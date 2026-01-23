@@ -783,8 +783,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const deleteStaff = async (memberId: string) => {
-        await deleteDoc(doc(db, "staff", memberId))
-        toast.error("تم حذف الموظف")
+        try {
+            await deleteDoc(doc(db, "staff", memberId))
+            await deleteDoc(doc(db, "users", memberId)) // Revoke login access
+            toast.error("تم حذف الموظف وسحب الصلاحيات")
+        } catch (e: any) {
+            console.error("Delete Staff Error:", e)
+            toast.error("فشل حذف الموظف")
+        }
     }
 
     const broadcastToCategory = async (category: string, text: string) => {
