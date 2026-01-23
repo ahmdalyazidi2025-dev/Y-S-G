@@ -584,9 +584,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
             await addDoc(collection(db, "products"), sanitizeData(dataToSave))
             toast.success("تم إضافة المنتج للسحابة")
-        } catch (e) {
+        } catch (e: any) {
             console.error("Add Product Error:", e)
-            toast.error("فشل إضافة المنتج (تأكد من الصلاحيات)")
+            toast.error(`فشل إضافة المنتج: ${e.message}`)
         }
     }
 
@@ -609,9 +609,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
             await addDoc(collection(db, "categories"), sanitizeData(category))
             toast.success("تم إضافة القسم")
-        } catch (e) {
+        } catch (e: any) {
             console.error("Add Category Error:", e)
-            toast.error("فشل إضافة القسم (تأكد من الصلاحيات)")
+            toast.error(`فشل إضافة القسم: ${e.message}`)
         }
     }
 
