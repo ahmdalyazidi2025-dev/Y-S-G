@@ -186,7 +186,7 @@ export default function CustomersPage() {
             </div>
 
             {/* Segment Tabs */}
-            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar">
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar gap-1">
                 {[
                     { id: "all", label: "الكل" },
                     { id: "vip", label: "كبار العملاء" },
@@ -195,18 +195,33 @@ export default function CustomersPage() {
                     { id: "interactive", label: "متفاعلين" },
                     { id: "dormant", label: "خاملين" }
                 ].map((tab) => (
-                    <button
+                    <div
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as "all" | "vip" | "active" | "semi_active" | "interactive" | "dormant")}
                         className={cn(
-                            "px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex-1",
+                            "group flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex-1 cursor-pointer min-w-fit gap-2",
                             activeTab === tab.id
                                 ? "bg-primary text-white shadow-lg"
-                                : "text-slate-500 hover:text-white"
+                                : "text-slate-500 hover:bg-white/5 hover:text-white"
                         )}
                     >
-                        {tab.label}
-                    </button>
+                        <span>{tab.label}</span>
+
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setTargetCategory(tab.id);
+                                setIsBroadcastOpen(true);
+                            }}
+                            className={cn(
+                                "p-1.5 rounded-full hover:bg-white/20 transition-colors",
+                                activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-white"
+                            )}
+                            title={`إرسال إشعار لـ ${tab.label}`}
+                        >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                        </div>
+                    </div>
                 ))}
             </div>
 

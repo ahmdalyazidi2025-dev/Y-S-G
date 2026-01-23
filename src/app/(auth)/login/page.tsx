@@ -71,8 +71,8 @@ function LoginForm() {
                         <div className="relative">
                             <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                             <Input
-                                type="email" // Changed to email
-                                placeholder="البريد الإلكتروني"
+                                type="text"
+                                placeholder="username"
                                 className="bg-black/20 border-white/10 h-12 rounded-xl pr-12 text-right dir-rtl"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}

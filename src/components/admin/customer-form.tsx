@@ -20,7 +20,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
     const [formData, setFormData] = useState({
         name: "",
         phone: "",
-        email: "",
+        username: "",
         password: "",
         location: "",
         allowedCategories: "all" as string[] | "all"
@@ -34,7 +34,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 setFormData({
                     name: initialCustomer.name,
                     phone: initialCustomer.phone,
-                    email: initialCustomer.email,
+                    username: initialCustomer.email.split('@')[0], // Extract username from email
                     password: initialCustomer.password || "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
                     allowedCategories: initialCustomer.allowedCategories || "all",
@@ -43,7 +43,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 setFormData({
                     name: "",
                     phone: "",
-                    email: "",
+                    username: "",
                     password: "",
                     location: "",
                     allowedCategories: "all",
@@ -56,11 +56,16 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Generate email from username (e.g., username@store.local) or use a consistent domain
+        // Ideally, we should ensure uniqueness in the backend or handle errors if it exists.
+        const generatedEmail = `${formData.username}@ysg.local`
+
         if (initialCustomer) {
             updateCustomer(initialCustomer.id, {
                 name: formData.name,
                 phone: formData.phone,
-                email: formData.email, // Updated
+                email: generatedEmail,
                 password: formData.password || undefined,
                 location: formData.location,
                 allowedCategories: formData.allowedCategories
@@ -69,7 +74,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
             addCustomer({
                 name: formData.name,
                 phone: formData.phone,
-                email: formData.email, // Updated
+                email: generatedEmail,
                 password: formData.password,
                 location: formData.location,
                 allowedCategories: formData.allowedCategories
@@ -117,15 +122,15 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="space-y-2">
-                                <Label className="text-right block">البريد الإلكتروني</Label>
+                                <Label className="text-right block">اسم المستخدم (للدخول)</Label>
                                 <Input
-                                    type="email"
                                     required
                                     className="bg-black/20 border-white/10 text-right"
-                                    placeholder="email@example.com"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    placeholder="username"
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '').toLowerCase() })} // Force lowercase and no spaces
                                 />
+                                <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول</p>
                             </div>
 
                             <div className="space-y-2">

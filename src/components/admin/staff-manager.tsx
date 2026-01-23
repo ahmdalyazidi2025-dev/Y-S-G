@@ -14,19 +14,23 @@ export function StaffManager() {
     const [isAdding, setIsAdding] = useState(false)
     const [newStaff, setNewStaff] = useState({
         name: "",
-        email: "",
+
+        username: "",
         password: "",
         role: "staff" as "admin" | "staff",
         permissions: ["orders"] as string[]
     })
 
     const handleAdd = () => {
-        if (!newStaff.name || !newStaff.email || !newStaff.password) {
+        if (!newStaff.name || !newStaff.username || !newStaff.password) {
             toast.error("يرجى إكمال جميع البيانات")
             return
         }
-        addStaff(newStaff)
-        setNewStaff({ name: "", email: "", password: "", role: "staff", permissions: ["orders"] })
+
+        const generatedEmail = `${newStaff.username}@ysg.local`
+        addStaff({ ...newStaff, email: generatedEmail })
+
+        setNewStaff({ name: "", username: "", password: "", role: "staff", permissions: ["orders"] })
         setIsAdding(false)
         hapticFeedback('success')
     }
@@ -61,7 +65,7 @@ export function StaffManager() {
                                 <p className="text-sm font-bold text-white">{member.name}</p>
                                 {member.role === "admin" && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">مسؤول</span>}
                             </div>
-                            <p className="text-[10px] text-slate-500">{member.email} • {member.permissions.length} صلاحيات</p>
+                            <p className="text-[10px] text-slate-500">{member.email.split('@')[0]} • {member.permissions.length} صلاحيات</p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -90,12 +94,11 @@ export function StaffManager() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[10px]">البريد الإلكتروني</Label>
+                            <Label className="text-[10px]">اسم المستخدم</Label>
                             <Input
-                                type="email"
-                                placeholder="email@store.com"
-                                value={newStaff.email}
-                                onChange={e => setNewStaff({ ...newStaff, email: e.target.value })}
+                                placeholder="username"
+                                value={newStaff.username}
+                                onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
                                 className="bg-black/40 h-10 text-xs text-right dir-rtl"
                             />
                         </div>
