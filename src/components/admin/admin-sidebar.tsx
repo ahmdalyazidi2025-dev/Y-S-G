@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useStore } from "@/context/store-context"
 
+
 const NAV_ITEMS = [
     { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
     { title: "المنتجات", icon: Package, href: "/admin/products", color: "text-blue-400" },
@@ -26,7 +27,10 @@ const NAV_ITEMS = [
 export function AdminSidebar() {
     const pathname = usePathname()
     const router = useRouter()
-    const { logout, currentUser } = useStore()
+    const { logout, currentUser, authInitialized } = useStore()
+
+    if (!authInitialized) return null // Don't render anything until we know the user state
+
 
     const handleLogout = () => {
         logout()
@@ -36,6 +40,7 @@ export function AdminSidebar() {
     const canAccess = (item: typeof NAV_ITEMS[0]) => {
         if (!currentUser) return false
         if (currentUser.role === "admin") return true
+        if (currentUser.permissions?.includes("all")) return true
         if (item.href === "/admin") return true
 
         const perms: Record<string, string> = {
@@ -116,8 +121,25 @@ export function AdminSidebar() {
                 })}
             </nav>
 
+            {/* Debug Info - Temporary */}
+            <div className="px-4 py-2 mt-2">
+                <p className="text-[10px] text-yellow-500 font-mono">
+                    Debug: {currentUser ? `${currentUser.role} (${currentUser.id.slice(0, 4)})` : "No User"}
+                </p>
+                <p className="text-[10px] text-gray-500 font-mono">
+                    Items: {filteredNavItems.length}
+                </p>
+            </div>
+
             {/* Bottom Section */}
-            <div className="pt-6 border-t border-white/5">
+            <div className="pt-6 border-t border-white/5 space-y-2">
+                {currentUser && (
+                    <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                        <p className="text-[10px] text-slate-400">Logged in as:</p>
+                        <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+                        <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
+                    </div>
+                )}
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors group"

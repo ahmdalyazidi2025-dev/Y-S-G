@@ -224,6 +224,7 @@ type StoreContextType = {
     sendNotificationToGroup: (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string) => void
     sendGlobalMessage: (text: string) => void
     updateAdminCredentials: (username: string, password: string) => Promise<void>
+    authInitialized: boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -278,20 +279,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
                 if (userDoc.exists()) {
                     const userData = userDoc.data() as User
+
+                    // --- AUTO ADMIN FIX: Force promotion for these emails ---
+                    if (["ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
+                        if (userData.role !== "admin" || !userData.permissions?.includes("all")) {
+                            const newUserData = { ...userData, role: "admin", permissions: ["all"] }
+                            await setDoc(doc(db, "users", firebaseUser.uid), newUserData, { merge: true })
+                            setCurrentUser(newUserData as User)
+                            localStorage.setItem("ysg_user", JSON.stringify(newUserData))
+                            toast.success("تم ترقية حسابك لمدير تلقائياً! 🚀")
+                            return // Exit early as we set user
+                        }
+                    }
+                    // --------------------------------------------------------
+
                     setCurrentUser(userData)
+                    localStorage.setItem("ysg_user", JSON.stringify(userData))
                 } else {
                     // Fallback for Admin if not in 'users' collection yet (First run)
-                    if (firebaseUser.email === "admin@store.com") {
+                    // Also auto-create admin doc for these emails
+                    if (["admin@store.com", "ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
                         const adminUser: User = {
                             id: firebaseUser.uid,
-                            name: "المشرف العام",
+                            name: firebaseUser.displayName || "المشرف العام",
                             role: "admin",
-                            username: "admin",
-                            permissions: ["orders", "products", "customers", "settings", "chat", "sales"]
+                            username: firebaseUser.email || "admin",
+                            permissions: ["all"]
                         }
                         setCurrentUser(adminUser)
-                        // Save to Firestore for next time
                         await setDoc(doc(db, "users", firebaseUser.uid), adminUser)
+                        localStorage.setItem("ysg_user", JSON.stringify(adminUser))
                     }
                 }
             } else {
@@ -383,7 +400,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
-            if (snap.exists()) setStoreSettings(snap.data() as StoreSettings)
+            if (snap.exists()) {
+                setStoreSettings(snap.data() as StoreSettings)
+            } else {
+                // Initialize checks if not exists
+                setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
+            }
         })
 
         const unsubCoupons = onSnapshot(query(collection(db, "coupons"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
@@ -900,6 +922,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const logout = async () => {
         await firebaseSignOut(auth)
         setCurrentUser(null)
+        localStorage.removeItem("ysg_user")
         router.push("/login")
     }
 
@@ -914,7 +937,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials
+            updateAdminCredentials, authInitialized
         }}>
             {children}
         </StoreContext.Provider>
