@@ -14,7 +14,9 @@ import {
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     onAuthStateChanged,
-    User as FirebaseUser
+    User as FirebaseUser,
+    setPersistence,
+    inMemoryPersistence
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
 
@@ -628,6 +630,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
             // 1. Create Auth User using Secondary App (to keep Admin logged in)
             const secondaryAuth = getSecondaryAuth();
+
+            // CRITICAL: Set persistence to NONE (in-memory) for the secondary auth instance
+            // This prevents the new user login from overwriting the Admin's session in LocalStorage
+            await setPersistence(secondaryAuth, inMemoryPersistence);
+
             const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, data.password || "123456");
             const uid = userCredential.user.uid;
 
