@@ -29,7 +29,9 @@ export function AdminSidebar() {
     const router = useRouter()
     const { logout, currentUser, authInitialized } = useStore()
 
-    if (!authInitialized) return null // Don't render anything until we know the user state
+    // If we have a user, show the sidebar immediately (optimistic). 
+    // If no user AND not initialized, then hide (loading state).
+    if (!authInitialized && !currentUser) return null
 
 
     const handleLogout = () => {

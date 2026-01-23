@@ -273,49 +273,65 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     // Listen to Auth State Changes
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                // User is signed in, fetch profile from Firestore
-                const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
-                if (userDoc.exists()) {
-                    const userData = userDoc.data() as User
-
-                    // --- AUTO ADMIN FIX: Force promotion for these emails ---
-                    if (["ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
-                        if (userData.role !== "admin" || !userData.permissions?.includes("all")) {
-                            const newUserData = { ...userData, role: "admin", permissions: ["all"] }
-                            await setDoc(doc(db, "users", firebaseUser.uid), newUserData, { merge: true })
-                            setCurrentUser(newUserData as User)
-                            localStorage.setItem("ysg_user", JSON.stringify(newUserData))
-                            toast.success("تم ترقية حسابك لمدير تلقائياً! 🚀")
-                            return // Exit early as we set user
-                        }
-                    }
-                    // --------------------------------------------------------
-
-                    setCurrentUser(userData)
-                    localStorage.setItem("ysg_user", JSON.stringify(userData))
-                } else {
-                    // Fallback for Admin if not in 'users' collection yet (First run)
-                    // Also auto-create admin doc for these emails
-                    if (["admin@store.com", "ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
-                        const adminUser: User = {
-                            id: firebaseUser.uid,
-                            name: firebaseUser.displayName || "المشرف العام",
-                            role: "admin",
-                            username: firebaseUser.email || "admin",
-                            permissions: ["all"]
-                        }
-                        setCurrentUser(adminUser)
-                        await setDoc(doc(db, "users", firebaseUser.uid), adminUser)
-                        localStorage.setItem("ysg_user", JSON.stringify(adminUser))
-                    }
-                }
-            } else {
-                setCurrentUser(null)
+        // Optimistic Load from LocalStorage
+        const savedUser = localStorage.getItem("ysg_user")
+        if (savedUser && !currentUser) {
+            try {
+                setCurrentUser(JSON.parse(savedUser))
+            } catch (e) {
+                console.error("Failed to parse saved user", e)
             }
-            setLoading(false)
-            setAuthInitialized(true)
+        }
+
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            try {
+                if (firebaseUser) {
+                    // User is signed in, fetch profile from Firestore
+                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data() as User
+
+                        // --- AUTO ADMIN FIX: Force promotion for these emails ---
+                        if (["ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
+                            if (userData.role !== "admin" || !userData.permissions?.includes("all")) {
+                                const newUserData = { ...userData, role: "admin", permissions: ["all"] }
+                                await setDoc(doc(db, "users", firebaseUser.uid), newUserData, { merge: true })
+                                setCurrentUser(newUserData as User)
+                                localStorage.setItem("ysg_user", JSON.stringify(newUserData))
+                                toast.success("تم ترقية حسابك لمدير تلقائياً! 🚀")
+                                return // Exit early as we set user
+                            }
+                        }
+                        // --------------------------------------------------------
+
+                        setCurrentUser(userData)
+                        localStorage.setItem("ysg_user", JSON.stringify(userData))
+                    } else {
+                        // Fallback for Admin if not in 'users' collection yet (First run)
+                        // Also auto-create admin doc for these emails
+                        if (["admin@store.com", "ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
+                            const adminUser: User = {
+                                id: firebaseUser.uid,
+                                name: firebaseUser.displayName || "المشرف العام",
+                                role: "admin",
+                                username: firebaseUser.email || "admin",
+                                permissions: ["all"]
+                            }
+                            setCurrentUser(adminUser)
+                            await setDoc(doc(db, "users", firebaseUser.uid), adminUser)
+                            localStorage.setItem("ysg_user", JSON.stringify(adminUser))
+                        }
+                    }
+                } else {
+                    setCurrentUser(null)
+                }
+            } catch (error) {
+                console.error("Auth State Change Error:", error)
+                toast.error("حدث خطأ في تحميل بيانات المستخدم")
+            } finally {
+                setLoading(false)
+                setAuthInitialized(true)
+            }
         })
         return () => unsubscribe()
     }, [])
@@ -330,7 +346,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     useEffect(() => {
-        if (!authInitialized) return // Wait for auth to initialize before fetching data
+        // We allow fetching data immediately as our security rules allow public read for now.
+        // This prevents "0 data" state while auth is hydrating.
+        // if (!authInitialized) return
 
         const unsubProducts = onSnapshot(collection(db, "products"), (snap: QuerySnapshot<DocumentData>) => {
             setProducts(snap.docs.map((doc) => {
