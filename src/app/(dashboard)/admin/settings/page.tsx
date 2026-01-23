@@ -239,21 +239,7 @@ export default function AdminSettingsPage() {
 
 
 
-                {/* Checkout Settings */}
-                <Section icon={<ShoppingBag className="w-5 h-5" />} title="إعدادات إتمام الطلب">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <Label className="text-base">إلزام العميل بالاسم ورقم الجوال</Label>
-                            <p className="text-xs text-slate-400">عند التفعيل، لن يتمكن العميل من إتمام الطلب دون إدخال بياناته.</p>
-                        </div>
-                        <div
-                            onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
-                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
-                        >
-                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
-                        </div>
-                    </div>
-                </Section>
+                {/* Checkout Settings removed from here - moved to Entity Management */}
 
                 {/* Reports & Exports */}
                 <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
@@ -299,10 +285,7 @@ export default function AdminSettingsPage() {
 
 
 
-                {/* Security Section */}
-                <Section icon={<Save className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                    <SecuritySettings />
-                </Section>
+                {/* Security Section removed from here - moved to Entity Management */}
             </form>
         </div >
     )
@@ -310,102 +293,7 @@ export default function AdminSettingsPage() {
 
 
 
-function SecuritySettings() {
-    const { updateAdminCredentials } = useStore()
-    const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
 
-    const handleUpdate = async () => {
-        if (!username || !password) return
-        await updateAdminCredentials(username, password)
-        setUsername("")
-        setPassword("")
-    }
-
-    return (
-        <div className="space-y-6">
-            {/* Gemini API Key Section - ADDED HERE */}
-            <div className="space-y-2 p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">✨</span>
-                    <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
-                </div>
-                <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
-                <div className="flex gap-2">
-                    <ApiKeyInput />
-                </div>
-            </div>
-
-            <hr className="border-white/5" />
-
-            {/* Admin Credentials */}
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>اسم المستخدم الجديد</Label>
-                    <Input
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل اسم مستخدم جديد"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label>كلمة المرور الجديدة</Label>
-                    <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل كلمة مرور جديدة"
-                    />
-                </div>
-                <Button
-                    type="button"
-                    className="w-full bg-red-500 hover:bg-red-600 text-white"
-                    onClick={handleUpdate}
-                    disabled={!username || !password}
-                >
-                    تحديث بيانات الدخول
-                </Button>
-            </div>
-        </div>
-    )
-}
-
-function ApiKeyInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [key, setKey] = useState(storeSettings.googleGeminiApiKey || "")
-    const [show, setShow] = useState(false)
-
-    const handleSaveKey = () => {
-        updateStoreSettings({ ...storeSettings, googleGeminiApiKey: key })
-        // hapticFeedback('success') - handled in store
-    }
-
-    return (
-        <div className="flex-1 flex gap-2">
-            <div className="relative flex-1">
-                <Input
-                    type={show ? "text" : "password"}
-                    value={key}
-                    onChange={(e) => setKey(e.target.value)}
-                    className="bg-black/20 border-white/10 pr-10 font-mono text-xs"
-                    placeholder="AIzaSy..."
-                />
-                <button
-                    type="button"
-                    onClick={() => setShow(!show)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                >
-                    {show ? "إخفاء" : "عرض"}
-                </button>
-            </div>
-            <Button type="button" onClick={handleSaveKey} variant="secondary" className="px-6">
-                حفظ المفتاح
-            </Button>
-        </div>
-    )
-}
 
 
 

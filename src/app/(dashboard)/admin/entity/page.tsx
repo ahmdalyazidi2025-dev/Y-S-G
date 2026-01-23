@@ -137,7 +137,111 @@ export default function EntityManagementPage() {
 
                     <StaffManager />
                 </div>
+                {/* Security Section */}
+                <div className="glass-card p-6 space-y-6">
+                    <div className="flex items-center gap-3 text-primary border-b border-white/5 pb-4">
+                        <Lock className="w-5 h-5" />
+                        <h2 className="font-bold">الأمان وبيانات الدخول</h2>
+                    </div>
+                    <SecuritySettings />
+                </div>
             </div>
+        </div>
+    )
+}
+
+function SecuritySettings() {
+    const { updateAdminCredentials } = useStore()
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
+
+    const handleUpdate = async () => {
+        if (!username || !password) return
+        await updateAdminCredentials(username, password)
+        setUsername("")
+        setPassword("")
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Gemini API Key Section */}
+            <div className="space-y-2 p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">✨</span>
+                    <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
+                </div>
+                <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                <div className="flex gap-2">
+                    <ApiKeyInput />
+                </div>
+            </div>
+
+            <hr className="border-white/5" />
+
+            {/* Admin Credentials */}
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label>اسم المستخدم الجديد</Label>
+                    <Input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="bg-black/20 border-white/10"
+                        placeholder="ادخل اسم مستخدم جديد"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label>كلمة المرور الجديدة</Label>
+                    <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="bg-black/20 border-white/10"
+                        placeholder="ادخل كلمة مرور جديدة"
+                    />
+                </div>
+                <Button
+                    type="button"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white"
+                    onClick={handleUpdate}
+                    disabled={!username || !password}
+                >
+                    تحديث بيانات الدخول
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+function ApiKeyInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [key, setKey] = useState(storeSettings.googleGeminiApiKey || "")
+    const [show, setShow] = useState(false)
+
+    const handleSaveKey = () => {
+        updateStoreSettings({ ...storeSettings, googleGeminiApiKey: key })
+    }
+
+    return (
+        <div className="flex-1 flex gap-2">
+            <div className="relative flex-1">
+                <Input
+                    type={show ? "text" : "password"}
+                    value={key}
+                    onChange={(e) => setKey(e.target.value)}
+                    className="bg-black/20 border-white/10 pr-10 font-mono text-xs"
+                    placeholder="AIzaSy..."
+                />
+                <button
+                    type="button"
+                    onClick={() => setShow(!show)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                >
+                    {show ? "إخفاء" : "عرض"}
+                </button>
+            </div>
+            <Button type="button" onClick={handleSaveKey} variant="secondary" className="px-6">
+                حفظ المفتاح
+            </Button>
         </div>
     )
 }

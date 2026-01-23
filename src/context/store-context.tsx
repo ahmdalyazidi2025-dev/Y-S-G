@@ -66,6 +66,7 @@ export interface Customer {
     location: string
     lastActive?: Date | null
     createdAt?: any
+    allowedCategories?: string[] | "all"
 }
 
 export type StaffMember = {
@@ -86,6 +87,7 @@ export type User = {
     phone?: string
     location?: string
     permissions?: string[]
+    allowedCategories?: string[] | "all"
 }
 
 export type Order = {
@@ -258,7 +260,8 @@ const MOCK_SETTINGS: StoreSettings = {
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [products, setProducts] = useState<Product[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
+    const [allCategories, setAllCategories] = useState<Category[]>([]) // Raw categories from DB
+    const [categories, setCategories] = useState<Category[]>([]) // Filtered categories for display
     const [customers, setCustomers] = useState<Customer[]>([])
     const [banners, setBanners] = useState<Banner[]>([])
     const [productRequests, setProductRequests] = useState<ProductRequest[]>([])
@@ -364,7 +367,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
-            setCategories(snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
+            setAllCategories(snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
         })
 
         const unsubCustomers = onSnapshot(collection(db, "customers"), (snap: QuerySnapshot<DocumentData>) => {
@@ -448,6 +451,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
         }
     }, [toDate, authInitialized])
+
+    // Filter categories based on user permissions
+    useEffect(() => {
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+            setCategories(allCategories)
+            return
+        }
+
+        // It's a customer
+        const customerAllowed = currentUser.allowedCategories
+
+        if (!customerAllowed || customerAllowed === "all") {
+            setCategories(allCategories)
+        } else {
+            // Filter categories
+            setCategories(allCategories.filter(cat => customerAllowed.includes(cat.id)))
+        }
+
+    }, [currentUser, allCategories])
 
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
@@ -644,7 +666,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 name: data.name,
                 role: "customer",
                 username: data.email, // using email as username for compatibility
-                email: data.email
+                email: data.email,
+                allowedCategories: data.allowedCategories || "all"
             });
 
             // 3. Create Customer Document in 'customers' collection (for store logic)

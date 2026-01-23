@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { X, Save, User, Phone, Lock, Hash, MapPin } from "lucide-react"
+import { X, Save, User, Phone, Lock, Hash, MapPin, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +23,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         email: "",
         password: "",
         location: "",
+        allowedCategories: "all" as string[] | "all"
     })
 
     useEffect(() => {
@@ -36,6 +37,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     email: initialCustomer.email,
                     password: initialCustomer.password || "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
+                    allowedCategories: initialCustomer.allowedCategories || "all",
                 })
             } else {
                 setFormData({
@@ -44,6 +46,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     email: "",
                     password: "",
                     location: "",
+                    allowedCategories: "all",
                 })
             }
         }, 0);
@@ -59,7 +62,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 phone: formData.phone,
                 email: formData.email, // Updated
                 password: formData.password || undefined,
-                location: formData.location
+                location: formData.location,
+                allowedCategories: formData.allowedCategories
             })
         } else {
             addCustomer({
@@ -67,7 +71,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 phone: formData.phone,
                 email: formData.email, // Updated
                 password: formData.password,
-                location: formData.location
+                location: formData.location,
+                allowedCategories: formData.allowedCategories
             } as any)
         }
         onClose()
@@ -161,7 +166,24 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
+                                    <Input
+                                        required
+                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        value={formData.location}
+                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                    />
                                 </div>
+                            </div>
+
+                            {/* Category Access Control */}
+                            <div className="space-y-3 pt-2 border-t border-white/10">
+                                <Label className="text-base font-bold text-primary">صلاحيات الأقسام</Label>
+                                <p className="text-[10px] text-slate-400">حدد الأقسام التي يسمح لهذا العميل برؤيتها في المتجر.</p>
+
+                                <CategorySelector
+                                    selected={formData.allowedCategories}
+                                    onChange={(newSelection) => setFormData({ ...formData, allowedCategories: newSelection })}
+                                />
                             </div>
 
                             <div className="pt-4">
@@ -175,5 +197,88 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 </div>
             )}
         </AnimatePresence>
+    )
+}
+
+function CategorySelector({ selected, onChange }: { selected: string[] | "all", onChange: (val: string[] | "all") => void }) {
+    const { categories } = useStore()
+
+    // Helper to check if a specific ID is selected
+    const isSelected = (id: string) => {
+        if (selected === "all") return true
+        return selected.includes(id)
+    }
+
+    const toggleAll = () => {
+        if (selected === "all") {
+            // Deselect all
+            onChange([])
+        } else {
+            // Select all
+            onChange("all")
+        }
+    }
+
+    const toggleCategory = (id: string) => {
+        if (selected === "all") {
+            // If strictly unchecking one item from "all", switch to array of all-minus-one
+            const allIds = categories.map(c => c.id)
+            onChange(allIds.filter(cId => cId !== id))
+        } else {
+            if (selected.includes(id)) {
+                // Deselecting one
+                const newVal = selected.filter(cId => cId !== id)
+                onChange(newVal)
+            } else {
+                // Selecting one
+                const newVal = [...selected, id]
+                // Check if we selected everything manually -> switch to "all"
+                if (newVal.length === categories.length) {
+                    onChange("all")
+                } else {
+                    onChange(newVal)
+                }
+            }
+        }
+    }
+
+    return (
+        <div className="space-y-2">
+            {/* Select All Button */}
+            <div
+                onClick={toggleAll}
+                className={`
+                    flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all
+                    ${selected === "all" ? 'bg-primary/20 border-primary text-white' : 'bg-black/20 border-white/10 text-slate-400 hover:bg-white/5'}
+                `}
+            >
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selected === "all" ? 'bg-primary border-primary' : 'border-slate-600'}`}>
+                    {selected === "all" && <Check className="w-3 h-3 text-black" />}
+                </div>
+                <span className="text-sm font-bold">كل الأقسام</span>
+            </div>
+
+            {/* Grid of Categories */}
+            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1 customer-scrollbar">
+                {categories.map(cat => {
+                    const active = isSelected(cat.id)
+                    return (
+                        <div
+                            key={cat.id}
+                            onClick={() => toggleCategory(cat.id)}
+                            className={`
+                                flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all
+                                ${active ? 'bg-primary/10 border-primary/50 text-white' : 'bg-black/10 border-white/5 text-slate-500 hover:bg-white/5'}
+                            `}
+                        >
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${active ? 'bg-primary border-primary' : 'border-slate-700'}`}>
+                                {active && <Check className="w-3 h-3 text-black" />}
+                            </div>
+                            <span className="text-xs truncate">{cat.nameAr}</span>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
     )
 }
