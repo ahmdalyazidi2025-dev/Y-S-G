@@ -171,12 +171,6 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
-                                    <Input
-                                        required
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
-                                        value={formData.location}
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    />
                                 </div>
                             </div>
 
