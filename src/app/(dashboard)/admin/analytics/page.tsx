@@ -1,0 +1,339 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import { useStore } from "@/context/store-context"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
+import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+export default function AnalyticsPage() {
+    const { orders } = useStore()
+
+    const [timeRange, setTimeRange] = useState<"day" | "week" | "month" | "year" | "custom">("week")
+    const [customStart, setCustomStart] = useState("")
+    const [customEnd, setCustomEnd] = useState("")
+
+    const filteredOrders = useMemo(() => {
+        const now = new Date()
+        const start = new Date()
+        let end = new Date()
+
+        switch (timeRange) {
+            case "day": start.setHours(0, 0, 0, 0); break;
+            case "week": start.setDate(now.getDate() - 7); break;
+            case "month": start.setMonth(now.getMonth() - 1); break;
+            case "year": start.setFullYear(now.getFullYear() - 1); break;
+            case "custom":
+                if (customStart) {
+                    start.setTime(new Date(customStart).getTime())
+                    start.setHours(0, 0, 0, 0)
+                }
+                if (customEnd) {
+                    end = new Date(customEnd)
+                    end.setHours(23, 59, 59, 999)
+                }
+                break;
+        }
+
+        return orders.filter(o => {
+            const date = new Date(o.createdAt)
+            if (timeRange === "custom") {
+                return date >= start && date <= end
+            }
+            return date >= start
+        })
+    }, [orders, timeRange, customStart, customEnd])
+
+    // 1. Calculate Revenue Over Time
+    // 1. Calculate Revenue Over Time
+    const revenueData = useMemo(() => {
+        let periods = 7
+        let timeUnit: 'hour' | 'day' | 'month' = 'day'
+
+        const now = new Date()
+        const endDate = timeRange === "custom" && customEnd ? new Date(customEnd) : now
+        if (timeRange === "custom" && customEnd) endDate.setHours(23, 59, 59, 999)
+
+        if (timeRange === "month") periods = 30
+        if (timeRange === "year") { periods = 12; timeUnit = 'month' }
+        if (timeRange === "day") { periods = 24; timeUnit = 'hour' }
+
+        if (timeRange === "custom" && customStart && customEnd) {
+            const start = new Date(customStart)
+            const end = new Date(customEnd)
+            const diffTime = Math.abs(end.getTime() - start.getTime())
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+            periods = diffDays + 1 // Inclusive
+            if (periods > 60) timeUnit = 'month' // Switch to monthly view for long ranges? Maybe not for now to keep it simple
+        }
+
+        const dataPoints = []
+
+        for (let i = 0; i < periods; i++) {
+            const d = new Date(endDate)
+
+            if (timeUnit === 'month') {
+                d.setMonth(endDate.getMonth() - i)
+                d.setDate(1)
+            } else if (timeUnit === 'hour') {
+                d.setHours(endDate.getHours() - i)
+            } else {
+                d.setDate(endDate.getDate() - i)
+            }
+
+            dataPoints.push(d)
+        }
+
+        // Reverse to show oldest to newest
+        dataPoints.reverse()
+
+        return dataPoints.map(date => {
+            let label = ""
+            let periodOrders = []
+
+            if (timeUnit === 'hour') {
+                label = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
+                periodOrders = orders.filter(o => {
+                    const od = new Date(o.createdAt)
+                    return od.getDate() === date.getDate() && od.getHours() === date.getHours()
+                })
+            } else if (timeUnit === 'month') {
+                label = date.toLocaleDateString('ar-SA', { month: 'short', year: '2-digit' })
+                periodOrders = orders.filter(o => {
+                    const od = new Date(o.createdAt)
+                    return od.getMonth() === date.getMonth() && od.getFullYear() === date.getFullYear()
+                })
+            } else {
+                label = date.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
+                periodOrders = orders.filter(o => {
+                    const od = new Date(o.createdAt)
+                    return od.toDateString() === date.toDateString()
+                })
+            }
+
+            return {
+                date: label,
+                revenue: periodOrders.reduce((sum, o) => sum + o.total, 0),
+                orders: periodOrders.length
+            }
+        })
+    }, [orders, timeRange, customStart, customEnd])
+
+    // 2. Top Selling Products (Filtered)
+    const topProductsData = useMemo(() => {
+        const productSales: Record<string, number> = {}
+        filteredOrders.forEach(order => {
+            order.items.forEach(item => {
+                productSales[item.name] = (productSales[item.name] || 0) + item.quantity
+            })
+        })
+        return Object.entries(productSales)
+            .map(([name, sales]) => ({ name, sales }))
+            .sort((a, b) => b.sales - a.sales)
+            .slice(0, 5)
+    }, [filteredOrders])
+
+    // 3. Order Status Distribution (Filtered)
+    const statusData = useMemo(() => {
+        const stats: Record<string, number> = {}
+        filteredOrders.forEach(o => {
+            stats[o.status] = (stats[o.status] || 0) + 1
+        })
+        return Object.entries(stats).map(([name, value]) => ({
+            name: name === 'delivered' ? 'مكتمل' : name === 'processing' ? 'جاري' : name === 'pending' ? 'جديد' : 'ملغي',
+            value
+        }))
+    }, [filteredOrders])
+
+    const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0)
+
+    return (
+        <div className="space-y-6 pb-20">
+            <div className="flex items-center gap-4">
+                <Link href="/admin">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-white" />
+                    </Button>
+                </Link>
+                <div className="flex-1">
+                    <h1 className="text-2xl font-black text-white">تحليل البيانات</h1>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Analytics Dashboard</p>
+                </div>
+            </div>
+
+            {/* Time Filter */}
+            <div className="flex flex-col md:flex-row justify-end p-1 gap-4">
+                {timeRange === "custom" && (
+                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+                        <div className="relative">
+                            <Input
+                                type="date"
+                                value={customStart}
+                                onChange={(e) => setCustomStart(e.target.value)}
+                                className="bg-white/5 border-white/10 h-8 text-xs w-32"
+                            />
+                        </div>
+                        <span className="text-slate-500 text-xs">إلى</span>
+                        <div className="relative">
+                            <Input
+                                type="date"
+                                value={customEnd}
+                                onChange={(e) => setCustomEnd(e.target.value)}
+                                className="bg-white/5 border-white/10 h-8 text-xs w-32"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-white/5 p-1 rounded-xl border border-white/10 flex gap-1 self-end">
+                    {(["day", "week", "month", "year", "custom"] as const).map((r) => (
+                        <button
+                            key={r}
+                            onClick={() => setTimeRange(r)}
+                            className={cn(
+                                "px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                                timeRange === r ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            {r === "day" && "اليوم"}
+                            {r === "week" && "الأسبوع"}
+                            {r === "month" && "الشهر"}
+                            {r === "year" && "السنة"}
+                            {r === "custom" && (
+                                <>
+                                    <span>مخصص</span>
+                                    <Calendar className="w-3 h-3" />
+                                </>
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="glass-card border-white/5 bg-emerald-500/5">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-emerald-400 font-bold">إجمالي الإيرادات</CardDescription>
+                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                            <DollarSign className="w-5 h-5" />
+                            {totalRevenue.toLocaleString()}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card className="glass-card border-white/5 bg-blue-500/5">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-blue-400 font-bold">إجمالي الطلبات</CardDescription>
+                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                            <ShoppingCart className="w-5 h-5" />
+                            {orders.length}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card className="glass-card border-white/5 bg-purple-500/5">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-purple-400 font-bold">المنتجات المباعة</CardDescription>
+                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                            <Package className="w-5 h-5" />
+                            {orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card className="glass-card border-white/5 bg-orange-500/5">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-orange-400 font-bold">متوسط السلة</CardDescription>
+                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5" />
+                            {orders.length > 0 ? (totalRevenue / orders.length).toFixed(0) : 0}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Revenue Chart */}
+                <Card className="glass-card border-white/5 col-span-1 lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle className="text-white">إيرادات آخر 7 أيام</CardTitle>
+                        <CardDescription>نمو المبيعات اليومي</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={revenueData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                <XAxis dataKey="date" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1c2a36', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                    itemStyle={{ color: '#fff' }}
+                                />
+                                <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', strokeWidth: 2 }} activeDot={{ r: 8 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Top Products */}
+                <Card className="glass-card border-white/5">
+                    <CardHeader>
+                        <CardTitle className="text-white">المنتجات الأكثر مبيعاً</CardTitle>
+                        <CardDescription>أفضل 5 منتجات طلباً</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={topProductsData} layout="vertical" margin={{ left: 40 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" horizontal={false} />
+                                <XAxis type="number" stroke="#ffffff50" hide />
+                                <YAxis dataKey="name" type="category" stroke="#ffffff50" fontSize={10} width={100} tickLine={false} axisLine={false} />
+                                <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} />
+                                <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                {/* Status Distribution */}
+                <Card className="glass-card border-white/5">
+                    <CardHeader>
+                        <CardTitle className="text-white">حالات الطلبات</CardTitle>
+                        <CardDescription>توزيع الطلبات حسب الحالة</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {statusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="flex flex-wrap gap-4 justify-center absolute bottom-4">
+                            {statusData.map((entry, index) => (
+                                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-slate-400">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                    {entry.name} ({entry.value})
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div >
+    )
+}
