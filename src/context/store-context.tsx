@@ -327,9 +327,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     setCurrentUser(null)
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Auth State Change Error:", error)
-                toast.error("حدث خطأ في تحميل بيانات المستخدم")
+                toast.error(`خطأ في تحميل البيانات: ${error.message || "خطأ غير معروف"}`)
             } finally {
                 setLoading(false)
                 setAuthInitialized(true)
