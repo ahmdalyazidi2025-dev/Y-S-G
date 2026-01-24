@@ -15,6 +15,7 @@ import ScannerModal from "@/components/store/scanner-modal"
 import RequestModal from "@/components/store/request-modal"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
+import { CustomerNotifications } from "@/components/store/customer-notifications"
 
 
 
@@ -46,84 +47,104 @@ export default function CustomerHome() {
 
     return (
         <PullToRefresh onRefresh={handleRefresh}>
-            <div className="space-y-8 pb-32 w-full overflow-x-hidden text-right">
-                {/* Search Header */}
-                {/* Search Header */}
-                <div className="flex flex-col gap-6 px-4 relative z-10">
-                    {/* Welcome & Search */}
-                    <div className="flex flex-col gap-4">
+            <div className="min-h-screen w-full overflow-x-hidden text-right bg-background relative pb-32">
+
+                {/* HERO BANNER SECTION (Full Bleed Background) */}
+                <div className="absolute top-0 left-0 right-0 h-[450px] w-full z-0 overflow-hidden">
+                    {activeBanners.length > 0 ? (
+                        <div className="relative w-full h-full">
+                            {/* Carousel or Single Banner Logic */}
+                            {activeBanners.map((banner, idx) => (
+                                <div key={idx} className={cn("absolute inset-0 transition-opacity duration-1000", idx === 0 ? "opacity-100" : "opacity-0 pointer-events-none")}>
+                                    {/* Note: Simple mapping showing first one for now or we build a proper carousel. 
+                                    Given existing code just mapped them, we will show the first active one as the main hero 
+                                    or standard fade if multiple. For complex carousel, we need state. 
+                                    Let's stick to showing the first one as Hero for simplicity/stability request 
+                                    or stack them. Let's stack them and only show the first one to avoid mess 
+                                    until a proper carousel state is added if needed. 
+                                    Actually, user layout request implies a single immersive look.
+                                    Let's use the first active banner as the Hero.
+                                */}
+                                    <Image
+                                        src={banner.image}
+                                        alt={banner.title || "banner"}
+                                        fill
+                                        sizes="100vw"
+                                        priority
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                    {/* Gradient Overlays */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent opacity-80" />
+
+                                    {/* Banner Text Content */}
+                                    <div className="absolute inset-x-0 bottom-32 px-6 flex flex-col items-start justify-end h-full pb-10">
+                                        <div className="bg-primary/90 backdrop-blur-md border border-primary/20 px-4 py-1.5 rounded-full text-white text-xs font-bold mb-4 shadow-lg shadow-primary/20 transform translate-y-2 opacity-90">
+                                            عروض حصرية 🔥
+                                        </div>
+                                        <h2 className="text-4xl sm:text-5xl font-black text-white drop-shadow-2xl mb-3 leading-tight max-w-lg">
+                                            {banner.title || "تخفيضات الموسم"}
+                                        </h2>
+                                        <p className="text-base sm:text-lg text-slate-200 font-medium max-w-xl opacity-90 leading-relaxed drop-shadow-md">
+                                            {banner.description || "استفد من خصومات حصرية لفترة محدودة على جميع المنتجات الجديدة"}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                            <span className="text-slate-500 font-medium">لا توجد عروض حالياً</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* HEADER CONTENT (Search, Profile, Bell) */}
+                <div className="relative z-10 px-4 pt-6 mb-44"> {/* Margin bottom pushes content down below the banner text area */}
+                    <div className="flex flex-col gap-6">
+                        {/* Top Bar */}
                         <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-3xl font-black text-foreground mb-1 flex items-center gap-2">
+                            <div className="text-white">
+                                <h1 className="text-2xl font-bold mb-1 flex items-center gap-2 drop-shadow-md">
                                     مرحباً بك <span className="animate-wave origin-bottom-right inline-block">👋</span>
                                 </h1>
-                                <p className="text-sm text-muted-foreground font-medium">لنبحث عن منتجاتك المفضلة اليوم</p>
+                                <p className="text-xs text-slate-200 font-medium opacity-90 drop-shadow-sm">لنبحث عن منتجاتك المفضلة</p>
                             </div>
                             <Link href="/customer/profile">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary via-purple-500 to-blue-400 p-[2px] cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-purple-500/30">
-                                    <div className="w-full h-full rounded-full bg-background flex items-center justify-center backdrop-blur-3xl">
-                                        <User className="w-6 h-6 text-foreground" />
+                                <div className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md p-[2px] cursor-pointer transition-all border border-white/10 shadow-lg">
+                                    <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden">
+                                        <User className="w-5 h-5 text-white" />
                                     </div>
                                 </div>
                             </Link>
                         </div>
 
+                        {/* Search Bar */}
                         <div className="flex gap-3">
                             <div className="relative flex-1 group">
-                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 group-focus-within:text-primary transition-colors" />
                                 <Input
                                     placeholder="ابحث عن منتج، باركود..."
-                                    className="bg-card border-border data-[state=open]:border-primary/50  rounded-2xl pr-12 text-right h-14 text-base focus:ring-2 focus:ring-primary/20 focus:bg-accent transition-all font-medium placeholder:text-muted-foreground shadow-inner"
+                                    className="bg-white/90 border-white/40 shadow-xl backdrop-blur-xl rounded-2xl pr-12 text-right h-14 text-base focus:ring-2 focus:ring-primary/50 text-black placeholder:text-slate-500"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
-                            <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 border border-border bg-card hover:bg-accent shadow-lg group">
-                                <Bell className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors group-hover:animate-swing" />
-                            </Button>
+                            <CustomerNotifications />
                         </div>
                     </div>
                 </div>
 
-                {/* Modern Carousel */}
-                <div className="px-4 relative z-10">
-                    <div className="relative h-48 sm:h-64 md:h-80 w-full rounded-[2.5rem] overflow-hidden group shadow-2xl shadow-primary/10 ring-1 ring-border transform transition-transform hover:scale-[1.01] duration-500">
-                        <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out">
-                            {activeBanners.length > 0 ? activeBanners.map((banner, idx) => (
-                                <div key={idx} className="min-w-full h-full relative">
-                                    <Image
-                                        src={banner.image}
-                                        alt="banner"
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, 1200px"
-                                        priority
-                                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                                        unoptimized
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90" />
-                                    <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col items-end text-right">
-                                        <div className="bg-primary/20 backdrop-blur-xl border border-primary/20 px-4 py-1.5 rounded-full text-primary text-xs font-bold mb-3 shadow-lg shadow-primary/20">
-                                            عروض حصرية 🔥
-                                        </div>
-                                        <h2 className="text-2xl lg:text-4xl font-black text-white drop-shadow-2xl mb-2 leading-tight">تخفيضات الموسم</h2>
-                                        <p className="text-sm lg:text-base text-slate-200 font-medium max-w-[90%] opacity-90">استفد من خصومات تصل إلى 50% على المنتجات المختارة لفترة محدودة</p>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="min-w-full h-full bg-slate-900/50 flex items-center justify-center border border-dashed border-white/10 m-2 rounded-3xl backdrop-blur-sm">
-                                    <span className="text-slate-500 text-sm font-medium">لا توجد عروض حالياً</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
-                {/* Category Stories (Mobile) / Filter (Desktop) */}
-                <div className="lg:hidden pl-4 relative z-10">
+                {/* Categories & Content Starts Here (Below Banner Area) */}
+
+                {/* Category Stories (Mobile) */}
+                <div className="lg:hidden pl-4 relative z-10 mb-6">
                     <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
                 </div>
 
-                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 no-scrollbar px-4 relative z-10 customer-scrollbar">
+                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 no-scrollbar px-4 relative z-10 customer-scrollbar mb-8">
                     <button
                         onClick={() => setSelectedCategory("الكل")}
                         className={cn(

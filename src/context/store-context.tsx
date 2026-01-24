@@ -24,6 +24,10 @@ export type Banner = {
     id: string
     image: string
     active: boolean
+    title: string
+    description: string
+    link?: string
+    textColor?: string
 }
 
 export type Product = {

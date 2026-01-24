@@ -1,0 +1,77 @@
+"use client"
+
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Bell, Check, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useStore } from "@/context/store-context"
+import { formatDistanceToNow } from "date-fns"
+import { ar } from "date-fns/locale"
+import { cn } from "@/lib/utils"
+
+export function CustomerNotifications() {
+    const { notifications, markNotificationRead, currentUser } = useStore()
+
+    // Filter notifications for current user
+    const userNotifications = notifications.filter(n => n.userId === currentUser?.id).sort((a, b) => {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    const unreadCount = userNotifications.filter(n => !n.read).length
+
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <div className="relative">
+                    <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 border border-border bg-card hover:bg-accent shadow-lg group">
+                        <Bell className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors group-hover:animate-swing" />
+                    </Button>
+                    {unreadCount > 0 && (
+                        <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-background flex items-center justify-center text-[10px] font-bold text-white z-10 animate-pulse">
+                            {unreadCount}
+                        </span>
+                    )}
+                </div>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-full sm:w-[400px] border-r border-white/10 bg-black/90 backdrop-blur-xl text-white">
+                <SheetHeader className="text-right border-b border-white/10 pb-4 mb-4">
+                    <SheetTitle className="text-white text-xl font-bold flex items-center gap-2 justify-end">
+                        الإشعارات
+                        <Bell className="w-5 h-5 text-primary" />
+                    </SheetTitle>
+                </SheetHeader>
+
+                <div className="space-y-4 overflow-y-auto h-[calc(100vh-100px)] customer-scrollbar p-1">
+                    {userNotifications.length === 0 ? (
+                        <div className="text-center py-20 text-slate-500">
+                            لا توجد إشعارات حالياً
+                        </div>
+                    ) : (
+                        userNotifications.map((notification) => (
+                            <div
+                                key={notification.id}
+                                className={cn(
+                                    "relative p-4 rounded-xl border transition-all duration-300",
+                                    notification.read ? "bg-white/5 border-white/5 opacity-70" : "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5"
+                                )}
+                                onClick={() => !notification.read && markNotificationRead(notification.id)}
+                            >
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="flex-1 space-y-1">
+                                        <h4 className={cn("text-sm font-bold", !notification.read && "text-primary")}>{notification.title}</h4>
+                                        <p className="text-xs text-slate-300 leading-relaxed">{notification.body}</p>
+                                        <span className="text-[10px] text-slate-500 block pt-2">
+                                            {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ar })}
+                                        </span>
+                                    </div>
+                                    {!notification.read && (
+                                        <div className="w-2 h-2 bg-primary rounded-full mt-1.5" />
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+}

@@ -18,6 +18,8 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const { addBanner } = useStore()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [image, setImage] = useState("")
+    const [title, setTitle] = useState("")
+    const [description, setDescription] = useState("")
     const [isLoading, setIsLoading] = useState(false)
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,9 +66,13 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
             setIsLoading(true)
             await addBanner({
                 image,
-                active: true
+                active: true,
+                title: title || "",
+                description: description || ""
             })
             setImage("")
+            setTitle("")
+            setDescription("")
             onClose()
         } catch (error) {
             console.error("Upload error:", error)
@@ -139,6 +145,29 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                         </span>
                                     </>
                                 )}
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300">عنوان البنر</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: عروض الصيف"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className="w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-300">الوصف</label>
+                                    <input
+                                        type="text"
+                                        placeholder="مثال: خصومات تصل إلى 50%"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-2">
