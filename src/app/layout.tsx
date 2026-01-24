@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: "Sales Management System for YSG Group",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo.jpg",
-    apple: "/pwa-icon.jpg",
+    icon: "/logo.png",
+    apple: "/pwa-icon.png", // PNG for better iOS support
   },
   appleWebApp: {
     capable: true,

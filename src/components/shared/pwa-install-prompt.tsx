@@ -113,7 +113,7 @@ export function PwaInstallPrompt() {
                         <div className="flex flex-col items-center text-center gap-6">
                             <div className="w-28 h-28 bg-[#080b12] rounded-full flex items-center justify-center flex-shrink-0 shadow-2xl overflow-hidden border-4 border-white/5 p-0 relative transition-transform group-hover:scale-105 duration-500">
                                 <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                                <Image src="/pwa-icon.jpg" alt="YSG" className="w-full h-full object-cover" width={112} height={112} />
+                                <Image src="/pwa-icon.png" alt="YSG" className="w-full h-full object-cover" width={112} height={112} />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="font-black text-white text-2xl tracking-tight flex items-center justify-center gap-2">

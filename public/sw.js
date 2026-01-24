@@ -2,8 +2,8 @@ const CACHE_NAME = 'ysg-sales-v1';
 const ASSETS = [
     '/',
     '/manifest.json',
-    '/logo.jpg',
-    '/pwa-icon.jpg',
+    '/logo.png',
+    '/pwa-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
