@@ -809,8 +809,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const updateStaff = async (member: StaffMember) => {
         const { id, ...data } = member
+
+        // 1. Update Staff Document
         await updateDoc(doc(db, "staff", id), sanitizeData(data))
-        toast.success("تم تحديث بيانات الموظف")
+
+        // 2. Update User Document (Critical for Permissions/Auth)
+        await setDoc(doc(db, "users", id), {
+            id,
+            name: member.name,
+            role: member.role,
+            email: member.email, // Keep email synced
+            permissions: member.role === "admin"
+                ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
+                : member.permissions
+        }, { merge: true })
+
+        toast.success("تم تحديث بيانات الموظف والصلاحيات")
     }
 
     const deleteStaff = async (memberId: string) => {

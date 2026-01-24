@@ -10,33 +10,95 @@ import { Label } from "@/components/ui/label"
 import { Trash2, CheckCircle, Circle, PlusSquare } from "lucide-react"
 
 export function StaffManager() {
-    const { staff, addStaff, deleteStaff } = useStore()
+    const { staff, addStaff, deleteStaff, updateStaff, currentUser } = useStore()
     const [isAdding, setIsAdding] = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const [newStaff, setNewStaff] = useState({
         name: "",
-
         username: "",
         password: "",
         role: "staff" as "admin" | "staff",
         permissions: ["orders"] as string[]
     })
 
-    const handleAdd = () => {
-        if (!newStaff.name || !newStaff.username || !newStaff.password) {
-            toast.error("يرجى إكمال جميع البيانات")
+    const resetForm = () => {
+        setNewStaff({ name: "", username: "", password: "", role: "staff", permissions: ["orders"] })
+        setIsAdding(false)
+        setEditingId(null)
+    }
+
+    const handleSave = () => {
+        if (!newStaff.name || !newStaff.username) {
+            toast.error("يرجى إكمال البيانات الأساسية")
             return
         }
 
-        const generatedEmail = `${newStaff.username}@ysg.local`
-        addStaff({ ...newStaff, email: generatedEmail })
+        if (editingId) {
+            // Update existing
+            const staffMember = staff.find(s => s.id === editingId)
+            if (staffMember) {
+                updateStaff({
+                    ...staffMember,
+                    name: newStaff.name,
+                    role: newStaff.role,
+                    permissions: newStaff.role === "admin" ? [] : newStaff.permissions, // Admin gets full perms implicitly in backend or UI logic
+                    email: staffMember.email // Keep original email/username
+                })
+            }
+            resetForm()
+        } else {
+            // Add new
+            if (!newStaff.password) {
+                toast.error("كلمة المرور مطلوبة للحساب الجديد")
+                return
+            }
+            const generatedEmail = `${newStaff.username}@ysg.local`
+            addStaff({ ...newStaff, email: generatedEmail })
+            resetForm()
+        }
+        hapticFeedback('success')
+    }
 
-        setNewStaff({ name: "", username: "", password: "", role: "staff", permissions: ["orders"] })
-        setIsAdding(false)
+    const startEdit = (member: any) => {
+        // Extract username from email (user@ysg.local -> user) or use name if not standard
+        const username = member.email.includes("@ysg.local") ? member.email.split("@")[0] : member.email
+        setNewStaff({
+            name: member.name,
+            username: username,
+            password: "", // Password not editable directly here for security/complexity, or maybe optional?
+            role: member.role,
+            permissions: member.permissions || []
+        })
+        setEditingId(member.id)
+        setIsAdding(true)
+    }
+
+    const addCurrentUser = () => {
+        if (!currentUser) return
+
+        // Check if already exists
+        if (staff.some(s => s.id === currentUser.id)) {
+            toast.info("أنت موجود بالفعل في قائمة الموظفين")
+            return
+        }
+
+        const staffData = {
+            id: currentUser.id, // Important to reuse ID
+            name: currentUser.name,
+            email: currentUser.username || currentUser.email || "user@local",
+            role: "admin" as const,
+            permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
+            password: "existing_user" // Dummy password as auth is already handled
+        }
+
+        // We use addStaff but simpler
+        addStaff(staffData)
+        toast.success("تم إضافة حسابك الحالي كمسؤول")
         hapticFeedback('success')
     }
 
     const togglePermission = (perm: string) => {
-        if (newStaff.role === "admin") return; // Admins have all perms
+        if (newStaff.role === "admin") return;
         setNewStaff(prev => ({
             ...prev,
             permissions: prev.permissions.includes(perm)
@@ -57,6 +119,24 @@ export function StaffManager() {
 
     return (
         <div className="space-y-4">
+            {/* Add Current User Shortcut */}
+            {currentUser && !staff.some(s => s.id === currentUser.id) && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold">
+                            {currentUser.name.charAt(0)}
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-white">حسابك الحالي ({currentUser.name})</p>
+                            <p className="text-[10px] text-emerald-400">لست في قائمة الموظفين بعد</p>
+                        </div>
+                    </div>
+                    <Button size="sm" onClick={addCurrentUser} className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs h-8">
+                        إضافة كمسؤول
+                    </Button>
+                </div>
+            )}
+
             <div className="space-y-2">
                 {staff.map(member => (
                     <div key={member.id} className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between group">
@@ -64,10 +144,19 @@ export function StaffManager() {
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-bold text-white">{member.name}</p>
                                 {member.role === "admin" && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">مسؤول</span>}
+                                {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
                             </div>
                             <p className="text-[10px] text-slate-500">{member.email.split('@')[0]} • {member.permissions.length} صلاحيات</p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 text-xs"
+                                onClick={() => startEdit(member)}
+                            >
+                                تعديل
+                            </Button>
                             <Button
                                 size="sm"
                                 variant="ghost"
@@ -83,6 +172,10 @@ export function StaffManager() {
 
             {isAdding ? (
                 <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-bold text-primary">{editingId ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}</h3>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <Label className="text-[10px]">الاسم</Label>
@@ -100,19 +193,22 @@ export function StaffManager() {
                                 value={newStaff.username}
                                 onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
                                 className="bg-black/40 h-10 text-xs text-right dir-rtl"
+                                disabled={!!editingId} // Disable username edit to prevent email mismatches
                             />
                         </div>
                     </div>
-                    <div className="space-y-1">
-                        <Label className="text-[10px]">كلمة المرور</Label>
-                        <Input
-                            type="password"
-                            placeholder="••••••••"
-                            value={newStaff.password}
-                            onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                            className="bg-black/40 h-10 text-xs"
-                        />
-                    </div>
+                    {!editingId && (
+                        <div className="space-y-1">
+                            <Label className="text-[10px]">كلمة المرور</Label>
+                            <Input
+                                type="password"
+                                placeholder="••••••••"
+                                value={newStaff.password}
+                                onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
+                                className="bg-black/40 h-10 text-xs"
+                            />
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label className="text-[10px]">نوع الحساب</Label>
@@ -153,8 +249,8 @@ export function StaffManager() {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                        <Button className="flex-1 h-10 text-xs" onClick={handleAdd}>إضافة</Button>
-                        <Button variant="ghost" className="h-10 text-xs" onClick={() => setIsAdding(false)}>إلغاء</Button>
+                        <Button className="flex-1 h-10 text-xs" onClick={handleSave}>{editingId ? "حفظ التعديلات" : "إضافة"}</Button>
+                        <Button variant="ghost" className="h-10 text-xs" onClick={resetForm}>إلغاء</Button>
                     </div>
                 </div>
             ) : (
