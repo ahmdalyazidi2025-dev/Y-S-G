@@ -248,10 +248,10 @@ export default function CustomersPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                                             <div className="flex items-center gap-1">
                                                 <ShieldCheck className="w-3 h-3 text-teal-500" />
-                                                <span>{customer.email}</span>
+                                                <span className="truncate max-w-[100px] sm:max-w-auto">{customer.email}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Phone className="w-3 h-3" />
