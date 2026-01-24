@@ -280,7 +280,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         <Label className="text-slate-400 text-[10px] pr-1 text-right block w-full">تاريخ ووقت انتهاء العرض</Label>
                                         <Input
                                             type="datetime-local"
-                                            className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50"
+                                            dir="ltr" // Force LTR for correct date/time format display
+                                            className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50 text-center font-mono"
                                             value={formData.discountEndDate}
                                             onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
                                             required={showCountdown}
