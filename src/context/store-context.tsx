@@ -66,7 +66,8 @@ export interface Customer {
     id: string
     name: string
     email: string
-    password?: string // Optional now as it's in Auth
+    username?: string // Added for better tracking
+    password?: string // Should not store plain text ideally, but existing logic does
     phone: string
     location: string
     lastActive?: Date | null
@@ -658,44 +659,51 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف القسم")
     }
 
-    const addCustomer = async (data: Omit<Customer, "id">) => {
+    const addCustomer = async (data: Omit<Customer, "id" | "createdAt"> & { password?: string, username?: string, email?: string }) => {
         try {
-            // 1. Create Auth User using Secondary App (to keep Admin logged in)
+            // 1. Determine Email & Username
+            // If email is provided (Recovery Email), use it. Otherwise generate fake one.
+            const username = data.username || data.name.replace(/\s/g, '').toLowerCase();
+            const email = data.email && data.email.includes('@') ? data.email : `${username}@ysg.local`;
+            const password = data.password || "123456"; // Default if not provided
+
+            // 2. Create Auth User
             const secondaryAuth = getSecondaryAuth();
-
-            // CRITICAL: Set persistence to NONE (in-memory) for the secondary auth instance
-            // This prevents the new user login from overwriting the Admin's session in LocalStorage
-            await setPersistence(secondaryAuth, inMemoryPersistence);
-
-            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, data.email, data.password || "123456");
+            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
             const uid = userCredential.user.uid;
 
-            // 2. Create User Profile in 'users' collection for Auth/Role management
+            // 3. Create Username Mapping (Username -> Real Email)
+            // Always map the username so they can login with it
+            await setDoc(doc(db, "usernames", username.toLowerCase()), {
+                email: email,
+                uid: uid
+            });
+
+            // 4. Create User Profile (for auth/permissions check)
             await setDoc(doc(db, "users", uid), {
                 id: uid,
                 name: data.name,
                 role: "customer",
-                username: data.email, // using email as username for compatibility
-                email: data.email,
-                allowedCategories: data.allowedCategories || "all"
+                email: email,
+                username: username,
+                permissions: [] // Customers don't have admin panel permissions
             });
 
-            // 3. Create Customer Document in 'customers' collection (for store logic)
-            // We use the SAME ID for consistency
+            // 5. Create Customer Document
             await setDoc(doc(db, "customers", uid), sanitizeData({
                 ...data,
                 id: uid,
+                email: email, // Store the actual used email
+                username: username,
                 createdAt: Timestamp.now()
             }))
 
-            // Sign out the secondary auth immediately so it doesn't interfere (just in case)
             await firebaseSignOut(secondaryAuth);
-
             toast.success("تم إضافة العميل بنجاح")
         } catch (error: any) {
             console.error("Add Customer Error:", error);
             if (error.code === 'auth/email-already-in-use') {
-                toast.error("البريد الإلكتروني مستخدم بالفعل")
+                toast.error("البريد الإلكتروني أو اسم المستخدم مستخدم بالفعل")
             } else {
                 toast.error("فشل إضافة العميل: " + error.message)
             }
@@ -704,6 +712,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const updateCustomer = async (id: string, data: Partial<Customer>) => {
         await updateDoc(doc(db, "customers", id), sanitizeData(data))
+
+        // If email changed, we should ideally update Auth email too, but that's complex (requires admin SDK or re-auth).
+        // For now, we update the DB records. If username changed, we update mapping.
+        if (data.username && data.email) {
+            await setDoc(doc(db, "usernames", data.username.toLowerCase()), {
+                email: data.email,
+                uid: id
+            }, { merge: true });
+        }
+
         toast.success("تم تحديث بيانات العميل")
     }
 

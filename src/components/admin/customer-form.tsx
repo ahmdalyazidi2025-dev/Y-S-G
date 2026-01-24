@@ -22,6 +22,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         name: "",
         phone: "",
         username: "",
+        email: "", // Added email field
         password: "",
         location: "",
         allowedCategories: "all" as string[] | "all"
@@ -38,7 +39,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 setFormData({
                     name: initialCustomer.name,
                     phone: initialCustomer.phone,
-                    username: initialCustomer.email.split('@')[0], // Extract username from email
+                    username: initialCustomer.username || initialCustomer.email.split('@')[0],
+                    email: initialCustomer.email.includes('@ysg.local') ? "" : initialCustomer.email, // Only show if real email
                     password: initialCustomer.password || "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
                     allowedCategories: initialCustomer.allowedCategories || "all",
@@ -48,6 +50,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     name: "",
                     phone: "",
                     username: "",
+                    email: "",
                     password: "",
                     location: "",
                     allowedCategories: "all",
@@ -71,14 +74,17 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
     }
 
     const performSave = () => {
-        // Generate email from username (e.g., username@store.local) or use a consistent domain
-        const generatedEmail = `${formData.username}@ysg.local`
+        // Use provided email OR generate fake one based on username
+        const finalEmail = formData.email && formData.email.includes('@')
+            ? formData.email
+            : `${formData.username}@ysg.local`
 
         if (initialCustomer) {
             updateCustomer(initialCustomer.id, {
                 name: formData.name,
                 phone: formData.phone,
-                email: generatedEmail,
+                email: finalEmail,
+                username: formData.username,
                 password: formData.password || undefined,
                 location: formData.location,
                 allowedCategories: formData.allowedCategories
@@ -87,7 +93,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
             addCustomer({
                 name: formData.name,
                 phone: formData.phone,
-                email: generatedEmail,
+                email: finalEmail, // Pass the chosen email
+                username: formData.username,
                 password: formData.password,
                 location: formData.location,
                 allowedCategories: formData.allowedCategories
@@ -165,6 +172,19 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                     onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
                                 />
                                 <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول (إجباري)</p>
+                            </div>
+
+                            {/* Email (Optional for Recovery) */}
+                            <div className="space-y-2">
+                                <Label className="text-right block">البريد الإلكتروني (للاستعادة)</Label>
+                                <Input
+                                    type="email"
+                                    className="bg-black/20 border-white/10 text-right"
+                                    placeholder="example@gmail.com"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                />
+                                <p className="text-[10px] text-yellow-500/80 text-right">هام: أدخل بريد حقيقي لتمكين استعادة كلمة المرور للعميل</p>
                             </div>
 
                             {/* 2. Password */}
