@@ -19,7 +19,7 @@ import { CartDrawer } from "@/components/store/cart-drawer"
 
 
 export default function CustomerHome() {
-    const { products, banners } = useStore()
+    const { products, banners, categories } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -37,6 +37,9 @@ export default function CustomerHome() {
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (product.barcode && product.barcode.includes(searchQuery))
+
+        // Fix: Compare category IDs (assuming product.category stores the ID now, or if it stores name, we need to find the ID)
+        // Store Context usually saves category ID in product.category
         const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory
         return matchesSearch && matchesCategory
     })
@@ -120,20 +123,34 @@ export default function CustomerHome() {
                     <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
                 </div>
 
-                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 no-scrollbar px-4 relative z-10">
-                    {["الكل", "المشروبات", "المعلبات", "المجمدات", "المنظفات"].map((cat) => (
+                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 no-scrollbar px-4 relative z-10 customer-scrollbar">
+                    <button
+                        onClick={() => setSelectedCategory("الكل")}
+                        className={cn(
+                            "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
+                            selectedCategory === "الكل"
+                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
+                                : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                        )}
+                    >
+                        <span className="relative z-10">الكل</span>
+                        {selectedCategory === "الكل" && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                        )}
+                    </button>
+                    {categories.map((cat) => (
                         <button
-                            key={cat}
-                            onClick={() => setSelectedCategory(cat)}
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.id)}
                             className={cn(
-                                "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group",
-                                selectedCategory === cat
+                                "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
+                                selectedCategory === cat.id
                                     ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
                                     : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                             )}
                         >
-                            <span className="relative z-10">{cat}</span>
-                            {selectedCategory === cat && (
+                            <span className="relative z-10">{cat.nameAr}</span>
+                            {selectedCategory === cat.id && (
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                             )}
                         </button>
