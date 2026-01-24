@@ -961,7 +961,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             // Fix for Customer Login: valid customer emails are username@ysg.local
             // If the user enters just "username", we append the domain.
             if (role === "customer" && !finalEmail.includes("@")) {
-                finalEmail = `${finalEmail}@ysg.local`
+                const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
+                finalEmail = `${normalizedUsername}@ysg.local`
             }
 
             console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log

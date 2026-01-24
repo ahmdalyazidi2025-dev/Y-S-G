@@ -83,7 +83,7 @@ export default function AdminChatPage() {
     const currentCustomerName = conversations.find(c => c.customerId === selectedCustomer)?.customerName
 
     return (
-        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+        <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col w-full overflow-hidden relative">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
@@ -176,7 +176,7 @@ export default function AdminChatPage() {
                             <div
                                 key={conv.customerId}
                                 onClick={() => setSelectedCustomer(conv.customerId)}
-                                className="p-4 border-b border-white/5 flex items-center gap-4 hover:bg-white/5 cursor-pointer transition-colors active:bg-white/10"
+                                className="p-4 border-b border-white/5 flex items-center gap-4 hover:bg-white/5 cursor-pointer transition-colors active:bg-white/10 w-full"
                             >
                                 <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-slate-400 relative">
                                     <User className="w-6 h-6" />
