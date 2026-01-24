@@ -7,22 +7,23 @@ import { hapticFeedback } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, CheckCircle, Circle, PlusSquare } from "lucide-react"
+import { Trash2, CheckCircle, Circle, PlusSquare, Lock, Edit } from "lucide-react"
 
 export function StaffManager() {
-    const { staff, addStaff, deleteStaff, updateStaff, currentUser } = useStore()
+    const { staff, addStaff, deleteStaff, updateStaff, currentUser, resetPassword } = useStore() // Added resetPassword
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [newStaff, setNewStaff] = useState({
         name: "",
         username: "",
+        email: "", // Added
         password: "",
         role: "staff" as "admin" | "staff",
         permissions: ["orders"] as string[]
     })
 
     const resetForm = () => {
-        setNewStaff({ name: "", username: "", password: "", role: "staff", permissions: ["orders"] })
+        setNewStaff({ name: "", username: "", email: "", password: "", role: "staff", permissions: ["orders"] })
         setIsAdding(false)
         setEditingId(null)
     }
@@ -52,19 +53,39 @@ export function StaffManager() {
                 toast.error("كلمة المرور مطلوبة للحساب الجديد")
                 return
             }
-            const generatedEmail = `${newStaff.username}@ysg.local`
-            addStaff({ ...newStaff, email: generatedEmail })
+
+            // Should we force a real email? 
+            // If user puts an email, use it. If not, auto-generate (legacy) but warn regarding reset?
+            // The prompt implies we WANT to support recovery. So let's default to auto-gen if empty, BUT allow input.
+            // Better: use username logic to generate email only if email is empty.
+
+            let finalEmail = newStaff.email
+            if (!finalEmail) {
+                finalEmail = `${newStaff.username}@ysg.local`
+            }
+
+            addStaff({
+                ...newStaff,
+                email: finalEmail
+                // username is passed spread from newStaff 
+            })
             resetForm()
         }
         hapticFeedback('success')
     }
 
     const startEdit = (member: any) => {
-        // Extract username from email (user@ysg.local -> user) or use name if not standard
-        const username = member.email.includes("@ysg.local") ? member.email.split("@")[0] : member.email
+        // Extract username from email (user@ysg.local -> user) or lookup?
+        // Ideally we should have saved username in the staff doc, but if not we guess it.
+        // If it's a real email, username is not obvious unless we saved it.
+        // Let's assume for editing we just show the email.
+        const isLegacy = member.email.includes("@ysg.local")
+        const username = member.username || (isLegacy ? member.email.split("@")[0] : "")
+
         setNewStaff({
             name: member.name,
             username: username,
+            email: member.email,
             password: "", // Password not editable directly here for security/complexity, or maybe optional?
             role: member.role,
             permissions: member.permissions || []
@@ -157,6 +178,20 @@ export function StaffManager() {
                             >
                                 تعديل
                             </Button>
+
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 rounded-lg text-emerald-400 hover:bg-emerald-400/10 text-xs"
+                                onClick={() => {
+                                    if (confirm("هل أنت متأكد من إرسال رابط استعادة كلمة المرور لهذا المستخدم؟")) {
+                                        resetPassword(member.email)
+                                    }
+                                }}
+                            >
+                                <Lock className="w-4 h-4" />
+                            </Button>
+
                             <Button
                                 size="sm"
                                 variant="ghost"
@@ -196,6 +231,17 @@ export function StaffManager() {
                                 disabled={!!editingId} // Disable username edit to prevent email mismatches
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <Label className="text-[10px]">البريد الإلكتروني (للاستعادة)</Label>
+                        <Input
+                            placeholder="email@example.com (اختياري)"
+                            value={newStaff.email}
+                            onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                            className="bg-black/40 h-10 text-xs text-right"
+                        />
+                        <p className="text-[9px] text-slate-500">يفضل استخدام بريد حقيقي لاستعادة كلمة المرور</p>
                     </div>
                     {!editingId && (
                         <div className="space-y-1">

@@ -16,7 +16,8 @@ import {
     onAuthStateChanged,
     User as FirebaseUser,
     setPersistence,
-    inMemoryPersistence
+    inMemoryPersistence,
+    sendPasswordResetEmail // Added
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
 
@@ -235,6 +236,7 @@ type StoreContextType = {
     sendGlobalMessage: (text: string) => void
     updateAdminCredentials: (username: string, password: string) => Promise<void>
     authInitialized: boolean
+    resetPassword: (email: string) => Promise<boolean> // Added
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -772,10 +774,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.info(text, { duration: 5000, icon: "🔔" })
     }
 
+    // Helper: Reset Password
+    const resetPassword = async (email: string) => {
+        try {
+            await sendPasswordResetEmail(auth, email)
+            toast.success("تم إرسال رابط استعادة كلمة المرور للبريد الإلكتروني")
+            return true
+        } catch (error: any) {
+            console.error("Reset Password Error:", error)
+            toast.error("فشل إرسال الرابط: " + error.message)
+            return false
+        }
+    }
+
     const addStaff = async (member: Omit<StaffMember, "id" | "createdAt" | "role"> & { password?: string, role: "admin" | "staff" }) => {
         try {
             // 1. Create Auth User
             const secondaryAuth = getSecondaryAuth();
+            // Use the real email provided in member.email
             const userCredential = await createUserWithEmailAndPassword(secondaryAuth, member.email, member.password || "123456");
             const uid = userCredential.user.uid;
 
@@ -785,13 +801,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 name: member.name,
                 role: member.role, // Use the passed role
                 email: member.email,
+                username: member.name, // Store username for reference if needed, but key is the mapping
                 permissions: member.role === "admin"
                     ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"] // Full perms for admin
                     : member.permissions
             });
 
-            // 3. Create Staff Document (Even admins can be in staff for listing purposes, or we create a separate collection? 
-            // The current UI lists 'staff'. Let's keep them in 'staff' collection for visibility in the StaffManager list)
+            // 3. Create Username Mapping (Username -> Real Email)
+            // Extract username from existing logic or we should ask for it explicitly?
+            // For now, let's assume the UI passes a "username" field in member or we derive it.
+            // But member type in arg doesn't have username explicit property in StaffMember type usually?
+            // Let's modify the generic arg to include username if possible, or just rely on the UI passing it in `member` object as extra prop.
+            // Casting member to any to extract username if it exists
+            const username = (member as any).username;
+            if (username) {
+                const normalizedUsername = username.toLowerCase().trim();
+                await setDoc(doc(db, "usernames", normalizedUsername), {
+                    email: member.email,
+                    uid: uid
+                });
+            }
+
+            // 4. Create Staff Document
             await setDoc(doc(db, "staff", uid), sanitizeData({
                 ...member,
                 id: uid,
@@ -800,10 +831,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
 
             await firebaseSignOut(secondaryAuth);
-            toast.success("تم إضافة المستخدم بنجاح")
+            toast.success("تم إضافة الموظف وإعداد الدخول")
         } catch (error: any) {
             console.error("Add Staff Error:", error);
-            toast.error("فشل إضافة المستخدم: " + error.message)
+            toast.error("فشل إضافة الموظف: " + error.message)
         }
     }
 
@@ -983,6 +1014,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 finalEmail = `${normalizedUsername}@ysg.local`
             }
 
+            // Fix for Admin/Staff Login using Username
+            if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
+                // Check 'usernames' collection for mapping
+                try {
+                    const normalizedUsername = finalEmail.toLowerCase().trim()
+                    const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
+
+                    if (usernameDoc.exists()) {
+                        finalEmail = usernameDoc.data().email
+                        console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
+                    } else {
+                        // Fallback to legacy behavior just in case
+                        finalEmail = `${normalizedUsername}@ysg.local`
+                    }
+                } catch (err) {
+                    console.error("Username lookup failed:", err)
+                    // Fallback
+                    finalEmail = `${finalEmail}@ysg.local`
+                }
+            }
+
             console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
 
             await signInWithEmailAndPassword(auth, finalEmail, password)
@@ -1033,7 +1085,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized
+            updateAdminCredentials, authInitialized, resetPassword
         }}>
             {children}
         </StoreContext.Provider>
