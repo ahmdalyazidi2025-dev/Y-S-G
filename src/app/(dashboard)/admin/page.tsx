@@ -238,12 +238,29 @@ export default function AdminDashboard() {
                                 {idx !== 4 && (
                                     <div className="absolute right-[19px] top-8 bottom-[-24px] w-[2px] bg-white/5 group-hover:bg-white/10 transition-colors" />
                                 )}
-                                <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 z-10 group-hover:scale-110 transition-transform">
-                                    <ShoppingBag className="w-4 h-4 text-blue-400" />
+
+                                {/* Customer Avatar / Name Bubble */}
+                                <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 z-10 group-hover:scale-110 transition-transform overflow-hidden">
+                                    <span className="text-[10px] font-bold text-blue-400 text-center leading-tight px-1">
+                                        {o.customerName.split(" ").slice(0, 2).map(n => n[0]).join("")}
+                                    </span>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-bold text-white">طلب جديد #{o.id}</p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{o.customerName} • {o.total} ر.س</p>
+
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{o.customerName}</p>
+                                            <p className="text-[10px] text-slate-400 mt-0.5">طلب #{o.id} • {o.total} ر.س</p>
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-white/5 px-2 py-1 rounded-full">
+                                                <Clock className="w-3 h-3" />
+                                                <time>{new Date(o.createdAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}</time>
+                                                <span className="mx-0.5">-</span>
+                                                <time>{new Date(o.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</time>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}

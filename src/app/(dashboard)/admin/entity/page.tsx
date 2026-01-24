@@ -165,7 +165,7 @@ function SecuritySettings() {
     return (
         <div className="space-y-6">
             {/* Gemini API Key Section */}
-            <div className="space-y-2 p-4 bg-primary/10 border border-primary/20 rounded-xl">
+            <div className="space-y-4 p-4 bg-primary/10 border border-primary/20 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">✨</span>
                     <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
@@ -173,6 +173,24 @@ function SecuritySettings() {
                 <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
                 <div className="flex gap-2">
                     <ApiKeyInput />
+                </div>
+
+                {/* Advanced Gemini Settings */}
+                <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+                    <Label className="text-white font-bold flex items-center gap-2">
+                        <span className="text-lg">🤖</span>
+                        تخصيص المساعد (اختياري)
+                    </Label>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">تعليمات خاصة (Custom Prompt) - مثال: "ركز دائماً على الماركة"</Label>
+                        <CustomPromptInput />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">رابط صورة مرجعية (للمقارنة)</Label>
+                        <ReferenceImageInput />
+                    </div>
                 </div>
             </div>
 
@@ -243,5 +261,50 @@ function ApiKeyInput() {
                 حفظ المفتاح
             </Button>
         </div>
+    )
+}
+
+function CustomPromptInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [value, setValue] = useState(storeSettings.geminiCustomPrompt || "")
+
+    // Debounce save or save on blur
+    const handleBlur = () => {
+        if (value !== storeSettings.geminiCustomPrompt) {
+            updateStoreSettings({ ...storeSettings, geminiCustomPrompt: value })
+            toast.success("تم حفظ التعليمات الخاصة")
+        }
+    }
+
+    return (
+        <textarea
+            className="w-full bg-black/20 border-white/10 rounded-xl p-3 text-sm h-24 focus:ring-1 focus:ring-primary outline-none resize-none text-right"
+            placeholder="اكتب تعليماتك هنا..."
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+        />
+    )
+}
+
+function ReferenceImageInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [value, setValue] = useState(storeSettings.geminiReferenceImageUrl || "")
+
+    const handleBlur = () => {
+        if (value !== storeSettings.geminiReferenceImageUrl) {
+            updateStoreSettings({ ...storeSettings, geminiReferenceImageUrl: value })
+            toast.success("تم حفظ رابط الصورة المرجعية")
+        }
+    }
+
+    return (
+        <Input
+            className="bg-black/20 border-white/10 text-left ltr"
+            placeholder="https://example.com/reference-image.jpg"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+        />
     )
 }

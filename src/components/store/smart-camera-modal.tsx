@@ -89,7 +89,12 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         }
 
         try {
-            const result = await analyzeImageWithGemini(storeSettings.googleGeminiApiKey, imageBase64)
+            const result = await analyzeImageWithGemini(
+                storeSettings.googleGeminiApiKey,
+                imageBase64,
+                storeSettings.geminiCustomPrompt,
+                storeSettings.geminiReferenceImageUrl
+            )
             setAnalysisResult(JSON.stringify(result))
         } catch (error) {
             console.error("Analysis Failed:", error)

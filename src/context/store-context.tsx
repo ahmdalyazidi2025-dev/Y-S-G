@@ -952,12 +952,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
         try {
-            await signInWithEmailAndPassword(auth, email, password)
+            let finalEmail = email.trim()
+
+            // Fix for Customer Login: valid customer emails are username@ysg.local
+            // If the user enters just "username", we append the domain.
+            if (role === "customer" && !finalEmail.includes("@")) {
+                finalEmail = `${finalEmail}@ysg.local`
+            }
+
+            console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
+
+            await signInWithEmailAndPassword(auth, finalEmail, password)
             // The onAuthStateChanged hook will handle setting the currentUser
             return true
         } catch (error: any) {
             console.error("Login Error:", error)
-            toast.error("خطأ في تسجيل الدخول: تأكد من البيانات")
+
+            // Nice error handling
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                toast.error("بيانات الدخول غير صحيحة")
+            } else if (error.code === 'auth/invalid-email') {
+                toast.error("صيغة اسم المستخدم غير صحيحة")
+            } else {
+                toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
+            }
+
             return false
         }
     }
