@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, Lock } from "lucide-react"
 import Link from "next/link"
 import { useStore, Customer } from "@/context/store-context"
 import { AdminCustomerForm } from "@/components/admin/customer-form"
@@ -252,6 +252,16 @@ export default function CustomersPage() {
                                             <div className="flex items-center gap-1">
                                                 <ShieldCheck className="w-3 h-3 text-teal-500" />
                                                 <span className="truncate max-w-[100px] sm:max-w-auto">{customer.email}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 cursor-pointer hover:text-white transition-colors" title="اضغط لإظهار/إخفاء كلمة المرور" onClick={(e) => {
+                                                const target = e.currentTarget.querySelector('span');
+                                                if (target) {
+                                                    const isHidden = target.innerText === '••••••';
+                                                    target.innerText = isHidden ? (customer.password || 'غير مسجل') : '••••••';
+                                                }
+                                            }}>
+                                                <Lock className="w-3 h-3 text-rose-500" />
+                                                <span className="font-mono tracking-wider">••••••</span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Phone className="w-3 h-3" />
