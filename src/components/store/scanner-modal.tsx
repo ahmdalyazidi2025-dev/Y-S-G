@@ -72,8 +72,8 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 { facingMode: "environment" },
                 {
                     fps: 10,
-                    qrbox: { width: 300, height: 300 },
-                    aspectRatio: 1.0,
+                    qrbox: { width: 250, height: 250 },
+                    // aspectRatio: 1.0, // Removed to let it fill container naturally
                     disableFlip: false
                 },
                 (decodedText) => {
@@ -180,8 +180,8 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                <div className="relative aspect-video overflow-hidden rounded-2xl bg-black/40 border border-white/10">
-                                    <div id="reader" className="w-full h-full" />
+                                <div className="relative aspect-[3/4] sm:aspect-video overflow-hidden rounded-2xl bg-black border border-white/10">
+                                    <div id="reader" className="w-full h-full [&>video]:object-cover [&>video]:w-full [&>video]:h-full" />
                                     <div className="absolute inset-0 border-2 border-primary/50 m-6 rounded-lg pointer-events-none">
                                         <div className="absolute inset-0 animate-pulse bg-primary/5 text-center flex items-end justify-center pb-2">
                                             <span className="text-[10px] text-primary/50 uppercase tracking-widest">Bar-code Guide</span>
