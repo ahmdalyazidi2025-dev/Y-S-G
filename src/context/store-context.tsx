@@ -174,6 +174,8 @@ export type StoreSettings = {
     requireCustomerInfoOnCheckout: boolean
     googleGeminiApiKey?: string
     logoUrl?: string
+    geminiCustomPrompt?: string
+    geminiReferenceImageUrl?: string
 }
 
 type StoreContextType = {
@@ -256,6 +258,8 @@ const MOCK_SETTINGS: StoreSettings = {
     requireCustomerInfoOnCheckout: false,
     googleGeminiApiKey: "", // Added default empty key
     logoUrl: "", // Optional store logo URL for branding
+    geminiCustomPrompt: "",
+    geminiReferenceImageUrl: "",
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
