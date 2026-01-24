@@ -50,7 +50,7 @@ export default function CustomerHome() {
             <div className="min-h-screen w-full overflow-x-hidden text-right bg-background relative pb-32">
 
                 {/* HERO BANNER SECTION (Full Bleed Background) */}
-                <div className="absolute top-0 left-0 right-0 h-[450px] w-full z-0 overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-[450px] w-full z-0 overflow-hidden rounded-b-[3rem] shadow-2xl">
                     {activeBanners.length > 0 ? (
                         <div className="relative w-full h-full">
                             {/* Carousel or Single Banner Logic */}
