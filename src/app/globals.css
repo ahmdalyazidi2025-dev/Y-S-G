@@ -185,6 +185,7 @@ body {
     color: hsl(var(--foreground));
     overflow-x: hidden;
     padding-bottom: env(safe-area-inset-bottom);
+    width: 100%;
 }
 
 ::-webkit-scrollbar {

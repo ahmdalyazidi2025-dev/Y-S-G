@@ -26,7 +26,7 @@ export default function AdminLayout({
                 <AdminMobileNav />
 
                 {/* Main Content */}
-                <main className="flex-1 p-4 lg:pr-72 pb-24 lg:pb-4 relative z-10">
+                <main className="flex-1 w-full p-4 lg:pr-72 pb-24 lg:pb-4 relative z-10 overflow-x-hidden">
                     {children}
                 </main>
             </div>
