@@ -85,7 +85,7 @@ export function StaffManager() {
         const staffData = {
             id: currentUser.id, // Important to reuse ID
             name: currentUser.name,
-            email: currentUser.username || currentUser.email || "user@local",
+            email: currentUser.username.includes('@') ? currentUser.username : `${currentUser.username}@ysg.local`,
             role: "admin" as const,
             permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
             password: "existing_user" // Dummy password as auth is already handled
