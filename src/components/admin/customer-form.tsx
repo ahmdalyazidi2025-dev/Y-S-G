@@ -16,6 +16,7 @@ interface CustomerFormProps {
 
 export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: CustomerFormProps) {
     const { addCustomer, updateCustomer } = useStore()
+    const [showConfirm, setShowConfirm] = useState(false)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -27,7 +28,10 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
     })
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen) {
+            setShowConfirm(false);
+            return;
+        }
 
         const timer = setTimeout(() => {
             if (initialCustomer) {
@@ -54,11 +58,20 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         return () => clearTimeout(timer);
     }, [initialCustomer, isOpen])
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleInitialSubmit = (e: React.FormEvent) => {
         e.preventDefault()
 
+        // Check for missing optional fields
+        if (!formData.phone || !formData.location) {
+            setShowConfirm(true)
+        } else {
+            console.log("All fields present, saving directly")
+            performSave()
+        }
+    }
+
+    const performSave = () => {
         // Generate email from username (e.g., username@store.local) or use a consistent domain
-        // Ideally, we should ensure uniqueness in the backend or handle errors if it exists.
         const generatedEmail = `${formData.username}@ysg.local`
 
         if (initialCustomer) {
@@ -80,6 +93,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 allowedCategories: formData.allowedCategories
             } as any)
         }
+        setShowConfirm(false)
         onClose()
     }
 
@@ -94,6 +108,38 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                         onClick={onClose}
                         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                     />
+
+                    {/* Confirmation Modal */}
+                    <AnimatePresence>
+                        {showConfirm && (
+                            <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    className="bg-slate-900 border border-white/10 p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl"
+                                >
+                                    <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <Hash className="w-8 h-8 text-yellow-500" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white">بيانات ناقصة!</h3>
+                                    <p className="text-slate-400 text-sm">
+                                        لم تقم بتعبئة بعض البيانات الاختيارية (الهاتف أو الموقع). <br />
+                                        هل أنت متأكد من الحفظ بدونها؟
+                                    </p>
+                                    <div className="flex gap-3 pt-2">
+                                        <Button onClick={performSave} className="flex-1 bg-primary text-white font-bold h-11 rounded-xl">
+                                            نعم، حفظ
+                                        </Button>
+                                        <Button onClick={() => setShowConfirm(false)} variant="outline" className="flex-1 border-white/10 hover:bg-white/5 h-11 rounded-xl">
+                                            لا، العودة
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -107,46 +153,21 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>اسم العميل</Label>
-                                <div className="relative">
-                                    <User className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
-                                    <Input
-                                        required
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
+                        <form onSubmit={handleInitialSubmit} className="space-y-4">
+                            {/* 1. Username */}
                             <div className="space-y-2">
                                 <Label className="text-right block">اسم المستخدم (للدخول)</Label>
                                 <Input
                                     required
-                                    className="bg-black/20 border-white/10 text-right"
+                                    className="bg-black/20 border-white/10 text-right font-bold text-primary"
                                     placeholder="username"
                                     value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '').toLowerCase() })} // Force lowercase and no spaces
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
                                 />
-                                <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول</p>
+                                <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول (إجباري)</p>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>رقم الهاتف</Label>
-                                <div className="relative">
-                                    <Phone className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
-                                    <Input
-                                        required
-                                        type="tel"
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
+                            {/* 2. Password */}
                             <div className="space-y-2">
                                 <Label>{initialCustomer ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}</Label>
                                 <div className="relative">
@@ -161,12 +182,40 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                 </div>
                             </div>
 
+                            {/* 3. Name */}
                             <div className="space-y-2">
-                                <Label>الموقع (المدينة)</Label>
+                                <Label>اسم العميل</Label>
+                                <div className="relative">
+                                    <User className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Input
+                                        required
+                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* 4. Phone (Optional) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-400">رقم الهاتف (اختياري)</Label>
+                                <div className="relative">
+                                    <Phone className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Input
+                                        type="tel"
+                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* 5. Location (Optional) */}
+                            <div className="space-y-2">
+                                <Label className="text-slate-400">الموقع (اختياري)</Label>
                                 <div className="relative">
                                     <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
                                     <Input
-                                        required
                                         className="bg-black/20 border-white/10 pr-10 text-right"
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}

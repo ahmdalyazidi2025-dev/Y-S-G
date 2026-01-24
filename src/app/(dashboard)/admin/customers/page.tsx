@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import { PasswordReveal } from "@/components/admin/password-reveal"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -253,16 +254,9 @@ export default function CustomersPage() {
                                                 <ShieldCheck className="w-3 h-3 text-teal-500" />
                                                 <span className="truncate max-w-[100px] sm:max-w-auto">{customer.email}</span>
                                             </div>
-                                            <div className="flex items-center gap-1 cursor-pointer hover:text-white transition-colors" title="اضغط لإظهار/إخفاء كلمة المرور" onClick={(e) => {
-                                                const target = e.currentTarget.querySelector('span');
-                                                if (target) {
-                                                    const isHidden = target.innerText === '••••••';
-                                                    target.innerText = isHidden ? (customer.password || 'غير مسجل') : '••••••';
-                                                }
-                                            }}>
-                                                <Lock className="w-3 h-3 text-rose-500" />
-                                                <span className="font-mono tracking-wider">••••••</span>
-                                            </div>
+
+                                            <PasswordReveal password={customer.password} />
+
                                             <div className="flex items-center gap-1">
                                                 <Phone className="w-3 h-3" />
                                                 <span>{customer.phone}</span>
