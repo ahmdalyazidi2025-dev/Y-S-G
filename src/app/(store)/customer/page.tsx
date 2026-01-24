@@ -16,6 +16,7 @@ import RequestModal from "@/components/store/request-modal"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { CustomerNotifications } from "@/components/store/customer-notifications"
+import { HeroBanner } from "@/components/store/hero-banner"
 
 
 
@@ -49,56 +50,8 @@ export default function CustomerHome() {
         <PullToRefresh onRefresh={handleRefresh}>
             <div className="min-h-screen w-full overflow-x-hidden text-right bg-background relative pb-32">
 
-                {/* HERO BANNER SECTION (Full Bleed Background) */}
-                <div className="absolute top-0 left-0 right-0 h-[450px] w-full z-0 overflow-hidden rounded-b-[3rem] shadow-2xl">
-                    {activeBanners.length > 0 ? (
-                        <div className="relative w-full h-full">
-                            {/* Carousel or Single Banner Logic */}
-                            {activeBanners.map((banner, idx) => (
-                                <div key={idx} className={cn("absolute inset-0 transition-opacity duration-1000", idx === 0 ? "opacity-100" : "opacity-0 pointer-events-none")}>
-                                    {/* Note: Simple mapping showing first one for now or we build a proper carousel. 
-                                    Given existing code just mapped them, we will show the first active one as the main hero 
-                                    or standard fade if multiple. For complex carousel, we need state. 
-                                    Let's stick to showing the first one as Hero for simplicity/stability request 
-                                    or stack them. Let's stack them and only show the first one to avoid mess 
-                                    until a proper carousel state is added if needed. 
-                                    Actually, user layout request implies a single immersive look.
-                                    Let's use the first active banner as the Hero.
-                                */}
-                                    <Image
-                                        src={banner.image}
-                                        alt={banner.title || "banner"}
-                                        fill
-                                        sizes="100vw"
-                                        priority
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                    {/* Gradient Overlays */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/30" />
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent opacity-80" />
-
-                                    {/* Banner Text Content */}
-                                    <div className="absolute inset-x-0 bottom-32 px-6 flex flex-col items-start justify-end h-full pb-10">
-                                        <div className="bg-primary/90 backdrop-blur-md border border-primary/20 px-4 py-1.5 rounded-full text-white text-xs font-bold mb-4 shadow-lg shadow-primary/20 transform translate-y-2 opacity-90">
-                                            عروض حصرية 🔥
-                                        </div>
-                                        <h2 className="text-4xl sm:text-5xl font-black text-white drop-shadow-2xl mb-3 leading-tight max-w-lg">
-                                            {banner.title || "تخفيضات الموسم"}
-                                        </h2>
-                                        <p className="text-base sm:text-lg text-slate-200 font-medium max-w-xl opacity-90 leading-relaxed drop-shadow-md">
-                                            {banner.description || "استفد من خصومات حصرية لفترة محدودة على جميع المنتجات الجديدة"}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-                            <span className="text-slate-500 font-medium">لا توجد عروض حالياً</span>
-                        </div>
-                    )}
-                </div>
+                {/* HERO BANNER SECTION */}
+                <HeroBanner />
 
                 {/* HEADER CONTENT (Search, Profile, Bell) */}
                 <div className="relative z-10 px-4 pt-6 mb-44"> {/* Margin bottom pushes content down below the banner text area */}
