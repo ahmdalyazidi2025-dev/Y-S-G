@@ -135,7 +135,7 @@ export function StaffManager() {
         { id: "customers", label: "العملاء" },
         { id: "settings", label: "الإعدادات" },
         { id: "chat", label: "المحادثات" },
-        { id: "sales", label: "المبيعات" },
+        { id: "sales", label: "الإحصائيات" },
     ]
 
     return (

@@ -95,44 +95,49 @@ export default function AdminDashboard() {
                 </Button>
             </div>
 
-            {/* Premium Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <AnimatePresence mode="wait">
-                    {isLoading ? (
-                        [1, 2, 3].map(i => <SkeletonStats key={i} />)
-                    ) : (
-                        <>
-                            <StatsCard
-                                title="إجمالي المبيعات"
-                                value={`${totalSales.toLocaleString()} ر.س`}
-                                icon={TrendingUp}
-                                gradient="from-emerald-500/20 to-teal-500/5"
-                                border="border-emerald-500/20"
-                                iconColor="text-emerald-400"
-                                href="/admin/analytics"
-                            />
-                            <StatsCard
-                                title="الطلبات النشطة"
-                                value={pendingOrders.toString()}
-                                icon={ShoppingBag}
-                                gradient="from-blue-500/20 to-indigo-500/5"
-                                border="border-blue-500/20"
-                                iconColor="text-blue-400"
-                                href="/admin/orders"
-                            />
-                            <StatsCard
-                                title="قاعدة العملاء"
-                                value={customers.length.toString()}
-                                icon={UserCheck}
-                                gradient="from-violet-500/20 to-purple-500/5"
-                                border="border-violet-500/20"
-                                iconColor="text-violet-400"
-                                href="/admin/customers"
-                            />
-                        </>
-                    )}
-                </AnimatePresence>
-            </div>
+
+
+
+            {/* Premium Stats Grid - Only for Admins or Staff with 'sales' permission */}
+            {(currentUser?.role === 'admin' || currentUser?.permissions?.includes('sales')) && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <AnimatePresence mode="wait">
+                        {isLoading ? (
+                            [1, 2, 3].map(i => <SkeletonStats key={i} />)
+                        ) : (
+                            <>
+                                <StatsCard
+                                    title="إجمالي المبيعات"
+                                    value={`${totalSales.toLocaleString()} ر.س`}
+                                    icon={TrendingUp}
+                                    gradient="from-emerald-500/20 to-teal-500/5"
+                                    border="border-emerald-500/20"
+                                    iconColor="text-emerald-400"
+                                    href="/admin/analytics"
+                                />
+                                <StatsCard
+                                    title="الطلبات النشطة"
+                                    value={pendingOrders.toString()}
+                                    icon={ShoppingBag}
+                                    gradient="from-blue-500/20 to-indigo-500/5"
+                                    border="border-blue-500/20"
+                                    iconColor="text-blue-400"
+                                    href="/admin/orders"
+                                />
+                                <StatsCard
+                                    title="قاعدة العملاء"
+                                    value={customers.length.toString()}
+                                    icon={UserCheck}
+                                    gradient="from-violet-500/20 to-purple-500/5"
+                                    border="border-violet-500/20"
+                                    iconColor="text-violet-400"
+                                    href="/admin/customers"
+                                />
+                            </>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
 
             {/* Modern Module Grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

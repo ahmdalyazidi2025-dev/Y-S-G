@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useStore } from "@/context/store-context"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
 import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar } from "lucide-react"
@@ -13,7 +14,14 @@ import { cn } from "@/lib/utils"
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function AnalyticsPage() {
-    const { orders } = useStore()
+    const { orders, currentUser } = useStore()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (currentUser && currentUser.role !== 'admin' && !currentUser.permissions?.includes('sales')) {
+            router.push('/admin')
+        }
+    }, [currentUser, router])
 
     const [timeRange, setTimeRange] = useState<"day" | "week" | "month" | "year" | "custom">("week")
     const [customStart, setCustomStart] = useState("")
@@ -217,8 +225,8 @@ export default function AnalyticsPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="glass-card border-white/5 bg-emerald-500/5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <Card className="glass-card border-white/5 bg-emerald-500/5 col-span-2">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-emerald-400 font-bold">إجمالي الإيرادات</CardDescription>
                         <CardTitle className="text-2xl text-white flex items-center gap-2">
@@ -227,29 +235,36 @@ export default function AnalyticsPage() {
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-blue-500/5">
+                <Card className="glass-card border-white/5 bg-blue-500/5 col-span-2 md:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-blue-400 font-bold">إجمالي الطلبات</CardDescription>
+                        <CardDescription className="text-blue-400 font-bold">الطلبات النشطة</CardDescription>
                         <CardTitle className="text-2xl text-white flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
-                            {orders.length}
+                            {orders.filter(o => o.status === "processing" || o.status === "pending").length}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-purple-500/5">
+                <Card className="glass-card border-white/5 bg-violet-500/5 col-span-2 md:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-purple-400 font-bold">المنتجات المباعة</CardDescription>
+                        <CardDescription className="text-violet-400 font-bold">قاعدة العملاء</CardDescription>
                         <CardTitle className="text-2xl text-white flex items-center gap-2">
                             <Package className="w-5 h-5" />
+                            {useStore().customers.length}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
+                <Card className="glass-card border-white/5 bg-purple-500/5 col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-purple-400 font-bold">المنتجات المباعة</CardDescription>
+                        <CardTitle className="text-lg text-white">
                             {orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-orange-500/5">
+                <Card className="glass-card border-white/5 bg-orange-500/5 col-span-1">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-orange-400 font-bold">متوسط السلة</CardDescription>
-                        <CardTitle className="text-2xl text-white flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5" />
+                        <CardTitle className="text-lg text-white">
                             {orders.length > 0 ? (totalRevenue / orders.length).toFixed(0) : 0}
                         </CardTitle>
                     </CardHeader>
