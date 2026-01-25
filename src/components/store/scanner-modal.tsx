@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { useStore } from "@/context/store-context"
 import { hapticFeedback } from "@/lib/haptics"
+import { extractBarcodeWithGemini } from "@/lib/gemini"
 
 interface ScannerModalProps {
     isOpen: boolean
@@ -17,7 +18,7 @@ interface ScannerModalProps {
 }
 
 export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan }: ScannerModalProps) {
-    const { scanProduct } = useStore()
+    const { scanProduct, storeSettings } = useStore()
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
     const [showNotFound, setShowNotFound] = useState(false)
@@ -141,13 +142,45 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         const file = e.target.files?.[0]
         if (!file) return
 
+        // 1. Try Standard Scan
         const html5QrCode = new Html5Qrcode("reader")
         try {
             const decodedText = await html5QrCode.scanFile(file, true)
             handleScan(decodedText)
-        } catch {
-            toast.error("لم يتم العثور على باركود في الصورة")
-            hapticFeedback('error')
+        } catch (err) {
+            console.log("Standard scan failed, trying AI...", err)
+
+            // 2. Fallback to Gemini AI
+            try {
+                // Read file as base64
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onloadend = async () => {
+                    const base64data = reader.result as string;
+
+                    if (!storeSettings?.googleGeminiApiKey) {
+                        toast.error("لم يتم العثور على باركود (تأكد من إضاءة الصورة)")
+                        return
+                    }
+
+                    toast.info("جاري استخدام الذكاء الاصطناعي لقراءة الباركود...")
+                    const aiResult = await extractBarcodeWithGemini(
+                        storeSettings.googleGeminiApiKey,
+                        base64data
+                    )
+
+                    if (aiResult.found && aiResult.code) {
+                        toast.success("تم قراءة الباركود بالذكاء الاصطناعي!")
+                        handleScan(aiResult.code)
+                    } else {
+                        toast.error("حتى الذكاء الاصطناعي لم يستطع قراءة الباركود! تأكد من وضوح الصورة")
+                        hapticFeedback('error')
+                    }
+                }
+            } catch (aiError) {
+                console.error(aiError)
+                toast.error("فشل في قراءة الصورة")
+            }
         } finally {
             e.target.value = ""
         }

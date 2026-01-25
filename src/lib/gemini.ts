@@ -97,3 +97,47 @@ export async function analyzeImageWithGemini(
         throw error;
     }
 }
+
+export async function extractBarcodeWithGemini(
+    apiKey: string,
+    imageBase64: string
+) {
+    try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `
+        Look at this image. specifically at any BARCODE or LABEL.
+        Extract the alphanumeric CODE or PART NUMBER written on it or encoded in it.
+        
+        If you see multiple numbers, prefer the one labeled "Part Number" or "P/N" or the largest barcode text.
+        
+        Return JSON format:
+        {
+            "found": true,
+            "code": "THE_EXTRACTED_CODE"
+        }
+        
+        If no code is found, return { "found": false, "code": "" }.
+        Do not use Markdown.
+        `;
+
+        const base64Data = imageBase64.split(',')[1] || imageBase64;
+        const imagePart = {
+            inlineData: {
+                data: base64Data,
+                mimeType: "image/jpeg",
+            },
+        };
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return JSON.parse(text);
+
+    } catch (error) {
+        console.error("Gemini Barcode Extraction Error:", error);
+        return { found: false, code: "" };
+    }
+}
