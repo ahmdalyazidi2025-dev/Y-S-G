@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Calendar, Wallet } from "lucide-react"
+import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Mail, Calendar, Wallet } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
@@ -12,6 +12,7 @@ import { hapticFeedback } from "@/lib/haptics"
 export default function ProfilePage() {
     const { currentUser, updateCustomer, orders } = useStore()
     const [phone, setPhone] = useState(currentUser?.phone || "")
+    const [email, setEmail] = useState(currentUser?.email && !currentUser.email.endsWith("@ysg.local") ? currentUser.email : "")
     const [password, setPassword] = useState(currentUser?.password || "")
     const [isLoading, setIsLoading] = useState(false)
 
@@ -27,6 +28,7 @@ export default function ProfilePage() {
         try {
             await updateCustomer(currentUser.id, {
                 phone,
+                email: email || `${currentUser.username}@ysg.local`, // Fallback if cleared
                 password
             })
             toast.success("تم تحديث البيانات بنجاح")
@@ -132,6 +134,21 @@ export default function ProfilePage() {
                                 className="bg-black/20 border-white/10 pr-10 focus:border-primary/50"
                             />
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs text-slate-400 font-bold pr-1">البريد الإلكتروني</label>
+                        <div className="relative">
+                            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <Input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="example@domain.com"
+                                className="bg-black/20 border-white/10 pr-10 focus:border-primary/50"
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-500 pr-1">يستخدم لاستعادة كلمة المرور</p>
                     </div>
 
                     <Button

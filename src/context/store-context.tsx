@@ -89,6 +89,7 @@ export type User = {
     name: string
     role: "admin" | "customer" | "staff"
     username: string
+    email?: string // Added email field
     password?: string
     phone?: string
     location?: string
