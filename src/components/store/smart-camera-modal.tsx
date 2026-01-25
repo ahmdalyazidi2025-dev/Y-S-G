@@ -36,7 +36,11 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
     const startCamera = async () => {
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
+                video: {
+                    facingMode: "environment",
+                    width: { ideal: 2160 }, // Request 4K or highest available
+                    height: { ideal: 4096 }
+                }
             })
             setStream(mediaStream)
             if (videoRef.current) {
@@ -98,7 +102,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
             setAnalysisResult(JSON.stringify(result))
         } catch (error) {
             console.error("Analysis Failed:", error)
-            toast.error("حدث خطأ أثناء المحاولة، تأكد من صحة المفتاح")
+            toast.error("فشل التحليل: تأكد من الاتصال بالإنترنت أو صلاحية مفتاح API")
         } finally {
             setIsAnalyzing(false)
         }
