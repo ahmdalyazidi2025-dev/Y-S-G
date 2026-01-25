@@ -17,11 +17,12 @@ import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { CustomerNotifications } from "@/components/store/customer-notifications"
 import { HeroBanner } from "@/components/store/hero-banner"
+import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skeletons"
 
 
 
 export default function CustomerHome() {
-    const { products, banners, categories } = useStore()
+    const { products, banners, categories, loading } = useStore() // Assume loading is available
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -129,6 +130,7 @@ export default function CustomerHome() {
                             )}
                         </button>
                     ))}
+                    {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
                 </div>
 
                 {/* Product Grid */}
@@ -151,6 +153,9 @@ export default function CustomerHome() {
                                     onViewDetails={() => setSelectedProduct(product)}
                                 />
                             ))
+                        ) : loading ? (
+                            // Show 10 skeletons while loading
+                            Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
                         ) : (
                             <div className="col-span-full flex flex-col items-center justify-center py-20 text-center gap-6">
                                 <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center animate-pulse">

@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Network First for HTML, Stale-While-Revalidate for assets
 self.addEventListener('fetch', (event) => {
-    const url = new URL(event.request.url);
+    // const url = new URL(event.request.url); // Unused
 
     // 1. Navigation (HTML) -> Network First
     // This ensures the user ALWAYS gets the latest version if online.

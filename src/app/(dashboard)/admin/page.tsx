@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useStore, type Product, type Order } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
+import { AdminStatsSkeleton, AdminModuleSkeleton } from "@/components/store/skeletons"
 
 const ADMIN_MODULES = [
     { title: "المنتجات", icon: Package, link: "/admin/products", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
@@ -103,7 +104,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <AnimatePresence mode="wait">
                         {isLoading ? (
-                            [1, 2, 3].map(i => <SkeletonStats key={i} />)
+                            [1, 2, 3].map(i => <AdminStatsSkeleton key={i} />)
                         ) : (
                             <>
                                 <StatsCard
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 <AnimatePresence>
                     {isLoading ? (
-                        [1, 2, 3, 4, 5, 6, 7, 8].map(i => <SkeletonModule key={i} index={i} />)
+                        [1, 2, 3, 4, 5, 6, 7, 8].map(i => <AdminModuleSkeleton key={i} index={i} />)
                     ) : (
                         filteredModules.map((module, idx) => {
                             const isLarge = idx === 0 || idx === 1; // First two are large
@@ -276,21 +277,7 @@ export default function AdminDashboard() {
     )
 }
 
-function SkeletonStats() {
-    return (
-        <div className="h-32 rounded-[2rem] skeleton bg-white/5" />
-    )
-}
 
-function SkeletonModule({ index }: { index: number }) {
-    const isLarge = index === 0 || index === 1;
-    return (
-        <div className={cn(
-            "h-48 rounded-[2rem] skeleton bg-white/5",
-            isLarge ? "col-span-2" : "col-span-1"
-        )} />
-    )
-}
 
 function StatsCard({ title, value, icon: Icon, gradient, border, iconColor, href }: any) {
     const Content = (

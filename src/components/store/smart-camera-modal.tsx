@@ -147,7 +147,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
             )
             setAnalysisResult(JSON.stringify(result))
         } catch (error) {
-            const err = error as any;
+            const err = error as Error;
             console.error("Analysis Failed Full Error:", error)
             const errorMessage = err.message || JSON.stringify(error);
             toast.error(`فشل التحليل: ${errorMessage.includes('400') ? 'مفتاح خطأ أو صورة غير مدعومة' : 'تأكد من النت والمفتاح'}`)
