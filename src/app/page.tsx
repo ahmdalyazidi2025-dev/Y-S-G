@@ -137,21 +137,51 @@ function LandingContent() {
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", damping: 20 }}
                     >
-                      <Link href="/login?role=customer" className="group block">
-                        <div className="relative w-full h-56 md:h-64 glass-card flex flex-col items-center justify-center gap-6 transition-all border border-white/10 group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/5">
-                          <div className="p-5 rounded-[2rem] bg-white/5 text-primary group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
-                            <ShoppingBag className="w-10 h-10 md:w-12 md:h-12" />
-                          </div>
-                          <div className="text-center">
-                            <span className="text-3xl md:text-4xl font-black text-white block drop-shadow-md">دخول العملاء</span>
-                            <span className="text-[10px] text-primary/80 font-bold uppercase tracking-[0.3em] group-hover:tracking-[0.4em] transition-all">Customer Portal</span>
-                          </div>
-                          <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-60 transition-opacity">
-                            <Users className="w-6 h-6 text-primary" />
+                      <Link href="/login?role=customer" className="group block relative z-20">
+                        <div className="relative w-full h-64 md:h-72 glass-card flex flex-col items-center justify-center gap-8 transition-all border border-white/10 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)]">
+
+                          {/* Animated Background Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+
+                          {/* Tech Grid Background (Subtle) */}
+                          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:30px_30px] opacity-20" />
+
+                          {/* Icon Container with Orb Effect */}
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-primary/40 blur-[30px] rounded-full scale-0 group-hover:scale-150 transition-transform duration-700 delay-100" />
+                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-md flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:border-primary/50 transition-all duration-500">
+                              <div className="absolute inset-0 rounded-full border border-t-white/30 border-b-transparent opacity-50" />
+                              <ShoppingBag className="w-10 h-10 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] group-hover:text-primary transition-colors duration-300" />
+                            </div>
+
+                            {/* Floating Particles/dots around icon */}
+                            {[...Array(3)].map((_, i) => (
+                              <div key={i} className={`absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(59,130,246,1)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-700`}
+                                style={{
+                                  transform: `rotate(${i * 120}deg) translateY(-40px)`,
+                                  transitionDelay: `${i * 100}ms`
+                                }}
+                              />
+                            ))}
                           </div>
 
-                          {/* Decorative Glow */}
-                          <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/20 blur-[50px] rounded-full group-hover:bg-primary/30 transition-all" />
+                          <div className="text-center relative z-10 space-y-2">
+                            <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 tracking-tighter group-hover:to-white transition-all">
+                              دخول العملاء
+                            </h2>
+                            <div className="flex items-center justify-center gap-3">
+                              <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-primary/50" />
+                              <span className="text-[10px] text-primary font-bold uppercase tracking-[0.4em] group-hover:tracking-[0.6em] transition-all duration-500 shadow-primary/50">
+                                CUSTOMER PORTAL
+                              </span>
+                              <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-primary/50" />
+                            </div>
+                          </div>
+
+                          {/* Hover Reveal Text */}
+                          <div className="absolute bottom-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0 text-[10px] text-slate-400 font-medium font-mono">
+                            CLICK TO ACCESS STORE
+                          </div>
                         </div>
                       </Link>
                     </motion.div>
