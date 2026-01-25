@@ -29,19 +29,55 @@ interface Message {
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     const { storeSettings, products, addToCart, addProductRequest } = useStore()
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "welcome",
-            role: "ai",
-            content: "مرحباً بك! 👋 أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي قطعة غيار، بدائلها، أو حتى تصوير قطعة لمعرفة تفاصيلها. كيف يمكنني مساعدتك اليوم؟",
-            timestamp: new Date()
-        }
-    ])
+    const [messages, setMessages] = useState<Message[]>([])
     const [inputValue, setInputValue] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // Load from LocalStorage
+    useEffect(() => {
+        if (!isOpen) return
+        const saved = localStorage.getItem("ysg_ai_chat_history")
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                // Convert string dates back to Date objects
+                const hydrated = parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }))
+                setMessages(hydrated)
+            } catch (e) {
+                console.error("Failed to parse chat history", e)
+            }
+        } else {
+            setMessages([{
+                id: "welcome",
+                role: "ai",
+                content: "مرحباً بك! 👋 أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي قطعة غيار، بدائلها، أو حتى تصوير قطعة لمعرفة تفاصيلها. كيف يمكنني مساعدتك اليوم؟",
+                timestamp: new Date()
+            }])
+        }
+    }, [isOpen])
+
+    // Save to LocalStorage
+    useEffect(() => {
+        if (messages.length > 0) {
+            localStorage.setItem("ysg_ai_chat_history", JSON.stringify(messages))
+        }
+    }, [messages])
+
+    const clearChat = () => {
+        const resetMsg: Message = {
+            id: "welcome",
+            role: "ai",
+            content: "تم مسح المحادثة. كيف يمكنني مساعدتك من جديد؟",
+            timestamp: new Date()
+        }
+        setMessages([resetMsg])
+        localStorage.removeItem("ysg_ai_chat_history")
+        hapticFeedback('medium')
+        toast.info("تم مسح سجل المحادثة")
+    }
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -206,9 +242,19 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                     </div>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10 text-slate-400">
-                                <X className="w-5 h-5" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearChat}
+                                    className="text-xs text-slate-400 hover:text-red-400 rounded-full h-8 px-3"
+                                >
+                                    مسح 🗑️
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-white/10 text-slate-400">
+                                    <X className="w-5 h-5" />
+                                </Button>
+                            </div>
                         </div>
 
                         {/* Chat Area */}
