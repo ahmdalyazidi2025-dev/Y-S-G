@@ -133,19 +133,19 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
                     />
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className="glass-card w-full max-w-sm p-6 relative overflow-hidden"
+                        className="glass-card w-full max-w-sm p-6 relative overflow-hidden z-[10000]"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold">الماسح الذكي</h2>
@@ -181,7 +181,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                         ) : (
                             <div className="space-y-6">
                                 <div className="relative aspect-[3/4] sm:aspect-video overflow-hidden rounded-2xl bg-black border border-white/10">
-                                    <div id="reader" className="w-full h-full [&>video]:object-cover [&>video]:w-full [&>video]:h-full" />
+                                    <div id="reader" className="w-full h-full [&>video]:object-cover [&>video]:w-full [&>video]:h-full min-h-[300px]" style={{ minHeight: "300px" }} />
                                     <div className="absolute inset-0 border-2 border-primary/50 m-6 rounded-lg pointer-events-none">
                                         <div className="absolute inset-0 animate-pulse bg-primary/5 text-center flex items-end justify-center pb-2">
                                             <span className="text-[10px] text-primary/50 uppercase tracking-widest">Bar-code Guide</span>

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
-import { X, Camera, Zap, Image as ImageIcon, Sparkles, AlertTriangle } from "lucide-react"
+import { X, Camera, Zap, Image as ImageIcon, Sparkles, AlertTriangle, SwitchCamera } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
@@ -21,6 +21,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const { storeSettings } = useStore()
     const [analysisResult, setAnalysisResult] = useState<string | null>(null)
+    const [facingMode, setFacingMode] = useState<"environment" | "user">("environment")
 
     useEffect(() => {
         if (isOpen) {
@@ -31,13 +32,16 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
             setAnalysisResult(null)
             setIsAnalyzing(false)
         }
-    }, [isOpen])
+    }, [isOpen, facingMode])
 
     const startCamera = async () => {
+        // Stop any existing stream first
+        stopCamera()
+
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    facingMode: "environment",
+                    facingMode: facingMode,
                     width: { ideal: 2160 }, // Request 4K or highest available
                     height: { ideal: 4096 }
                 }
@@ -60,6 +64,10 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         }
     }
 
+    const toggleCamera = () => {
+        setFacingMode(prev => prev === "environment" ? "user" : "environment")
+    }
+
     const captureImage = () => {
         if (!videoRef.current) return
 
@@ -68,6 +76,11 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         canvas.height = videoRef.current.videoHeight
         const ctx = canvas.getContext("2d")
         if (ctx) {
+            // Mirror image if using front camera
+            if (facingMode === 'user') {
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
             ctx.drawImage(videoRef.current, 0, 0)
             const image = canvas.toDataURL("image/jpeg")
             setCapturedImage(image)
@@ -115,7 +128,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] bg-black flex flex-col"
+                    className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center"
                 >
                     {/* Header */}
                     <div className="absolute top-0 inset-x-0 p-4 pt-12 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
@@ -126,17 +139,19 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                             <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
                             <span className="text-sm font-bold text-white">المساعد الذكي</span>
                         </div>
-                        <div className="w-10" /> {/* Spacer */}
+                        <Button variant="ghost" size="icon" onClick={toggleCamera} className="rounded-full bg-black/20 text-white backdrop-blur-md">
+                            <SwitchCamera className="w-6 h-6" />
+                        </Button>
                     </div>
 
-                    {/* Camera/Image View */}
-                    <div className="flex-1 relative overflow-hidden bg-black">
+                    {/* Camera/Image View - Full Screen */}
+                    <div className="absolute inset-0 z-10 bg-black">
                         {!capturedImage ? (
                             <video
                                 ref={videoRef}
                                 autoPlay
                                 playsInline
-                                className="absolute inset-0 w-full h-full object-cover"
+                                className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                             />
                         ) : (
                             <div className="absolute inset-0">
@@ -147,15 +162,15 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                         {/* Scanner Overlay */}
                         {!capturedImage && (
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="w-64 h-64 border-2 border-white/30 rounded-3xl relative">
-                                    <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-purple-500 rounded-tl-xl" />
-                                    <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-purple-500 rounded-tr-xl" />
-                                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-purple-500 rounded-bl-xl" />
-                                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-purple-500 rounded-br-xl" />
-                                    <div className="absolute inset-0 bg-purple-500/10 animate-pulse rounded-3xl" />
+                                <div className="w-[80vw] h-[80vw] max-w-sm max-h-sm border-2 border-white/30 rounded-3xl relative">
+                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-purple-500 rounded-tl-xl" />
+                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-purple-500 rounded-tr-xl" />
+                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-purple-500 rounded-bl-xl" />
+                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-purple-500 rounded-br-xl" />
+                                    <div className="absolute inset-0 bg-purple-500/5 animate-pulse rounded-3xl" />
                                 </div>
-                                <p className="absolute bottom-32 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">
-                                    وجه الكاميرا نحو السيارة أو القطعة
+                                <p className="absolute bottom-32 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm text-center mx-4">
+                                    وجه الكاميرا نحو السيارة أو القطعة بوضوح
                                 </p>
                             </div>
                         )}
@@ -221,12 +236,12 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
 
                     {/* Capture Button */}
                     {!capturedImage && (
-                        <div className="p-8 pb-12 bg-black flex justify-center items-center">
+                        <div className="absolute bottom-10 left-0 right-0 flex justify-center items-center z-20 pointer-events-none">
                             <button
                                 onClick={captureImage}
-                                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center relative group"
+                                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center relative group pointer-events-auto bg-white/10 backdrop-blur-sm"
                             >
-                                <div className="w-16 h-16 bg-white rounded-full group-hover:scale-95 transition-transform" />
+                                <div className="w-16 h-16 bg-white rounded-full group-hover:scale-95 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.5)]" />
                             </button>
                         </div>
                     )}
