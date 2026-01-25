@@ -179,18 +179,21 @@ export default function StoreLayout({
                     })}
                 </nav>
 
-                <ScannerModal
-                    isOpen={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onRequestProduct={() => setIsRequestOpen(true)}
-                />
-                <SmartCameraModal
-                    isOpen={isSmartCameraOpen}
-                    onClose={() => setIsSmartCameraOpen(false)}
-                />
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                 <RequestModal isOpen={isRequestOpen} onClose={() => setIsRequestOpen(false)} />
             </div>
+
+            {/* Modals moved outside the main layout container to avoid stacking context issues */}
+            <ScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onRequestProduct={() => setIsRequestOpen(true)}
+            />
+            <SmartCameraModal
+                isOpen={isSmartCameraOpen}
+                onClose={() => setIsSmartCameraOpen(false)}
+            />
         </ProtectedRoute>
+        </ProtectedRoute >
     )
 }
