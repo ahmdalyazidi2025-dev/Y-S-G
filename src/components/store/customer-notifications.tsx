@@ -1,7 +1,7 @@
 "use client"
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Bell, Check, Trash2 } from "lucide-react"
+import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { formatDistanceToNow } from "date-fns"

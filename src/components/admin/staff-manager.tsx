@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { useStore } from "@/context/store-context"
+import { useStore, StaffMember } from "@/context/store-context"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, CheckCircle, Circle, PlusSquare, Lock, Edit } from "lucide-react"
+import { Trash2, CheckCircle, Circle, PlusSquare, Lock } from "lucide-react"
 
 export function StaffManager() {
     const { staff, addStaff, deleteStaff, updateStaff, currentUser, resetPassword } = useStore() // Added resetPassword
@@ -74,13 +74,13 @@ export function StaffManager() {
         hapticFeedback('success')
     }
 
-    const startEdit = (member: any) => {
+    const startEdit = (member: StaffMember) => {
         // Extract username from email (user@ysg.local -> user) or lookup?
         // Ideally we should have saved username in the staff doc, but if not we guess it.
         // If it's a real email, username is not obvious unless we saved it.
         // Let's assume for editing we just show the email.
         const isLegacy = member.email.includes("@ysg.local")
-        const username = member.username || (isLegacy ? member.email.split("@")[0] : "")
+        const username = (member as any).username || (isLegacy ? member.email.split("@")[0] : "")
 
         setNewStaff({
             name: member.name,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/context/store-context"
@@ -13,23 +13,25 @@ export function HeroBanner() {
     const [current, setCurrent] = useState(0)
     const [direction, setDirection] = useState(0)
 
+
+
+    const handleNext = useCallback(() => {
+        setDirection(1)
+        setCurrent((prev) => (prev + 1) % activeBanners.length)
+    }, [activeBanners.length])
+
+    const handlePrev = useCallback(() => {
+        setDirection(-1)
+        setCurrent((prev) => (prev - 1 + activeBanners.length) % activeBanners.length)
+    }, [activeBanners.length])
+
     useEffect(() => {
         if (activeBanners.length <= 1) return
         const timer = setInterval(() => {
             handleNext()
         }, 5000)
         return () => clearInterval(timer)
-    }, [current, activeBanners.length])
-
-    const handleNext = () => {
-        setDirection(1)
-        setCurrent((prev) => (prev + 1) % activeBanners.length)
-    }
-
-    const handlePrev = () => {
-        setDirection(-1)
-        setCurrent((prev) => (prev - 1 + activeBanners.length) % activeBanners.length)
-    }
+    }, [current, activeBanners.length, handleNext])
 
     const variants = {
         enter: (direction: number) => ({

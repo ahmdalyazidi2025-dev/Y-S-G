@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import {
     collection, addDoc, onSnapshot, query, orderBy,
-    updateDoc, doc, deleteDoc, where, getDocs, Timestamp, getDoc, setDoc, runTransaction,
+    updateDoc, doc, deleteDoc, Timestamp, getDoc, setDoc, runTransaction,
     QuerySnapshot, DocumentSnapshot, DocumentData
 } from "firebase/firestore"
 import { db, auth, getSecondaryAuth } from "@/lib/firebase"
@@ -14,9 +14,6 @@ import {
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     onAuthStateChanged,
-    User as FirebaseUser,
-    setPersistence,
-    inMemoryPersistence,
     sendPasswordResetEmail // Added
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
@@ -71,7 +68,7 @@ export interface Customer {
     phone: string
     location: string
     lastActive?: Date | null
-    createdAt?: any
+    createdAt?: Date | Timestamp | null
     allowedCategories?: string[] | "all"
 }
 
@@ -81,7 +78,7 @@ export type StaffMember = {
     email: string
     role: "staff" | "admin"
     permissions: string[]
-    createdAt?: any
+    createdAt?: Date | Timestamp | null
 }
 
 export type User = {
@@ -343,9 +340,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     setCurrentUser(null)
                 }
-            } catch (error: any) {
+            } catch (error) {
                 console.error("Auth State Change Error:", error)
-                toast.error(`خطأ في تحميل البيانات: ${error.message || "خطأ غير معروف"}`)
+                toast.error(`خطأ في تحميل البيانات: ${(error as Error).message || "خطأ غير معروف"}`)
             } finally {
                 setLoading(false)
                 setAuthInitialized(true)
@@ -619,9 +616,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
             await addDoc(collection(db, "products"), sanitizeData(dataToSave))
             toast.success("تم إضافة المنتج للسحابة")
-        } catch (e: any) {
+        } catch (e) {
             console.error("Add Product Error:", e)
-            toast.error(`فشل إضافة المنتج: ${e.message}`)
+            toast.error(`فشل إضافة المنتج: ${(e as Error).message}`)
         }
     }
 
@@ -644,9 +641,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
             await addDoc(collection(db, "categories"), sanitizeData(category))
             toast.success("تم إضافة القسم")
-        } catch (e: any) {
+        } catch (e) {
             console.error("Add Category Error:", e)
-            toast.error(`فشل إضافة القسم: ${e.message}`)
+            toast.error(`فشل إضافة القسم: ${(e as Error).message}`)
         }
     }
 
@@ -802,7 +799,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             return true
         } catch (error: any) {
             console.error("Reset Password Error:", error)
-            toast.error("فشل إرسال الرابط: " + error.message)
+            toast.error("فشل إرسال الرابط: " + (error as Error).message)
             return false
         }
     }
@@ -854,7 +851,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.success("تم إضافة الموظف وإعداد الدخول")
         } catch (error: any) {
             console.error("Add Staff Error:", error);
-            toast.error("فشل إضافة الموظف: " + error.message)
+            toast.error("فشل إضافة الموظف: " + (error as Error).message)
         }
     }
 
@@ -883,7 +880,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await deleteDoc(doc(db, "staff", memberId))
             await deleteDoc(doc(db, "users", memberId)) // Revoke login access
             toast.error("تم حذف الموظف وسحب الصلاحيات")
-        } catch (e: any) {
+        } catch (e) {
             console.error("Delete Staff Error:", e)
             toast.error("فشل حذف الموظف")
         }

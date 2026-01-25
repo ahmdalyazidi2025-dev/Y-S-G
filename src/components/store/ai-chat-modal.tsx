@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Send, Image as ImageIcon, Sparkles, User, Loader2, Camera } from "lucide-react"
+import { X, Send, Sparkles, User, Loader2, Camera } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useStore } from "@/context/store-context"
@@ -43,7 +44,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved)
-                const hydrated = parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }))
+                const hydrated = parsed.map((m: Message) => ({ ...m, timestamp: new Date(m.timestamp) }))
                 setMessages(hydrated)
             } catch (e) {
                 console.error("Failed to parse chat history", e)
@@ -149,7 +150,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             }
             `
 
-            const parts: any[] = [systemPrompt]
+            const parts: (string | { inlineData: { data: string, mimeType: string } })[] = [systemPrompt]
 
             if (userMessage.image) {
                 const base64Data = userMessage.image.split(',')[1]
@@ -281,7 +282,9 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                             : "bg-white/10 text-slate-200 rounded-tl-sm border border-white/5"
                                             }`}>
                                             {msg.image && (
-                                                <img src={msg.image} alt="User upload" className="w-full h-32 object-cover rounded-lg mb-2 border border-black/20" />
+                                                <div className="relative w-full h-32 mb-2 rounded-lg overflow-hidden border border-black/20">
+                                                    <Image src={msg.image} alt="User upload" fill className="object-cover" />
+                                                </div>
                                             )}
 
                                             {/* VIN Identification Badge */}
@@ -374,7 +377,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 <div className="mb-2 p-2 bg-white/5 rounded-lg flex items-center justify-between border border-white/10">
                                     <div className="flex items-center gap-2">
                                         <div className="w-10 h-10 rounded-md overflow-hidden bg-black">
-                                            <img src={selectedImage} alt="Selected" className="w-full h-full object-cover" />
+                                            <Image src={selectedImage} alt="Selected" fill className="object-cover" />
                                         </div>
                                         <span className="text-xs text-slate-300">صورة مرفقة</span>
                                     </div>

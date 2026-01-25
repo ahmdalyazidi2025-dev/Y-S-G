@@ -38,8 +38,9 @@ export function exportToCSV(data: any[], filename: string) {
     }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function exportComprehensiveReport(customers: any[], orders: any[]) {
+import { Customer, Order } from "@/context/store-context";
+
+export function exportComprehensiveReport(customers: Customer[], orders: Order[]) {
     // 1. Prepare Data structure: Flat Table (Customer + Order details per row)
     // "Customer Name", "Phone", "Email", "Order ID", "Date", "Total", "Status", "Items"
 
@@ -51,7 +52,7 @@ export function exportComprehensiveReport(customers: any[], orders: any[]) {
     for (const customer of sortedCustomers) {
         // Find customer's orders
         const customerOrders = orders.filter(o => o.customerId === customer.id)
-            .sort((a, b) => new Date(b.createdAt?.seconds * 1000).getTime() - new Date(a.createdAt?.seconds * 1000).getTime());
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         if (customerOrders.length === 0) {
             // Include customer even if no orders (Sales leads?)
@@ -70,12 +71,12 @@ export function exportComprehensiveReport(customers: any[], orders: any[]) {
             for (const order of customerOrders) {
                 // Format Date
                 let dateStr = "";
-                if (order.createdAt?.seconds) {
-                    dateStr = new Date(order.createdAt.seconds * 1000).toLocaleDateString('ar-EG');
+                if (order.createdAt) {
+                    dateStr = new Date(order.createdAt).toLocaleDateString('ar-EG');
                 }
 
                 // Format Items
-                const itemsSummary = order.items.map((i: any) => `${i.product.name} (x${i.quantity})`).join(" | ");
+                const itemsSummary = order.items.map((i) => `${i.name} (x${i.quantity})`).join(" | ");
 
                 reportData.push({
                     "اسم العميل": customer.name,

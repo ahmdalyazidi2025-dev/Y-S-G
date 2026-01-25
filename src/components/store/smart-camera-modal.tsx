@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useRef, useState, useEffect } from "react"
-import { X, Camera, Zap, Image as ImageIcon, Sparkles, AlertTriangle, SwitchCamera } from "lucide-react"
+import React, { useRef, useState, useEffect, useCallback } from "react"
+import { X, Sparkles, SwitchCamera } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
@@ -24,25 +24,14 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
     const [facingMode, setFacingMode] = useState<"environment" | "user">("environment")
     const [isMirrored, setIsMirrored] = useState(false) // Default to no mirror for environment
 
-    useEffect(() => {
-        // Default mirror state: environment -> false, user -> true
-        setIsMirrored(facingMode === 'user')
-    }, [facingMode])
 
-    useEffect(() => {
-        if (isOpen) {
-            startCamera()
-        } else {
-            stopCamera()
-            setCapturedImage(null)
-            setAnalysisResult(null)
-            setIsAnalyzing(false)
-        }
-    }, [isOpen, facingMode])
 
-    const startCamera = async () => {
+    const startCamera = useCallback(async () => {
         // Stop any existing stream first
-        stopCamera()
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop())
+            setStream(null)
+        }
 
         try {
             const constraints: MediaStreamConstraints = {
@@ -68,7 +57,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                     if (videoRef.current) videoRef.current.srcObject = mediaStream
                     // Assume user facing if fallback worked
                     setFacingMode('user')
-                } catch (e) {
+                } catch {
                     toast.error("لا يمكن الوصول للكاميرا")
                     onClose()
                 }
@@ -77,14 +66,14 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                 onClose()
             }
         }
-    }
+    }, [facingMode, onClose, stream])
 
-    const stopCamera = () => {
+    const stopCamera = useCallback(() => {
         if (stream) {
             stream.getTracks().forEach(track => track.stop())
             setStream(null)
         }
-    }
+    }, [stream])
 
     const toggleCamera = () => {
         setFacingMode(prev => prev === "environment" ? "user" : "environment")
@@ -93,6 +82,22 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
     const toggleMirror = () => {
         setIsMirrored(prev => !prev)
     }
+
+    useEffect(() => {
+        // Default mirror state: environment -> false, user -> true
+        setIsMirrored(facingMode === 'user')
+    }, [facingMode])
+
+    useEffect(() => {
+        if (isOpen) {
+            startCamera()
+        } else {
+            stopCamera()
+            setCapturedImage(null)
+            setAnalysisResult(null)
+            setIsAnalyzing(false)
+        }
+    }, [isOpen, facingMode, startCamera, stopCamera])
 
     const captureImage = () => {
         if (!videoRef.current) return
@@ -141,9 +146,10 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                 storeSettings.geminiReferenceImageUrl
             )
             setAnalysisResult(JSON.stringify(result))
-        } catch (error: any) {
+        } catch (error) {
+            const err = error as any;
             console.error("Analysis Failed Full Error:", error)
-            const errorMessage = error.message || JSON.stringify(error);
+            const errorMessage = err.message || JSON.stringify(error);
             toast.error(`فشل التحليل: ${errorMessage.includes('400') ? 'مفتاح خطأ أو صورة غير مدعومة' : 'تأكد من النت والمفتاح'}`)
         } finally {
             setIsAnalyzing(false)

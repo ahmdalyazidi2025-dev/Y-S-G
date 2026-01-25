@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Part } from "@google/generative-ai";
 
 export async function analyzeImageWithGemini(
     apiKey: string,
@@ -52,7 +52,7 @@ export async function analyzeImageWithGemini(
             },
         };
 
-        const parts: any[] = [prompt, imagePart];
+        const parts: (string | Part)[] = [prompt, imagePart];
 
         // Handle Reference Image if provided
         if (referenceImageUrl) {
