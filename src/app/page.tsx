@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Users, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useStore } from "@/context/store-context";
 
 function LandingContent() {
   const searchParams = useSearchParams();
@@ -20,6 +21,21 @@ function LandingContent() {
     const timer = setTimeout(() => setShowContent(true), 2500);
     return () => clearTimeout(timer);
   }, [isFromLogout]);
+
+  // --- Auto-Redirect Logic ---
+  const { currentUser, loading } = useStore() // Need to import useStore
+  const router = useRouter() // Need to import useRouter
+
+  useEffect(() => {
+    if (!loading && currentUser && !isFromLogout) {
+      if (currentUser.role === 'admin' || currentUser.role === 'staff') {
+        router.replace('/admin')
+      } else {
+        router.replace('/customer')
+      }
+    }
+  }, [currentUser, loading, isFromLogout, router])
+  // ---------------------------
 
   useEffect(() => {
     if (showContent && !isFromLogout) {

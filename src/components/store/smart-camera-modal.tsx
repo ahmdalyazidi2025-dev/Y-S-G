@@ -22,6 +22,12 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
     const { storeSettings } = useStore()
     const [analysisResult, setAnalysisResult] = useState<string | null>(null)
     const [facingMode, setFacingMode] = useState<"environment" | "user">("environment")
+    const [isMirrored, setIsMirrored] = useState(false) // Default to no mirror for environment
+
+    useEffect(() => {
+        // Default mirror state: environment -> false, user -> true
+        setIsMirrored(facingMode === 'user')
+    }, [facingMode])
 
     useEffect(() => {
         if (isOpen) {
@@ -39,21 +45,37 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         stopCamera()
 
         try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({
+            const constraints: MediaStreamConstraints = {
                 video: {
-                    facingMode: facingMode,
-                    width: { ideal: 2160 }, // Request 4K or highest available
-                    height: { ideal: 4096 }
+                    facingMode: facingMode
                 }
-            })
+            }
+
+            // Attempt to get stream
+            const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+
             setStream(mediaStream)
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream
             }
         } catch (err) {
             console.error("Camera access denied:", err)
-            toast.error("لا يمكن الوصول للكاميرا")
-            onClose()
+            // Try fallback if environment failed
+            if (facingMode === 'environment') {
+                try {
+                    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
+                    setStream(mediaStream)
+                    if (videoRef.current) videoRef.current.srcObject = mediaStream
+                    // Assume user facing if fallback worked
+                    setFacingMode('user')
+                } catch (e) {
+                    toast.error("لا يمكن الوصول للكاميرا")
+                    onClose()
+                }
+            } else {
+                toast.error("لا يمكن الوصول للكاميرا")
+                onClose()
+            }
         }
     }
 
@@ -68,6 +90,10 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         setFacingMode(prev => prev === "environment" ? "user" : "environment")
     }
 
+    const toggleMirror = () => {
+        setIsMirrored(prev => !prev)
+    }
+
     const captureImage = () => {
         if (!videoRef.current) return
 
@@ -76,8 +102,8 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         canvas.height = videoRef.current.videoHeight
         const ctx = canvas.getContext("2d")
         if (ctx) {
-            // Mirror image if using front camera
-            if (facingMode === 'user') {
+            // Apply mirror if enabled
+            if (isMirrored) {
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
             }
@@ -98,10 +124,12 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
 
         // Check if API Key exists
         if (!storeSettings.googleGeminiApiKey) {
+            console.warn("Gemini API Key is missing in store settings");
             setTimeout(() => {
                 setIsAnalyzing(false)
                 setAnalysisResult("NO_KEY")
-            }, 1000)
+                toast.error("مفتاح الذكاء الاصطناعي مفقود! يرجى إضافته في الإعدادات")
+            }, 500)
             return
         }
 
@@ -113,9 +141,10 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                 storeSettings.geminiReferenceImageUrl
             )
             setAnalysisResult(JSON.stringify(result))
-        } catch (error) {
-            console.error("Analysis Failed:", error)
-            toast.error("فشل التحليل: تأكد من الاتصال بالإنترنت أو صلاحية مفتاح API")
+        } catch (error: any) {
+            console.error("Analysis Failed Full Error:", error)
+            const errorMessage = error.message || JSON.stringify(error);
+            toast.error(`فشل التحليل: ${errorMessage.includes('400') ? 'مفتاح خطأ أو صورة غير مدعومة' : 'تأكد من النت والمفتاح'}`)
         } finally {
             setIsAnalyzing(false)
         }
@@ -139,9 +168,16 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                             <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
                             <span className="text-sm font-bold text-white">المساعد الذكي</span>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={toggleCamera} className="rounded-full bg-black/20 text-white backdrop-blur-md">
-                            <SwitchCamera className="w-6 h-6" />
-                        </Button>
+                        <div className="flex gap-2">
+                            {/* Mirror Toggle */}
+                            <Button variant="ghost" size="icon" onClick={toggleMirror} className={`rounded-full backdrop-blur-md ${isMirrored ? "bg-purple-500/20 text-purple-400" : "bg-black/20 text-white"}`}>
+                                <SwitchCamera className="w-6 h-6 rotate-90" />
+                            </Button>
+                            {/* Camera Switch */}
+                            <Button variant="ghost" size="icon" onClick={toggleCamera} className="rounded-full bg-black/20 text-white backdrop-blur-md">
+                                <SwitchCamera className="w-6 h-6" />
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Camera/Image View - Full Screen */}
@@ -151,7 +187,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
                                 ref={videoRef}
                                 autoPlay
                                 playsInline
-                                className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                                className={`w-full h-full object-cover ${isMirrored ? 'scale-x-[-1]' : ''}`}
                             />
                         ) : (
                             <div className="absolute inset-0">

@@ -238,7 +238,8 @@ type StoreContextType = {
     sendGlobalMessage: (text: string) => void
     updateAdminCredentials: (username: string, password: string) => Promise<void>
     authInitialized: boolean
-    resetPassword: (email: string) => Promise<boolean> // Added
+    resetPassword: (email: string) => Promise<boolean>
+    loading: boolean // Added
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -1104,7 +1105,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword
+            updateAdminCredentials, authInitialized, resetPassword, loading
         }}>
             {children}
         </StoreContext.Provider>
