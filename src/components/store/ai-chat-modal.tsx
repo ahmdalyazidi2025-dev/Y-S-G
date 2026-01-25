@@ -28,7 +28,7 @@ interface Message {
 }
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
-    const { storeSettings, products, addToCart, addProductRequest } = useStore()
+    const { storeSettings, products, addToCart, addProductRequest, currentUser } = useStore()
     const [messages, setMessages] = useState<Message[]>([])
     const [inputValue, setInputValue] = useState("")
     const [isLoading, setIsLoading] = useState(false)
@@ -43,21 +43,29 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         if (saved) {
             try {
                 const parsed = JSON.parse(saved)
-                // Convert string dates back to Date objects
                 const hydrated = parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }))
                 setMessages(hydrated)
             } catch (e) {
                 console.error("Failed to parse chat history", e)
             }
         } else {
+            const customerName = currentUser?.name || "عزيزي العميل"
             setMessages([{
                 id: "welcome",
                 role: "ai",
-                content: "مرحباً بك! 👋 أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي قطعة غيار، بدائلها، أو حتى تصوير قطعة لمعرفة تفاصيلها. كيف يمكنني مساعدتك اليوم؟",
+                content: `مرحباً بك ${customerName} 👋
+أنا "Gemini"، مساعدك الشخصي الذكي في المتجر 🤖✨
+
+يمكنني مساعدتك في:
+1️⃣ **البحث عن القطع:** اسألني عن أي قطعة وسأخبرك بسعرها وتوفرها.
+2️⃣ **تحليل الصور الذكي:** صور "رقم الهيكل" (VIN) أو أي قطعة وسأعرفها وأخبرك بتفاصيلها فوراً!
+3️⃣ **طلب القطع:** إذا لم تكن متوفرة، سأساعدك في طلبها من الإدارة مباشرة.
+
+بماذا نبدأ اليوم؟ 🚗`,
                 timestamp: new Date()
             }])
         }
-    }, [isOpen])
+    }, [isOpen, currentUser])
 
     // Save to LocalStorage
     useEffect(() => {
