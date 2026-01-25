@@ -137,50 +137,35 @@ function LandingContent() {
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", damping: 20 }}
                     >
-                      <Link href="/login?role=customer" className="group block relative z-20">
-                        <div className="relative w-full h-64 md:h-72 glass-card flex flex-col items-center justify-center gap-8 transition-all border border-white/10 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)]">
+                      <Link href="/login?role=customer" className="group block relative z-20 w-full max-w-sm mx-auto">
+                        <div className="relative w-full aspect-square glass-card flex flex-col items-center justify-center gap-8 transition-all border border-white/10 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_80px_-20px_rgba(59,130,246,0.6)] rounded-[48px]">
 
-                          {/* Animated Background Gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                          {/* Soft Ambient Background */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-blue-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
 
-                          {/* Tech Grid Background (Subtle) */}
-                          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:30px_30px] opacity-20" />
+                          {/* Animated Blobs */}
+                          <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/30 rounded-full blur-[50px] animate-pulse" />
+                          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-600/30 rounded-full blur-[50px] animate-pulse delay-700" />
 
-                          {/* Icon Container with Orb Effect */}
-                          <div className="relative">
-                            <div className="absolute inset-0 bg-primary/40 blur-[30px] rounded-full scale-0 group-hover:scale-150 transition-transform duration-700 delay-100" />
-                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-md flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:border-primary/50 transition-all duration-500">
-                              <div className="absolute inset-0 rounded-full border border-t-white/30 border-b-transparent opacity-50" />
-                              <ShoppingBag className="w-10 h-10 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] group-hover:text-primary transition-colors duration-300" />
+                          {/* Icon Container with Floating Effect */}
+                          <div className="relative z-10">
+                            <div className="absolute inset-0 bg-white/5 blur-[40px] rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
+                            <div className="relative w-28 h-28 rounded-[32px] bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 will-change-transform">
+                              <div className="absolute inset-0 rounded-[32px] border border-t-white/40 border-b-transparent opacity-50" />
+                              <ShoppingBag className="w-12 h-12 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] group-hover:text-primary transition-colors duration-300" />
                             </div>
-
-                            {/* Floating Particles/dots around icon */}
-                            {[...Array(3)].map((_, i) => (
-                              <div key={i} className={`absolute w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(59,130,246,1)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-700`}
-                                style={{
-                                  transform: `rotate(${i * 120}deg) translateY(-40px)`,
-                                  transitionDelay: `${i * 100}ms`
-                                }}
-                              />
-                            ))}
                           </div>
 
-                          <div className="text-center relative z-10 space-y-2">
-                            <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 tracking-tighter group-hover:to-white transition-all">
+                          <div className="text-center relative z-10 space-y-3">
+                            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
                               دخول العملاء
                             </h2>
-                            <div className="flex items-center justify-center gap-3">
-                              <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-primary/50" />
-                              <span className="text-[10px] text-primary font-bold uppercase tracking-[0.4em] group-hover:tracking-[0.6em] transition-all duration-500 shadow-primary/50">
-                                CUSTOMER PORTAL
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-md group-hover:bg-primary/20 group-hover:border-primary/30 transition-all duration-500">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                              <span className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors">
+                                Portal Access
                               </span>
-                              <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-primary/50" />
                             </div>
-                          </div>
-
-                          {/* Hover Reveal Text */}
-                          <div className="absolute bottom-6 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0 text-[10px] text-slate-400 font-medium font-mono">
-                            CLICK TO ACCESS STORE
                           </div>
                         </div>
                       </Link>
