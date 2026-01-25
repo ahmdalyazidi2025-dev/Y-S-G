@@ -16,7 +16,7 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
-    pending: { label: "لم تجهز", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
+    pending: { label: "مسودة (طلب جديد)", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
     processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
     shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
     delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
@@ -79,6 +79,7 @@ export default function AdminOrdersPage() {
         }
 
         let matchesCategory = true
+        // Active includes pending (new drafts), processing, shipped
         if (activeCategory === "active") matchesCategory = ["pending", "processing", "shipped"].includes(o.status)
         else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
         else if (activeCategory === "received") matchesCategory = o.status === "delivered"
