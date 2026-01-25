@@ -194,6 +194,6 @@ export default function StoreLayout({
                 onClose={() => setIsSmartCameraOpen(false)}
             />
         </ProtectedRoute>
-        </ProtectedRoute >
+
     )
 }
