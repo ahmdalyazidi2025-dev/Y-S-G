@@ -183,7 +183,7 @@ function SecuritySettings() {
                     </Label>
 
                     <div className="space-y-2">
-                        <Label className="text-xs text-slate-400">تعليمات خاصة (Custom Prompt) - مثال: "ركز دائماً على الماركة"</Label>
+                        <Label className="text-xs text-slate-400">تعليمات تعديل/تحسين الصور (Prompt) - مثال: "اجعل الخلفية بيضاء نقية"</Label>
                         <CustomPromptInput />
                     </div>
 
@@ -234,9 +234,30 @@ function ApiKeyInput() {
     const { storeSettings, updateStoreSettings } = useStore()
     const [key, setKey] = useState(storeSettings.googleGeminiApiKey || "")
     const [show, setShow] = useState(false)
+    const [status, setStatus] = useState<"idle" | "valid" | "invalid" | "checking">("idle")
 
-    const handleSaveKey = () => {
+    const handleSaveKey = async () => {
+        setStatus("checking")
         updateStoreSettings({ ...storeSettings, googleGeminiApiKey: key })
+
+        if (!key) {
+            setStatus("idle")
+            return
+        }
+
+        // Validate Key
+        try {
+            const { GoogleGenerativeAI } = await import("@google/generative-ai")
+            const genAI = new GoogleGenerativeAI(key)
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+            await model.generateContent("test")
+            setStatus("valid")
+            toast.success("تم التحقق من المفتاح بنجاح! ✅")
+        } catch (e) {
+            console.error(e)
+            setStatus("invalid")
+            toast.error("المفتاح غير صالح! ❌")
+        }
     }
 
     return (
@@ -245,10 +266,21 @@ function ApiKeyInput() {
                 <Input
                     type={show ? "text" : "password"}
                     value={key}
-                    onChange={(e) => setKey(e.target.value)}
-                    className="bg-black/20 border-white/10 pr-10 font-mono text-xs"
+                    onChange={(e) => {
+                        setKey(e.target.value)
+                        setStatus("idle")
+                    }}
+                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
                     placeholder="AIzaSy..."
                 />
+
+                {/* Status Indicator inside input */}
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {status === "checking" && <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />}
+                    {status === "valid" && <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" />}
+                    {status === "invalid" && <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]" />}
+                </div>
+
                 <button
                     type="button"
                     onClick={() => setShow(!show)}
@@ -257,8 +289,13 @@ function ApiKeyInput() {
                     {show ? "إخفاء" : "عرض"}
                 </button>
             </div>
-            <Button type="button" onClick={handleSaveKey} variant="secondary" className="px-6">
-                حفظ المفتاح
+            <Button
+                type="button"
+                onClick={handleSaveKey}
+                variant={status === "valid" ? "default" : "secondary"}
+                className={`px-6 ${status === "valid" ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+            >
+                {status === "checking" ? "جاري التحقق..." : status === "valid" ? "المفتاح يعمل" : "حفظ وتحقق"}
             </Button>
         </div>
     )
