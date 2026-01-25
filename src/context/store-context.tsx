@@ -123,6 +123,8 @@ export type Coupon = {
     type: "percentage"
     expiryDate?: Timestamp
     usageLimit?: number
+    minOrderValue?: number // New: Minimum order value
+    categoryId?: string // New: Specific category ID (if any)
     usedCount: number
     active: boolean
     createdAt: Date

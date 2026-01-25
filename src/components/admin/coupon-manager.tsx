@@ -12,11 +12,13 @@ import { hapticFeedback } from "@/lib/haptics"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function CouponManager() {
-    const { coupons, addCoupon, deleteCoupon } = useStore()
+    const { coupons, addCoupon, deleteCoupon, categories } = useStore()
     const [code, setCode] = useState("")
     const [discount, setDiscount] = useState("10")
     const [usageLimit, setUsageLimit] = useState("100")
     const [expiryDays, setExpiryDays] = useState("30")
+    const [minOrderValue, setMinOrderValue] = useState("")
+    const [selectedCategory, setSelectedCategory] = useState<string>("")
 
     const generateCode = () => {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -46,14 +48,14 @@ export function CouponManager() {
             type: "percentage",
             usageLimit: parseInt(usageLimit) || 1000,
             active: true,
-            // We pass standard Date objects, store-context handles Firestore conversion if needed or we might need Timestamp depending on impl.
-            // In store-context we implemented addCoupon using {...coupon, createdAt: Timestamp.now()}.
-            // We should ensure expiryDate is handled. The current store-context implementation didn't explicitly convert input dates to Timestamps in 'addCoupon' except 'createdAt'.
-            // However, Firestore addDoc handles Date objects automatically by converting them to Timestamps.
+            minOrderValue: minOrderValue ? parseFloat(minOrderValue) : undefined,
+            categoryId: selectedCategory || undefined,
             expiryDate: Timestamp.fromDate(expiryDate)
         })
 
         setCode("")
+        setMinOrderValue("")
+        setSelectedCategory("")
         hapticFeedback('success')
     }
 
@@ -88,8 +90,9 @@ export function CouponManager() {
                                 placeholder="مثال: OFFER20"
                                 className="bg-white/5 border-white/10 text-white font-mono placeholder:text-slate-600"
                             />
-                            <Button onClick={generateCode} variant="outline" className="border-white/10 hover:bg-white/5 text-purple-400">
-                                <Sparkles className="w-4 h-4" />
+                            <Button onClick={generateCode} variant="outline" className="border-white/10 hover:bg-white/5 text-purple-400 relative overflow-hidden group">
+                                <Sparkles className="w-4 h-4 group-hover:animate-spin" />
+                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                             </Button>
                         </div>
                     </div>
@@ -128,6 +131,31 @@ export function CouponManager() {
                             />
                             <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-white">الحد الأدنى للطلب (اختياري)</Label>
+                        <Input
+                            type="number"
+                            value={minOrderValue}
+                            onChange={(e) => setMinOrderValue(e.target.value)}
+                            placeholder="0.00"
+                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-white">تخصيص لقسم معين (اختياري)</Label>
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 h-10 rounded-md text-white px-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        >
+                            <option value="" className="bg-[#1c2a36]">الكل</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id} className="bg-[#1c2a36]">{cat.nameAr}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <Button onClick={handleAdd} className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold col-span-1 md:col-span-2 py-6">

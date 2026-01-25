@@ -29,6 +29,7 @@ import { StoreProvider } from "@/context/store-context";
 import { Toaster } from "sonner";
 import { PwaRegistration } from "@/components/pwa-registration";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
+import { NotificationManager } from "@/components/shared/notification-manager";
 
 export default function RootLayout({
   children,
@@ -56,6 +57,7 @@ export default function RootLayout({
           <StoreProvider>
             <PwaRegistration />
             <PwaInstallPrompt />
+            <NotificationManager />
             {children}
             <Toaster position="top-center" expand={false} richColors />
           </StoreProvider>

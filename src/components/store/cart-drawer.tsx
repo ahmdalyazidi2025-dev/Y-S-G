@@ -9,11 +9,85 @@ import { Trash2, Plus, Minus, FileText, Send, X, User, Phone } from "lucide-reac
 import { toast } from "sonner"
 
 export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { cart, removeFromCart, createOrder, updateCartQuantity, currentUser, storeSettings } = useStore()
+    const { cart, removeFromCart, createOrder, updateCartQuantity, currentUser, storeSettings, categories } = useStore()
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
+    const [couponCode, setCouponCode] = useState("")
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null)
+    const [couponError, setCouponError] = useState("")
+    const { coupons } = useStore() // Assume coupons are available in context, if not I need to verify store-context.tsx has coupons (it appeared in coupon-manager.tsx so it should be there)
 
-    const total = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
+    const rawTotal = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
+
+    // Calculate Discount
+    let discountAmount = 0
+    if (appliedCoupon) {
+        if (appliedCoupon.type === 'percentage') {
+            discountAmount = (rawTotal * appliedCoupon.discount) / 100
+        }
+    }
+
+    const total = rawTotal - discountAmount
+
+    const navToCheckout = () => {
+        // Implement coupon validation logic
+        if (!couponCode) return
+        const coupon = coupons.find(c => c.code === couponCode.toUpperCase() && c.active)
+
+        if (!coupon) {
+            setCouponError("الكوبون غير صحيح")
+            setAppliedCoupon(null)
+            return;
+        }
+
+        // Check Expiry
+        if (coupon.expiryDate) {
+            const now = new Date()
+            const expiry = coupon.expiryDate instanceof Date ? coupon.expiryDate : (coupon.expiryDate as any).toDate()
+            if (expiry < now) {
+                setCouponError("الكوبون منتهي الصلاحية")
+                setAppliedCoupon(null)
+                return
+            }
+        }
+
+        // Check Usage Limit
+        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+            setCouponError("تم استنفاذ مرات استخدام الكوبون")
+            setAppliedCoupon(null)
+            return
+        }
+
+        // Check Minimum Order
+        if (coupon.minOrderValue && rawTotal < coupon.minOrderValue) {
+            setCouponError(`الحد الأدنى للطلب هو ${coupon.minOrderValue} ر.س`)
+            setAppliedCoupon(null)
+            return
+        }
+
+        // Check Category Restriction
+        if (coupon.categoryId) {
+            const category = categories.find(c => c.id === coupon.categoryId)
+            if (category) {
+                const hasCategoryItem = cart.some(item => item.category === category.nameAr)
+                if (!hasCategoryItem) {
+                    setCouponError(`هذا الكوبون خاص بقسم ${category.nameAr} فقط`)
+                    setAppliedCoupon(null)
+                    return
+                }
+            }
+        }
+
+        setAppliedCoupon({ code: coupon.code, discount: coupon.discount, type: coupon.type })
+        setCouponError("")
+        toast.success(`تم تطبيق خصم ${coupon.discount}% بنجاح`)
+    }
+
+    const removeCoupon = () => {
+        setAppliedCoupon(null)
+        setCouponCode("")
+        setCouponError("")
+    }
 
     const handleCreateOrder = (isDraft: boolean) => {
         // Validation if required
@@ -136,9 +210,57 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400">الإجمالي التقديري</span>
-                                <span className="text-2xl font-bold text-white">{total.toFixed(2)} ر.س</span>
+                            <div className="space-y-3 mb-4 p-4 bg-black/20 rounded-2xl border border-white/5">
+                                <label className="text-xs text-slate-400 font-bold">كود الخصم (الكوبون)</label>
+                                <div className="flex gap-2 relative">
+                                    <Input
+                                        placeholder="أدخل الكود هنا"
+                                        value={couponCode}
+                                        onChange={(e) => {
+                                            setCouponCode(e.target.value.toUpperCase())
+                                            setCouponError("")
+                                        }}
+                                        disabled={!!appliedCoupon}
+                                        className={`h-10 text-right pr-4 bg-black/20 text-sm font-mono tracking-wider ${couponError ? "border-red-500/50" : "border-white/5"}`}
+                                    />
+                                    {appliedCoupon ? (
+                                        <button onClick={removeCoupon} className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 hover:bg-red-400/10 p-1 rounded-full">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                            onClick={navToCheckout}
+                                        >
+                                            تطبيق
+                                        </Button>
+                                    )}
+                                </div>
+                                {couponError && <p className="text-[10px] text-red-500 font-bold">{couponError}</p>}
+                                {appliedCoupon && (
+                                    <div className="flex justify-between items-center text-xs text-green-400 font-bold px-1">
+                                        <span>قسيمة {appliedCoupon.code}</span>
+                                        <span>-{discountAmount.toFixed(2)} ر.س</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center text-sm text-slate-400">
+                                    <span>المجموع الفرعي</span>
+                                    <span>{rawTotal.toFixed(2)} ر.س</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between items-center text-sm text-green-400 font-bold">
+                                        <span>الخصم</span>
+                                        <span>-{discountAmount.toFixed(2)} ر.س</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
+                                    <span className="text-white font-bold">الإجمالي النهائي</span>
+                                    <span className="text-2xl font-black text-primary">{total.toFixed(2)} ر.س</span>
+                                </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <Button
