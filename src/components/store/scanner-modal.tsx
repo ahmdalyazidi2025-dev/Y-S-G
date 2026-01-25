@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode"
 import { Button } from "@/components/ui/button"
-import { X, ImageIcon, Zap, AlertTriangle } from "lucide-react"
+import { X, ImageIcon, Zap, AlertTriangle, Layers } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/context/store-context"
 import { hapticFeedback } from "@/lib/haptics"
@@ -17,12 +17,36 @@ interface ScannerModalProps {
 }
 
 export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan }: ScannerModalProps) {
-    const { scanProduct, storeSettings } = useStore()
+    const { scanProduct, storeSettings, addToCart } = useStore()
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
+    const [isBatchMode, setIsBatchMode] = useState(false)
     const [showNotFound, setShowNotFound] = useState(false)
     const [lastScanned, setLastScanned] = useState("")
     const scannerRef = useRef<Html5Qrcode | null>(null)
+
+    const playBeep = (type: 'success' | 'error') => {
+        const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        if (type === 'success') {
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime); // 1000Hz (BEEP)
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } else {
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime); // Low buzz
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+    };
 
     const stopCamera = useCallback(async () => {
         if (scannerRef.current && scannerRef.current.isScanning) {
@@ -33,27 +57,59 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     }, [])
 
     const handleScan = useCallback((decodedText: string) => {
-        if (decodedText === lastScanned) return
+        if (decodedText === lastScanned) return // Prevent duplicate triggering in short time
+
+        // Clear last scanned after 2 seconds to allow re-scanning same item in batch mode
+        setTimeout(() => setLastScanned(""), 2500)
+        setLastScanned(decodedText)
 
         if (onScan) {
             hapticFeedback('medium')
+            playBeep('success')
             onScan(decodedText)
-            onClose()
+            if (!isBatchMode) onClose()
+            else toast.success("تم مسح الباركود")
             return
         }
 
         const product = scanProduct(decodedText)
         if (product) {
-            setLastScanned(decodedText)
             hapticFeedback('medium')
-            onClose()
+            playBeep('success')
+
+            if (isBatchMode) {
+                addToCart(product)
+                toast.success(`تم إضافة ${product.name} للسلة`)
+            } else {
+                // If not batch mode, maybe redirect to product? Or just close?
+                // Default behavior was closing, but usually we want to see the product.
+                // For now, let's keep it simple: Add to cart? Or just close?
+                // The prompt didn't specify regular mode change, just batch mode addition.
+                // Existing code just closed it.
+                // Let's assume existing behavior for single scan was to open detail (handled outside?)
+                // Actually existing code just did onClose().
+                // We'll update it to add to cart if in batch mode.
+                // Wait, if not batch mode, what happens? Existing code just calls onClose().
+                // The caller (CustomerHome) usually doesn't listen to onScan unless custom logic.
+                // Existing CustomerHome scanner usage doesn't pass onScan.
+                // So this branch is executed.
+                // If single scan, we might want to open details.
+                // But for now, let's just stick to the requested "Batch Scan" improvements.
+                onClose()
+            }
         } else {
-            setLastScanned(decodedText)
-            setShowNotFound(true)
-            hapticFeedback('warning')
-            stopCamera()
+            if (isBatchMode) {
+                playBeep('error')
+                toast.error("المنتج غير موجود")
+                hapticFeedback('error')
+                // Don't stop camera in batch mode, just notify
+            } else {
+                setShowNotFound(true)
+                hapticFeedback('warning')
+                stopCamera()
+            }
         }
-    }, [lastScanned, onScan, onClose, stopCamera, scanProduct])
+    }, [lastScanned, onScan, onClose, stopCamera, scanProduct, isBatchMode, addToCart])
 
     const startCamera = useCallback(async () => {
         // Give the modal a moment to render properly
@@ -197,10 +253,22 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                         <Zap className={`w-4 h-4 ${isFlashOn ? "text-yellow-400 fill-current" : "text-slate-400"}`} />
                         <span className="text-sm font-bold text-white">ماسح الباركود</span>
                     </div>
+                    <Button variant="ghost" size="icon" onClick={() => setIsBatchMode(!isBatchMode)} className={`rounded-full backdrop-blur-md transition-colors ${isBatchMode ? "bg-primary text-white" : "bg-black/20 text-white"}`}>
+                        <Layers className="w-5 h-5" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={toggleFlash} className="rounded-full bg-black/20 text-white backdrop-blur-md">
                         <Zap className={`w-6 h-6 ${isFlashOn ? "text-yellow-400 fill-current" : "text-white"}`} />
                     </Button>
                 </div>
+
+                {/* Batch Mode Indicator */}
+                {isBatchMode && (
+                    <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20">
+                        <div className="bg-primary/90 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg animate-pulse border border-white/20">
+                            وضع الجرد السريع (مفعل)
+                        </div>
+                    </div>
+                )}
 
                 {/* Scanner View */}
                 <div className="flex-1 relative bg-black overflow-hidden">
