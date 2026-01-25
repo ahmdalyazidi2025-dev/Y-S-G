@@ -212,12 +212,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                             {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500">*</span>}
                                         </label>
                                         <div className="relative">
-                                            <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
                                             <Input
                                                 placeholder={currentUser?.name || "اسم العميل"}
                                                 value={customerName}
                                                 onChange={(e) => setCustomerName(e.target.value)}
-                                                className="h-12 text-right pr-10 bg-black/20 border-white/5 text-sm"
+                                                className="h-14 text-right pl-10 pr-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm"
                                             />
                                         </div>
                                     </div>
@@ -227,12 +227,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                             {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500">*</span>}
                                         </label>
                                         <div className="relative">
-                                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
                                             <Input
                                                 placeholder="رقم الجوال"
                                                 value={customerPhone}
                                                 onChange={(e) => setCustomerPhone(e.target.value)}
-                                                className="h-12 text-right pr-10 bg-black/20 border-white/5 text-sm"
+                                                className="h-14 text-right pl-10 pr-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm"
                                                 inputMode="numeric"
                                             />
                                         </div>
