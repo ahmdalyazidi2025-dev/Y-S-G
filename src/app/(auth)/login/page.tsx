@@ -88,29 +88,43 @@ function LoginForm() {
                     </div>
 
                     {baseRole === 'admin' && (
-                        <div className="flex bg-black/30 p-1 rounded-xl mt-6 border border-white/5 relative overflow-hidden">
-                            <motion.div
-                                className="absolute top-1 bottom-1 bg-primary rounded-lg shadow-lg z-0"
-                                initial={false}
-                                animate={{
-                                    left: loginType === 'staff' ? '4px' : '50%',
-                                    right: loginType === 'staff' ? '50%' : '4px',
-                                }}
-                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            />
+                        <div className="grid grid-cols-2 gap-3 mt-6">
                             <button
                                 type="button"
                                 onClick={() => setLoginType("staff")}
-                                className={`flex-1 py-2 px-4 text-xs font-bold rounded-lg relative z-10 transition-colors ${loginType === 'staff' ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                className={`
+                                    relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
+                                    ${loginType === 'staff'
+                                        ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(59,130,246,0.2)]'
+                                        : 'bg-white/5 border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'}
+                                `}
                             >
-                                موظف
+                                <div className={`p-2 rounded-full ${loginType === 'staff' ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
+                                    <User className="w-5 h-5" />
+                                </div>
+                                <span className={`text-xs font-bold ${loginType === 'staff' ? 'text-white' : 'text-slate-400'}`}>موظف</span>
+                                {loginType === 'staff' && (
+                                    <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
+                                )}
                             </button>
+
                             <button
                                 type="button"
                                 onClick={() => setLoginType("admin")}
-                                className={`flex-1 py-2 px-4 text-xs font-bold rounded-lg relative z-10 transition-colors ${loginType === 'admin' ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                className={`
+                                    relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
+                                    ${loginType === 'admin'
+                                        ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(59,130,246,0.2)]'
+                                        : 'bg-white/5 border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'}
+                                `}
                             >
-                                مدير النظام
+                                <div className={`p-2 rounded-full ${loginType === 'admin' ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
+                                    <Lock className="w-5 h-5" />
+                                </div>
+                                <span className={`text-xs font-bold ${loginType === 'admin' ? 'text-white' : 'text-slate-400'}`}>مدير النظام</span>
+                                {loginType === 'admin' && (
+                                    <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
+                                )}
                             </button>
                         </div>
                     )}
@@ -141,7 +155,7 @@ function LoginForm() {
                                         <Input
                                             type="email"
                                             placeholder="example@domain.com"
-                                            className="bg-black/40 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-slate-600 font-medium"
+                                            className="bg-white/5 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-slate-500 font-medium text-white"
                                             value={recoveryEmail}
                                             onChange={(e) => setRecoveryEmail(e.target.value)}
                                             required
@@ -181,7 +195,7 @@ function LoginForm() {
                                             <Input
                                                 type="text"
                                                 placeholder="username"
-                                                className="bg-black/40 border-white/10 h-14 rounded-xl pr-12 text-right dir-rtl relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-600 font-bold text-lg tracking-wide"
+                                                className="bg-white/5 border-white/10 h-14 rounded-xl pr-12 text-right dir-rtl relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-500 font-bold text-lg tracking-wide text-white"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
                                                 required
@@ -197,7 +211,7 @@ function LoginForm() {
                                                 id="password"
                                                 type="password"
                                                 placeholder="••••••••"
-                                                className="bg-black/40 border-white/10 h-14 rounded-xl pr-12 text-right text-white relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-600 font-bold text-lg tracking-widest"
+                                                className="bg-white/5 border-white/10 h-14 rounded-xl pr-12 text-right text-white relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-500 font-bold text-lg tracking-widest"
                                                 required
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
