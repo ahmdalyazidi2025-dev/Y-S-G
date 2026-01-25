@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Mail, Calendar, Wallet } from "lucide-react"
+import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Mail, Calendar, Wallet, Clock } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
@@ -82,6 +82,21 @@ export default function ProfilePage() {
                     <p className="text-xl font-black text-white">{orderCount} طلب</p>
                 </div>
             </div>
+
+            <Link href="/customer/invoices">
+                <div className="glass-card p-4 flex items-center justify-between group active:scale-[0.98] transition-all bg-white/5 hover:bg-white/10 border-white/5">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-white">طلباتي السابقة</h3>
+                            <p className="text-xs text-slate-400">تتبع طلباتك أو أعد الطلب بسهولة</p>
+                        </div>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors rtl:rotate-180" />
+                </div>
+            </Link>
 
             {/* Edit Form */}
             <div className="glass-card p-6 space-y-6">

@@ -16,7 +16,7 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
-    pending: { label: "لم تجهز", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
+    pending: { label: "مسودة (غير مرسل)", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
     processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
     shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
     delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
@@ -24,7 +24,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart } = useStore()
+    const { orders, restoreDraftToCart, addToCart } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
@@ -33,6 +33,24 @@ export default function InvoicesPage() {
         const success = await generateOrderPDF('premium-invoice-customer', order.id)
         if (success) toast.success("تم تجهيز وتحميل الفاتورة")
         else toast.error("فشل في تجهيز الفاتورة")
+    }
+
+    const handleReorder = (order: Order) => {
+        order.items.forEach(item => {
+            addToCart({
+                ...item,
+                // Ensure legacy items map correctly
+                categoryId: (item as any).categoryId || "general"
+            } as any)
+        })
+        toast.success("تم إضافة المنتجات للسلة", {
+            action: {
+                label: "الذهاب للسلة",
+                onClick: () => document.getElementById("cart-trigger")?.click() // Hacky but works if trigger has ID, or we assume user opens cart manually. Better: just toast.
+            }
+        })
+        hapticFeedback('medium')
+        setSelectedOrder(null)
     }
 
     const filteredOrders = filter === "all" ? orders : orders.filter(o => o.status === filter)
@@ -217,14 +235,24 @@ export default function InvoicesPage() {
                                         </div>
                                         {selectedOrder.status === "pending" && (
                                             <Button
-                                                className="w-full h-14 rounded-2xl bg-primary text-white gap-2 shadow-lg shadow-primary/20"
+                                                className="w-full h-14 rounded-2xl bg-orange-500/10 text-orange-400 gap-2 shadow-lg shadow-orange-500/5 border border-orange-500/20"
                                                 onClick={() => {
                                                     restoreDraftToCart(selectedOrder.id)
                                                     setSelectedOrder(null)
+                                                    toast.success("تم استرجاع المسودة للسلة للتعديل")
                                                 }}
                                             >
                                                 <Plus className="w-5 h-5" />
-                                                <span>إعادة للسلة للتعديل</span>
+                                                <span>استكمال الطلب (تعديل المسودة)</span>
+                                            </Button>
+                                        )}
+                                        {selectedOrder.status !== "pending" && (
+                                            <Button
+                                                className="w-full h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 gap-2 shadow-lg shadow-emerald-500/5 border border-emerald-500/20"
+                                                onClick={() => handleReorder(selectedOrder)}
+                                            >
+                                                <Plus className="w-5 h-5" />
+                                                <span>إعادة طلب نفس المنتجات</span>
                                             </Button>
                                         )}
                                         <div className="grid grid-cols-2 gap-3">
