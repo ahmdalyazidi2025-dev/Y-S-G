@@ -182,6 +182,7 @@ export type StoreSettings = {
     logoUrl?: string
     geminiCustomPrompt?: string
     geminiReferenceImageUrl?: string
+    enableCoupons?: boolean
 }
 
 type StoreContextType = {
@@ -248,6 +249,7 @@ const MOCK_SETTINGS: StoreSettings = {
     shippingDesc: "لكل الطلبات التي تفوق 500 ريال",
     paymentTitle: "الدفع عند الاستلام",
     paymentDesc: "الدفع عند استلام طلبك",
+    enableCoupons: true,
     supportTitle: "دعم مخصص",
     supportDesc: "الدعم 6 أيام في الأسبوع خلال الدوام الرسمي",
     aboutTitle: "مجموعة يحيى سلمان غزواني التجارية",

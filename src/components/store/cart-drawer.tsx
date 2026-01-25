@@ -240,41 +240,43 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 </div>
 
                                 {/* Coupon */}
-                                <div className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5">
-                                    <label className="text-xs text-slate-400 font-bold">كود الخصم (الكوبون)</label>
-                                    <div className="flex gap-2 relative">
-                                        <Input
-                                            placeholder="أدخل الكود هنا"
-                                            value={couponCode}
-                                            onChange={(e) => {
-                                                setCouponCode(e.target.value.toUpperCase())
-                                                setCouponError("")
-                                            }}
-                                            disabled={!!appliedCoupon}
-                                            className={`h-10 text-right pr-4 bg-black/20 text-sm font-mono tracking-wider ${couponError ? "border-red-500/50" : "border-white/5"}`}
-                                        />
-                                        {appliedCoupon ? (
-                                            <button onClick={removeCoupon} className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 hover:bg-red-400/10 p-1 rounded-full">
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        ) : (
-                                            <Button
-                                                size="sm"
-                                                className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
-                                                onClick={navToCheckout}
-                                            >
-                                                تطبيق
-                                            </Button>
+                                {storeSettings.enableCoupons !== false && (
+                                    <div className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5">
+                                        <label className="text-xs text-slate-400 font-bold">كود الخصم (الكوبون)</label>
+                                        <div className="flex gap-2 relative">
+                                            <Input
+                                                placeholder="أدخل الكود هنا"
+                                                value={couponCode}
+                                                onChange={(e) => {
+                                                    setCouponCode(e.target.value.toUpperCase())
+                                                    setCouponError("")
+                                                }}
+                                                disabled={!!appliedCoupon}
+                                                className={`h-10 text-right pr-4 bg-black/20 text-sm font-mono tracking-wider ${couponError ? "border-red-500/50" : "border-white/5"}`}
+                                            />
+                                            {appliedCoupon ? (
+                                                <button onClick={removeCoupon} className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 hover:bg-red-400/10 p-1 rounded-full">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                                    onClick={navToCheckout}
+                                                >
+                                                    تطبيق
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {couponError && <p className="text-[10px] text-red-500 font-bold">{couponError}</p>}
+                                        {appliedCoupon && (
+                                            <div className="flex justify-between items-center text-xs text-green-400 font-bold px-1">
+                                                <span>قسيمة {appliedCoupon.code}</span>
+                                                <span>-{discountAmount.toFixed(2)} ر.س</span>
+                                            </div>
                                         )}
                                     </div>
-                                    {couponError && <p className="text-[10px] text-red-500 font-bold">{couponError}</p>}
-                                    {appliedCoupon && (
-                                        <div className="flex justify-between items-center text-xs text-green-400 font-bold px-1">
-                                            <span>قسيمة {appliedCoupon.code}</span>
-                                            <span>-{discountAmount.toFixed(2)} ر.س</span>
-                                        </div>
-                                    )}
-                                </div>
+                                )}
                             </div>
                         )}
                     </div>

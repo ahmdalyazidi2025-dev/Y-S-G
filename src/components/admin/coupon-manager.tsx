@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { useStore } from "@/context/store-context"
 import { Timestamp } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2, Ticket, Sparkles, Copy, Calendar, Percent } from "lucide-react"
@@ -12,7 +13,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function CouponManager() {
-    const { coupons, addCoupon, deleteCoupon, categories } = useStore()
+    const { coupons, addCoupon, deleteCoupon, categories, storeSettings, updateStoreSettings } = useStore()
     const [code, setCode] = useState("")
     const [discount, setDiscount] = useState("10")
     const [usageLimit, setUsageLimit] = useState("100")
@@ -77,6 +78,14 @@ export function CouponManager() {
                     <div>
                         <h3 className="font-black text-lg text-white">الكوبونات والخصومات</h3>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Discount Engine</p>
+                    </div>
+                    <div className="mr-auto flex items-center gap-2 bg-white/5 px-3 py-2 rounded-full border border-white/5">
+                        <Label htmlFor="coupon-toggle" className="text-xs text-slate-300 cursor-pointer">تفعيل النظام</Label>
+                        <Switch
+                            id="coupon-toggle"
+                            checked={storeSettings.enableCoupons}
+                            onCheckedChange={(checked: boolean) => updateStoreSettings({ ...storeSettings, enableCoupons: checked })}
+                        />
                     </div>
                 </div>
 
