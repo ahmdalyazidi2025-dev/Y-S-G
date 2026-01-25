@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock, User } from "lucide-react"
+import Link from "next/link"
+import { Lock, User, ArrowRight } from "lucide-react"
 import { useStore } from "@/context/store-context"
 
 function LoginForm() {
@@ -54,6 +55,16 @@ function LoginForm() {
 
     return (
         <div className="relative w-full max-w-md mx-auto">
+            {/* Back Button */}
+            <div className="absolute -top-16 right-0 z-20">
+                <Link href="/">
+                    <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 gap-2 rounded-full px-4">
+                        <ArrowRight className="w-5 h-5" />
+                        <span className="pb-1">الرئيسية</span>
+                    </Button>
+                </Link>
+            </div>
+
             {/* Dynamic Background Elements */}
             <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] animate-pulse delay-1000" />
