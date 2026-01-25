@@ -67,6 +67,8 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     Html5QrcodeSupportedFormats.UPC_A,
                     Html5QrcodeSupportedFormats.UPC_E,
                     Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
                 ],
                 verbose: false
             })
