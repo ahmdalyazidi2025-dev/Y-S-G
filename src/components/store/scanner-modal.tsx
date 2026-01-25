@@ -70,6 +70,9 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     Html5QrcodeSupportedFormats.CODE_128,
                     Html5QrcodeSupportedFormats.CODE_39,
                 ],
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
                 verbose: false
             })
             scannerRef.current = html5QrCode
