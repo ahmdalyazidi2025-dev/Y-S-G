@@ -1,49 +1,43 @@
 "use server"
 
+// List of models to try in order of preference
+const GEMINI_MODELS = [
+    "gemini-1.5-flash-001", // Stable Flash (Preferred)
+    "gemini-1.5-flash",     // Generic Flash
+    "gemini-1.5-pro",       // Pro
+    "gemini-pro",           // Legacy Pro
+    "gemini-pro-vision"     // Legacy Vision (Good for images)
+]
+
 export async function verifyGeminiKey(apiKey: string) {
     if (!apiKey) return { success: false, error: "المفتاح غير موجود" }
 
-    try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`
+    // Try to verify using the robust callGeminiAPI helper
+    // This allows verification to succeed if *any* model works
+    const result = await callGeminiAPI(apiKey, ["Test connection"], true)
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: "Test connection" }] }]
-            }),
-            cache: "no-store"
-        })
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.error?.message || `HTTP Error: ${response.status}`)
-        }
-
+    if (result.success) {
         return { success: true }
-    } catch (error: any) {
-        console.error("Server-Side Gemini Verification Error (REST):", error)
-
-        let errorMessage = "فشل التحقق من المفتاح"
-        const msg = error.toString().toLowerCase()
-
-        if (msg.includes("api_key") || msg.includes("key invalid") || msg.includes("400") || msg.includes("403")) {
-            errorMessage = "المفتاح غير صحيح (API Key Invalid)"
-        } else if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {
-            try {
-                // Diagnostic: Check if we can reach Google at all
-                await fetch("https://www.google.com", { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(5000) });
-                errorMessage = "السيرفر متصل بالإنترنت، لكن API جوجل محظور برمجياً أو عبر الجدار الناري.";
-            } catch (netErr) {
-                errorMessage = "السيرفر غير متصل بالإنترنت نهائياً (No Internet/DNS).";
-            }
-        } else {
-            // Include raw error for debugging unknown issues
-            errorMessage = `خطأ غير معروف: ${error.message || JSON.stringify(error)}`
-        }
-
-        return { success: false, error: errorMessage }
     }
+
+    // If all models failed, return diagnostic info
+    let errorMessage = "فشل التحقق من المفتاح"
+    const msg = (result.error || "").toString().toLowerCase()
+
+    if (msg.includes("api_key") || msg.includes("key invalid") || msg.includes("400") || msg.includes("403")) {
+        errorMessage = "المفتاح غير صحيح (API Key Invalid)"
+    } else if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {
+        try {
+            await fetch("https://www.google.com", { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(5000) });
+            errorMessage = "السيرفر متصل بالإنترنت، لكن API جوجل محظور برمجياً أو عبر الجدار الناري.";
+        } catch (netErr) {
+            errorMessage = "السيرفر غير متصل بالإنترنت نهائياً (No Internet/DNS).";
+        }
+    } else {
+        errorMessage = `خطأ غير معروف: ${result.error}`
+    }
+
+    return { success: false, error: errorMessage }
 }
 
 export async function generateGeminiResponse(apiKey: string, promptParts: any[]) {
@@ -137,6 +131,7 @@ export async function extractBarcodeAction(apiKey: string, imageBase64: string) 
 
     const result = await callGeminiAPI(apiKey, [prompt, imageBase64])
 
+    // FIXED: Properly handle the result logic
     if (result.success && result.text) {
         try {
             const cleanedText = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -148,56 +143,86 @@ export async function extractBarcodeAction(apiKey: string, imageBase64: string) 
     return { found: false, code: "" }
 }
 
-// Reuseable Internal Helper
-async function callGeminiAPI(apiKey: string, promptParts: any[]) {
+// Reuseable Internal Helper with Fallback Strategy
+async function callGeminiAPI(apiKey: string, promptParts: any[], isVerification = false) {
     if (!apiKey) return { success: false, error: "المفتاح غير موجود" }
 
-    try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`
+    let lastError: any = null;
 
-        const parts = promptParts.map(part => {
-            if (typeof part === 'string') {
-                if (part.startsWith('data:')) {
-                    const split = part.split(',')
-                    const mimeType = split[0].match(/:(.*?);/)?.[1]
-                    const base64Data = split[1]
+    // Convert input parts to REST API format ONCE
+    const payloadParts = promptParts.map((part: any) => {
+        if (typeof part === 'string') {
+            if (part.startsWith('data:')) {
+                const split = part.split(',')
+                const mimeType = split[0].match(/:(.*?);/)?.[1]
+                const base64Data = split[1]
 
-                    if (mimeType && base64Data) {
-                        return {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Data
-                            }
+                if (mimeType && base64Data) {
+                    return {
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: base64Data
                         }
                     }
                 }
-                return { text: part }
-            } else if (part.inlineData) {
-                return { inlineData: part.inlineData }
             }
-            return { text: String(part) }
-        })
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts }]
-            }),
-            cache: "no-store"
-        })
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.error?.message || `HTTP Error: ${response.status}`)
+            return { text: part }
+        } else if (part.inlineData) {
+            return { inlineData: part.inlineData }
         }
+        return { text: String(part) }
+    })
 
-        const data = await response.json()
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    // Try models in sequence
+    for (const model of GEMINI_MODELS) {
+        try {
+            console.log(`Attempting Gemini Model: ${model}`)
+            // Note: v1beta is standard for most, v1 is for pro. But v1beta usually works for all new ones.
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
-        return { success: true, text: responseText }
-    } catch (error: any) {
-        console.error("Gemini REST API Error:", error)
-        return { success: false, error: error.message || "Unknown Error" }
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: payloadParts }]
+                }),
+                cache: "no-store"
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                const message = errorData.error?.message || `HTTP Error: ${response.status}`
+                throw new Error(message)
+            }
+
+            const data = await response.json()
+
+            // Verification check - short circuit if just testing connection
+            if (isVerification && data.candidates) {
+                return { success: true, text: "Verified" }
+            }
+
+            const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+            return { success: true, text: responseText }
+
+        } catch (error: any) {
+            console.warn(`Model ${model} failed:`, error.message)
+            lastError = error
+
+            // If it's an Auth error, don't try other models (Key is wrong globally)
+            const msg = error.message.toLowerCase()
+            if (msg.includes("api_key") || msg.includes("invalid argument")) {
+                // Sometimes 'invalid argument' is just the model name, but usually auth is 'invalid authentication'
+                // Proceed to next model if it's 404 Not Found or 400 Bad Request (Model not supported)
+            }
+            if (msg.includes("api key") || msg.includes("unauthenticated")) {
+                return { success: false, error: error.message }
+            }
+        }
     }
+
+    // All models failed
+    const errorMsg = lastError?.message || "Unknown Error";
+    console.error("All Gemini models failed. Last error:", errorMsg)
+    return { success: false, error: `All models failed. Last error: ${errorMsg}` }
 }
