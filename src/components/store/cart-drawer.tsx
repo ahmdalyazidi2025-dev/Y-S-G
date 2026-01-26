@@ -283,7 +283,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
                     {/* FOOTER */}
                     {cart.length > 0 && (
-                        <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#1c2a36] border-t border-white/10 pb-10 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
+                        <div className="w-full p-6 bg-[#1c2a36] border-t border-white/10 pb-10 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
                             {/* Totals */}
                             <div className="space-y-1">
                                 {view === 'checkout' && (
