@@ -202,10 +202,7 @@ export default function StoreLayout({
                 onClose={() => setIsScannerOpen(false)}
                 onRequestProduct={() => setIsRequestOpen(true)}
             />
-            <SmartCameraModal
-                isOpen={isSmartCameraOpen}
-                onClose={() => setIsSmartCameraOpen(false)}
-            />
+
             <AiChatModal
                 isOpen={isAiChatOpen}
                 onClose={() => setIsAiChatOpen(false)}
