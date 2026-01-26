@@ -79,12 +79,11 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                             <Button
                                 size="sm"
                                 onClick={(e) => {
-                                    e.stopPropagation()
                                     addToCart(item, "حبة", item.pricePiece)
                                 }}
-                                className="h-9 w-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all p-0"
+                                className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn:animate-pulse"
                             >
-                                <Plus className="h-5 w-5" />
+                                <Plus className="h-6 w-6" />
                             </Button>
                         </div>
 
@@ -101,9 +100,9 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                                         e.stopPropagation()
                                         addToCart(item, "كرتون", item.priceDozen!)
                                     }}
-                                    className="h-9 w-9 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all p-0"
+                                    className="h-10 w-10 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn-dozen:animate-pulse"
                                 >
-                                    <Plus className="h-5 w-5" />
+                                    <Plus className="h-6 w-6" />
                                 </Button>
                             </div>
                         )}

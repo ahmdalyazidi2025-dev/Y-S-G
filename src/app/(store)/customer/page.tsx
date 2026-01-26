@@ -74,18 +74,20 @@ export default function CustomerHome() {
                             </Link>
                         </div>
 
-                        {/* Search Bar */}
-                        <div className="flex gap-3">
-                            <div className="relative flex-1 group">
-                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 group-focus-within:text-primary transition-colors" />
-                                <Input
-                                    placeholder="ابحث عن منتج، باركود..."
-                                    className="bg-white/90 border-white/40 shadow-xl backdrop-blur-xl rounded-2xl pr-12 text-right h-14 text-base focus:ring-2 focus:ring-primary/50 text-black placeholder:text-slate-500"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
+                        {/* Search Bar - Sticky */}
+                        <div className="sticky top-[72px] z-40 bg-[#080b12]/80 backdrop-blur-xl py-3 -mx-4 px-4 transition-all border-b border-white/5 shadow-2xl">
+                            <div className="flex gap-3">
+                                <div className="relative flex-1 group">
+                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 group-focus-within:text-primary transition-colors z-10" />
+                                    <Input
+                                        placeholder="ابحث عن منتج، باركود..."
+                                        className="bg-white/90 border-white/40 shadow-inner backdrop-blur-xl rounded-2xl pr-12 text-right h-12 text-sm focus:ring-2 focus:ring-primary/50 text-black placeholder:text-slate-500"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <CustomerNotifications />
                             </div>
-                            <CustomerNotifications />
                         </div>
                     </div>
                 </div>
@@ -98,7 +100,7 @@ export default function CustomerHome() {
                     <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
                 </div>
 
-                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 no-scrollbar px-4 relative z-10 customer-scrollbar mb-8">
+                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-[#080b12]/95 backdrop-blur-md border-b border-white/5 -mx-4">
                     <button
                         onClick={() => setSelectedCategory("الكل")}
                         className={cn(
