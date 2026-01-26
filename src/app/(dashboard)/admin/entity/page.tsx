@@ -237,10 +237,11 @@ function ApiKeyInput() {
     const [status, setStatus] = useState<"idle" | "valid" | "invalid" | "checking">("idle")
 
     const handleSaveKey = async () => {
+        const trimmedKey = key.trim()
         setStatus("checking")
-        updateStoreSettings({ ...storeSettings, googleGeminiApiKey: key })
+        updateStoreSettings({ ...storeSettings, googleGeminiApiKey: trimmedKey })
 
-        if (!key) {
+        if (!trimmedKey) {
             setStatus("idle")
             return
         }
@@ -248,15 +249,22 @@ function ApiKeyInput() {
         // Validate Key
         try {
             const { GoogleGenerativeAI } = await import("@google/generative-ai")
-            const genAI = new GoogleGenerativeAI(key)
+            const genAI = new GoogleGenerativeAI(trimmedKey)
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
             await model.generateContent("test")
             setStatus("valid")
             toast.success("تم التحقق من المفتاح بنجاح! ✅")
-        } catch (e) {
+        } catch (e: any) {
             console.error(e)
             setStatus("invalid")
-            toast.error("المفتاح غير صالح! ❌")
+
+            // Detailed Error Message
+            let errorMessage = "المفتاح غير صالح أو انتهت الصلاحية"
+            if (e.message?.includes("API_KEY_INVALID")) errorMessage = "المفتاح غير صحيح (API Key Invalid)"
+            if (e.message?.includes("PERMISSION_DENIED")) errorMessage = "ليس لديك صلاحية لاستخدام هذا الموديل"
+            if (e.message?.includes("fetch")) errorMessage = "خطأ في الاتصال (تأكد من الإنترنت)"
+
+            toast.error(`${errorMessage} ❌`)
         }
     }
 

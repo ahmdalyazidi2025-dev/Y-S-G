@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Send, Sparkles, User, Loader2, Camera, Maximize2, Minimize2, Settings, Key } from "lucide-react"
+import { X, Send, Sparkles, User, Loader2, Camera, Maximize2, Minimize2, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { useStore } from "@/context/store-context"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
+import Link from "next/link"
 
 interface AiChatModalProps {
     isOpen: boolean
@@ -29,7 +30,7 @@ interface Message {
 }
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
-    const { products, addToCart, addProductRequest } = useStore()
+    const { products, addToCart, addProductRequest, storeSettings } = useStore()
     const [isExpanded, setIsExpanded] = useState(false)
     const [messages, setMessages] = useState<Message[]>([
         { id: "1", role: "ai", content: "مرحباً! أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي منتج، أو إرسال صورة لقطعة غيار للبحث عنها، أو حتى طلب توفير منتج غير موجود! 🤖", timestamp: new Date() }
@@ -37,58 +38,8 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     const [inputValue, setInputValue] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [selectedImage, setSelectedImage] = useState<string | null>(null)
-    const [showSettings, setShowSettings] = useState(false)
-    const [customKey, setCustomKey] = useState("")
-    const [customPrompt, setCustomPrompt] = useState("")
-    const [referenceUrl, setReferenceUrl] = useState("")
-    const [isVerifying, setIsVerifying] = useState(false)
-
     const fileInputRef = useRef<HTMLInputElement>(null)
     const messagesEndRef = useRef<HTMLDivElement>(null)
-
-    // Load key from storage on mount
-    useEffect(() => {
-        setCustomKey(localStorage.getItem("gemini_api_key") || "")
-        setCustomPrompt(localStorage.getItem("gemini_custom_prompt") || "")
-        setReferenceUrl(localStorage.getItem("gemini_reference_url") || "")
-    }, [])
-
-    const handleSaveSettings = async () => {
-        if (!customKey.trim()) {
-            toast.error("الرجاء إدخال مفتاح API")
-            return
-        }
-
-        setIsVerifying(true)
-        try {
-            // Verify Key
-            const genAI = new GoogleGenerativeAI(customKey.trim())
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-            await model.generateContent("Test") // Simple ping
-
-            // Save if valid
-            localStorage.setItem("gemini_api_key", customKey.trim())
-            localStorage.setItem("gemini_custom_prompt", customPrompt.trim())
-            localStorage.setItem("gemini_reference_url", referenceUrl.trim())
-
-            toast.success("تم التحقق والحفظ بنجاح! ✅")
-            setShowSettings(false)
-        } catch (error) {
-            toast.error("المفتاح غير صالح! تأكد من نسخه بشكل صحيح.")
-        } finally {
-            setIsVerifying(false)
-        }
-    }
-
-    const clearSettings = () => {
-        localStorage.removeItem("gemini_api_key")
-        localStorage.removeItem("gemini_custom_prompt")
-        localStorage.removeItem("gemini_reference_url")
-        setCustomKey("")
-        setCustomPrompt("")
-        setReferenceUrl("")
-        toast.info("تمت استعادة الإعدادات الافتراضية")
-    }
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -126,16 +77,25 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         setIsLoading(true)
 
         try {
-            const apiKey = localStorage.getItem("gemini_api_key") || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+            // Use key from Global Settings ONLY
+            const apiKey = storeSettings.googleGeminiApiKey
 
             if (!apiKey) {
-                toast.error("مفتاح API مفقود! يرجى إضافته من الإعدادات.")
-                setShowSettings(true)
-                setIsLoading(false)
+                // Professional Fallback Message
+                setTimeout(() => {
+                    setMessages(prev => [...prev, {
+                        id: (Date.now() + 1).toString(),
+                        role: "ai",
+                        content: "عذراً، خدمة المساعد الذكي غير مفعلة حالياً. يرجى التواصل مع إدارة المتجر لتفعيلها.",
+                        timestamp: new Date()
+                    }])
+                    setIsLoading(false)
+                    hapticFeedback('error')
+                }, 1000)
                 return
             }
 
-            const genAI = new GoogleGenerativeAI(apiKey)
+            const genAI = new GoogleGenerativeAI(apiKey.trim())
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
             const systemPromptBase = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
@@ -147,9 +107,9 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             3. إذا لم تجد القطعة، اقترح طلب توفير (Request).
             4. حلل الصور لاستخراج أرقام الهيكل (VIN) أو معرفة القطعة.`
 
-            // Append custom prompt if exists
-            const finalPrompt = customPrompt
-                ? `${systemPromptBase}\n\nتعليمات إضافية من المستخدم:\n${customPrompt}`
+            // Append custom prompt from Global Settings if exists
+            const finalPrompt = storeSettings.geminiCustomPrompt
+                ? `${systemPromptBase}\n\nتعليمات إضافية من الإدارة:\n${storeSettings.geminiCustomPrompt}`
                 : systemPromptBase
 
             const promptParts: any[] = [
@@ -158,12 +118,16 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             ]
 
             if (userMessage.image) promptParts.push(userMessage.image)
-            if (referenceUrl) promptParts.push(`صورة مرجعية للسياق: ${referenceUrl}`)
+
+            // Use Reference Image from Global Settings if exists
+            if (storeSettings.geminiReferenceImageUrl) {
+                promptParts.push(`صورة مرجعية للسياق: ${storeSettings.geminiReferenceImageUrl}`)
+            }
 
             const result = await model.generateContent(promptParts)
             const responseText = result.response.text()
 
-            // ... parsing logic (same as before) ...
+            // ... parsing logic ...
             let action: Message['action'] = "none"
             let productData
             let marketEstimate
@@ -195,19 +159,17 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             hapticFeedback('success')
         } catch (error) {
             console.error("Gemini Error:", error)
-            toast.error("حدث خطأ في الاتصال. تأكد من صحة المفتاح.")
+            // Generic friendly error
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
-                content: "عذراً، حدثت مشكلة في المعالجة. يرجى التحقق من مفتاح API أو المحاولة لاحقاً.",
+                content: "عذراً، حدث خطأ تقني في الاتصال. يرجى المحاولة مرة أخرى لاحقاً.",
                 timestamp: new Date()
             }])
         } finally {
             setIsLoading(false)
         }
     }
-
-
 
     return (
         <AnimatePresence>
@@ -252,14 +214,6 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setShowSettings(!showSettings)}
-                                    className={`rounded-full w-10 h-10 ${showSettings ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
-                                >
-                                    <Settings className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
                                     onClick={() => setIsExpanded(!isExpanded)}
                                     className="rounded-full hover:bg-white/10 text-slate-400 w-10 h-10"
                                 >
@@ -275,81 +229,6 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 </Button>
                             </div>
                         </div>
-
-                        {/* Settings Area (Matches Screenshot) */}
-                        <AnimatePresence>
-                            {showSettings && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="bg-[#0f172a] border-b border-white/10 overflow-hidden"
-                                >
-                                    <div className="p-5 space-y-5" dir="rtl">
-
-                                        {/* API Key Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-indigo-400">
-                                                <Sparkles className="w-4 h-4" />
-                                                <span className="text-sm font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</span>
-                                            </div>
-                                            <p className="text-[10px] text-slate-400">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    value={customKey}
-                                                    onChange={(e) => setCustomKey(e.target.value)}
-                                                    placeholder="...AIzaSy"
-                                                    type="password"
-                                                    className="bg-[#1e293b] border-white/5 text-white/90 text-sm h-11 text-left ltr font-mono"
-                                                />
-                                                <Button
-                                                    onClick={handleSaveSettings}
-                                                    disabled={isVerifying}
-                                                    className="h-11 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6"
-                                                >
-                                                    {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ وتحقق"}
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        {/* Custom Prompt Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-purple-400">
-                                                <span className="text-xl">🤖</span>
-                                                <span className="text-sm font-bold">تخصيص المساعد (اختياري)</span>
-                                            </div>
-                                            <p className="text-[10px] text-slate-400">تعليمات إضافية للمساعد (Prompt) - مثال: "تحدث بلهجة عامية سعودية"</p>
-                                            <textarea
-                                                value={customPrompt}
-                                                onChange={(e) => setCustomPrompt(e.target.value)}
-                                                placeholder="اكتب تعليماتك هنا..."
-                                                className="w-full bg-[#1e293b] border border-white/5 rounded-xl p-3 text-white/90 text-sm min-h-[80px] focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none"
-                                            />
-                                        </div>
-
-                                        {/* Reference Image Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[10px] text-slate-400">رابط صورة مرجعية (للمقارنة أو السياق)</label>
-                                                {referenceUrl && <button onClick={() => setReferenceUrl("")} className="text-[10px] text-red-400 hover:underline">مسح</button>}
-                                            </div>
-                                            <Input
-                                                value={referenceUrl}
-                                                onChange={(e) => setReferenceUrl(e.target.value)}
-                                                placeholder="https://example.com/reference-image.jpg"
-                                                className="bg-[#1e293b] border-white/5 text-slate-300 text-xs h-9 text-left font-mono"
-                                            />
-                                        </div>
-
-                                        <div className="pt-2 border-t border-white/5 flex justify-end">
-                                            <button onClick={clearSettings} className="text-[10px] text-red-500/60 hover:text-red-400 transition-colors">
-                                                استعادة الإعدادات الافتراضية
-                                            </button>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
 
                         {/* Chat Area */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -444,6 +323,23 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                     </div>
                                 </motion.div>
                             ))}
+
+                            {/* Check if key is missing and show Contact Admin Hint if messages length > 1 (meaning user tried to talk) */}
+                            {(!storeSettings.googleGeminiApiKey && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex justify-center"
+                                >
+                                    <Link href="/customer/chat">
+                                        <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 gap-2">
+                                            <MessageCircle className="w-4 h-4" />
+                                            تواصل مع الإدارة
+                                        </Button>
+                                    </Link>
+                                </motion.div>
+                            )}
+
                             {isLoading && (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 text-slate-400 text-xs p-2 bg-white/5 rounded-2xl w-fit px-4">
                                     <Loader2 className="w-4 h-4 animate-spin text-primary" />
