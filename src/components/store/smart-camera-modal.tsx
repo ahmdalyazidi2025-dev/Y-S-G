@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { toast } from "sonner"
 import Image from "next/image"
-import { analyzeImageWithGemini } from "@/lib/gemini"
+import { analyzeImageAction } from "@/app/actions/gemini"
 
 interface SmartCameraModalProps {
     isOpen: boolean
@@ -139,7 +139,7 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         }
 
         try {
-            const result = await analyzeImageWithGemini(
+            const result = await analyzeImageAction(
                 storeSettings.googleGeminiApiKey,
                 imageBase64,
                 storeSettings.geminiCustomPrompt,

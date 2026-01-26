@@ -7,7 +7,7 @@ import { X, ImageIcon, Zap, AlertTriangle, Layers } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/context/store-context"
 import { hapticFeedback } from "@/lib/haptics"
-import { extractBarcodeWithGemini } from "@/lib/gemini"
+import { extractBarcodeAction } from "@/app/actions/gemini"
 
 interface ScannerModalProps {
     isOpen: boolean
@@ -219,7 +219,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     }
 
                     toast.info("جاري استخدام الذكاء الاصطناعي لقراءة الباركود...")
-                    const aiResult = await extractBarcodeWithGemini(
+                    const aiResult = await extractBarcodeAction(
                         storeSettings.googleGeminiApiKey,
                         base64data
                     )
