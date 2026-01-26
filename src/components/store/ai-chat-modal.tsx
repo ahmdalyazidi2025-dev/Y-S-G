@@ -7,7 +7,8 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useStore } from "@/context/store-context"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+// import { GoogleGenerativeAI } from "@google/generative-ai" // Removed: Client-side
+import { verifyGeminiKey, generateGeminiResponse } from "@/app/actions/gemini" // Added: Server-side
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import Link from "next/link"
@@ -95,9 +96,6 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                 return
             }
 
-            const genAI = new GoogleGenerativeAI(apiKey.trim())
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-
             const systemPromptBase = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
             لديك صلاحية الوصول لبيانات المنتجات: ${JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price })))}
             
@@ -107,7 +105,6 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             3. إذا لم تجد القطعة، اقترح طلب توفير (Request).
             4. حلل الصور لاستخراج أرقام الهيكل (VIN) أو معرفة القطعة.`
 
-            // Append custom prompt from Global Settings if exists
             const finalPrompt = storeSettings.geminiCustomPrompt
                 ? `${systemPromptBase}\n\nتعليمات إضافية من الإدارة:\n${storeSettings.geminiCustomPrompt}`
                 : systemPromptBase
@@ -124,8 +121,14 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                 promptParts.push(`صورة مرجعية للسياق: ${storeSettings.geminiReferenceImageUrl}`)
             }
 
-            const result = await model.generateContent(promptParts)
-            const responseText = result.response.text()
+            // Call Server Action
+            const result = await generateGeminiResponse(apiKey, promptParts)
+
+            if (!result.success || !result.text) {
+                throw new Error(result.error || "Failed to generate response")
+            }
+
+            const responseText = result.text
 
             // ... parsing logic ...
             let action: Message['action'] = "none"

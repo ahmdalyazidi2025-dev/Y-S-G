@@ -11,7 +11,8 @@ import { StaffManager } from "@/components/admin/staff-manager"
 import { Input } from "@/components/ui/input"
 import { Lock } from "lucide-react"
 import { toast } from "sonner"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { verifyGeminiKey } from "@/app/actions/gemini"
+
 
 const PROTECTED_PIN = "4422707";
 
@@ -247,34 +248,18 @@ function ApiKeyInput() {
 
         setStatus("checking")
 
-        // 1. Verify Key First
-        try {
-            const genAI = new GoogleGenerativeAI(trimmedKey)
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-            await model.generateContent("Test connection")
+        // 1. Verify Key via Server Action
+        const result = await verifyGeminiKey(trimmedKey)
 
+        if (result.success) {
             // 2. If successful, Save to Store
             setStatus("valid")
             updateStoreSettings({ ...storeSettings, googleGeminiApiKey: trimmedKey })
             toast.success("تم التحقق والحفظ بنجاح! ✅")
-        } catch (e: any) {
-            console.error("Gemini Verification Error:", e)
+        } else {
+            console.error("Gemini Verification Error:", result.error)
             setStatus("invalid")
-
-            // Detailed Error Message
-            let errorMessage = "المفتاح غير صالح! تأكد من صحته."
-
-            // Check for common error patterns
-            const msg = e.toString().toLowerCase()
-            if (msg.includes("api_key") || msg.includes("400") || msg.includes("403")) {
-                errorMessage = "المفتاح غير صحيح (API Key Invalid)"
-            } else if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {
-                errorMessage = "مشكلة في الاتصال بالإنترنت (Network Error)"
-            } else if (msg.includes("quota")) {
-                errorMessage = "تم تجاوز حد الاستخدام (Quota Exceeded)"
-            }
-
-            toast.error(`${errorMessage}`)
+            toast.error(`${result.error} ❌`)
         }
     }
 
