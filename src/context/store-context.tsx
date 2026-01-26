@@ -240,6 +240,7 @@ type StoreContextType = {
     authInitialized: boolean
     resetPassword: (email: string) => Promise<boolean>
     loading: boolean // Added
+    guestId: string
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -288,7 +289,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
     const [authInitialized, setAuthInitialized] = useState(false)
+    const [guestId, setGuestId] = useState("")
     const router = useRouter()
+
+    useEffect(() => {
+        // Generate or retrieve persistent Guest ID
+        const storedGuestId = localStorage.getItem("ysg_guest_id")
+        if (storedGuestId) {
+            setGuestId(storedGuestId)
+        } else {
+            const newGuestId = `guest_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`
+            localStorage.setItem("ysg_guest_id", newGuestId)
+            setGuestId(newGuestId)
+        }
+    }, [])
 
     // Listen to Auth State Changes
     useEffect(() => {
@@ -1106,7 +1120,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading
+            updateAdminCredentials, authInitialized, resetPassword, loading, guestId,
         }}>
             {children}
         </StoreContext.Provider>

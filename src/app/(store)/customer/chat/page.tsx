@@ -10,11 +10,11 @@ import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
 export default function ChatPage() {
-    const { messages, sendMessage, currentUser } = useStore()
+    const { messages, sendMessage, currentUser, guestId } = useStore()
     const [msg, setMsg] = useState("")
 
-    // Use logged in user or fallback to guest (though this page should probably be protected)
-    const currentCustomerId = currentUser?.id || "guest"
+    // Use logged in user or fallback to unique guest ID
+    const currentCustomerId = currentUser?.id || guestId
     // const currentCustomerName = currentUser?.name || "عميل" // Not strictly needed as local var if we pass it directly
 
     const chatMessages = useMemo(() => {
