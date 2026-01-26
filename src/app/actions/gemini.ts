@@ -4,7 +4,7 @@ export async function verifyGeminiKey(apiKey: string) {
     if (!apiKey) return { success: false, error: "المفتاح غير موجود" }
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`
 
         const response = await fetch(url, {
             method: "POST",
@@ -153,7 +153,7 @@ async function callGeminiAPI(apiKey: string, promptParts: any[]) {
     if (!apiKey) return { success: false, error: "المفتاح غير موجود" }
 
     try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`
 
         const parts = promptParts.map(part => {
             if (typeof part === 'string') {
