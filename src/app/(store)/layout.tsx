@@ -35,12 +35,13 @@ export default function StoreLayout({
     const longPressTimer = useRef<NodeJS.Timeout | null>(null)
     const isLongPress = useRef(false)
 
-    const handleTouchStart = () => {
+    const handleTouchStart = (e?: React.TouchEvent | React.MouseEvent) => {
+        // e?.preventDefault() // Don't prevent default on start, or scrolling breaks
         isLongPress.current = false
         longPressTimer.current = setTimeout(() => {
             isLongPress.current = true
             hapticFeedback('heavy')
-            setIsSmartCameraOpen(true)
+            setIsAiChatOpen(true)
         }, 600)
     }
 
@@ -48,9 +49,14 @@ export default function StoreLayout({
         if (longPressTimer.current) {
             clearTimeout(longPressTimer.current)
         }
-        if (!isLongPress.current) {
-            action()
+
+        // If it was a long press, we prevent further actions (like click processing)
+        if (isLongPress.current) {
+            e.preventDefault()
+            return
         }
+
+        action()
     }
     // --------------------------
 
@@ -136,13 +142,18 @@ export default function StoreLayout({
                                 <button
                                     key={item.name}
                                     // Mobile Touch Events
-                                    onTouchStart={() => item.name === "الماسح" && handleTouchStart()}
+                                    onTouchStart={(e) => item.name === "الماسح" && handleTouchStart(e)}
                                     onTouchEnd={(e) => item.name === "الماسح" ? handleTouchEnd(e, () => item.onClick?.()) : item.onClick?.()}
                                     // Desktop/Mouse Events
-                                    onMouseDown={() => item.name === "الماسح" && handleTouchStart()}
+                                    onMouseDown={(e) => item.name === "الماسح" && handleTouchStart(e)}
                                     onMouseUp={(e) => item.name === "الماسح" ? handleTouchEnd(e, () => item.onClick?.()) : item.onClick?.()}
+                                    // Prevent Context Menu on Long Press
+                                    onContextMenu={(e) => { if (item.name === "الماسح") e.preventDefault() }}
                                     // Fallback Click
-                                    onClick={() => item.name !== "الماسح" && item.onClick?.()}
+                                    onClick={(e) => {
+                                        if (item.name === "الماسح") return // Handled by Touch/Mouse events
+                                        item.onClick?.()
+                                    }}
                                     className="relative -top-8 w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all border-4 border-[#101c26] group"
                                 >
                                     <Icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
