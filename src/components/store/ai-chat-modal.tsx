@@ -130,67 +130,20 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             setIsLoading(false)
         }
     }
-    const [isExpanded, setIsExpanded] = useState(false)
-    const { products, addToCart, addProductRequest } = useStore()
-    const [messages, setMessages] = useState<Message[]>([
-        { id: "1", role: "ai", content: "مرحباً! أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي منتج، أو إرسال صورة لقطعة غيار للبحث عنها، أو حتى طلب توفير منتج غير موجود! 🤖", timestamp: new Date() }
-    ])
-    const [inputValue, setInputValue] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const [selectedImage, setSelectedImage] = useState<string | null>(null)
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // DEBUG: Temporary check
+    if (!apiKey) {
+        toast.error("DEBUG: المفتاح غير موجود (undefined). تأكد من اسم المتغير في .env.local وتشغيل السيرفر مجدداً.")
+        console.error("API Key is missing")
+        setIsLoading(false)
+        return
     }
+    // console.log("Key loaded, length:", apiKey.length) // Safe log
 
-    useEffect(() => {
-        scrollToBottom()
-    }, [messages])
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setSelectedImage(reader.result as string)
-            }
-            reader.readAsDataURL(file)
-        }
-    }
-
-    const handleSendMessage = async () => {
-        if (!inputValue.trim() && !selectedImage) return
-
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            role: "user",
-            content: inputValue,
-            image: selectedImage || undefined,
-            timestamp: new Date()
-        }
-
-        setMessages(prev => [...prev, userMessage])
-        setInputValue("")
-        setSelectedImage(null)
-        setIsLoading(true)
-
-        try {
-            const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-            // DEBUG: Temporary check
-            if (!apiKey) {
-                toast.error("DEBUG: المفتاح غير موجود (undefined). تأكد من اسم المتغير في .env.local وتشغيل السيرفر مجدداً.")
-                console.error("API Key is missing")
-                setIsLoading(false)
-                return
-            }
-            // console.log("Key loaded, length:", apiKey.length) // Safe log
-
-            const genAI = new GoogleGenerativeAI(apiKey)
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-
-            let prompt = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
+    let prompt = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
             لديك صلاحية الوصول لبيانات المنتجات التالية: ${JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price })))}
             
             مهمتك:
@@ -201,358 +154,358 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             
             رسالة العميل: ${userMessage.content}`
 
-            const result = await model.generateContent([prompt, ...(userMessage.image ? [userMessage.image] : [])])
-            const responseText = result.response.text()
+    const result = await model.generateContent([prompt, ...(userMessage.image ? [userMessage.image] : [])])
+    const responseText = result.response.text()
 
-            // Simple parsing logic (in a real app, use structured output or JSON mode)
-            let action: Message['action'] = "none"
-            let productData
-            let marketEstimate
-            let vinData
+    // Simple parsing logic (in a real app, use structured output or JSON mode)
+    let action: Message['action'] = "none"
+    let productData
+    let marketEstimate
+    let vinData
 
-            if (responseText.includes("متوفرة") || responseText.includes("موجودة")) {
-                const foundProduct = products.find(p => responseText.includes(p.name) || prompt.includes(p.name))
-                if (foundProduct) {
-                    action = "available"
-                    productData = { id: foundProduct.id, name: foundProduct.name, price: foundProduct.price }
-                }
-            } else if (responseText.includes("غير متوفرة") || responseText.includes("طلب")) {
-                action = "request"
-                marketEstimate = "150 - 300" // Mock estimate
-            }
-
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: "ai",
-                content: responseText,
-                timestamp: new Date(),
-                action,
-                productData,
-                marketEstimate,
-                vinData
-            }
-
-            setMessages(prev => [...prev, aiMessage])
-            hapticFeedback('success')
-        } catch (error) {
-            console.error("Gemini Error:", error)
-            toast.error("حدث خطأ أثناء الاتصال بالمساعد الذكي")
-            setMessages(prev => [...prev, {
-                id: (Date.now() + 1).toString(),
-                role: "ai",
-                content: "والله يا غالي صار عندي مشكلة تقنية بسيطة، يا ليت تحاول مرة ثانية 😅",
-                timestamp: new Date()
-            }])
-        } finally {
-            setIsLoading(false)
+    if (responseText.includes("متوفرة") || responseText.includes("موجودة")) {
+        const foundProduct = products.find(p => responseText.includes(p.name) || prompt.includes(p.name))
+        if (foundProduct) {
+            action = "available"
+            productData = { id: foundProduct.id, name: foundProduct.name, price: foundProduct.price }
         }
+    } else if (responseText.includes("غير متوفرة") || responseText.includes("طلب")) {
+        action = "request"
+        marketEstimate = "150 - 300" // Mock estimate
     }
 
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto"
-                        onClick={onClose}
-                    />
+    const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: responseText,
+        timestamp: new Date(),
+        action,
+        productData,
+        marketEstimate,
+        vinData
+    }
 
-                    <motion.div
-                        layout
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{
-                            opacity: 1,
-                            scale: 1,
-                            y: 0,
-                            width: isExpanded ? "100%" : "90%",
-                            height: isExpanded ? "100%" : "70%",
-                            borderRadius: isExpanded ? "0px" : "24px"
-                        }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className={`bg-[#1c2a36]/95 backdrop-blur-xl border border-white/10 flex flex-col pointer-events-auto relative z-10 overflow-hidden shadow-2xl transition-all duration-300 ${isExpanded ? "max-w-none rounded-none" : "max-w-lg rounded-3xl"}`}
-                    >
-                        {/* Header */}
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 relative">
-                                    <Sparkles className="w-6 h-6 text-white animate-pulse" />
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#1c2a36]" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white text-lg">المساعد الذكي</h3>
-                                    <p className="text-[10px] text-slate-300 font-medium">متصل (Gemini AI)</p>
-                                </div>
+    setMessages(prev => [...prev, aiMessage])
+    hapticFeedback('success')
+} catch (error) {
+    console.error("Gemini Error:", error)
+    toast.error("حدث خطأ أثناء الاتصال بالمساعد الذكي")
+    setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: "ai",
+        content: "والله يا غالي صار عندي مشكلة تقنية بسيطة، يا ليت تحاول مرة ثانية 😅",
+        timestamp: new Date()
+    }])
+} finally {
+    setIsLoading(false)
+}
+    }
+
+return (
+    <AnimatePresence>
+        {isOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto"
+                    onClick={onClose}
+                />
+
+                <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{
+                        opacity: 1,
+                        scale: 1,
+                        y: 0,
+                        width: isExpanded ? "100%" : "90%",
+                        height: isExpanded ? "100%" : "70%",
+                        borderRadius: isExpanded ? "0px" : "24px"
+                    }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className={`bg-[#1c2a36]/95 backdrop-blur-xl border border-white/10 flex flex-col pointer-events-auto relative z-10 overflow-hidden shadow-2xl transition-all duration-300 ${isExpanded ? "max-w-none rounded-none" : "max-w-lg rounded-3xl"}`}
+                >
+                    {/* Header */}
+                    <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 relative">
+                                <Sparkles className="w-6 h-6 text-white animate-pulse" />
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#1c2a36]" />
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setShowSettings(!showSettings)}
-                                    className={`rounded-full w-10 h-10 ${showSettings ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
-                                >
-                                    <Settings className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setIsExpanded(!isExpanded)}
-                                    className="rounded-full hover:bg-white/10 text-slate-400 w-10 h-10"
-                                >
-                                    {isExpanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={onClose}
-                                    className="rounded-full hover:bg-red-500/20 hover:text-red-400 text-slate-400 w-10 h-10 transition-colors"
-                                >
-                                    <X className="w-6 h-6" />
-                                </Button>
+                            <div>
+                                <h3 className="font-bold text-white text-lg">المساعد الذكي</h3>
+                                <p className="text-[10px] text-slate-300 font-medium">متصل (Gemini AI)</p>
                             </div>
                         </div>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShowSettings(!showSettings)}
+                                className={`rounded-full w-10 h-10 ${showSettings ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
+                            >
+                                <Settings className="w-5 h-5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="rounded-full hover:bg-white/10 text-slate-400 w-10 h-10"
+                            >
+                                {isExpanded ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onClose}
+                                className="rounded-full hover:bg-red-500/20 hover:text-red-400 text-slate-400 w-10 h-10 transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </Button>
+                        </div>
+                    </div>
 
-                        {/* Settings Area (Matches Screenshot) */}
-                        <AnimatePresence>
-                            {showSettings && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="bg-[#0f172a] border-b border-white/10 overflow-hidden"
-                                >
-                                    <div className="p-5 space-y-5" dir="rtl">
+                    {/* Settings Area (Matches Screenshot) */}
+                    <AnimatePresence>
+                        {showSettings && (
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-[#0f172a] border-b border-white/10 overflow-hidden"
+                            >
+                                <div className="p-5 space-y-5" dir="rtl">
 
-                                        {/* API Key Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-indigo-400">
-                                                <Sparkles className="w-4 h-4" />
-                                                <span className="text-sm font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</span>
+                                    {/* API Key Section */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-indigo-400">
+                                            <Sparkles className="w-4 h-4" />
+                                            <span className="text-sm font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={customKey}
+                                                onChange={(e) => setCustomKey(e.target.value)}
+                                                placeholder="...AIzaSy"
+                                                type="password"
+                                                className="bg-[#1e293b] border-white/5 text-white/90 text-sm h-11 text-left ltr font-mono"
+                                            />
+                                            <Button
+                                                onClick={handleSaveSettings}
+                                                disabled={isVerifying}
+                                                className="h-11 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6"
+                                            >
+                                                {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ وتحقق"}
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Custom Prompt Section */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-purple-400">
+                                            <span className="text-xl">🤖</span>
+                                            <span className="text-sm font-bold">تخصيص المساعد (اختياري)</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400">تعليمات إضافية للمساعد (Prompt) - مثال: "تحدث بلهجة عامية سعودية"</p>
+                                        <textarea
+                                            value={customPrompt}
+                                            onChange={(e) => setCustomPrompt(e.target.value)}
+                                            placeholder="اكتب تعليماتك هنا..."
+                                            className="w-full bg-[#1e293b] border border-white/5 rounded-xl p-3 text-white/90 text-sm min-h-[80px] focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none"
+                                        />
+                                    </div>
+
+                                    {/* Reference Image Section */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] text-slate-400">رابط صورة مرجعية (للمقارنة أو السياق)</label>
+                                            {referenceUrl && <button onClick={() => setReferenceUrl("")} className="text-[10px] text-red-400 hover:underline">مسح</button>}
+                                        </div>
+                                        <Input
+                                            value={referenceUrl}
+                                            onChange={(e) => setReferenceUrl(e.target.value)}
+                                            placeholder="https://example.com/reference-image.jpg"
+                                            className="bg-[#1e293b] border-white/5 text-slate-300 text-xs h-9 text-left font-mono"
+                                        />
+                                    </div>
+
+                                    <div className="pt-2 border-t border-white/5 flex justify-end">
+                                        <button onClick={clearSettings} className="text-[10px] text-red-500/60 hover:text-red-400 transition-colors">
+                                            استعادة الإعدادات الافتراضية
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Chat Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                        {messages.map((msg) => (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                key={msg.id}
+                                className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                            >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg ${msg.role === "user" ? "bg-slate-700" : "bg-gradient-to-br from-indigo-500 to-purple-600"}`}>
+                                    {msg.role === "user" ? <User className="w-5 h-5 text-white" /> : <Sparkles className="w-5 h-5 text-white" />}
+                                </div>
+                                <div className={`flex flex-col gap-1 max-w-[85%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                                    {msg.role === "ai" && <span className="text-[10px] text-slate-400 px-2">Gemini AI</span>}
+                                    <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${msg.role === "user"
+                                        ? "bg-primary text-black rounded-tr-sm font-bold"
+                                        : "bg-white/10 text-slate-100 rounded-tl-sm border border-white/5"
+                                        }`}>
+                                        {msg.image && (
+                                            <div className="relative w-full h-40 mb-3 rounded-2xl overflow-hidden border border-black/20">
+                                                <Image src={msg.image} alt="User upload" fill className="object-cover" />
                                             </div>
-                                            <p className="text-[10px] text-slate-400">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    value={customKey}
-                                                    onChange={(e) => setCustomKey(e.target.value)}
-                                                    placeholder="...AIzaSy"
-                                                    type="password"
-                                                    className="bg-[#1e293b] border-white/5 text-white/90 text-sm h-11 text-left ltr font-mono"
-                                                />
+                                        )}
+
+                                        {/* VIN Identification Badge */}
+                                        {msg.action === "vin_identified" && msg.vinData && (
+                                            <div className="mb-3 p-3 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 shadow-lg">
+                                                    <span className="text-white text-lg">🚗</span>
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-indigo-100 text-sm">{msg.vinData.car}</div>
+                                                    <div className="text-[10px] text-indigo-300 font-mono tracking-wider bg-black/20 px-2 py-0.5 rounded-full mt-1 inline-block">{msg.vinData.vin}</div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="whitespace-pre-line">{msg.content}</div>
+
+                                        {/* Action Buttons */}
+                                        {msg.action === "available" && msg.productData && (
+                                            <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
+                                                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center justify-between">
+                                                    <span className="text-xs text-green-400 font-bold">✅ متوفرة في المتجر</span>
+                                                    <span className="text-sm font-black text-white">{msg.productData.price} <span className="text-[10px] font-normal">ر.س</span></span>
+                                                </div>
                                                 <Button
-                                                    onClick={handleSaveSettings}
-                                                    disabled={isVerifying}
-                                                    className="h-11 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6"
+                                                    className="w-full bg-green-600 hover:bg-green-500 text-white rounded-xl h-12 font-bold shadow-lg shadow-green-600/20"
+                                                    onClick={() => {
+                                                        const fullProduct = products.find(p => p.id === msg.productData?.id)
+                                                        if (fullProduct) {
+                                                            addToCart(fullProduct)
+                                                        }
+                                                    }}
                                                 >
-                                                    {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ وتحقق"}
+                                                    إضافة للسلة 🛒
                                                 </Button>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        {/* Custom Prompt Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-purple-400">
-                                                <span className="text-xl">🤖</span>
-                                                <span className="text-sm font-bold">تخصيص المساعد (اختياري)</span>
+                                        {msg.action === "request" && (
+                                            <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
+                                                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3">
+                                                    <div className="text-xs text-yellow-400 font-bold mb-1">⚠️ غير متوفرة حالياً</div>
+                                                    {msg.marketEstimate && (
+                                                        <div className="text-[10px] text-slate-400">
+                                                            السعر التقريبي: <span className="text-white font-bold">{msg.marketEstimate}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 rounded-xl h-12 font-bold"
+                                                    onClick={() => {
+                                                        addProductRequest({
+                                                            customerName: "عميل المتجر الذكي",
+                                                            description: `طلب تلقائي من AI: ${msg.content.slice(0, 50)}...`,
+                                                            image: msg.image || undefined
+                                                        })
+                                                        toast.success("تم التقديم")
+                                                    }}
+                                                >
+                                                    طلب توفير 📝
+                                                </Button>
                                             </div>
-                                            <p className="text-[10px] text-slate-400">تعليمات إضافية للمساعد (Prompt) - مثال: "تحدث بلهجة عامية سعودية"</p>
-                                            <textarea
-                                                value={customPrompt}
-                                                onChange={(e) => setCustomPrompt(e.target.value)}
-                                                placeholder="اكتب تعليماتك هنا..."
-                                                className="w-full bg-[#1e293b] border border-white/5 rounded-xl p-3 text-white/90 text-sm min-h-[80px] focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none"
-                                            />
-                                        </div>
-
-                                        {/* Reference Image Section */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-[10px] text-slate-400">رابط صورة مرجعية (للمقارنة أو السياق)</label>
-                                                {referenceUrl && <button onClick={() => setReferenceUrl("")} className="text-[10px] text-red-400 hover:underline">مسح</button>}
-                                            </div>
-                                            <Input
-                                                value={referenceUrl}
-                                                onChange={(e) => setReferenceUrl(e.target.value)}
-                                                placeholder="https://example.com/reference-image.jpg"
-                                                className="bg-[#1e293b] border-white/5 text-slate-300 text-xs h-9 text-left font-mono"
-                                            />
-                                        </div>
-
-                                        <div className="pt-2 border-t border-white/5 flex justify-end">
-                                            <button onClick={clearSettings} className="text-[10px] text-red-500/60 hover:text-red-400 transition-colors">
-                                                استعادة الإعدادات الافتراضية
-                                            </button>
-                                        </div>
+                                        )}
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    <span className="text-[10px] text-slate-500 px-2 opacity-60">
+                                        {msg.timestamp.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: 'numeric' })}
+                                    </span>
+                                </div>
+                            </motion.div>
+                        ))}
+                        {isLoading && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 text-slate-400 text-xs p-2 bg-white/5 rounded-2xl w-fit px-4">
+                                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                                <span>جاري التحليل والكتابة...</span>
+                            </motion.div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
 
-                        {/* Chat Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                            {messages.map((msg) => (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    key={msg.id}
-                                    className={`flex items-start gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                    {/* Input Area */}
+                    <div className="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
+                        {selectedImage && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-4 p-3 bg-indigo-500/10 rounded-2xl flex items-center justify-between border border-indigo-500/20">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-black border border-white/10">
+                                        <Image src={selectedImage} alt="Selected" width={48} height={48} className="object-cover w-full h-full" />
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-bold text-white block">صورة جاهزة للارسال</span>
+                                        <span className="text-[10px] text-indigo-300">سيتم تحليلها بواسطة AI</span>
+                                    </div>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-500/20 text-slate-400 hover:text-red-400" onClick={() => setSelectedImage(null)}>
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </motion.div>
+                        )}
+
+                        <div className="flex items-end gap-3">
+                            {/* Prominent Camera Button */}
+                            <div className="relative shrink-0">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleImageSelect}
+                                />
+                                <Button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 border border-white/10 shadow-xl flex items-center justify-center group overflow-hidden relative"
                                 >
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg ${msg.role === "user" ? "bg-slate-700" : "bg-gradient-to-br from-indigo-500 to-purple-600"}`}>
-                                        {msg.role === "user" ? <User className="w-5 h-5 text-white" /> : <Sparkles className="w-5 h-5 text-white" />}
-                                    </div>
-                                    <div className={`flex flex-col gap-1 max-w-[85%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                                        {msg.role === "ai" && <span className="text-[10px] text-slate-400 px-2">Gemini AI</span>}
-                                        <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${msg.role === "user"
-                                            ? "bg-primary text-black rounded-tr-sm font-bold"
-                                            : "bg-white/10 text-slate-100 rounded-tl-sm border border-white/5"
-                                            }`}>
-                                            {msg.image && (
-                                                <div className="relative w-full h-40 mb-3 rounded-2xl overflow-hidden border border-black/20">
-                                                    <Image src={msg.image} alt="User upload" fill className="object-cover" />
-                                                </div>
-                                            )}
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <Camera className="w-7 h-7 text-white" />
+                                </Button>
+                                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-400 whitespace-nowrap">تصوير</span>
+                            </div>
 
-                                            {/* VIN Identification Badge */}
-                                            {msg.action === "vin_identified" && msg.vinData && (
-                                                <div className="mb-3 p-3 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 shadow-lg">
-                                                        <span className="text-white text-lg">🚗</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-indigo-100 text-sm">{msg.vinData.car}</div>
-                                                        <div className="text-[10px] text-indigo-300 font-mono tracking-wider bg-black/20 px-2 py-0.5 rounded-full mt-1 inline-block">{msg.vinData.vin}</div>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="whitespace-pre-line">{msg.content}</div>
-
-                                            {/* Action Buttons */}
-                                            {msg.action === "available" && msg.productData && (
-                                                <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
-                                                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center justify-between">
-                                                        <span className="text-xs text-green-400 font-bold">✅ متوفرة في المتجر</span>
-                                                        <span className="text-sm font-black text-white">{msg.productData.price} <span className="text-[10px] font-normal">ر.س</span></span>
-                                                    </div>
-                                                    <Button
-                                                        className="w-full bg-green-600 hover:bg-green-500 text-white rounded-xl h-12 font-bold shadow-lg shadow-green-600/20"
-                                                        onClick={() => {
-                                                            const fullProduct = products.find(p => p.id === msg.productData?.id)
-                                                            if (fullProduct) {
-                                                                addToCart(fullProduct)
-                                                            }
-                                                        }}
-                                                    >
-                                                        إضافة للسلة 🛒
-                                                    </Button>
-                                                </div>
-                                            )}
-
-                                            {msg.action === "request" && (
-                                                <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
-                                                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3">
-                                                        <div className="text-xs text-yellow-400 font-bold mb-1">⚠️ غير متوفرة حالياً</div>
-                                                        {msg.marketEstimate && (
-                                                            <div className="text-[10px] text-slate-400">
-                                                                السعر التقريبي: <span className="text-white font-bold">{msg.marketEstimate}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <Button
-                                                        variant="outline"
-                                                        className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 rounded-xl h-12 font-bold"
-                                                        onClick={() => {
-                                                            addProductRequest({
-                                                                customerName: "عميل المتجر الذكي",
-                                                                description: `طلب تلقائي من AI: ${msg.content.slice(0, 50)}...`,
-                                                                image: msg.image || undefined
-                                                            })
-                                                            toast.success("تم التقديم")
-                                                        }}
-                                                    >
-                                                        طلب توفير 📝
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[10px] text-slate-500 px-2 opacity-60">
-                                            {msg.timestamp.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: 'numeric' })}
-                                        </span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                            {isLoading && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 text-slate-400 text-xs p-2 bg-white/5 rounded-2xl w-fit px-4">
-                                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                                    <span>جاري التحليل والكتابة...</span>
-                                </motion.div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="p-4 border-t border-white/10 bg-black/20 backdrop-blur-md">
-                            {selectedImage && (
-                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-4 p-3 bg-indigo-500/10 rounded-2xl flex items-center justify-between border border-indigo-500/20">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-black border border-white/10">
-                                            <Image src={selectedImage} alt="Selected" width={48} height={48} className="object-cover w-full h-full" />
-                                        </div>
-                                        <div>
-                                            <span className="text-sm font-bold text-white block">صورة جاهزة للارسال</span>
-                                            <span className="text-[10px] text-indigo-300">سيتم تحليلها بواسطة AI</span>
-                                        </div>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-500/20 text-slate-400 hover:text-red-400" onClick={() => setSelectedImage(null)}>
-                                        <X className="w-4 h-4" />
-                                    </Button>
-                                </motion.div>
-                            )}
-
-                            <div className="flex items-end gap-3">
-                                {/* Prominent Camera Button */}
-                                <div className="relative shrink-0">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={handleImageSelect}
-                                    />
-                                    <Button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 border border-white/10 shadow-xl flex items-center justify-center group overflow-hidden relative"
-                                    >
-                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                        <Camera className="w-7 h-7 text-white" />
-                                    </Button>
-                                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-medium text-slate-400 whitespace-nowrap">تصوير</span>
-                                </div>
-
-                                <div className="flex-1 bg-white/5 border border-white/10 rounded-[24px] flex items-center p-1.5 focus-within:bg-black/40 focus-within:border-primary/50 transition-all pr-4">
-                                    <Input
-                                        value={inputValue}
-                                        onChange={(e) => setInputValue(e.target.value)}
-                                        placeholder="اكتب استفسارك هنا..."
-                                        className="bg-transparent border-none shadow-none text-right dir-rtl placeholder:text-slate-500 text-white h-11 focus-visible:ring-0"
-                                        onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                                    />
-                                    <Button
-                                        size="icon"
-                                        className={`rounded-full h-11 w-11 transition-all ${inputValue.trim() || selectedImage ? "bg-primary text-black hover:scale-105" : "bg-white/5 text-slate-500"}`}
-                                        onClick={handleSendMessage}
-                                        disabled={isLoading || (!inputValue.trim() && !selectedImage)}
-                                    >
-                                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className={`w-5 h-5 ${!inputValue.trim() && !selectedImage ? "opacity-50" : ""}`} />}
-                                    </Button>
-                                </div>
+                            <div className="flex-1 bg-white/5 border border-white/10 rounded-[24px] flex items-center p-1.5 focus-within:bg-black/40 focus-within:border-primary/50 transition-all pr-4">
+                                <Input
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    placeholder="اكتب استفسارك هنا..."
+                                    className="bg-transparent border-none shadow-none text-right dir-rtl placeholder:text-slate-500 text-white h-11 focus-visible:ring-0"
+                                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                                />
+                                <Button
+                                    size="icon"
+                                    className={`rounded-full h-11 w-11 transition-all ${inputValue.trim() || selectedImage ? "bg-primary text-black hover:scale-105" : "bg-white/5 text-slate-500"}`}
+                                    onClick={handleSendMessage}
+                                    disabled={isLoading || (!inputValue.trim() && !selectedImage)}
+                                >
+                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className={`w-5 h-5 ${!inputValue.trim() && !selectedImage ? "opacity-50" : ""}`} />}
+                                </Button>
                             </div>
                         </div>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
-    )
+                    </div>
+                </motion.div>
+            </div>
+        )}
+    </AnimatePresence>
+)
 }
