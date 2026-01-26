@@ -2,33 +2,134 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Send, Sparkles, User, Loader2, Camera, Maximize2, Minimize2 } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useStore } from "@/context/store-context"
-import { GoogleGenerativeAI } from "@google/generative-ai"
-import { toast } from "sonner"
-import { hapticFeedback } from "@/lib/haptics"
+import { X, Send, Sparkles, User, Loader2, Camera, Maximize2, Minimize2, Settings, Key } from "lucide-react"
+// ... imports
 
-interface AiChatModalProps {
-    isOpen: boolean
-    onClose: () => void
-}
-
-interface Message {
-    id: string
-    role: "user" | "ai"
-    content: string
-    image?: string
-    timestamp: Date
-    action?: "available" | "request" | "vin_identified" | "none"
-    productData?: { id: string, name: string, price: number }
-    marketEstimate?: string
-    vinData?: { vin: string, car: string }
-}
+// ... interfaces
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
+    const { products, addToCart, addProductRequest } = useStore()
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [messages, setMessages] = useState<Message[]>([
+        { id: "1", role: "ai", content: "مرحباً! أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي منتج، أو إرسال صورة لقطعة غيار للبحث عنها، أو حتى طلب توفير منتج غير موجود! 🤖", timestamp: new Date() }
+    ])
+    const [inputValue, setInputValue] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [selectedImage, setSelectedImage] = useState<string | null>(null)
+    const [showSettings, setShowSettings] = useState(false) // New state for settings
+    const [customKey, setCustomKey] = useState("") // New state for custom key input
+
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    // Load key from storage on mount
+    useEffect(() => {
+        const storedKey = localStorage.getItem("gemini_api_key")
+        if (storedKey) setCustomKey(storedKey)
+    }, [])
+
+    const saveCustomKey = () => {
+        if (customKey.trim()) {
+            localStorage.setItem("gemini_api_key", customKey.trim())
+            toast.success("تم حفظ مفتاح API الخاص بك بنجاح")
+            setShowSettings(false)
+        } else {
+            localStorage.removeItem("gemini_api_key")
+            toast.info("تم إزالة المفتاح المخصص، سيتم استخدام مفتاح النظام")
+        }
+    }
+
+    // ... scrollToBottom ...
+
+    // ... handleImageSelect ...
+
+    const handleSendMessage = async () => {
+        if (!inputValue.trim() && !selectedImage) return
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            role: "user",
+            content: inputValue,
+            image: selectedImage || undefined,
+            timestamp: new Date()
+        }
+
+        setMessages(prev => [...prev, userMessage])
+        setInputValue("")
+        setSelectedImage(null)
+        setIsLoading(true)
+
+        try {
+            // Priority: Custom Key (LocalStorage) -> Env Key
+            const apiKey = localStorage.getItem("gemini_api_key") || process.env.NEXT_PUBLIC_GEMINI_API_KEY
+
+            if (!apiKey) {
+                toast.error("مفتاح API غير موجود. يرجى إضافته من الإعدادات أو ملف .env")
+                setShowSettings(true) // Open settings if no key
+                setIsLoading(false)
+                return
+            }
+
+            const genAI = new GoogleGenerativeAI(apiKey)
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+
+            let prompt = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
+            لديك صلاحية الوصول لبيانات المنتجات التالية: ${JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price })))}
+            
+            مهمتك:
+            1. الرد على استفسارات العملاء باللهجة السعودية الودودة.
+            2. اذا سأل العميل عن قطعة موجودة في القائمة اعلاه، اخبره انها متوفرة وسعرها، واعرض عليه اضافتها للسلة. (استخدم type: available)
+            3. اذا كانت القطعة غير موجودة، اقترح عليه تقديم "طلب توفير" واطرح عليه سعر تقريبي اذا كنت تعرفه. (استخدم type: request)
+            4. اذا ارسل العميل صورة، حاول التعرف على القطعة او السيارة من الصورة. اذا ظهر رقم هيكل (VIN) استخرجه. (استخدم type: vin_identified)
+            
+            رسالة العميل: ${userMessage.content}`
+
+            const result = await model.generateContent([prompt, ...(userMessage.image ? [userMessage.image] : [])])
+            const responseText = result.response.text()
+
+            // Simple parsing logic
+            let action: Message['action'] = "none"
+            let productData
+            let marketEstimate
+            let vinData
+
+            if (responseText.includes("متوفرة") || responseText.includes("موجودة")) {
+                const foundProduct = products.find(p => responseText.includes(p.name) || prompt.includes(p.name))
+                if (foundProduct) {
+                    action = "available"
+                    productData = { id: foundProduct.id, name: foundProduct.name, price: foundProduct.price }
+                }
+            } else if (responseText.includes("غير متوفرة") || responseText.includes("طلب")) {
+                action = "request"
+                marketEstimate = "150 - 300"
+            }
+
+            const aiMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: "ai",
+                content: responseText,
+                timestamp: new Date(),
+                action,
+                productData,
+                marketEstimate,
+                vinData
+            }
+
+            setMessages(prev => [...prev, aiMessage])
+            hapticFeedback('success')
+        } catch (error) {
+            console.error("Gemini Error:", error)
+            toast.error("حدث خطأ أثناء الاتصال بالمساعد الذكي")
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                role: "ai",
+                content: "والله يا غالي صار عندي مشكلة تقنية بسيطة، يا ليت تحاول مرة ثانية 😅",
+                timestamp: new Date()
+            }])
+        } finally {
+            setIsLoading(false)
+        }
+    }
     const [isExpanded, setIsExpanded] = useState(false)
     const { products, addToCart, addProductRequest } = useStore()
     const [messages, setMessages] = useState<Message[]>([
@@ -76,7 +177,17 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         setIsLoading(true)
 
         try {
-            const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
+            const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+            // DEBUG: Temporary check
+            if (!apiKey) {
+                toast.error("DEBUG: المفتاح غير موجود (undefined). تأكد من اسم المتغير في .env.local وتشغيل السيرفر مجدداً.")
+                console.error("API Key is missing")
+                setIsLoading(false)
+                return
+            }
+            // console.log("Key loaded, length:", apiKey.length) // Safe log
+
+            const genAI = new GoogleGenerativeAI(apiKey)
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
             let prompt = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
@@ -180,6 +291,14 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    onClick={() => setShowSettings(!showSettings)}
+                                    className={`rounded-full w-10 h-10 ${showSettings ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setIsExpanded(!isExpanded)}
                                     className="rounded-full hover:bg-white/10 text-slate-400 w-10 h-10"
                                 >
@@ -195,6 +314,43 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 </Button>
                             </div>
                         </div>
+
+                        {/* Settings Area */}
+                        <AnimatePresence>
+                            {showSettings && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="bg-black/40 border-b border-white/10 overflow-hidden"
+                                >
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-white/80 active:text-white">
+                                            <Key className="w-4 h-4 text-purple-400" />
+                                            <span className="text-xs font-bold">مفتاح API الخاص (اختياري)</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={customKey}
+                                                onChange={(e) => setCustomKey(e.target.value)}
+                                                placeholder="ضع مفتاح Gemini API الخاص بك هنا..."
+                                                type="password"
+                                                className="bg-white/5 border-white/10 text-white text-xs h-10"
+                                            />
+                                            <Button
+                                                onClick={saveCustomKey}
+                                                className="h-10 bg-purple-600 hover:bg-purple-500 text-white text-xs whitespace-nowrap"
+                                            >
+                                                حفظ المفتاح
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                                            سيتم تخزين المفتاح في متصفحك فقط ولن يتم مشاركته. إذا تركته فارغاً، سيتم استخدام المفتاح الافتراضي للنظام.
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Chat Area */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-6">
