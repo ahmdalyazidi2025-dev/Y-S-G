@@ -273,7 +273,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                         }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className={`bg-[#1c2a36]/80 backdrop-blur-xl border border-white/10 flex flex-col pointer-events-auto relative z-10 overflow-hidden shadow-2xl transition-all duration-300 ${isExpanded ? "max-w-none rounded-none" : "max-w-lg rounded-3xl"}`}
+                        className={`bg-[#1c2a36]/95 backdrop-blur-xl border border-white/10 flex flex-col pointer-events-auto relative z-10 overflow-hidden shadow-2xl transition-all duration-300 ${isExpanded ? "max-w-none rounded-none" : "max-w-lg rounded-3xl"}`}
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
@@ -315,38 +315,76 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                             </div>
                         </div>
 
-                        {/* Settings Area */}
+                        {/* Settings Area (Matches Screenshot) */}
                         <AnimatePresence>
                             {showSettings && (
                                 <motion.div
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="bg-black/40 border-b border-white/10 overflow-hidden"
+                                    className="bg-[#0f172a] border-b border-white/10 overflow-hidden"
                                 >
-                                    <div className="p-4 space-y-3">
-                                        <div className="flex items-center gap-2 text-white/80 active:text-white">
-                                            <Key className="w-4 h-4 text-purple-400" />
-                                            <span className="text-xs font-bold">مفتاح API الخاص (اختياري)</span>
+                                    <div className="p-5 space-y-5" dir="rtl">
+
+                                        {/* API Key Section */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-indigo-400">
+                                                <Sparkles className="w-4 h-4" />
+                                                <span className="text-sm font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={customKey}
+                                                    onChange={(e) => setCustomKey(e.target.value)}
+                                                    placeholder="...AIzaSy"
+                                                    type="password"
+                                                    className="bg-[#1e293b] border-white/5 text-white/90 text-sm h-11 text-left ltr font-mono"
+                                                />
+                                                <Button
+                                                    onClick={handleSaveSettings}
+                                                    disabled={isVerifying}
+                                                    className="h-11 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-6"
+                                                >
+                                                    {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ وتحقق"}
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                value={customKey}
-                                                onChange={(e) => setCustomKey(e.target.value)}
-                                                placeholder="ضع مفتاح Gemini API الخاص بك هنا..."
-                                                type="password"
-                                                className="bg-white/5 border-white/10 text-white text-xs h-10"
+
+                                        {/* Custom Prompt Section */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-purple-400">
+                                                <span className="text-xl">🤖</span>
+                                                <span className="text-sm font-bold">تخصيص المساعد (اختياري)</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400">تعليمات إضافية للمساعد (Prompt) - مثال: "تحدث بلهجة عامية سعودية"</p>
+                                            <textarea
+                                                value={customPrompt}
+                                                onChange={(e) => setCustomPrompt(e.target.value)}
+                                                placeholder="اكتب تعليماتك هنا..."
+                                                className="w-full bg-[#1e293b] border border-white/5 rounded-xl p-3 text-white/90 text-sm min-h-[80px] focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none"
                                             />
-                                            <Button
-                                                onClick={saveCustomKey}
-                                                className="h-10 bg-purple-600 hover:bg-purple-500 text-white text-xs whitespace-nowrap"
-                                            >
-                                                حفظ المفتاح
-                                            </Button>
                                         </div>
-                                        <p className="text-[10px] text-slate-400 leading-relaxed">
-                                            سيتم تخزين المفتاح في متصفحك فقط ولن يتم مشاركته. إذا تركته فارغاً، سيتم استخدام المفتاح الافتراضي للنظام.
-                                        </p>
+
+                                        {/* Reference Image Section */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-[10px] text-slate-400">رابط صورة مرجعية (للمقارنة أو السياق)</label>
+                                                {referenceUrl && <button onClick={() => setReferenceUrl("")} className="text-[10px] text-red-400 hover:underline">مسح</button>}
+                                            </div>
+                                            <Input
+                                                value={referenceUrl}
+                                                onChange={(e) => setReferenceUrl(e.target.value)}
+                                                placeholder="https://example.com/reference-image.jpg"
+                                                className="bg-[#1e293b] border-white/5 text-slate-300 text-xs h-9 text-left font-mono"
+                                            />
+                                        </div>
+
+                                        <div className="pt-2 border-t border-white/5 flex justify-end">
+                                            <button onClick={clearSettings} className="text-[10px] text-red-500/60 hover:text-red-400 transition-colors">
+                                                استعادة الإعدادات الافتراضية
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
