@@ -22,7 +22,13 @@ export async function verifyGeminiKey(apiKey: string) {
         if (msg.includes("api_key") || msg.includes("400") || msg.includes("403")) {
             errorMessage = "المفتاح غير صحيح (API Key Invalid)"
         } else if (msg.includes("fetch") || msg.includes("network")) {
-            errorMessage = "فشل الاتصال بخوادم جوجل من السيرفر (Server Network Error)"
+            try {
+                // Test basic connectivity
+                await fetch("https://www.google.com", { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(5000) });
+                errorMessage = "سيرفرك متصل بالإنترنت، لكنه محظور من الوصول لـ Gemini API specifically.";
+            } catch (netErr) {
+                errorMessage = "سيرفرك (جهازك) غير متصل بالإنترنت أو يواجه مشاكل DNS حادة.";
+            }
         } else if (msg.includes("quota")) {
             errorMessage = "تم تجاوز حد الاستخدام (Quota Exceeded)"
         }
