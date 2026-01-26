@@ -11,6 +11,7 @@ import { StaffManager } from "@/components/admin/staff-manager"
 import { Input } from "@/components/ui/input"
 import { Lock } from "lucide-react"
 import { toast } from "sonner"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const PROTECTED_PIN = "4422707";
 
@@ -238,33 +239,42 @@ function ApiKeyInput() {
 
     const handleSaveKey = async () => {
         const trimmedKey = key.trim()
-        setStatus("checking")
-        updateStoreSettings({ ...storeSettings, googleGeminiApiKey: trimmedKey })
 
         if (!trimmedKey) {
             setStatus("idle")
             return
         }
 
-        // Validate Key
+        setStatus("checking")
+
+        // 1. Verify Key First
         try {
-            const { GoogleGenerativeAI } = await import("@google/generative-ai")
             const genAI = new GoogleGenerativeAI(trimmedKey)
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-            await model.generateContent("test")
+            await model.generateContent("Test connection")
+
+            // 2. If successful, Save to Store
             setStatus("valid")
-            toast.success("تم التحقق من المفتاح بنجاح! ✅")
+            updateStoreSettings({ ...storeSettings, googleGeminiApiKey: trimmedKey })
+            toast.success("تم التحقق والحفظ بنجاح! ✅")
         } catch (e: any) {
-            console.error(e)
+            console.error("Gemini Verification Error:", e)
             setStatus("invalid")
 
             // Detailed Error Message
-            let errorMessage = "المفتاح غير صالح أو انتهت الصلاحية"
-            if (e.message?.includes("API_KEY_INVALID")) errorMessage = "المفتاح غير صحيح (API Key Invalid)"
-            if (e.message?.includes("PERMISSION_DENIED")) errorMessage = "ليس لديك صلاحية لاستخدام هذا الموديل"
-            if (e.message?.includes("fetch")) errorMessage = "خطأ في الاتصال (تأكد من الإنترنت)"
+            let errorMessage = "المفتاح غير صالح! تأكد من صحته."
 
-            toast.error(`${errorMessage} ❌`)
+            // Check for common error patterns
+            const msg = e.toString().toLowerCase()
+            if (msg.includes("api_key") || msg.includes("400") || msg.includes("403")) {
+                errorMessage = "المفتاح غير صحيح (API Key Invalid)"
+            } else if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {
+                errorMessage = "مشكلة في الاتصال بالإنترنت (Network Error)"
+            } else if (msg.includes("quota")) {
+                errorMessage = "تم تجاوز حد الاستخدام (Quota Exceeded)"
+            }
+
+            toast.error(`${errorMessage}`)
         }
     }
 
