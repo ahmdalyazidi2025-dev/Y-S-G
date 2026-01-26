@@ -11,6 +11,7 @@ import ScannerModal from "@/components/store/scanner-modal"
 import SmartCameraModal from "@/components/store/smart-camera-modal" // Added import
 import { CartDrawer } from "@/components/store/cart-drawer"
 import RequestModal from "@/components/store/request-modal"
+import { AiChatModal } from "@/components/store/ai-chat-modal"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { Footer } from "@/components/store/footer"
@@ -24,6 +25,7 @@ export default function StoreLayout({
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [isRequestOpen, setIsRequestOpen] = useState(false)
+    const [isAiChatOpen, setIsAiChatOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
     const { cart, logout } = useStore()
@@ -98,6 +100,17 @@ export default function StoreLayout({
                                     <p className="text-[9px] text-primary/80 font-bold tracking-[0.2em] uppercase">Client Portal</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsAiChatOpen(true)}
+                                className="px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
+                            >
+                                <MessageSquare className="w-4 h-4 text-white" />
+                                <span className="hidden sm:inline">المساعد الذكي</span>
+                            </button>
+
                             <button
                                 onClick={handleLogout}
                                 className="px-5 py-2.5 bg-red-500/10 rounded-2xl text-red-400 hover:bg-red-400/20 transition-all border border-red-500/20 flex items-center gap-2 font-bold text-xs"
@@ -192,6 +205,10 @@ export default function StoreLayout({
             <SmartCameraModal
                 isOpen={isSmartCameraOpen}
                 onClose={() => setIsSmartCameraOpen(false)}
+            />
+            <AiChatModal
+                isOpen={isAiChatOpen}
+                onClose={() => setIsAiChatOpen(false)}
             />
         </ProtectedRoute>
 
