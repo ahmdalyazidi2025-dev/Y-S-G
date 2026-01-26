@@ -31,11 +31,15 @@ export async function verifyGeminiKey(apiKey: string) {
             errorMessage = "المفتاح غير صحيح (API Key Invalid)"
         } else if (msg.includes("fetch") || msg.includes("network") || msg.includes("failed to fetch")) {
             try {
+                // Diagnostic: Check if we can reach Google at all
                 await fetch("https://www.google.com", { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(5000) });
                 errorMessage = "السيرفر متصل بالإنترنت، لكن API جوجل محظور برمجياً أو عبر الجدار الناري.";
             } catch (netErr) {
                 errorMessage = "السيرفر غير متصل بالإنترنت نهائياً (No Internet/DNS).";
             }
+        } else {
+            // Include raw error for debugging unknown issues
+            errorMessage = `خطأ غير معروف: ${error.message || JSON.stringify(error)}`
         }
 
         return { success: false, error: errorMessage }
