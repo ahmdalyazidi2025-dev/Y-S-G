@@ -102,7 +102,7 @@ export type Order = {
     customerId: string
     items: CartItem[]
     total: number
-    status: "pending" | "processing" | "shipped" | "delivered" | "canceled"
+    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
 }
@@ -789,11 +789,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
         const order = orders.find(o => o.id === orderId)
         if (!order) return
+
+        // 1. Update Order Document
         await updateDoc(doc(db, "orders", orderId), sanitizeData({
             status,
             statusHistory: [...order.statusHistory, { status, timestamp: Timestamp.now() }]
         }))
-        toast.info(`تم تحديث الحالة سحابياً: ${status}`)
+
+        // 2. Create Persistent Notification for Customer
+        const statusMessages: Record<string, string> = {
+            accepted: "تمت الموافقة على طلبك! سيتم تجهيزه قريباً",
+            rejected: "عذراً، تم رفض الطلب. يرجى مراجعة التفاصيل",
+            processing: "بدأ تجهيز طلبك",
+            shipped: "تم شحن طلبك (في الطريق)",
+            delivered: "تم توصيل الطلب بنجاح",
+            canceled: "تم إلغاء الطلب"
+        }
+
+        if (statusMessages[status]) {
+            await addDoc(collection(db, "notifications"), sanitizeData({
+                userId: order.customerId,
+                title: "تحديث حالة الطلب",
+                body: statusMessages[status],
+                type: status === "rejected" || status === "canceled" ? "error" : "success",
+                read: false,
+                createdAt: Timestamp.now()
+            }))
+        }
+
+        toast.info(`تم تحديث الحالة: ${status}`)
         hapticFeedback('medium')
     }
 
