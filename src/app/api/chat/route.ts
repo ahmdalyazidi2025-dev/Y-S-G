@@ -49,12 +49,29 @@ export async function POST(req: Request) {
         });
 
         if (!response.ok) {
-            if (response.status === 400 || response.status === 401 || response.status === 403) {
-                return NextResponse.json({ error: "المفتاح الموجود في قاعدة البيانات غير صالح" }, { status: 401 });
-            }
             const errData = await response.json().catch(() => ({}));
-            console.error("Gemini API Error:", errData);
-            throw new Error(errData.error?.message || `Gemini API Error: ${response.status}`);
+
+            // Log for server-side debugging
+            console.error("Gemini API Error Detail:", JSON.stringify(errData, null, 2));
+
+            // Create a detailed message for the client
+            let detailedMessage = `Gemini API Error: ${response.status}`;
+            if (errData.error) {
+                detailedMessage += ` - ${errData.error.message || errData.error.status || "Unknown Error"}`;
+            }
+
+            if (response.status === 400) {
+                detailedMessage = "خطأ في الطلب (Bad Request): " + (errData.error?.message || "تأكد من صحة البيانات المرسلة");
+            } else if (response.status === 401 || response.status === 403) {
+                return NextResponse.json({
+                    error: "المفتاح غير صالح أو محظور",
+                    details: "يرجى التأكد من صحة API Key في الإعدادات. قد يكون انتهت صلاحيته أو غير مفعل."
+                }, { status: 401 });
+            } else if (response.status === 429) {
+                detailedMessage = "تم تجاوز حد الاستخدام (Quota Exceeded). يرجى الانتظار قليلاً أو ترقية الخطة.";
+            }
+
+            throw new Error(detailedMessage);
         }
 
         const data = await response.json();

@@ -120,19 +120,29 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             })
 
             if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                // Use the simplified error message or the detailed one
+                const errorMessage = errorData.details || errorData.error || `خطأ ${response.status}: فشل الاتصال`;
+
+                // Show detailed toast for debugging
+                toast.error("خطأ في الذكاء الاصطناعي", {
+                    description: errorMessage,
+                    duration: 5000,
+                });
+
                 if (response.status === 401 || response.status === 403) {
-                    const errorText = "المفتاح الموجود في قاعدة البيانات غير صالح";
+                    const errorText = "المفتاح الموجود في قاعدة البيانات غير صالح ❌";
                     setMessages(prev => [...prev, {
                         id: (Date.now() + 1).toString(),
                         role: "ai",
-                        content: errorText,
+                        content: `${errorText}\n\nالتفاصيل: ${errorMessage}`,
                         timestamp: new Date()
                     }]);
                     setIsLoading(false);
                     return;
                 }
-                const err = await response.json().catch(() => ({}))
-                throw new Error(err.error || "خطأ في الاتصال بالخدمة")
+
+                throw new Error(errorMessage)
             }
 
             const result = await response.json()
