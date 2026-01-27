@@ -58,19 +58,37 @@ export async function POST(req: Request) {
         // This runs on the Node.js server, so it's secure from the client browser.
         // Note: 'db' usage here depends on Firebase rules allowing public read OR env vars setup.
         // Assuming rules allow read for settings.
-        const settingsRef = doc(db, "settings", storeId);
-        const settingsSnap = await getDoc(settingsRef);
+        // 1. Fetch Settings from Firebase (Server-Side)
+        // STRATEGY: Try 'ai_config' document first (per user request), then fallback to 'store'
+        let keysToCheck: { key: string, status: string }[] = [];
 
-        if (!settingsSnap.exists()) {
-            return NextResponse.json({ error: "Store settings not found" }, { status: 404 });
+        // Check specific 'ai_config' doc first
+        const aiConfigRef = doc(db, "settings", "ai_config");
+        const aiConfigSnap = await getDoc(aiConfigRef);
+
+        if (aiConfigSnap.exists()) {
+            const aiData = aiConfigSnap.data();
+            if (aiData.gemini_api_key) {
+                keysToCheck.push({ key: aiData.gemini_api_key, status: "valid" });
+            }
         }
 
-        const settings = settingsSnap.data();
+        // If no keys found in ai_config, check store settings
+        if (keysToCheck.length === 0) {
+            const settingsRef = doc(db, "settings", storeId);
+            const settingsSnap = await getDoc(settingsRef);
 
-        // Use Multi-Key Array if available, otherwise fallback to legacy single key
-        const keysToCheck: { key: string, status: string }[] = settings.aiApiKeys || [];
-        if (keysToCheck.length === 0 && settings.googleGeminiApiKey) {
-            keysToCheck.push({ key: settings.googleGeminiApiKey, status: "valid" });
+            if (settingsSnap.exists()) {
+                const settings = settingsSnap.data();
+                // Use Multi-Key Array if available
+                if (settings.aiApiKeys && Array.isArray(settings.aiApiKeys)) {
+                    keysToCheck.push(...settings.aiApiKeys);
+                }
+                // Fallback to legacy single key
+                else if (settings.googleGeminiApiKey) {
+                    keysToCheck.push({ key: settings.googleGeminiApiKey, status: "valid" });
+                }
+            }
         }
 
         const validKeys = keysToCheck.filter((k: any) => k.key && k.status !== "invalid");
