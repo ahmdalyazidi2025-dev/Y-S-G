@@ -21,6 +21,8 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
     shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
     delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
     canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
+    accepted: { label: "تم القبول", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: CheckCircle2 },
+    rejected: { label: "مرفوض", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
 }
 
 export default function InvoicesPage() {
@@ -67,7 +69,7 @@ export default function InvoicesPage() {
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
-                {["all", "pending", "processing", "shipped", "canceled"].map((s) => (
+                {["all", "pending", "processing", "shipped", "delivered", "canceled", "accepted", "rejected"].map((s) => (
                     <button
                         key={s}
                         onClick={() => setFilter(s)}
