@@ -719,7 +719,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
 
             await firebaseSignOut(secondaryAuth);
-            toast.success("تم إضافة العميل بنجاح")
+
+            // Send Welcome Notification (First time interaction)
+            await addDoc(collection(db, "notifications"), sanitizeData({
+                userId: uid,
+                title: "مرحباً بك في YSG GROUP! 👋",
+                body: "سعداء بانضمامك إلينا! 🌹 هذا القسم مخصص لإشعاراتك الخاصة، حيث ستصلك تحديثات حالة الطلب والعروض الحصرية هنا.",
+                type: "success",
+                read: false,
+                createdAt: Timestamp.now()
+            }))
+
+            toast.success("تم إضافة العميل وإرسال ترحيب")
         } catch (error: any) {
             console.error("Add Customer Error:", error);
             if (error.code === 'auth/email-already-in-use') {
