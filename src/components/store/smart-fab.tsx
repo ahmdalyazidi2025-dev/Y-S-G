@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { hapticFeedback } from "@/lib/haptics"
+import { useStore } from "@/context/store-context"
 
 interface SmartFABProps {
     onScan: () => void
@@ -16,12 +17,18 @@ import { useRef } from "react"
 import { AiChatModal } from "./ai-chat-modal"
 
 export function SmartFAB({ onRequest, onChat }: Omit<SmartFABProps, 'onScan'>) {
+    const { storeSettings } = useStore()
     const [isOpen, setIsOpen] = useState(false)
     const [isAiChatOpen, setIsAiChatOpen] = useState(false)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
     const isLongPress = useRef(false)
 
+    // Check if AI is enabled (default to true if undefined)
+    const isAiEnabled = storeSettings.enableAIChat !== false
+
     const handleTouchStart = () => {
+        if (!isAiEnabled) return // Disable long press if AI is off
+
         isLongPress.current = false
         timerRef.current = setTimeout(() => {
             isLongPress.current = true
@@ -43,15 +50,17 @@ export function SmartFAB({ onRequest, onChat }: Omit<SmartFABProps, 'onScan'>) {
                 <AnimatePresence>
                     {isOpen && (
                         <>
-                            <motion.button
-                                initial={{ scale: 0, opacity: 0, y: 10 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0, opacity: 0, y: 10 }}
-                                onClick={() => { onChat(); setIsOpen(false); hapticFeedback('light') }}
-                                className="w-12 h-12 bg-[#1c2a36] border border-white/10 rounded-full flex items-center justify-center shadow-xl text-primary"
-                            >
-                                <MessageSquare className="w-5 h-5" />
-                            </motion.button>
+                            {isAiEnabled && (
+                                <motion.button
+                                    initial={{ scale: 0, opacity: 0, y: 10 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0, opacity: 0, y: 10 }}
+                                    onClick={() => { onChat(); setIsOpen(false); hapticFeedback('light') }}
+                                    className="w-12 h-12 bg-[#1c2a36] border border-white/10 rounded-full flex items-center justify-center shadow-xl text-primary"
+                                >
+                                    <MessageSquare className="w-5 h-5" />
+                                </motion.button>
+                            )}
                             <motion.button
                                 initial={{ scale: 0, opacity: 0, y: 10 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}

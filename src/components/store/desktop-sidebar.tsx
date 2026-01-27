@@ -7,13 +7,16 @@ import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import Image from "next/image"
 
+import { useStore } from "@/context/store-context" // Add import
+
 export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
     const pathname = usePathname()
+    const { storeSettings } = useStore() // Get settings
 
     const navItems = [
         { name: "المتجر", icon: LayoutDashboard, href: "/customer" },
         { name: "فواتيري", icon: ClipboardList, href: "/customer/invoices" },
-        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
+        ...(storeSettings.enableAIChat !== false ? [{ name: "الدردشة", icon: MessageSquare, href: "/customer/chat" }] : []),
     ]
 
     return (

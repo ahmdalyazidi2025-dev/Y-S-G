@@ -184,6 +184,7 @@ export type StoreSettings = {
     geminiCustomPrompt?: string
     geminiReferenceImageUrl?: string
     enableCoupons?: boolean
+    enableAIChat?: boolean // New Toggle
 }
 
 type StoreContextType = {

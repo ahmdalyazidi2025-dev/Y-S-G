@@ -28,7 +28,7 @@ export default function StoreLayout({
     const [isAiChatOpen, setIsAiChatOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout } = useStore()
+    const { cart, logout, storeSettings } = useStore() // Added storeSettings
 
     // --- Smart Camera Logic ---
     const [isSmartCameraOpen, setIsSmartCameraOpen] = useState(false)
@@ -73,7 +73,7 @@ export default function StoreLayout({
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) },
         { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) },
-        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
+        ...(storeSettings.enableAIChat !== false ? [{ name: "الدردشة", icon: MessageSquare, href: "/customer/chat" }] : []),
     ]
 
     return (
@@ -109,13 +109,15 @@ export default function StoreLayout({
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setIsAiChatOpen(true)}
-                                className="px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
-                            >
-                                <MessageSquare className="w-4 h-4 text-white" />
-                                <span className="hidden sm:inline">المساعد الذكي</span>
-                            </button>
+                            {storeSettings.enableAIChat !== false && (
+                                <button
+                                    onClick={() => setIsAiChatOpen(true)}
+                                    className="px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
+                                >
+                                    <MessageSquare className="w-4 h-4 text-white" />
+                                    <span className="hidden sm:inline">المساعد الذكي</span>
+                                </button>
+                            )}
 
                             <button
                                 onClick={handleLogout}

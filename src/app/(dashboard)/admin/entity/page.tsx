@@ -152,8 +152,10 @@ export default function EntityManagementPage() {
     )
 }
 
+import { Switch } from "@/components/ui/switch"
+
 function SecuritySettings() {
-    const { updateAdminCredentials } = useStore()
+    const { updateAdminCredentials, storeSettings, updateStoreSettings } = useStore()
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
 
@@ -168,14 +170,33 @@ function SecuritySettings() {
         <div className="space-y-6">
             {/* Gemini API Key Section */}
             <div className="space-y-4 p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">✨</span>
-                    <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl">✨</span>
+                        <div>
+                            <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
+                            <p className="text-xs text-slate-400">تفعيل/تعطيل المساعد الذكي</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className={`text-xs ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
+                            {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
+                        </span>
+                        <Switch
+                            checked={storeSettings.enableAIChat !== false}
+                            onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
+                        />
+                    </div>
                 </div>
-                <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
-                <div className="flex gap-2">
-                    <GeminiKeyInput />
-                </div>
+
+                {storeSettings.enableAIChat !== false && (
+                    <>
+                        <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                        <div className="flex gap-2">
+                            <GeminiKeyInput />
+                        </div>
+                    </>
+                )}
 
                 {/* Advanced Gemini Settings */}
                 <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
