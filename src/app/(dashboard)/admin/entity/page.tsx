@@ -323,7 +323,7 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
                 variant={keyData.status === "valid" ? "ghost" : "secondary"}
                 className={`px-3 ${keyData.status === "valid" ? "text-green-500 hover:text-green-400" : ""}`}
             >
-                {checking ? "..." : keyData.status === "valid" ? "✅" : "تحقق"}
+                {checking ? "..." : keyData.status === "valid" ? "✅" : "حفظ وتحقق"}
             </Button>
         </div>
     )
