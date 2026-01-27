@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle } from "lucide-react"
 import Link from "next/link"
@@ -10,12 +10,16 @@ import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
 export default function ChatPage() {
-    const { messages, sendMessage, currentUser, guestId } = useStore()
+    const { messages, sendMessage, currentUser, guestId, markMessagesRead } = useStore()
     const [msg, setMsg] = useState("")
 
     // Use logged in user or fallback to unique guest ID
     const currentCustomerId = currentUser?.id || guestId
-    // const currentCustomerName = currentUser?.name || "عميل" // Not strictly needed as local var if we pass it directly
+
+    // Mark messages as read when entering the chat
+    useEffect(() => {
+        markMessagesRead(currentCustomerId)
+    }, [currentCustomerId]) // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const chatMessages = useMemo(() => {
         return messages.filter(m => m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`)))

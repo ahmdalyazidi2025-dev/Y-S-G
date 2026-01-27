@@ -147,6 +147,8 @@ export type Message = {
     text: string
     createdAt: Date
     isAdmin: boolean
+    read: boolean // Added
+    userId?: string // To track which user this message belongs to
 }
 
 export type Conversation = {
@@ -244,6 +246,7 @@ type StoreContextType = {
     loading: boolean // Added
     guestId: string
     markAllNotificationsRead: () => void
+    markMessagesRead: (customerId?: string) => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -730,6 +733,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 createdAt: Timestamp.now()
             }))
 
+            // Send Welcome Chat Message
+            await addDoc(collection(db, "messages"), sanitizeData({
+                senderId: "admin", // Admin sender
+                senderName: "الإدارة",
+                text: "مرحباً بك! 👋 هذا قسم الدردشة المباشرة مع الإدارة. نحن هنا لمساعدتك.",
+                isAdmin: true,
+                read: false,
+                userId: uid, // Target user
+                createdAt: Timestamp.now()
+            }))
+
+            // Send Welcome Chat Message
+            await addDoc(collection(db, "messages"), sanitizeData({
+                senderId: "admin", // Admin sender
+                senderName: "الإدارة",
+                text: "مرحباً بك! 👋 هذا قسم الدردشة المباشرة مع الإدارة. نحن هنا لمساعدتك.",
+                isAdmin: true,
+                read: false,
+                userId: uid, // Target user
+                createdAt: Timestamp.now()
+            }))
+
             toast.success("تم إضافة العميل وإرسال ترحيب")
         } catch (error: any) {
             console.error("Add Customer Error:", error);
@@ -810,13 +835,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل") => {
+        // Determine the target user. If admin sends, they must target a user (logic handled in UI usually via tagging or implicit context)
+        // For general chat, if customer sends, userId is their ID.
+        // If admin sends, we should probably store the target userId. logic here assumes broadcast or context aware? 
+        // Existing logic for admin was: text includes (@id). 
+        // Let's keep it robust:
+
         await addDoc(collection(db, "messages"), sanitizeData({
             senderId: isAdmin ? "admin" : (currentUser?.id || customerId),
             senderName: isAdmin ? "الإدارة" : (currentUser?.name || customerName),
             text,
             isAdmin,
+            read: false, // Default unread
+            userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
             createdAt: Timestamp.now()
         }))
+    }
+
+    const markMessagesRead = async (customerId?: string) => {
+        const targetId = customerId || currentUser?.id
+        if (!targetId) return
+
+        // If I am customer, I want to mark messages FROM admin as read.
+        // If I am admin, I want to mark messages FROM customer as read.
+        // Assuming this function is called by the viewer of the messages.
+
+        const isViewerAdmin = currentUser?.role === "admin" || currentUser?.role === "staff"
+
+        const unreadMessages = messages.filter(m => {
+            if (isViewerAdmin) {
+                // Admin reading customer messages
+                return m.senderId === targetId && !m.isAdmin && !m.read
+            } else {
+                // Customer reading admin messages
+                // Filter messages that are from admin AND directed to this user (or global)
+                // Legacy logic used @mention in text. New logic might use userId field if present.
+                // Let's handle both for backward compat.
+                const isForMe = m.text.includes(`(@${targetId})`) || m.userId === targetId
+                return m.isAdmin && isForMe && !m.read
+            }
+        })
+
+        if (unreadMessages.length === 0) return
+
+        const batchPromises = unreadMessages.map(m =>
+            updateDoc(doc(db, "messages", m.id), { read: true })
+        )
+
+        try {
+            await Promise.all(batchPromises)
+        } catch (e) {
+            console.error("Failed to mark messages read", e)
+        }
     }
 
     const broadcastNotification = (text: string) => {
@@ -1153,7 +1223,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead
+            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead
         }}>
             {children}
         </StoreContext.Provider>
