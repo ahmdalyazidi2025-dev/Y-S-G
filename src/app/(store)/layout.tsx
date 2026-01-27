@@ -45,6 +45,8 @@ export default function StoreLayout({
 
     const handleTouchStart = (e?: React.TouchEvent | React.MouseEvent) => {
         // e?.preventDefault() // Don't prevent default on start, or scrolling breaks
+        if (storeSettings.enableAIChat === false) return // Disable long press if AI is off
+
         isLongPress.current = false
         longPressTimer.current = setTimeout(() => {
             isLongPress.current = true

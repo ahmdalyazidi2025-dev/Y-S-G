@@ -171,20 +171,23 @@ function SecuritySettings() {
             {/* Gemini API Key Section */}
             <div className="space-y-4 p-4 bg-primary/10 border border-primary/20 rounded-xl">
                 <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl">✨</span>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-lg">✨</span>
+                        </div>
                         <div>
-                            <Label className="text-primary font-bold">مفتاح الذكاء الاصطناعي (Google Gemini)</Label>
-                            <p className="text-xs text-slate-400">تفعيل/تعطيل المساعد الذكي</p>
+                            <Label className="text-white font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
+                            <p className="text-xs text-slate-400 mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className={`text-xs ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
+                    <div className="flex items-center gap-3 bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
+                        <span className={`text-xs font-bold ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
                             {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
                         </span>
                         <Switch
                             checked={storeSettings.enableAIChat !== false}
                             onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
+                            className="data-[state=checked]:bg-green-500"
                         />
                     </div>
                 </div>
