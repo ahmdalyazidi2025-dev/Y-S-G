@@ -91,10 +91,18 @@ export async function POST(req: Request) {
             }
         }
 
+        // 3. Final Fallback: Environment Variable (For manual local setup)
+        if (keysToCheck.length === 0 && process.env.GEMINI_API_KEY) {
+            keysToCheck.push({ key: process.env.GEMINI_API_KEY, status: "valid" });
+        }
+
         const validKeys = keysToCheck.filter((k: any) => k.key && k.status !== "invalid");
 
         if (validKeys.length === 0) {
-            return NextResponse.json({ error: "لا توجد مفاتيح صالحة في الإعدادات (No valid keys)" }, { status: 500 });
+            return NextResponse.json({
+                error: "لم يتم العثور على مفتاح API",
+                details: "يرجى إضافة المفتاح في الإعدادات أو في ملف .env باسم GEMINI_API_KEY"
+            }, { status: 500 });
         }
 
         // 2. Multi-Key Rotation Implementation
