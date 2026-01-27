@@ -9,7 +9,8 @@ const GEMINI_MODELS = [
     "gemini-1.0-pro"
 ]
 
-export async function verifyGeminiKey(apiKey: string) {
+export async function verifyGeminiKey(rawApiKey: string) {
+    const apiKey = rawApiKey?.trim()
     if (!apiKey) return { success: false, error: "المفتاح غير موجود" }
 
     // 1. Try standard generation verify
