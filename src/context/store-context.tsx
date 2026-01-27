@@ -508,7 +508,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
             await setDoc(doc(db, "settings", "global"), sanitizeData(settings), { merge: true })
-            toast.success("تم تحديث إعدادات المتجر في السحابة")
+
+            // Educational Feedback for AI
+            if (settings.enableAIChat !== storeSettings.enableAIChat) {
+                if (settings.enableAIChat) {
+                    toast.success("تم تفعيل المساعد الذكي ✅", {
+                        description: "سيقوم النظام الآن بالرد تلقائياً على استفسارات العملاء واقتراح المنتجات عند توفرها.",
+                        duration: 5000
+                    })
+                } else {
+                    toast.info("تم إيقاف المساعد الذكي 🛑", {
+                        description: "ستحتاج للرد على جميع المحادثات يدوياً. لن يقوم النظام بالرد نيابة عنك.",
+                        duration: 5000
+                    })
+                }
+            } else {
+                toast.success("تم تحديث إعدادات المتجر في السحابة", {
+                    description: "سيتم تطبيق التغييرات فوراً على تطبيق العملاء."
+                })
+            }
         } catch {
             toast.error("فشل تحديث الإعدادات")
         }
@@ -842,7 +860,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const toggleBanner = async (bannerId: string) => {
         const banner = banners.find(b => b.id === bannerId)
-        if (banner) await updateDoc(doc(db, "banners", bannerId), { active: !banner.active })
+        if (banner) {
+            const newState = !banner.active
+            await updateDoc(doc(db, "banners", bannerId), { active: newState })
+            toast.success(newState ? "تم تفعيل البانر ✅" : "تم إخفاء البانر 🙈", {
+                description: newState
+                    ? "سيظهر هذا البانر الآن في الصفحة الرئيسية للعملاء."
+                    : "لن يظهر هذا البانر للعملاء بعد الآن."
+            })
+        }
     }
 
     const addProductRequest = async (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => {
@@ -974,7 +1000,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
 
             await firebaseSignOut(secondaryAuth);
-            toast.success("تم إضافة الموظف وإعداد الدخول")
+            toast.success("تم إضافة الموظف وإعداد الدخول 👤", {
+                description: "يمكن للموظف الجديد تسجيل الدخول فوراً باستخدام البريد وكلمة المرور. الصلاحيات تم تطبيقها."
+            })
         } catch (error: any) {
             console.error("Add Staff Error:", error);
             toast.error("فشل إضافة الموظف: " + (error as Error).message)
@@ -1023,7 +1051,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             usedCount: 0,
             createdAt: Timestamp.now()
         }))
-        toast.success("تم إنشاء الكوبون")
+        toast.success("تم إنشاء الكوبون بنجاح 🎫", {
+            description: "سيتمكن العملاء من استخدام هذا الكود في سلة المشتريات للحصول على الخصم."
+        })
     }
 
     const deleteCoupon = async (id: string) => {
