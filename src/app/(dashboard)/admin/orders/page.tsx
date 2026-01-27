@@ -16,12 +16,13 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
-    // Hidden from Admin view by default as per user request, but needed for types if old orders interact
     pending: { label: "مسودة (مخفي)", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
     processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
     shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
     delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
     canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
+    accepted: { label: "تم القبول", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: CheckCircle2 },
+    rejected: { label: "مرفوض", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
 }
 
 export default function AdminOrdersPage() {
