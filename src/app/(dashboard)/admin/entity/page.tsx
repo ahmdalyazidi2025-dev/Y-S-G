@@ -236,10 +236,11 @@ interface AIKeyInputProps {
     index: number
     keyData: { key: string, status: "valid" | "invalid" | "unchecked" }
     onChange: (val: string) => void
+    onBlur: () => void
     onStatusChange: (status: "valid" | "invalid" | "unchecked") => void
 }
 
-function SingleAIKeyInput({ index, keyData, onChange, onStatusChange }: AIKeyInputProps) {
+function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: AIKeyInputProps) {
     const [show, setShow] = useState(false)
     const [checking, setChecking] = useState(false)
 
@@ -273,6 +274,7 @@ function SingleAIKeyInput({ index, keyData, onChange, onStatusChange }: AIKeyInp
                         onChange(e.target.value)
                         onStatusChange("unchecked")
                     }}
+                    onBlur={onBlur}
                     className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : keyData.status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
                     placeholder={`Key #${index + 1} (AIzaSy...)`}
                 />
@@ -321,23 +323,55 @@ function GeminiKeyInput() {
         return filled.slice(0, 3)
     })
 
-    // Sync back to store whenever keys changes (debounced ideally, but here manual save button handles it mostly)
-    useEffect(() => {
-        if (JSON.stringify(keys) !== JSON.stringify(storeSettings.aiApiKeys)) {
-            updateStoreSettings({ ...storeSettings, aiApiKeys: keys })
-        }
-    }, [keys])
+    // Update store only when finishing editing (onBlur behavior logic)
+    // using a manual save trigger or debounced effect would be better,
+    // but here we can just update the store on every change if we remove the dependency loop.
+    // The issue was likely that updateStoreSettings caused a parent re-render which
+    // re-initialized the component or conflict. 
+    // Actually, 'useState' initializer only runs once.
+    // BUT if the parent 'EntityManagementPage' re-renders, 'GeminiKeyInput' re-renders.
+    // 'keys' state is kept.
+    // The problem might come if 'storeSettings' updates cause 'keys' to be out of sync
+    // if we don't watch storeSettings.
+
+    // Simplest fix: Update store directly on change, but ensure we don't block UI.
+    // However, frequent store updates can be laggy.
+
+    // Let's implement a 'handleSave' or 'onBlur' equivalent found in other inputs.
+    // Since we have multiple inputs, we can just update store on 'onChange' but 
+    // maybe verify the input field implementation.
+
+    // Actually, let's use a local effect but check if values actually changed markedly.
+    // AND important: passing 'keys' back to store doesn't need to re-trigger this component
+    // if we don't depend on storeSettings for 'keys' after mount.
+
+    // Re-reading code: 'useEffect' dependency was '[keys]'. 
+    // Inside: 'updateStoreSettings'. This updates context. 
+    // Context update -> App re-render -> GeminiKeyInput re-render.
+    // This cycle is usually fine unless 'updateStoreSettings' is slow or async in a way that
+    // messes with React's batching.
+
+    // Better approach: Sync on Blur for text, and immediately for status.
+
+    const saveToStore = (newKeys: typeof keys) => {
+        updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
+    }
 
     const updateKey = (index: number, val: string) => {
         const newKeys = [...keys]
-        newKeys[index] = { ...newKeys[index], key: val }
+        newKeys[index] = { ...newKeys[index], key: val, status: "unchecked" }
         setKeys(newKeys)
+    }
+
+    const handleBlur = () => {
+        saveToStore(keys)
     }
 
     const updateStatus = (index: number, status: "valid" | "invalid" | "unchecked") => {
         const newKeys = [...keys]
         newKeys[index] = { ...newKeys[index], status }
         setKeys(newKeys)
+        saveToStore(newKeys) // Save status immediately
     }
 
     return (
@@ -349,6 +383,7 @@ function GeminiKeyInput() {
                     index={i}
                     keyData={k}
                     onChange={(val) => updateKey(i, val)}
+                    onBlur={handleBlur}
                     onStatusChange={(status) => updateStatus(i, status)}
                 />
             ))}
