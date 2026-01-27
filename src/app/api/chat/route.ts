@@ -57,7 +57,10 @@ export async function POST(req: Request) {
             // Create a detailed message for the client
             let detailedMessage = `Gemini API Error: ${response.status}`;
             if (errData.error) {
-                detailedMessage += ` - ${errData.error.message || errData.error.status || "Unknown Error"}`;
+                // Example: [INVALID_ARGUMENT] API key not valid...
+                const status = errData.error.status || errData.error.code || "UNKNOWN";
+                const msg = errData.error.message || "No message";
+                detailedMessage += ` [${status}]: ${msg}`;
             }
 
             if (response.status === 400) {
