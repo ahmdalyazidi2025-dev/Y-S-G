@@ -83,7 +83,7 @@ export default function StoreLayout({
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) },
         { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) },
-        ...(storeSettings.enableAIChat !== false ? [{ name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount }] : []),
+        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount },
     ]
 
     return (
@@ -119,20 +119,18 @@ export default function StoreLayout({
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {storeSettings.enableAIChat !== false && (
-                                <Link
-                                    href="/customer/chat"
-                                    className="relative px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
-                                >
-                                    <MessageSquare className="w-4 h-4 text-white" />
-                                    <span className="hidden sm:inline">الدردشة</span>
-                                    {unreadChatCount > 0 && (
-                                        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                            {unreadChatCount}
-                                        </span>
-                                    )}
-                                </Link>
-                            )}
+                            <Link
+                                href="/customer/chat"
+                                className="relative px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
+                            >
+                                <MessageSquare className="w-4 h-4 text-white" />
+                                <span className="hidden sm:inline">الدردشة</span>
+                                {unreadChatCount > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                        {unreadChatCount}
+                                    </span>
+                                )}
+                            </Link>
 
                             <button
                                 onClick={handleLogout}

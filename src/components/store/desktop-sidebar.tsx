@@ -16,7 +16,7 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
     const navItems = [
         { name: "المتجر", icon: LayoutDashboard, href: "/customer" },
         { name: "فواتيري", icon: ClipboardList, href: "/customer/invoices" },
-        ...(storeSettings.enableAIChat !== false ? [{ name: "الدردشة", icon: MessageSquare, href: "/customer/chat" }] : []),
+        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
     ]
 
     return (
