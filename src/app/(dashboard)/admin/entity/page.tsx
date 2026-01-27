@@ -272,7 +272,6 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
                     value={keyData.key}
                     onChange={(e) => {
                         onChange(e.target.value)
-                        onStatusChange("unchecked")
                     }}
                     onBlur={onBlur}
                     className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : keyData.status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
