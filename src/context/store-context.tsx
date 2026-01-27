@@ -178,7 +178,8 @@ export type StoreSettings = {
     footerPrivacy: string
     footerReturns: string
     requireCustomerInfoOnCheckout: boolean
-    googleGeminiApiKey?: string
+    googleGeminiApiKey?: string // Legacy, deprecate soon
+    aiApiKeys?: { key: string, status: "valid" | "invalid" | "unchecked" }[] // Multi-key support
     logoUrl?: string
     geminiCustomPrompt?: string
     geminiReferenceImageUrl?: string

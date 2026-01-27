@@ -174,7 +174,7 @@ function SecuritySettings() {
                 </div>
                 <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
                 <div className="flex gap-2">
-                    <ApiKeyInput />
+                    <GeminiKeyInput />
                 </div>
 
                 {/* Advanced Gemini Settings */}
@@ -232,56 +232,56 @@ function SecuritySettings() {
     )
 }
 
-function ApiKeyInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [key, setKey] = useState(storeSettings.googleGeminiApiKey || "")
+interface AIKeyInputProps {
+    index: number
+    keyData: { key: string, status: "valid" | "invalid" | "unchecked" }
+    onChange: (val: string) => void
+    onStatusChange: (status: "valid" | "invalid" | "unchecked") => void
+}
+
+function SingleAIKeyInput({ index, keyData, onChange, onStatusChange }: AIKeyInputProps) {
     const [show, setShow] = useState(false)
-    const [status, setStatus] = useState<"idle" | "valid" | "invalid" | "checking">("idle")
+    const [checking, setChecking] = useState(false)
 
-    const handleSaveKey = async () => {
-        const trimmedKey = key.trim()
-
-        if (!trimmedKey) {
-            setStatus("idle")
-            return
-        }
-
-        setStatus("checking")
-
-        // 1. Verify Key via Server Action
-        const result = await verifyGeminiKey(trimmedKey)
-
-        if (result.success) {
-            // 2. If successful, Save to Store
-            setStatus("valid")
-            updateStoreSettings({ ...storeSettings, googleGeminiApiKey: trimmedKey })
-            toast.success("تم التحقق والحفظ بنجاح! ✅")
-        } else {
-            console.error("Gemini Verification Error:", result.error)
-            setStatus("invalid")
-            toast.error(`${result.error} ❌`)
+    const handleVerify = async () => {
+        if (!keyData.key) return
+        setChecking(true)
+        try {
+            const result = await verifyGeminiKey(keyData.key)
+            if (result.success) {
+                onStatusChange("valid")
+                toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)
+            } else {
+                onStatusChange("invalid")
+                toast.error(`مفتاح ${index + 1} لا يعمل ❌`)
+            }
+        } catch (e) {
+            onStatusChange("invalid")
+            toast.error("خطأ في التحقق")
+        } finally {
+            setChecking(false)
         }
     }
 
     return (
-        <div className="flex-1 flex gap-2">
+        <div className="flex gap-2 mb-2">
             <div className="relative flex-1">
                 <Input
                     type={show ? "text" : "password"}
-                    value={key}
+                    value={keyData.key}
                     onChange={(e) => {
-                        setKey(e.target.value)
-                        setStatus("idle")
+                        onChange(e.target.value)
+                        onStatusChange("unchecked")
                     }}
-                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
-                    placeholder="AIzaSy..."
+                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : keyData.status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
+                    placeholder={`Key #${index + 1} (AIzaSy...)`}
                 />
 
-                {/* Status Indicator inside input */}
+                {/* Status Indicator */}
                 <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    {status === "checking" && <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />}
-                    {status === "valid" && <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" />}
-                    {status === "invalid" && <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]" />}
+                    {checking && <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />}
+                    {!checking && keyData.status === "valid" && <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" />}
+                    {!checking && keyData.status === "invalid" && <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]" />}
                 </div>
 
                 <button
@@ -292,17 +292,73 @@ function ApiKeyInput() {
                     {show ? "إخفاء" : "عرض"}
                 </button>
             </div>
+
             <Button
                 type="button"
-                onClick={handleSaveKey}
-                variant={status === "valid" ? "default" : "secondary"}
-                className={`px-6 ${status === "valid" ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+                onClick={handleVerify}
+                disabled={checking || !keyData.key}
+                size="sm"
+                variant={keyData.status === "valid" ? "ghost" : "secondary"}
+                className={`px-3 ${keyData.status === "valid" ? "text-green-500 hover:text-green-400" : ""}`}
             >
-                {status === "checking" ? "جاري التحقق..." : status === "valid" ? "المفتاح يعمل" : "حفظ وتحقق"}
+                {checking ? "..." : keyData.status === "valid" ? "✅" : "تحقق"}
             </Button>
         </div>
     )
 }
+
+function GeminiKeyInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+
+    // Initialize with 3 slots or existing
+    const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>(() => {
+        const existing = storeSettings.aiApiKeys || []
+        // Fill up to 3 slots
+        const filled = [...existing]
+        while (filled.length < 3) {
+            filled.push({ key: "", status: "unchecked" })
+        }
+        return filled.slice(0, 3)
+    })
+
+    // Sync back to store whenever keys changes (debounced ideally, but here manual save button handles it mostly)
+    useEffect(() => {
+        if (JSON.stringify(keys) !== JSON.stringify(storeSettings.aiApiKeys)) {
+            updateStoreSettings({ ...storeSettings, aiApiKeys: keys })
+        }
+    }, [keys])
+
+    const updateKey = (index: number, val: string) => {
+        const newKeys = [...keys]
+        newKeys[index] = { ...newKeys[index], key: val }
+        setKeys(newKeys)
+    }
+
+    const updateStatus = (index: number, status: "valid" | "invalid" | "unchecked") => {
+        const newKeys = [...keys]
+        newKeys[index] = { ...newKeys[index], status }
+        setKeys(newKeys)
+    }
+
+    return (
+        <div className="w-full">
+            <Label className="mb-2 block text-xs text-slate-400">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
+            {keys.map((k, i) => (
+                <SingleAIKeyInput
+                    key={i}
+                    index={i}
+                    keyData={k}
+                    onChange={(val) => updateKey(i, val)}
+                    onStatusChange={(status) => updateStatus(i, status)}
+                />
+            ))}
+            <p className="text-[10px] text-slate-500 mt-1">
+                سيقوم النظام باستخدام المفتاح الأول الصالح تلقائياً. إذا فشل، سينتقل للتالي.
+            </p>
+        </div>
+    )
+}
+
 
 function CustomPromptInput() {
     const { storeSettings, updateStoreSettings } = useStore()

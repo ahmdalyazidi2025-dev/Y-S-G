@@ -78,24 +78,6 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         setIsLoading(true)
 
         try {
-            // Use key from Global Settings ONLY
-            const apiKey = storeSettings.googleGeminiApiKey
-
-            if (!apiKey) {
-                // Professional Fallback Message
-                setTimeout(() => {
-                    setMessages(prev => [...prev, {
-                        id: (Date.now() + 1).toString(),
-                        role: "ai",
-                        content: "عذراً، خدمة المساعد الذكي غير مفعلة حالياً. يرجى التواصل مع إدارة المتجر لتفعيلها.",
-                        timestamp: new Date()
-                    }])
-                    setIsLoading(false)
-                    hapticFeedback('error')
-                }, 1000)
-                return
-            }
-
             const systemPromptBase = `أنت مساعد ذكي لمتجر قطع غيار سيارات يسمى YSG.
             لديك صلاحية الوصول لبيانات المنتجات: ${JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price })))}
             
@@ -109,25 +91,53 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                 ? `${systemPromptBase}\n\nتعليمات إضافية من الإدارة:\n${storeSettings.geminiCustomPrompt}`
                 : systemPromptBase
 
-            const promptParts: any[] = [
-                finalPrompt,
-                `سؤال العميل: ${userMessage.content}`
-            ]
+            // Construct Payload with Multimodal Support
+            const messagePayload = []
 
-            if (userMessage.image) promptParts.push(userMessage.image)
+            // System Prompt
+            messagePayload.push({ role: "system", content: finalPrompt })
 
-            // Use Reference Image from Global Settings if exists
+            // History
+            messagePayload.push(...messages.map(m => ({
+                role: m.role === "ai" ? "assistant" : "user",
+                content: m.content // Assuming history is text-only for now, or update filters
+            })))
+
+            // Current User Message
+            const currentContent: any[] = [{ type: "text", text: `سؤال العميل: ${userMessage.content}` }]
+
+            if (userMessage.image) {
+                currentContent.push({
+                    type: "image_url",
+                    image_url: { url: userMessage.image }
+                })
+            }
+
+            // Reference Image from Global Settings
             if (storeSettings.geminiReferenceImageUrl) {
-                promptParts.push(`صورة مرجعية للسياق: ${storeSettings.geminiReferenceImageUrl}`)
+                // Note: Ideally request specific format, but appending URL to text is safer for simple models
+                // For Gemini Vision, we can add it as image_url if it's base64 or accessible public URL?
+                // Gemini API usually needs base64 for inlineData.
+                // If it's a URL, Gemini might not fetch it directly unless it's Vertex AI.
+                // We will append it as text context for now:
+                currentContent[0].text += `\n\n[صورة مرجعية]: ${storeSettings.geminiReferenceImageUrl}`
             }
 
-            // Call Server Action
-            const result = await generateGeminiResponse(apiKey, promptParts)
+            messagePayload.push({ role: "user", content: currentContent })
 
-            if (!result.success || !result.text) {
-                throw new Error(result.error || "Failed to generate response")
+            // Call Secure Proxy (Server-Side Key Fetching)
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: messagePayload })
+            })
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                throw new Error(err.error || "خطأ في الاتصال بالخدمة")
             }
 
+            const result = await response.json()
             const responseText = result.text
 
             // ... parsing logic ...
@@ -166,7 +176,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
-                content: "عذراً، حدث خطأ تقني في الاتصال. يرجى المحاولة مرة أخرى لاحقاً.",
+                content: "عذراً، حدث خطأ تقني في الاتصال. يرجى التأكد من تفعيل الخدمة من الإعدادات.",
                 timestamp: new Date()
             }])
         } finally {
