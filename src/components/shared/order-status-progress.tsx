@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Check, Clock, Package, Truck, Home } from "lucide-react"
 
-type Status = "pending" | "processing" | "shipped" | "delivered" | "canceled"
+type Status = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected"
 
 const STAGES = [
     { key: "pending", label: "بانتظار التأكيد", icon: Clock },
@@ -13,16 +13,27 @@ const STAGES = [
 ]
 
 export function OrderStatusProgress({ status }: { status: Status }) {
-    if (status === "canceled") {
+    if (status === "canceled" || status === "rejected") {
         return (
             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
-                <p className="text-red-400 font-bold text-sm">تم إلغاء هذا الطلب</p>
+                <p className="text-red-400 font-bold text-sm">
+                    {status === "canceled" ? "تم إلغاء هذا الطلب" : "تم رفض هذا الطلب"}
+                </p>
             </div>
         )
     }
 
-    const currentIdx = STAGES.findIndex(s => s.key === status)
-    const activeIdx = currentIdx === -1 ? 0 : currentIdx
+    // Map 'accepted' to 'processing' stage for visualization if needed, or keep distinct.
+    // For now, let's treat 'pending' and 'accepted' as the first stage, 'processing' as second.
+    const getStageIndex = (s: Status) => {
+        if (s === "pending" || s === "accepted") return 0
+        if (s === "processing") return 1
+        if (s === "shipped") return 2
+        if (s === "delivered") return 3
+        return 0
+    }
+
+    const activeIdx = getStageIndex(status)
 
     return (
         <div className="py-6">
