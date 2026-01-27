@@ -9,7 +9,7 @@ import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
 export function CustomerNotifications() {
-    const { notifications, markNotificationRead, currentUser } = useStore()
+    const { notifications, markNotificationRead, markAllNotificationsRead, currentUser } = useStore()
 
     // Filter notifications for current user
     const userNotifications = notifications.filter(n => n.userId === currentUser?.id).sort((a, b) => {
@@ -19,7 +19,12 @@ export function CustomerNotifications() {
     const unreadCount = userNotifications.filter(n => !n.read).length
 
     return (
-        <Sheet>
+        <Sheet onOpenChange={(open) => {
+            if (open) {
+                // Small delay to ensure UI opens first
+                setTimeout(() => markAllNotificationsRead(), 500)
+            }
+        }}>
             <SheetTrigger asChild>
                 <div className="relative">
                     <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 border border-border bg-card hover:bg-accent shadow-lg group">

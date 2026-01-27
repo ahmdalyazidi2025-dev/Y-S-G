@@ -243,6 +243,7 @@ type StoreContextType = {
     resetPassword: (email: string) => Promise<boolean>
     loading: boolean // Added
     guestId: string
+    markAllNotificationsRead: () => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -938,6 +939,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         await updateDoc(doc(db, "notifications", id), { read: true })
     }
 
+    const markAllNotificationsRead = async () => {
+        if (!currentUser) return
+
+        // Filter unread notifications for current user
+        const unread = notifications.filter(n => n.userId === currentUser.id && !n.read)
+        if (unread.length === 0) return
+
+        // Create batch update
+        const batchPromises = unread.map(n =>
+            updateDoc(doc(db, "notifications", n.id), { read: true })
+        )
+
+        try {
+            await Promise.all(batchPromises)
+        } catch (error) {
+            console.error("Failed to mark all read:", error)
+        }
+    }
+
     const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string) => {
         let targetCustomers: Customer[] = []
 
@@ -1122,7 +1142,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading, guestId,
+            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead
         }}>
             {children}
         </StoreContext.Provider>
