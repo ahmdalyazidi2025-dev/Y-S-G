@@ -178,172 +178,170 @@ function SecuritySettings() {
                         <div>
                             <Label className="text-white font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
                             <p className="text-xs text-slate-400 mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
+                            <div className="flex items-center gap-3">
+                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
+                                    {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
+                                </span>
+                                <Switch
+                                    checked={storeSettings.enableAIChat !== false}
+                                    onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
+                                    className="data-[state=checked]:bg-green-500"
+                                />
+                            </div>
+                        </div>
+
+                        {storeSettings.enableAIChat !== false && (
+                            <>
+                                <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                                <div className="flex gap-2">
+                                    <GeminiKeyInput />
+                                </div>
+                            </>
+                        )}
+
+                        {/* Advanced Gemini Settings */}
+                        <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+                            <Label className="text-white font-bold flex items-center gap-2">
+                                <span className="text-lg">🤖</span>
+                                تخصيص المساعد (اختياري)
+                            </Label>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">تعليمات تعديل/تحسين الصور (Prompt) - مثال: "اجعل الخلفية بيضاء نقية"</Label>
+                                <CustomPromptInput />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-xs text-slate-400">رابط صورة مرجعية (للمقارنة)</Label>
+                                <ReferenceImageInput />
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
-                        <span className={`text-xs font-bold ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
-                            {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
-                        </span>
-                        <Switch
-                            checked={storeSettings.enableAIChat !== false}
-                            onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
-                            className="data-[state=checked]:bg-green-500"
-                        />
-                    </div>
-                </div>
 
-                {storeSettings.enableAIChat !== false && (
-                    <>
-                        <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
-                        <div className="flex gap-2">
-                            <GeminiKeyInput />
+                    <hr className="border-white/5" />
+
+                    {/* Admin Credentials */}
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>اسم المستخدم الجديد</Label>
+                            <Input
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="bg-black/20 border-white/10"
+                                placeholder="ادخل اسم مستخدم جديد"
+                            />
                         </div>
-                    </>
-                )}
-
-                {/* Advanced Gemini Settings */}
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
-                    <Label className="text-white font-bold flex items-center gap-2">
-                        <span className="text-lg">🤖</span>
-                        تخصيص المساعد (اختياري)
-                    </Label>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs text-slate-400">تعليمات تعديل/تحسين الصور (Prompt) - مثال: "اجعل الخلفية بيضاء نقية"</Label>
-                        <CustomPromptInput />
+                        <div className="space-y-2">
+                            <Label>كلمة المرور الجديدة</Label>
+                            <Input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="bg-black/20 border-white/10"
+                                placeholder="ادخل كلمة مرور جديدة"
+                            />
+                        </div>
+                        <Button
+                            type="button"
+                            className="w-full bg-red-500 hover:bg-red-600 text-white"
+                            onClick={handleUpdate}
+                            disabled={!username || !password}
+                        >
+                            تحديث بيانات الدخول
+                        </Button>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs text-slate-400">رابط صورة مرجعية (للمقارنة)</Label>
-                        <ReferenceImageInput />
-                    </div>
                 </div>
-            </div>
-
-            <hr className="border-white/5" />
-
-            {/* Admin Credentials */}
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>اسم المستخدم الجديد</Label>
-                    <Input
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل اسم مستخدم جديد"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label>كلمة المرور الجديدة</Label>
-                    <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل كلمة مرور جديدة"
-                    />
-                </div>
-                <Button
-                    type="button"
-                    className="w-full bg-red-500 hover:bg-red-600 text-white"
-                    onClick={handleUpdate}
-                    disabled={!username || !password}
-                >
-                    تحديث بيانات الدخول
-                </Button>
-            </div>
-        </div>
-    )
+                )
 }
 
-interface AIKeyInputProps {
-    index: number
-    keyData: { key: string, status: "valid" | "invalid" | "unchecked" }
+                interface AIKeyInputProps {
+                    index: number
+                keyData: {key: string, status: "valid" | "invalid" | "unchecked" }
     onChange: (val: string) => void
     onBlur: () => void
     onStatusChange: (status: "valid" | "invalid" | "unchecked") => void
 }
 
-function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: AIKeyInputProps) {
+                function SingleAIKeyInput({index, keyData, onChange, onBlur, onStatusChange}: AIKeyInputProps) {
     const [show, setShow] = useState(false)
-    const [checking, setChecking] = useState(false)
+                const [checking, setChecking] = useState(false)
 
     const handleVerify = async () => {
         if (!keyData.key) return
-        setChecking(true)
-        try {
+                setChecking(true)
+                try {
             const result = await verifyGeminiKey(keyData.key)
-            if (result.success) {
-                onStatusChange("valid")
+                if (result.success) {
+                    onStatusChange("valid")
                 toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)
             } else {
-                onStatusChange("invalid")
+                    onStatusChange("invalid")
                 toast.error(`مفتاح ${index + 1} لا يعمل ❌`)
             }
         } catch (e) {
-            onStatusChange("invalid")
+                    onStatusChange("invalid")
             toast.error("خطأ في التحقق")
         } finally {
-            setChecking(false)
-        }
+                    setChecking(false)
+                }
     }
 
-    return (
-        <div className="flex gap-2 mb-2">
-            <div className="relative flex-1">
-                <Input
-                    type={show ? "text" : "password"}
-                    value={keyData.key}
-                    onChange={(e) => {
-                        onChange(e.target.value)
-                    }}
-                    onBlur={onBlur}
-                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : keyData.status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
-                    placeholder={`Key #${index + 1} (AIzaSy...)`}
-                />
+                return (
+                <div className="flex gap-2 mb-2">
+                    <div className="relative flex-1">
+                        <Input
+                            type={show ? "text" : "password"}
+                            value={keyData.key}
+                            onChange={(e) => {
+                                onChange(e.target.value)
+                            }}
+                            onBlur={onBlur}
+                            className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-green-500/50 focus:ring-green-500/20" : keyData.status === "invalid" ? "border-red-500/50 focus:ring-red-500/20" : ""}`}
+                            placeholder={`Key #${index + 1} (AIzaSy...)`}
+                        />
 
-                {/* Status Indicator */}
-                <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    {checking && <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />}
-                    {!checking && keyData.status === "valid" && <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" />}
-                    {!checking && keyData.status === "invalid" && <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]" />}
+                        {/* Status Indicator */}
+                        <div className="absolute left-10 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            {checking && <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />}
+                            {!checking && keyData.status === "valid" && <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.6)]" />}
+                            {!checking && keyData.status === "invalid" && <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.6)]" />}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShow(!show)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                        >
+                            {show ? "إخفاء" : "عرض"}
+                        </button>
+                    </div>
+
+                    <Button
+                        type="button"
+                        onClick={handleVerify}
+                        disabled={checking || !keyData.key}
+                        size="sm"
+                        variant={keyData.status === "valid" ? "ghost" : "secondary"}
+                        className={`px-3 ${keyData.status === "valid" ? "text-green-500 hover:text-green-400" : ""}`}
+                    >
+                        {checking ? "..." : keyData.status === "valid" ? "✅" : "حفظ وتحقق"}
+                    </Button>
                 </div>
-
-                <button
-                    type="button"
-                    onClick={() => setShow(!show)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                >
-                    {show ? "إخفاء" : "عرض"}
-                </button>
-            </div>
-
-            <Button
-                type="button"
-                onClick={handleVerify}
-                disabled={checking || !keyData.key}
-                size="sm"
-                variant={keyData.status === "valid" ? "ghost" : "secondary"}
-                className={`px-3 ${keyData.status === "valid" ? "text-green-500 hover:text-green-400" : ""}`}
-            >
-                {checking ? "..." : keyData.status === "valid" ? "✅" : "حفظ وتحقق"}
-            </Button>
-        </div>
-    )
+                )
 }
 
-function GeminiKeyInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
+                function GeminiKeyInput() {
+    const {storeSettings, updateStoreSettings} = useStore()
 
-    // Initialize with 3 slots or existing
-    const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>(() => {
+                // Initialize with 3 slots or existing
+                const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>(() => {
         const existing = storeSettings.aiApiKeys || []
-        // Fill up to 3 slots
-        const filled = [...existing]
-        while (filled.length < 3) {
-            filled.push({ key: "", status: "unchecked" })
-        }
-        return filled.slice(0, 3)
+                // Fill up to 3 slots
+                const filled = [...existing]
+                while (filled.length < 3) {
+                    filled.push({ key: "", status: "unchecked" })
+                }
+                return filled.slice(0, 3)
     })
 
     // Update store only when finishing editing (onBlur behavior logic)
@@ -377,88 +375,88 @@ function GeminiKeyInput() {
     // Better approach: Sync on Blur for text, and immediately for status.
 
     const saveToStore = (newKeys: typeof keys) => {
-        updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
-    }
+                    updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
+                }
 
     const updateKey = (index: number, val: string) => {
         const newKeys = [...keys]
-        newKeys[index] = { ...newKeys[index], key: val, status: "unchecked" }
-        setKeys(newKeys)
+                newKeys[index] = {...newKeys[index], key: val, status: "unchecked" }
+                setKeys(newKeys)
     }
 
     const handleBlur = () => {
-        saveToStore(keys)
-    }
+                    saveToStore(keys)
+                }
 
     const updateStatus = (index: number, status: "valid" | "invalid" | "unchecked") => {
         const newKeys = [...keys]
-        newKeys[index] = { ...newKeys[index], status }
-        setKeys(newKeys)
-        saveToStore(newKeys) // Save status immediately
+                newKeys[index] = {...newKeys[index], status}
+                setKeys(newKeys)
+                saveToStore(newKeys) // Save status immediately
     }
 
-    return (
-        <div className="w-full">
-            <Label className="mb-2 block text-xs text-slate-400">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
-            {keys.map((k, i) => (
-                <SingleAIKeyInput
-                    key={i}
-                    index={i}
-                    keyData={k}
-                    onChange={(val) => updateKey(i, val)}
-                    onBlur={handleBlur}
-                    onStatusChange={(status) => updateStatus(i, status)}
-                />
-            ))}
-            <p className="text-[10px] text-slate-500 mt-1">
-                سيقوم النظام باستخدام المفتاح الأول الصالح تلقائياً (الأولوية لـ ai_config). إذا فشل، سينتقل للتالي.
-            </p>
-        </div>
-    )
+                return (
+                <div className="w-full">
+                    <Label className="mb-2 block text-xs text-slate-400">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
+                    {keys.map((k, i) => (
+                        <SingleAIKeyInput
+                            key={i}
+                            index={i}
+                            keyData={k}
+                            onChange={(val) => updateKey(i, val)}
+                            onBlur={handleBlur}
+                            onStatusChange={(status) => updateStatus(i, status)}
+                        />
+                    ))}
+                    <p className="text-[10px] text-slate-500 mt-1">
+                        سيقوم النظام باستخدام المفتاح الأول الصالح تلقائياً (الأولوية لـ ai_config). إذا فشل، سينتقل للتالي.
+                    </p>
+                </div>
+                )
 }
 
 
-function CustomPromptInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [value, setValue] = useState(storeSettings.geminiCustomPrompt || "")
+                function CustomPromptInput() {
+    const {storeSettings, updateStoreSettings} = useStore()
+                const [value, setValue] = useState(storeSettings.geminiCustomPrompt || "")
 
     // Debounce save or save on blur
     const handleBlur = () => {
         if (value !== storeSettings.geminiCustomPrompt) {
-            updateStoreSettings({ ...storeSettings, geminiCustomPrompt: value })
+                    updateStoreSettings({ ...storeSettings, geminiCustomPrompt: value })
             toast.success("تم حفظ التعليمات الخاصة")
         }
     }
 
-    return (
-        <textarea
-            className="w-full bg-black/20 border-white/10 rounded-xl p-3 text-sm h-24 focus:ring-1 focus:ring-primary outline-none resize-none text-right"
-            placeholder="اكتب تعليماتك هنا..."
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={handleBlur}
-        />
-    )
+                return (
+                <textarea
+                    className="w-full bg-black/20 border-white/10 rounded-xl p-3 text-sm h-24 focus:ring-1 focus:ring-primary outline-none resize-none text-right"
+                    placeholder="اكتب تعليماتك هنا..."
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onBlur={handleBlur}
+                />
+                )
 }
 
-function ReferenceImageInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [value, setValue] = useState(storeSettings.geminiReferenceImageUrl || "")
+                function ReferenceImageInput() {
+    const {storeSettings, updateStoreSettings} = useStore()
+                const [value, setValue] = useState(storeSettings.geminiReferenceImageUrl || "")
 
     const handleBlur = () => {
         if (value !== storeSettings.geminiReferenceImageUrl) {
-            updateStoreSettings({ ...storeSettings, geminiReferenceImageUrl: value })
+                    updateStoreSettings({ ...storeSettings, geminiReferenceImageUrl: value })
             toast.success("تم حفظ رابط الصورة المرجعية")
         }
     }
 
-    return (
-        <Input
-            className="bg-black/20 border-white/10 text-left ltr"
-            placeholder="https://example.com/reference-image.jpg"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={handleBlur}
-        />
-    )
+                return (
+                <Input
+                    className="bg-black/20 border-white/10 text-left ltr"
+                    placeholder="https://example.com/reference-image.jpg"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onBlur={handleBlur}
+                />
+                )
 }
