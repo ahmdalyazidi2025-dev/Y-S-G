@@ -188,31 +188,32 @@ export default function AdminRequestsPage() {
                                         onClick={() => {
                                             updateProductRequestStatus(selectedRequest.id, "rejected")
                                             setSelectedRequest(null)
-                                                >
+                                        }}
+                                    >
                                         <XCircle className="w-4 h-4" />
                                         <span>رفض</span>
                                     </Button>
 
-                                {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
-                                    <Button
-                                        variant="glass"
-                                        className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl h-12 w-12 p-0 flex items-center justify-center transition-colors"
-                                        onClick={() => {
-                                            if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
-                                                deleteProductRequest(selectedRequest.id)
-                                                setSelectedRequest(null)
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </Button>
-                                )}
+                                    {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
+                                        <Button
+                                            variant="glass"
+                                            className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl h-12 w-12 p-0 flex items-center justify-center transition-colors"
+                                            onClick={() => {
+                                                if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                                                    deleteProductRequest(selectedRequest.id)
+                                                    setSelectedRequest(null)
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
-                    </div>
                         </motion.div>
-        </div>
-    )
-}
+                    </div>
+                )
+                }
             </AnimatePresence >
         </div >
     )
