@@ -3,7 +3,10 @@
 import { useUsageStats } from "@/hooks/use-usage-stats"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Database, HardDrive, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { ArrowRight, Database, HardDrive, ExternalLink, AlertTriangle, CheckCircle2, Bell, RefreshCw, Volume2, Smartphone } from "lucide-react"
+import { hapticFeedback } from "@/lib/haptics"
+import { playNotificationSound } from "@/lib/sounds"
+import { toast } from "sonner"
 import Link from "next/link"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 
@@ -11,6 +14,22 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'
 
 export default function SystemMonitorPage() {
     const stats = useUsageStats()
+
+    const handleTestFeedback = () => {
+        playNotificationSound()
+        hapticFeedback('success')
+        toast.success("تم اختبار الصوت والاهتزاز بنجاح! إذا لم تسمع شيئاً، تأكد من وضع الهاتف العام ومن أذونات المتصفح.")
+    }
+
+    const forceUpdateSW = async () => {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations()
+            for (let registration of registrations) {
+                await registration.update()
+            }
+            toast.info("تم إرسال طلب تحديث لـ Service Worker. يرجى إغلاق المتصفح وفتحه مجدداً لضمان تفعيل التغييرات.")
+        }
+    }
 
     const dbData = Object.entries(stats.db.breakdown)
         .map(([name, bytes]) => ({ name, value: bytes }))
