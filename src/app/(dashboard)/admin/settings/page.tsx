@@ -80,7 +80,7 @@ export default function AdminSettingsPage() {
                 </Link>
                 <h1 className="text-2xl font-bold flex-1 flex flex-col">
                     <span>إعدادات المتجر</span>
-                    <span className="text-[10px] text-slate-500 font-mono">آخر تحديث: 2026-01-28 12:15 PM</span>
+                    <span className="text-[10px] text-slate-500 font-mono">آخر تحديث: 2026-01-28 14:00 PM</span>
                 </h1>
                 <Button
                     variant="ghost"
@@ -221,6 +221,30 @@ export default function AdminSettingsPage() {
                                                 className="text-[10px] text-primary hover:underline"
                                             >
                                                 نسخ
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    if (!currentUser?.id) return;
+                                                    const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
+                                                    import('firebase/firestore').then(async ({ doc, setDoc, arrayUnion, getFirestore }) => {
+                                                        const app = (await import('@/lib/firebase')).app;
+                                                        const db = getFirestore(app);
+                                                        toast.promise(
+                                                            setDoc(doc(db, collectionName, currentUser.id), {
+                                                                fcmTokens: arrayUnion(fcmToken)
+                                                            }, { merge: true }),
+                                                            {
+                                                                loading: "جاري المزامنة القسرية...",
+                                                                success: "تمت المزامنة بنجاح! ✅",
+                                                                error: "فشلت المزامنة المباشرة"
+                                                            }
+                                                        )
+                                                    })
+                                                }}
+                                                className="text-[10px] text-emerald-400 hover:underline font-bold"
+                                            >
+                                                مزامنة قسرية الآن ⚡
                                             </button>
                                             <button
                                                 type="button"

@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useFcmToken } from "@/hooks/use-fcm-token"
 import { useStore } from "@/context/store-context"
-import { doc, updateDoc, arrayUnion } from "firebase/firestore"
+import { doc, setDoc, arrayUnion } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 export function PushNotificationManager() {
@@ -17,9 +17,9 @@ export function PushNotificationManager() {
 
                 try {
                     const userRef = doc(db, collectionName, currentUser.id)
-                    await updateDoc(userRef, {
+                    await setDoc(userRef, {
                         fcmTokens: arrayUnion(fcmToken)
-                    })
+                    }, { merge: true })
                     console.log("FCM Token synced for user:", currentUser.id)
                 } catch (error) {
                     console.error("Failed to sync FCM token:", error)
