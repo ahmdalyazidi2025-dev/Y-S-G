@@ -14,12 +14,23 @@ import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
+import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
+    const [activeTab, setActiveTab] = useState<'identity' | 'logistics' | 'alerts' | 'coupons' | 'data'>('identity')
+
+    const TABS = [
+        { id: 'identity', label: 'هوية المتجر', icon: <ShoppingBag className="w-5 h-5" />, color: 'text-blue-400' },
+        { id: 'logistics', label: 'اللوجستيات', icon: <Truck className="w-5 h-5" />, color: 'text-orange-400' },
+        { id: 'alerts', label: 'التنبيهات', icon: <Music className="w-5 h-5" />, color: 'text-purple-400' },
+        { id: 'coupons', label: 'القسائم', icon: <FileText className="w-5 h-5" />, color: 'text-pink-400' },
+        { id: 'data', label: 'النظام والبيانات', icon: <BarChart3 className="w-5 h-5" />, color: 'text-emerald-400' },
+    ] as const
 
     useEffect(() => {
         getRegisteredTokensCount().then(res => {
@@ -104,506 +115,502 @@ export default function AdminSettingsPage() {
     }
 
     return (
-        <div className="space-y-6 pb-20">
-            <div className="flex items-center gap-4">
-                <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+        <div className="space-y-8 pb-24">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <Link href="/admin">
+                        <Button variant="ghost" size="icon" className="group rounded-2xl bg-white/5 hover:bg-white/10 transition-all">
+                            <ArrowRight className="w-5 h-5 text-white group-hover:-translate-x-1" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-3xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
+                            إعدادات المتجر
+                            <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full animate-pulse">V2.0 PREMIUM</span>
+                        </h1>
+                        <p className="text-[10px] text-slate-500 font-mono mt-1">LAST_SYNC: 2026.01.28.14.50</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-[10px] text-yellow-500/60 hover:text-yellow-400 gap-1 h-10 rounded-2xl border border-yellow-500/10 hover:border-yellow-500/30 transition-all font-bold"
+                        onClick={() => {
+                            if (confirm("سيتم تصفير المخزن المؤقت وإعادة تحميل الصفحة. هل أنت متأكد؟")) {
+                                localStorage.clear();
+                                sessionStorage.clear();
+                                window.location.reload();
+                            }
+                        }}
+                    >
+                        إعادة تهيئة النظام ⚡
                     </Button>
-                </Link>
-                <h1 className="text-2xl font-bold flex-1 flex flex-col">
-                    <span>إعدادات المتجر</span>
-                    <span className="text-[10px] text-slate-500 font-mono">آخر تحديث: 2026-01-28 14:00 PM</span>
-                </h1>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs text-yellow-500 gap-1 h-9 rounded-full border border-yellow-500/20"
-                    onClick={() => {
-                        if (confirm("سيتم تصفير مخزن المتصفح وتجميد الصفحة ثانية لإجبار التحديث. هل أنت متأكد؟")) {
-                            localStorage.clear();
-                            sessionStorage.clear();
-                            window.location.reload();
-                        }
-                    }}
-                >
-                    تحديث القالب والقوة ⚡
-                </Button>
-                <Button
-                    className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-6"
-                    onClick={handleSubmit}
-                >
-                    <Save className="w-4 h-4" />
-                    <span>حفظ الكل</span>
-                </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-2xl h-12 px-10 shadow-lg shadow-primary/20 transition-all active:translate-y-0.5 font-black uppercase tracking-wider"
+                    >
+                        <Save className="w-5 h-5" />
+                        <span>حفظ الإعدادات</span>
+                    </Button>
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                {/* Notification Test Section */}
-                <div className="col-span-1 lg:col-span-2">
-                    <Section icon={<Info className="w-5 h-5" />} title="اختبار النظام">
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 gap-4">
-                            <div>
-                                <h3 className="font-bold text-white mb-1">تجربة الإشعارات 🔔</h3>
-                                <p className="text-sm text-slate-400">أرسل إشعار تجريبي لهاتفك الآن للتأكد من عمل النظام بشكل صحيح.</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={handleTestNotification}
-                                    className="border-primary/30 text-primary hover:bg-primary/10 h-12 px-6 rounded-xl"
-                                >
-                                    إرسال لجهازي
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={async () => {
-                                        toast.promise(
-                                            broadcastPushNotification("تنبيه عام 🚨", "هذا إشعار تجريبي مرسل لجميع الأجهزة المسجلة."),
-                                            {
-                                                loading: "جاري بث الإشعار للكل...",
-                                                success: (res: any) => `تم الإرسال لـ ${res.sentCount} جهاز! 📢`,
-                                                error: "فشل البث"
-                                            }
-                                        )
-                                    }}
-                                    className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 h-12 px-6 rounded-xl"
-                                >
-                                    بث للجميع
-                                </Button>
-                            </div>
+            <div className="flex flex-wrap items-center gap-3 p-2 bg-white/5 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => {
+                            setActiveTab(tab.id)
+                            hapticFeedback('light')
+                        }}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 relative group",
+                            activeTab === tab.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-white/5"
+                        )}
+                    >
+                        <div className={cn("transition-colors duration-300", activeTab === tab.id ? "text-white" : tab.color)}>
+                            {tab.icon}
                         </div>
+                        <span className="text-sm font-bold whitespace-nowrap">{tab.label}</span>
+                        {activeTab === tab.id && (
+                            <motion.div
+                                layoutId="active-tab-glow"
+                                className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl -z-10"
+                                initial={false}
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                        )}
+                    </button>
+                ))}
+            </div>
 
-                        {/* Targeted Test */}
-                        <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                            <h4 className="text-sm font-bold text-primary mb-3">إرسال لعميل محدد (للتجربة على الهاتف):</h4>
-                            <div className="flex gap-2">
-                                <select
-                                    className="flex-1 bg-black/40 border-white/10 rounded-xl text-sm px-4 h-11 text-white"
-                                    onChange={(e) => {
-                                        const cid = e.target.value;
-                                        if (cid) {
-                                            const customer = customers.find(c => c.id === cid);
-                                            toast.promise(
-                                                sendPushNotification(cid, "تجربة إشعار عميل 🔔", `مرحباً ${customer?.name || ''}، هذا إشعار تجريبي من الإدارة.`, "/customer/invoices"),
-                                                {
-                                                    loading: "جاري الإرسال للعميل...",
-                                                    success: (res: any) => res.success ? `وصلت لـ ${res.sentCount} من أجهزة العميل! ✅` : `فشل: ${res.error}`,
-                                                    error: "حدث خطأ"
-                                                }
-                                            )
-                                        }
-                                    }}
-                                >
-                                    <option value="">اختر عميلاً للإرسال له...</option>
-                                    {customers.map(c => {
-                                        const tokenCount = (c as any).fcmTokens?.length || 0;
-                                        return (
-                                            <option key={c.id} value={c.id}>
-                                                {c.name} ({c.phone}) - {tokenCount === 0 ? 'لا يوجد أجهزة ❌' : `${tokenCount} أجهزة ✅`}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
-                        </div>
+            <form onSubmit={handleSubmit} className="relative min-h-[500px]">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="space-y-6"
+                    >
+                        {activeTab === 'identity' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <Section icon={<Info className="w-5 h-5" />} title="من نحن (أسفل المتجر)">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label>العنوان الرئيسي</Label>
+                                            <Input
+                                                value={formData.aboutTitle}
+                                                onChange={(e) => handleChange("aboutTitle", e.target.value)}
+                                                className="bg-black/20 border-white/10 h-12 rounded-xl"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>النص التعريفي</Label>
+                                            <textarea
+                                                className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
+                                                value={formData.aboutText}
+                                                onChange={(e) => handleChange("aboutText", e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </Section>
 
-                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 space-y-3">
-                            <h4 className="text-sm font-bold text-slate-300">معلومات تشخيصية:</h4>
+                                <Section icon={<Phone className="w-5 h-5" />} title="معلومات التواصل">
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>رقم الهاتف</Label>
+                                                <Input
+                                                    value={formData.contactPhone}
+                                                    onChange={(e) => handleChange("contactPhone", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>العنوان الفعلي</Label>
+                                                <Input
+                                                    value={formData.contactAddress}
+                                                    onChange={(e) => handleChange("contactAddress", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                            <div className="space-y-2">
+                                                <Label>رابط واتساب</Label>
+                                                <Input
+                                                    value={formData.socialWhatsapp}
+                                                    onChange={(e) => handleChange("socialWhatsapp", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>رابط تيوتير (X)</Label>
+                                                <Input
+                                                    value={formData.socialTwitter}
+                                                    onChange={(e) => handleChange("socialTwitter", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>رابط انستقرام</Label>
+                                                <Input
+                                                    value={formData.socialInstagram}
+                                                    onChange={(e) => handleChange("socialInstagram", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>رابط فيسبوك</Label>
+                                                <Input
+                                                    value={formData.socialFacebook}
+                                                    onChange={(e) => handleChange("socialFacebook", e.target.value)}
+                                                    className="bg-black/20 border-white/10 h-11"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Section>
 
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">الحساب الحالي:</span>
-                                <span className="text-primary font-bold">
-                                    {currentUser?.name || "غير معروف"} ({currentUser?.role === 'admin' ? 'إدمن' : 'موظف'})
-                                </span>
+                                <Section icon={<FileText className="w-5 h-5" />} title="روابط قانونية">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label>شروط الاستخدام</Label>
+                                            <Input
+                                                value={formData.footerTerms}
+                                                onChange={(e) => handleChange("footerTerms", e.target.value)}
+                                                className="bg-black/20 border-white/10 h-11"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>الشروط والأحكام</Label>
+                                            <Input
+                                                value={formData.footerPrivacy}
+                                                onChange={(e) => handleChange("footerPrivacy", e.target.value)}
+                                                className="bg-black/20 border-white/10 h-11"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>سياسة الاسترجاع</Label>
+                                            <Input
+                                                value={formData.footerReturns}
+                                                onChange={(e) => handleChange("footerReturns", e.target.value)}
+                                                className="bg-black/20 border-white/10 h-11"
+                                            />
+                                        </div>
+                                    </div>
+                                </Section>
                             </div>
+                        )}
 
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">حالة الإذن:</span>
-                                <span className={`font-mono ${notificationPermissionStatus === 'granted' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                    {notificationPermissionStatus === 'granted' ? 'مسموح ✅' :
-                                        notificationPermissionStatus === 'denied' ? 'مرفوض ❌' : 'غير محدد ⚠️'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">مفتاح VAPID:</span>
-                                <span className={process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'text-emerald-400' : 'text-rose-400'}>
-                                    {process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'متوفر ✅' : 'مفقود ❌'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                                <span className="text-slate-500">إجمالي الأجهزة المسجلة (كل النظام):</span>
-                                <span className="text-primary font-bold">
-                                    {totalDevices === null ? "جاري الحساب..." : `${totalDevices} جهاز 📱`}
-                                </span>
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-slate-500">معرف الجهاز (Token):</span>
-                                    {fcmToken && (
-                                        <div className="flex gap-2">
+                        {activeTab === 'logistics' && (
+                            <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (الخدمات)">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <Truck className="w-5 h-5" />
+                                            <h4 className="font-bold">خدمة الشحن</h4>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>العنوان</Label>
+                                            <Input
+                                                value={formData.shippingTitle}
+                                                onChange={(e) => handleChange("shippingTitle", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>الوصف</Label>
+                                            <Input
+                                                value={formData.shippingDesc}
+                                                onChange={(e) => handleChange("shippingDesc", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-2 text-emerald-400">
+                                            <ShoppingBag className="w-5 h-5" />
+                                            <h4 className="font-bold">طريقة الدفع</h4>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>العنوان</Label>
+                                            <Input
+                                                value={formData.paymentTitle}
+                                                onChange={(e) => handleChange("paymentTitle", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>الوصف</Label>
+                                            <Input
+                                                value={formData.paymentDesc}
+                                                onChange={(e) => handleChange("paymentDesc", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-2 text-blue-400">
+                                            <Phone className="w-5 h-5" />
+                                            <h4 className="font-bold">والدعم الفني</h4>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>العنوان</Label>
+                                            <Input
+                                                value={formData.supportTitle}
+                                                onChange={(e) => handleChange("supportTitle", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>الوصف</Label>
+                                            <Input
+                                                value={formData.supportDesc}
+                                                onChange={(e) => handleChange("supportDesc", e.target.value)}
+                                                className="bg-black/40 border-white/10"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </Section>
+                        )}
+
+                        {activeTab === 'alerts' && (
+                            <div className="space-y-6">
+                                <Section icon={<Info className="w-5 h-5" />} title="اختبار النظام وتنبيهات الإشعارات">
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-black/20 p-5 rounded-2xl border border-white/5 gap-4">
+                                        <div>
+                                            <h3 className="font-bold text-white mb-1 flex items-center gap-2">
+                                                تجربة الإشعارات 🔔
+                                                <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full">FCM Test</span>
+                                            </h3>
+                                            <p className="text-sm text-slate-400">أرسل إشعار تجريبي لهاتفك الآن للتأكد من وصول التنبيهات.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={handleTestNotification}
+                                                className="border-primary/30 text-primary hover:bg-primary/10 h-12 px-8 rounded-2xl font-bold"
+                                            >
+                                                إرسال لجهازي
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={async () => {
+                                                    toast.promise(
+                                                        broadcastPushNotification("تنبيه عام 🚨", "هذا إشعار تجريبي مرسل لجميع الأجهزة المسجلة."),
+                                                        {
+                                                            loading: "جاري بث الإشعار للكل...",
+                                                            success: (res: any) => `تم الإرسال لـ ${res.sentCount} جهاز! 📢`,
+                                                            error: "فشل البث"
+                                                        }
+                                                    )
+                                                }}
+                                                className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 h-12 px-8 rounded-2xl font-bold"
+                                            >
+                                                بث للجميع
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                                            <h4 className="text-sm font-bold text-primary mb-3">إرسال لعميل محدد:</h4>
+                                            <select
+                                                className="w-full bg-black/40 border-white/10 rounded-xl text-sm px-4 h-12 text-white outline-none focus:ring-1 focus:ring-primary"
+                                                onChange={(e) => {
+                                                    const cid = e.target.value;
+                                                    if (cid) {
+                                                        const customer = customers.find(c => c.id === cid);
+                                                        toast.promise(
+                                                            sendPushNotification(cid, "تجربة إشعار عميل 🔔", `مرحباً ${customer?.name || ''}، هذا إشعار تجريبي من الإدارة.`, "/customer/invoices"),
+                                                            {
+                                                                loading: "جاري الإرسال للعميل...",
+                                                                success: (res: any) => res.success ? `وصلت لـ ${res.sentCount} من أجهزة العميل! ✅` : `فشل: ${res.error}`,
+                                                                error: "حدث خطأ"
+                                                            }
+                                                        )
+                                                    }
+                                                }}
+                                            >
+                                                <option value="">اختر عميلاً للإرسال له...</option>
+                                                {customers.map(c => {
+                                                    const tokenCount = (c as any).fcmTokens?.length || 0;
+                                                    return (
+                                                        <option key={c.id} value={c.id}>
+                                                            {c.name} ({c.phone}) - {tokenCount === 0 ? 'لا يوجد أجهزة ❌' : `${tokenCount} أجهزة ✅`}
+                                                        </option>
+                                                    );
+                                                })}
+                                            </select>
+                                        </div>
+
+                                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3 text-xs">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-500">حالة الإذن:</span>
+                                                <span className={cn("font-bold", notificationPermissionStatus === 'granted' ? 'text-emerald-400' : 'text-rose-400')}>
+                                                    {notificationPermissionStatus === 'granted' ? 'مسموح ✅' : 'مرفوض/غير نشط ⚠️'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-slate-500">إجمالي الأجهزة المسجلة:</span>
+                                                <span className="text-primary font-bold">{totalDevices || '...'}</span>
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(fcmToken)
-                                                    toast.success("تم نسخ المعرف!")
+                                                    if (fcmToken && currentUser?.id) {
+                                                        const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
+                                                        import('firebase/firestore').then(async ({ doc, setDoc, arrayUnion, getFirestore }) => {
+                                                            const app = (await import('@/lib/firebase')).app;
+                                                            const db = getFirestore(app);
+                                                            toast.promise(
+                                                                setDoc(doc(db, collectionName, currentUser.id), {
+                                                                    fcmTokens: arrayUnion(fcmToken)
+                                                                }, { merge: true }),
+                                                                {
+                                                                    loading: "جاري المزامنة...",
+                                                                    success: "تم الربط بنجاح! ✅",
+                                                                    error: "فشلت المزامنة"
+                                                                }
+                                                            )
+                                                        })
+                                                    }
                                                 }}
-                                                className="text-[10px] text-primary hover:underline"
+                                                className="w-full h-10 border border-primary/20 rounded-xl text-primary hover:bg-primary/10 transition-colors font-bold"
                                             >
-                                                نسخ
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={async () => {
-                                                    if (!currentUser?.id) return;
-                                                    const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
-                                                    import('firebase/firestore').then(async ({ doc, setDoc, arrayUnion, getFirestore }) => {
-                                                        const app = (await import('@/lib/firebase')).app;
-                                                        const db = getFirestore(app);
-                                                        toast.promise(
-                                                            setDoc(doc(db, collectionName, currentUser.id), {
-                                                                fcmTokens: arrayUnion(fcmToken)
-                                                            }, { merge: true }),
-                                                            {
-                                                                loading: "جاري المزامنة القسرية...",
-                                                                success: "تمت المزامنة بنجاح! ✅",
-                                                                error: "فشلت المزامنة المباشرة"
-                                                            }
-                                                        )
-                                                    })
-                                                }}
-                                                className="text-[10px] text-emerald-400 hover:underline font-bold"
-                                            >
-                                                مزامنة قسرية الآن ⚡
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => window.location.reload()}
-                                                className="text-[10px] text-yellow-500 hover:underline"
-                                            >
-                                                تحديث المعرف
+                                                ربط جهازي الحالي يدوياً ⚡
                                             </button>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="p-2 bg-black/40 rounded border border-white/5 text-[10px] font-mono break-all text-slate-400">
-                                    {fcmToken || 'جاري استخراج المعرف... تأكد من السماح بالإشعارات'}
-                                </div>
+                                    </div>
+                                </Section>
+
+                                <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
+                                    <div className="space-y-4">
+                                        <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <SoundRow
+                                                title="طلب جديد 💰"
+                                                description="أصوات لوحة التحكم للإداريين"
+                                                event="newOrder"
+                                                currentSound={formData.sounds?.newOrder}
+                                                onUpload={(file) => handleSoundUpload('newOrder', file)}
+                                                onPlay={() => {
+                                                    if (formData.sounds?.newOrder) {
+                                                        new Audio(formData.sounds.newOrder).play()
+                                                    } else {
+                                                        playSound('newOrder')
+                                                    }
+                                                }}
+                                                onReset={() => resetSound('newOrder')}
+                                            />
+                                            <SoundRow
+                                                title="رسالة شات 💬"
+                                                description="تنبيه الدردشة الجماعية والخاصة"
+                                                event="newMessage"
+                                                currentSound={formData.sounds?.newMessage}
+                                                onUpload={(file) => handleSoundUpload('newMessage', file)}
+                                                onPlay={() => {
+                                                    if (formData.sounds?.newMessage) {
+                                                        new Audio(formData.sounds.newMessage).play()
+                                                    } else {
+                                                        playSound('newMessage')
+                                                    }
+                                                }}
+                                                onReset={() => resetSound('newMessage')}
+                                            />
+                                            <SoundRow
+                                                title="تحديث الحالة 📦"
+                                                description="صوت يصل للعميل عند تغير حالة طلبه"
+                                                event="statusUpdate"
+                                                currentSound={formData.sounds?.statusUpdate}
+                                                onUpload={(file) => handleSoundUpload('statusUpdate', file)}
+                                                onPlay={() => {
+                                                    if (formData.sounds?.statusUpdate) {
+                                                        new Audio(formData.sounds.statusUpdate).play()
+                                                    } else {
+                                                        playSound('statusUpdate')
+                                                    }
+                                                }}
+                                                onReset={() => resetSound('statusUpdate')}
+                                            />
+                                        </div>
+                                    </div>
+                                </Section>
                             </div>
+                        )}
 
-                            <div className="pt-2 border-t border-white/5 space-y-2">
-                                <p className="text-[11px] text-slate-400 leading-relaxed">
-                                    ⚠️ **لماذا لا يصل الإشعار؟** <br />
-                                    • الزر يرسل إشعار لـ **الحساب المفتوح حالياً** فقط. إذا كان هاتفك مفتوحاً بحساب مختلف (عميل مثلاً) لن يصله هذا الاختبار. <br />
-                                    • جرب إغلاق المتصفح (أو التطبيق) في الهاتف تماماً ثم اضغط الزر من الكمبيوتر لتلقي "إشعار خلفية".
-                                </p>
-                                <p className="text-[11px] text-yellow-500/80 leading-relaxed">
-                                    💡 **لمستخدمي الآيفون (iOS):** يجب إضافة الموقع للشاشة الرئيسية (Add to Home Screen) وفتحه مرة واحدة على الأقل لكي يتم التسجيل.
-                                </p>
+                        {activeTab === 'coupons' && (
+                            <div className="glass-card p-2 rounded-3xl overflow-hidden">
+                                <CouponManager />
                             </div>
-                        </div>
-                    </Section>
-                </div>
+                        )}
 
-                {/* Features Section */}
-                <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (المربعات العلوية)">
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                            <Label>عنوان الشحن</Label>
-                            <Input
-                                value={formData.shippingTitle}
-                                onChange={(e) => handleChange("shippingTitle", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>وصف الشحن</Label>
-                            <Input
-                                value={formData.shippingDesc}
-                                onChange={(e) => handleChange("shippingDesc", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <hr className="border-white/5" />
-                        <div className="space-y-2">
-                            <Label>عنوان الدفع</Label>
-                            <Input
-                                value={formData.paymentTitle}
-                                onChange={(e) => handleChange("paymentTitle", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>وصف الدفع</Label>
-                            <Input
-                                value={formData.paymentDesc}
-                                onChange={(e) => handleChange("paymentDesc", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <hr className="border-white/5" />
-                        <div className="space-y-2">
-                            <Label>عنوان الدعم</Label>
-                            <Input
-                                value={formData.supportTitle}
-                                onChange={(e) => handleChange("supportTitle", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>وصف الدعم</Label>
-                            <Input
-                                value={formData.supportDesc}
-                                onChange={(e) => handleChange("supportDesc", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                    </div>
-                </Section>
+                        {activeTab === 'data' && (
+                            <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
+                                <div className="space-y-6">
+                                    <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
+                                        <div className="flex items-center gap-3 text-emerald-400">
+                                            <FileText className="w-6 h-6" />
+                                            <div>
+                                                <h4 className="font-bold">التقرير الشامل للمتجر</h4>
+                                                <p className="text-xs text-slate-500">تحميل ملف CSV يحتوي على كافة العملاء وطلباتهم وتفاصيلها مرتبة زمنياً.</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            onClick={() => exportComprehensiveReport(customers, orders)}
+                                            className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold text-lg gap-2"
+                                        >
+                                            <Download className="w-5 h-5" />
+                                            استخراج ملف Excel (CSV)
+                                        </Button>
+                                    </div>
 
-                {/* Coupon Management */}
-                <div className="col-span-1 lg:col-span-2">
-                    <CouponManager />
-                </div>
-
-                {/* About Section */}
-                <Section icon={<Info className="w-5 h-5" />} title="من نحن (أسفل المتجر)">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>العنوان الرئيسي</Label>
-                            <Input
-                                value={formData.aboutTitle}
-                                onChange={(e) => handleChange("aboutTitle", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>النص التعريفي</Label>
-                            <textarea
-                                className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
-                                value={formData.aboutText}
-                                onChange={(e) => handleChange("aboutText", e.target.value)}
-                            />
-                        </div>
-                    </div>
-                </Section>
-
-                {/* Contact Section */}
-                <Section icon={<Phone className="w-5 h-5" />} title="معلومات التواصل">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>رقم الهاتف / الخط الساخن</Label>
-                            <Input
-                                value={formData.contactPhone}
-                                onChange={(e) => handleChange("contactPhone", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>العنوان الفعلي</Label>
-                            <Input
-                                value={formData.contactAddress}
-                                onChange={(e) => handleChange("contactAddress", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <hr className="border-white/5" />
-                        <div className="space-y-2">
-                            <Label>رابط واتساب</Label>
-                            <Input
-                                value={formData.socialWhatsapp}
-                                onChange={(e) => handleChange("socialWhatsapp", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>رابط تيوتير (X)</Label>
-                            <Input
-                                value={formData.socialTwitter}
-                                onChange={(e) => handleChange("socialTwitter", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>رابط انستقرام</Label>
-                            <Input
-                                value={formData.socialInstagram}
-                                onChange={(e) => handleChange("socialInstagram", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>رابط فيسبوك</Label>
-                            <Input
-                                value={formData.socialFacebook}
-                                onChange={(e) => handleChange("socialFacebook", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>رابط تيك توك</Label>
-                            <Input
-                                value={formData.socialTiktok}
-                                onChange={(e) => handleChange("socialTiktok", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>رابط سناب شات</Label>
-                            <Input
-                                value={formData.socialSnapchat}
-                                onChange={(e) => handleChange("socialSnapchat", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                    </div>
-                </Section>
-
-                {/* Footer Links */}
-                <Section icon={<FileText className="w-5 h-5" />} title="روابط قانونية">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>شروط الاستخدام</Label>
-                            <Input
-                                value={formData.footerTerms}
-                                onChange={(e) => handleChange("footerTerms", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>الشروط والأحكام</Label>
-                            <Input
-                                value={formData.footerPrivacy}
-                                onChange={(e) => handleChange("footerPrivacy", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>سياسة الاسترجاع</Label>
-                            <Input
-                                value={formData.footerReturns}
-                                onChange={(e) => handleChange("footerReturns", e.target.value)}
-                                className="bg-black/20 border-white/10"
-                            />
-                        </div>
-                    </div>
-                </Section>
-
-
-
-                {/* Checkout Settings removed from here - moved to Entity Management */}
-
-                {/* Reports & Exports */}
-                <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
-                    <div className="space-y-4">
-                        <p className="text-xs text-slate-500">
-                            زر واحد لتحميل تقرير شامل يحتوي على قائمة العملاء وطلباتهم وتفاصيلها مرتبة زمنياً، بصيغة Excel (CSV).
-                        </p>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full bg-emerald-500/5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 gap-2 h-14 rounded-xl text-base font-bold"
-                            onClick={() => exportComprehensiveReport(customers, orders)}
-                        >
-                            <Download className="w-5 h-5" />
-                            <span>تحميل التقرير الشامل (العملاء + الطلبات)</span>
-                        </Button>
-
-                        <div className="pt-4 border-t border-white/5">
-                            <p className="text-xs text-slate-500 mb-4">
-                                "الصندوق الأسود": نسخة احتياطية كاملة (Offline Black Box) تحتوي على كل شيء (المنتجات، الأقسام، العملاء، الطلبات، الإعدادات، والموظفين) بصيغة JSON. احفظها في مكان آمن لاسترجاع النظام يدوياً عند الضرورة.
-                            </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 gap-2 h-14 rounded-xl text-base font-bold"
-                                onClick={() => exportFullSystemBackup({
-                                    settings: storeSettings,
-                                    products,
-                                    categories,
-                                    staff,
-                                    customers,
-                                    orders
-                                })}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <ShoppingBag className="w-5 h-5 text-yellow-500" />
-                                    <span>تحميل الصندوق الأسود (Black Box Backup)</span>
+                                    <div className="p-6 bg-slate-900/50 rounded-2xl border border-white/5 space-y-4">
+                                        <div className="flex items-center gap-3 text-yellow-500">
+                                            <ShoppingBag className="w-6 h-6" />
+                                            <div>
+                                                <h4 className="font-bold">الصندوق الأسود (Full Backup)</h4>
+                                                <p className="text-xs text-slate-500">نسخة احتياطية كاملة للنظام (JSON) تتضمن المنتجات، العملاء، والطلبات.</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => exportFullSystemBackup({
+                                                settings: storeSettings,
+                                                products,
+                                                categories,
+                                                staff,
+                                                customers,
+                                                orders
+                                            })}
+                                            className="w-full h-14 bg-slate-800 hover:bg-slate-700 border-white/5 text-slate-200 rounded-2xl font-bold gap-2"
+                                        >
+                                            <Save className="w-5 h-5" />
+                                            تحميل نسخة احتياطية Offline
+                                        </Button>
+                                    </div>
                                 </div>
-                            </Button>
-                        </div>
-                    </div>
-                </Section>
-
-
-
-                {/* Security Section removed from here - moved to Entity Management */}
-                {/* Alerts & Sounds Section */}
-                <Section icon={<Music className="w-5 h-5" />} title="إدارة التنبيهات والأصوات">
-                    <div className="space-y-4">
-                        <p className="text-xs text-slate-500 mb-4">
-                            قم بتخصيص نغمات التنبيه لكل حدث في النظام لجعل تجربتك فريدة.
-                        </p>
-
-                        <div className="space-y-6">
-                            <SoundRow
-                                title="طلب جديد 💰"
-                                description="تنبيه الإدارة عند وصول طلب جديد"
-                                event="newOrder"
-                                currentSound={formData.sounds?.newOrder}
-                                onUpload={(file) => handleSoundUpload('newOrder', file)}
-                                onPlay={() => {
-                                    if (formData.sounds?.newOrder) {
-                                        const audio = new Audio(formData.sounds.newOrder)
-                                        audio.play()
-                                    } else {
-                                        playSound('newOrder')
-                                    }
-                                }}
-                                onReset={() => resetSound('newOrder')}
-                            />
-
-                            <SoundRow
-                                title="رسالة دردشة 💬"
-                                description="تنبيه عند وصول رسالة شات جديدة"
-                                event="newMessage"
-                                currentSound={formData.sounds?.newMessage}
-                                onUpload={(file) => handleSoundUpload('newMessage', file)}
-                                onPlay={() => {
-                                    if (formData.sounds?.newMessage) {
-                                        const audio = new Audio(formData.sounds.newMessage)
-                                        audio.play()
-                                    } else {
-                                        playSound('newMessage')
-                                    }
-                                }}
-                                onReset={() => resetSound('newMessage')}
-                            />
-
-                            <SoundRow
-                                title="تحديث حالة الطلب 📦"
-                                description="تنبيه العميل عند تغيير حالة طلبه"
-                                event="statusUpdate"
-                                currentSound={formData.sounds?.statusUpdate}
-                                onUpload={(file) => handleSoundUpload('statusUpdate', file)}
-                                onPlay={() => {
-                                    if (formData.sounds?.statusUpdate) {
-                                        const audio = new Audio(formData.sounds.statusUpdate)
-                                        audio.play()
-                                    } else {
-                                        playSound('statusUpdate')
-                                    }
-                                }}
-                                onReset={() => resetSound('statusUpdate')}
-                            />
-                        </div>
-                    </div>
-                </Section>
+                            </Section>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </form>
-        </div >
+        </div>
     )
 }
 
