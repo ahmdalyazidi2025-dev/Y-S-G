@@ -163,3 +163,24 @@ export async function broadcastPushNotification(
         return { success: false, error: "حدث خطأ في السيرفر أثناء البث" }
     }
 }
+
+export async function getRegisteredTokensCount() {
+    try {
+        let count = 0
+        const staffDocs = await adminDb.collection("staff").get()
+        staffDocs.forEach(doc => {
+            const data = doc.data()
+            if (data.fcmTokens && Array.isArray(data.fcmTokens)) count += data.fcmTokens.length
+        })
+
+        const customerDocs = await adminDb.collection("customers").get()
+        customerDocs.forEach(doc => {
+            const data = doc.data()
+            if (data.fcmTokens && Array.isArray(data.fcmTokens)) count += data.fcmTokens.length
+        })
+
+        return { success: true, count }
+    } catch (error) {
+        return { success: false, count: 0 }
+    }
+}

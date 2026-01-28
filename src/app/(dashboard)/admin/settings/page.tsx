@@ -11,13 +11,20 @@ import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, Sh
 import Link from "next/link"
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
-import { sendPushNotification, broadcastPushNotification } from "@/app/actions/notifications"
+import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
+    const [totalDevices, setTotalDevices] = useState<number | null>(null)
+
+    useEffect(() => {
+        getRegisteredTokensCount().then(res => {
+            if (res.success) setTotalDevices(res.count)
+        })
+    }, [])
 
     // Sync state when storeSettings loads from Firebase
     useEffect(() => {
@@ -187,6 +194,12 @@ export default function AdminSettingsPage() {
                                 <span className="text-slate-500">مفتاح VAPID:</span>
                                 <span className={process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'text-emerald-400' : 'text-rose-400'}>
                                     {process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'متوفر ✅' : 'مفقود ❌'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+                                <span className="text-slate-500">إجمالي الأجهزة المسجلة (كل النظام):</span>
+                                <span className="text-primary font-bold">
+                                    {totalDevices === null ? "جاري الحساب..." : `${totalDevices} جهاز 📱`}
                                 </span>
                             </div>
                             <div className="space-y-1">
