@@ -198,6 +198,40 @@ export default function SystemMonitorPage() {
                 </Card>
             </div>
 
+            {/* Notification Debug */}
+            <Card className="glass-card border-white/5 relative overflow-hidden">
+                <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                        <Bell className="w-5 h-5 text-yellow-400" />
+                        <span>اختبار التنبيهات والتحديثات</span>
+                    </CardTitle>
+                    <CardDescription>تحقق من عمل الصوت والاهتزاز وتحديث ملفات الموقع</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button
+                        onClick={handleTestFeedback}
+                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl"
+                    >
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-center gap-2">
+                                <Volume2 className="w-4 h-4 text-primary" />
+                                <Smartphone className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="text-xs mt-1">اختبار الصوت والاهتزاز</span>
+                        </div>
+                    </Button>
+                    <Button
+                        onClick={forceUpdateSW}
+                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl"
+                    >
+                        <div className="flex flex-col items-center">
+                            <RefreshCw className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs mt-1">تحديث ملفات الموقع (V8)</span>
+                        </div>
+                    </Button>
+                </CardContent>
+            </Card>
+
             {/* Disclaimer */}
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-4 items-start">
                 <InfoIcon className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
