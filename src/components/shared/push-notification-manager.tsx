@@ -6,12 +6,12 @@ import { useStore } from "@/context/store-context"
 import { doc, setDoc, arrayUnion } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { hapticFeedback } from "@/lib/haptics"
-import { useSounds } from "@/hooks/use-sounds"
+
 
 export function PushNotificationManager() {
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const { currentUser } = useStore()
-    const { playSound } = useSounds()
+
 
     useEffect(() => {
         const syncToken = async () => {
@@ -42,7 +42,8 @@ export function PushNotificationManager() {
                     console.log('Foreground message received:', payload)
 
                     // 1. Play Sound (dynamic from settings)
-                    playSound('generalPush')
+                    // sound removed as per cleanup
+
 
                     // 2. Trigger Haptics
                     hapticFeedback('success')
