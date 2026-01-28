@@ -43,9 +43,10 @@ messaging.onBackgroundMessage((payload) => {
 
     return self.registration.showNotification(notificationTitle, {
         ...notificationOptions,
-        // Added properties for better mobile experience
         silent: false,
-        sound: 'default'
+        vibrate: [300, 100, 300, 100, 400], // Stronger pattern
+        renotify: true,
+        tag: 'ysg-notification'
     }).catch(err => console.error('Error showing notification:', err));
 });
 
@@ -72,7 +73,7 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // --- Existing PWA logic below ---
-const CACHE_NAME = 'ysg-sales-v6'; // Forced update for notification fix
+const CACHE_NAME = 'ysg-sales-v7'; // Forced update for notification fix
 const ASSETS = [
     '/',
     '/manifest.json',

@@ -5,6 +5,8 @@ import { useFcmToken } from "@/hooks/use-fcm-token"
 import { useStore } from "@/context/store-context"
 import { doc, setDoc, arrayUnion } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { playNotificationSound } from "@/lib/sounds"
+import { hapticFeedback } from "@/lib/haptics"
 
 export function PushNotificationManager() {
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
@@ -38,17 +40,13 @@ export function PushNotificationManager() {
                 onMessage(messaging, (payload) => {
                     console.log('Foreground message received:', payload)
 
-                    // 1. Play Sound
-                    try {
-                        const audio = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTpvT18AAAAAAAD//w=="); // Empty tiny wav as placeholder? 
-                        // Better: reuse playSound from store-context if possible, but this is a standalone component.
-                        // I will use a simple notification sound.
-                        const sound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                        sound.volume = 0.5;
-                        sound.play().catch(() => { });
-                    } catch (e) { }
+                    // 1. Play Sound (using reliable base64)
+                    playNotificationSound()
 
-                    // 2. Display toast
+                    // 2. Trigger Haptics
+                    hapticFeedback('success')
+
+                    // 3. Display toast
                     import('sonner').then(({ toast }) => {
                         toast.info(payload.data?.title || payload.notification?.title || "تنبيه جديد", {
                             description: payload.data?.body || payload.notification?.body || "",
