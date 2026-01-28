@@ -12,30 +12,30 @@ export const hapticFeedback = (pattern: HapticPattern = 'light') => {
 
     switch (pattern) {
         case 'light':
-            // Fast, subtle tap
-            window.navigator.vibrate(10);
+            // Fast, subtle tap (increased from 10 to 30)
+            window.navigator.vibrate(30);
             break;
         case 'medium':
-            // Noticeable tap
-            window.navigator.vibrate(20);
+            // Noticeable tap (increased from 20 to 60)
+            window.navigator.vibrate(60);
             break;
         case 'heavy':
-            // Strong tap
-            window.navigator.vibrate(35);
+            // Strong tap (increased from 35 to 120)
+            window.navigator.vibrate(120);
             break;
         case 'success':
-            // Two short pulses
-            window.navigator.vibrate([10, 30, 20]);
+            // Two short pulses (more rhythmic and stronger)
+            window.navigator.vibrate([40, 50, 60]);
             break;
         case 'warning':
-            // One long pulse
-            window.navigator.vibrate(50);
+            // One long pulse (increased from 50 to 150)
+            window.navigator.vibrate(150);
             break;
         case 'error':
-            // Three quick pulses (SOS style)
-            window.navigator.vibrate([20, 40, 20, 40, 20]);
+            // Three quick pulses (stronger SOS style)
+            window.navigator.vibrate([60, 50, 60, 50, 100]);
             break;
         default:
-            window.navigator.vibrate(10);
+            window.navigator.vibrate(30);
     }
 };
