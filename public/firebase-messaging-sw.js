@@ -18,26 +18,24 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-    // Check if payload.data exists (sent via our custom action)
-    if (payload.data) {
-        const notificationTitle = payload.data.title;
-        const notificationOptions = {
-            body: payload.data.body,
-            icon: payload.data.icon || '/app-icon-v2.png',
-            badge: '/app-icon-v2.png',
-            tag: 'ysg-notification', // Collapses multiple notifications
-            renotify: true, // Vibrate again for new messages with same tag
-            data: {
-                link: payload.data.link || '/'
-            },
-            requireInteraction: true, // Keep it visible on desktop
-            actions: [
-                { action: 'open', title: 'عرض التفاصيل' }
-            ]
-        };
+    const notificationTitle = payload.notification?.title || payload.data?.title || 'تنبيه جديد';
+    const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || '',
+        icon: payload.data?.icon || '/app-icon-v2.png',
+        badge: '/app-icon-v2.png',
+        tag: 'ysg-notification',
+        renotify: true,
+        data: {
+            link: payload.fcmOptions?.link || payload.data?.link || '/'
+        },
+        requireInteraction: true,
+        actions: [
+            { action: 'open', title: 'عرض التفاصيل' }
+        ]
+    };
 
-        return self.registration.showNotification(notificationTitle, notificationOptions);
-    }
+    return self.registration.showNotification(notificationTitle, notificationOptions)
+        .catch(err => console.error('Error showing notification:', err));
 });
 
 // Handle Notification Click
