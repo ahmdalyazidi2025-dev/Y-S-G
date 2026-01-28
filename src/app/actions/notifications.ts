@@ -46,7 +46,7 @@ export async function sendPushNotification(
                 headers: {
                     Urgency: 'high'
                 },
-                fcm_options: {
+                fcmOptions: {
                     link,
                 }
             },
@@ -122,19 +122,9 @@ export async function broadcastPushNotification(
         }
 
         const message = {
-            // notification: { title, body },
             data: { title, body, link },
             webpush: {
-                notification: {
-                    title,
-                    body,
-                    icon: '/app-icon-v2.png',
-                    badge: '/app-icon-v2.png',
-                    tag: 'ysg-notification',
-                    renotify: true,
-                    vibrate: [200, 100, 200],
-                },
-                fcm_options: { link }
+                fcmOptions: { link }
             },
             tokens: uniqueTokens,
         }
@@ -192,7 +182,7 @@ export async function sendPushToUsers(
         const message = {
             data: { title, body, link },
             webpush: {
-                fcm_options: { link }
+                fcmOptions: { link }
             },
             tokens: uniqueTokens,
         }
