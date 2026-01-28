@@ -22,11 +22,10 @@ export default function AdminSettingsPage() {
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
-    const [activeTab, setActiveTab] = useState<'identity' | 'logistics' | 'alerts' | 'coupons' | 'data'>('identity')
+    const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data'>('identity')
 
     const TABS = [
         { id: 'identity', label: 'هوية المتجر', icon: <ShoppingBag className="w-5 h-5" />, color: 'text-blue-400' },
-        { id: 'logistics', label: 'اللوجستيات', icon: <Truck className="w-5 h-5" />, color: 'text-orange-400' },
         { id: 'alerts', label: 'التنبيهات', icon: <Music className="w-5 h-5" />, color: 'text-purple-400' },
         { id: 'coupons', label: 'القسائم', icon: <FileText className="w-5 h-5" />, color: 'text-pink-400' },
         { id: 'data', label: 'النظام والبيانات', icon: <BarChart3 className="w-5 h-5" />, color: 'text-emerald-400' },
@@ -307,82 +306,82 @@ export default function AdminSettingsPage() {
                                         </div>
                                     </div>
                                 </Section>
-                            </div>
-                        )}
 
-                        {activeTab === 'logistics' && (
-                            <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (الخدمات)">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-                                        <div className="flex items-center gap-2 text-primary">
-                                            <Truck className="w-5 h-5" />
-                                            <h4 className="font-bold">خدمة الشحن</h4>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>العنوان</Label>
-                                            <Input
-                                                value={formData.shippingTitle}
-                                                onChange={(e) => handleChange("shippingTitle", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>الوصف</Label>
-                                            <Input
-                                                value={formData.shippingDesc}
-                                                onChange={(e) => handleChange("shippingDesc", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
+                                <div className="lg:col-span-2">
+                                    <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (الخدمات)">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-2 text-primary">
+                                                    <Truck className="w-5 h-5" />
+                                                    <h4 className="font-bold">خدمة الشحن</h4>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>العنوان</Label>
+                                                    <Input
+                                                        value={formData.shippingTitle}
+                                                        onChange={(e) => handleChange("shippingTitle", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>الوصف</Label>
+                                                    <Input
+                                                        value={formData.shippingDesc}
+                                                        onChange={(e) => handleChange("shippingDesc", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-                                        <div className="flex items-center gap-2 text-emerald-400">
-                                            <ShoppingBag className="w-5 h-5" />
-                                            <h4 className="font-bold">طريقة الدفع</h4>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>العنوان</Label>
-                                            <Input
-                                                value={formData.paymentTitle}
-                                                onChange={(e) => handleChange("paymentTitle", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>الوصف</Label>
-                                            <Input
-                                                value={formData.paymentDesc}
-                                                onChange={(e) => handleChange("paymentDesc", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
+                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-2 text-emerald-400">
+                                                    <ShoppingBag className="w-5 h-5" />
+                                                    <h4 className="font-bold">طريقة الدفع</h4>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>العنوان</Label>
+                                                    <Input
+                                                        value={formData.paymentTitle}
+                                                        onChange={(e) => handleChange("paymentTitle", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>الوصف</Label>
+                                                    <Input
+                                                        value={formData.paymentDesc}
+                                                        onChange={(e) => handleChange("paymentDesc", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-                                        <div className="flex items-center gap-2 text-blue-400">
-                                            <Phone className="w-5 h-5" />
-                                            <h4 className="font-bold">والدعم الفني</h4>
+                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-2 text-blue-400">
+                                                    <Phone className="w-5 h-5" />
+                                                    <h4 className="font-bold">والدعم الفني</h4>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>العنوان</Label>
+                                                    <Input
+                                                        value={formData.supportTitle}
+                                                        onChange={(e) => handleChange("supportTitle", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>الوصف</Label>
+                                                    <Input
+                                                        value={formData.supportDesc}
+                                                        onChange={(e) => handleChange("supportDesc", e.target.value)}
+                                                        className="bg-black/40 border-white/10"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>العنوان</Label>
-                                            <Input
-                                                value={formData.supportTitle}
-                                                onChange={(e) => handleChange("supportTitle", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>الوصف</Label>
-                                            <Input
-                                                value={formData.supportDesc}
-                                                onChange={(e) => handleChange("supportDesc", e.target.value)}
-                                                className="bg-black/40 border-white/10"
-                                            />
-                                        </div>
-                                    </div>
+                                    </Section>
                                 </div>
-                            </Section>
+                            </div>
                         )}
 
                         {activeTab === 'alerts' && (
