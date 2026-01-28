@@ -16,14 +16,20 @@ export async function sendPushNotification(
         // 1. Get user tokens
         // Check both 'customers' and 'staff' collections just in case, or rely on distinct collections.
         // Assuming 'customers' for now based on context.
-        const userDoc = await adminDb.collection("customers").doc(userId).get()
+        // 1. Get user tokens
+        let collectionName = "customers"
+        let userDoc = await adminDb.collection("customers").doc(userId).get()
+
+        if (!userDoc.exists) {
+            // Fallback to staff
+            userDoc = await adminDb.collection("staff").doc(userId).get()
+            collectionName = "staff"
+        }
+
         const userData = userDoc.data()
 
-        // Also check staff if not found (optional, purely for comprehensive coverage)
-        // const staffDoc = await adminDb.collection("staff").doc(userId).get() ...
-
         if (!userData || !userData.fcmTokens || !Array.isArray(userData.fcmTokens) || userData.fcmTokens.length === 0) {
-            console.log(`No tokens found for user ${userId}`)
+            console.log(`No tokens found for user ${userId} in ${collectionName}`)
             return { success: false, error: "User has no registered devices" }
         }
 
@@ -53,7 +59,7 @@ export async function sendPushNotification(
             })
 
             if (failedTokens.length > 0) {
-                await adminDb.collection("customers").doc(userId).update({
+                await adminDb.collection(collectionName).doc(userId).update({
                     fcmTokens: admin.firestore.FieldValue.arrayRemove(...failedTokens)
                 })
             }
