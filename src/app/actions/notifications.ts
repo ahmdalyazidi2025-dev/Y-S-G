@@ -46,15 +46,6 @@ export async function sendPushNotification(
                 headers: {
                     Urgency: 'high'
                 },
-                notification: {
-                    body,
-                    icon: '/app-icon-v2.png',
-                    badge: '/app-icon-v2.png',
-                    tag: 'ysg-notification',
-                    renotify: true,
-                    requireInteraction: true,
-                    vibrate: [200, 100, 200],
-                },
                 fcm_options: {
                     link,
                 }

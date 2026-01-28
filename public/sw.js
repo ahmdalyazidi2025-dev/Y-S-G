@@ -23,31 +23,26 @@ messaging.onBackgroundMessage((payload) => {
 
     const notificationTitle = payload.notification?.title || payload.data?.title || 'تنبيه جديد';
     const notificationOptions = {
-        body: payload.data?.body || payload.notification?.body || '',
+        body: payload.data?.body || '',
         icon: payload.data?.icon || '/app-icon-v2.png',
         badge: '/app-icon-v2.png',
         tag: 'ysg-notification',
         renotify: true,
-        vibrate: [200, 100, 200], // Vibration pattern
+        vibrate: [100, 50, 100, 50, 200], // Standard rhythmic pattern
         data: {
-            link: payload.data?.link || payload.fcmOptions?.link || '/'
+            link: payload.data?.link || '/'
         },
         requireInteraction: true,
-        actions: [
-            { action: 'open', title: 'عرض التفاصيل' }
-        ]
+        silent: false,
     };
+
+    console.log('[sw.js] Displaying notification:', notificationTitle, notificationOptions);
 
     // Note: Audio feedback is limited in background SW. 
     // Usually handled by system if sound is specified in FCM, but data-only gives us more UI control.
 
-    return self.registration.showNotification(notificationTitle, {
-        ...notificationOptions,
-        silent: false,
-        vibrate: [300, 100, 300, 100, 400], // Stronger pattern
-        renotify: true,
-        tag: 'ysg-notification'
-    }).catch(err => console.error('Error showing notification:', err));
+    return self.registration.showNotification(notificationTitle, notificationOptions)
+        .catch(err => console.error('Error showing notification:', err));
 });
 
 // Handle Notification Click
@@ -73,7 +68,7 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // --- Existing PWA logic below ---
-const CACHE_NAME = 'ysg-sales-v7'; // Forced update for notification fix
+const CACHE_NAME = 'ysg-sales-v8'; // Forced update for notification fix
 const ASSETS = [
     '/',
     '/manifest.json',
