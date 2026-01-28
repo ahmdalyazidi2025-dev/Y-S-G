@@ -193,6 +193,7 @@ export type StoreSettings = {
         newMessage?: string;    // Direct/Global chat alert
         statusUpdate?: string;  // Customer: Order status change alert
         systemPop?: string;     // Generic small notification
+        generalPush?: string;   // Customer: Global/Bulk notification alert
     }
 }
 
