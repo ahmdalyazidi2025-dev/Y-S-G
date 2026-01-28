@@ -21,7 +21,9 @@ export const useFcmToken = () => {
                     setNotificationPermissionStatus(permission)
 
                     if (permission === 'granted') {
-                        // We need a VAPID key from Firebase Console -> Project Settings -> Cloud Messaging -> Web Push Certificates
+                        // Get active service worker registration from sw.js
+                        const registration = await navigator.serviceWorker.getRegistration('/sw.js')
+
                         if (!VAPID_KEY) {
                             console.warn("VAPID Key is missing in .env (NEXT_PUBLIC_FIREBASE_VAPID_KEY). Notification token cannot be retrieved.")
                             return
@@ -29,6 +31,7 @@ export const useFcmToken = () => {
 
                         const currentToken = await getToken(messaging, {
                             vapidKey: VAPID_KEY,
+                            serviceWorkerRegistration: registration, // Use our unified SW
                         })
 
                         if (currentToken) {
