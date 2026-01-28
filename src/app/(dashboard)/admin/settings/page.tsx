@@ -166,9 +166,14 @@ export default function AdminSettingsPage() {
                                     }}
                                 >
                                     <option value="">اختر عميلاً للإرسال له...</option>
-                                    {customers.map(c => (
-                                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
-                                    ))}
+                                    {customers.map(c => {
+                                        const tokenCount = (c as any).fcmTokens?.length || 0;
+                                        return (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name} ({c.phone}) - {tokenCount === 0 ? 'لا يوجد أجهزة ❌' : `${tokenCount} أجهزة ✅`}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                             </div>
                         </div>
