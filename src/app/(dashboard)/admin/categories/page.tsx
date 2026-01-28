@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
 import { AdminCategoryForm } from "@/components/admin/category-form"
 
@@ -48,9 +49,18 @@ export default function CategoriesPage() {
                 ) : (
                     categories.map((category) => (
                         <div key={category.id} className="glass-card overflow-hidden group">
-                            <div className="h-24 bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center relative">
-                                <Layers className="w-10 h-10 text-primary opacity-20" />
-                                <div className="absolute top-2 right-2 flex gap-1">
+                            <div className="h-24 bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center relative overflow-hidden">
+                                {category.image && category.image.startsWith("data:") ? (
+                                    <Image
+                                        src={category.image}
+                                        alt={category.nameAr}
+                                        fill
+                                        className="object-cover transition-transform group-hover:scale-110"
+                                    />
+                                ) : (
+                                    <Layers className="w-10 h-10 text-primary opacity-20" />
+                                )}
+                                <div className="absolute top-2 right-2 flex gap-1 z-10">
                                     <Button
                                         variant="glass"
                                         size="icon"

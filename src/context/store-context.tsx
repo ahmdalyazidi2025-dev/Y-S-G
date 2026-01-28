@@ -223,6 +223,7 @@ type StoreContextType = {
     toggleBanner: (bannerId: string) => void
     addProductRequest: (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => void
     updateProductRequestStatus: (requestId: string, status: ProductRequest["status"]) => void
+    deleteProductRequest: (requestId: string) => void
     staff: StaffMember[]
     addStaff: (member: Omit<StaffMember, "id" | "createdAt">) => void
     updateStaff: (member: StaffMember) => void
@@ -926,7 +927,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const updateProductRequestStatus = async (requestId: string, status: ProductRequest["status"]) => {
-        await updateDoc(doc(db, "requests", requestId), { status })
+        try {
+            await updateDoc(doc(db, "requests", requestId), { status })
+            toast.success("تم تحديث حالة الطلب")
+        } catch (e) {
+            console.error("Update Request Status Error:", e)
+            toast.error("فشل تحديث حالة الطلب")
+        }
+    }
+
+    const deleteProductRequest = async (requestId: string) => {
+        try {
+            await deleteDoc(doc(db, "requests", requestId))
+            toast.success("تم حذف الطلب بنجاح")
+        } catch (e) {
+            console.error("Delete Request Error:", e)
+            toast.error("فشل حذف الطلب")
+        }
     }
 
     const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل") => {
@@ -1366,7 +1383,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             addToCart, removeFromCart, clearCart, createOrder, scanProduct,
             addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
             addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
-            addBanner, deleteBanner, toggleBanner, addProductRequest, updateProductRequestStatus,
+            addBanner, deleteBanner, toggleBanner, addProductRequest,
+            updateProductRequestStatus,
+            deleteProductRequest,
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,

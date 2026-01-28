@@ -14,75 +14,36 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 10mm !important;
+                        margin: 0;
                     }
                     
-                    /* Force white background and black text on ALL elements including :root */
-                    :root, html, body {
-                        --background: 0 0% 100% !important;
-                        --foreground: 0 0% 0% !important;
-                        background-color: white !important;
-                        background: white !important;
-                        color: black !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        color-scheme: light !important;
+                    /* Hide everything by default using visibility */
+                    body * {
+                        visibility: hidden;
                     }
 
-                    /* Disable dark mode classes if present */
-                    .dark {
-                        --background: 0 0% 100% !important;
-                        background-color: white !important;
-                        color: black !important;
-                    }
-
-                    /* Hide ALL common UI elements and non-print stuff */
-                    nav, aside, header, footer, button, .no-print, 
-                    [role="dialog"], [role="presentation"], .glass-card:not(#invoice-${order.id}),
-                    .fixed:not(#invoice-${order.id} *), .absolute:not(#invoice-${order.id} *) {
-                        display: none !important;
+                    /* Show the invoice and its children */
+                    #invoice-${order.id}, #invoice-${order.id} * {
+                        visibility: visible;
                     }
                     
-                    /* Hide EVERYTHING and then show only the invoice */
-                    body > * {
-                        display: none !important;
-                    }
-                    
+                    /* Position the invoice directly on the page */
                     #invoice-${order.id} {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        margin: 0;
+                        padding: 20px;
+                        background: white;
+                        z-index: 9999;
                         display: block !important;
-                        visibility: visible !important;
-                        position: relative !important;
-                        width: 100% !important;
-                        max-width: none !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
-                        color: black !important;
-                        border: none !important;
-                        box-shadow: none !important;
-                        left: auto !important;
-                        top: auto !important;
-                        transform: none !important;
-                        z-index: auto !important;
                     }
 
-                    /* Ensure tables look good */
-                    table {
-                        width: 100% !important;
-                        border-collapse: collapse !important;
-                        background: white !important;
-                    }
-                    
-                    th, td {
-                        border: 1px solid #000 !important;
-                        color: black !important;
-                        background: white !important;
-                        padding: 8px !important;
-                    }
-
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
+                    /* Reset specific styles for print */
+                    .no-print {
+                        display: none !important;
                     }
                 }
             `}</style>

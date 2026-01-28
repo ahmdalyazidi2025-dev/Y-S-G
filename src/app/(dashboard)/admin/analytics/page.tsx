@@ -282,8 +282,8 @@ export default function AnalyticsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={revenueData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                <XAxis dataKey="date" stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#ffffff50" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} />
+                                <XAxis dataKey="date" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: 'white' }} />
+                                <YAxis stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} tick={{ fill: 'white' }} />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1c2a36', border: '1px solid #ffffff10', borderRadius: '12px' }}
                                     itemStyle={{ color: '#fff' }}
@@ -304,8 +304,8 @@ export default function AnalyticsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topProductsData} layout="vertical" margin={{ left: 40 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" horizontal={false} />
-                                <XAxis type="number" stroke="#ffffff50" hide />
-                                <YAxis dataKey="name" type="category" stroke="#ffffff50" fontSize={10} width={100} tickLine={false} axisLine={false} />
+                                <XAxis type="number" stroke="#ffffff" hide />
+                                <YAxis dataKey="name" type="category" stroke="#ffffff" fontSize={11} width={100} tickLine={false} axisLine={false} tick={{ fill: 'white', fontWeight: 'bold' }} />
                                 <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} />
                                 <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
                             </BarChart>

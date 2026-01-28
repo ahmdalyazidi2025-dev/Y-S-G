@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare } from "lucide-react"
+import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, ProductRequest } from "@/context/store-context"
@@ -16,7 +16,7 @@ const REQUEST_STATUS = {
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus } = useStore()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
 
@@ -189,16 +189,30 @@ export default function AdminRequestsPage() {
                                             updateProductRequestStatus(selectedRequest.id, "rejected")
                                             setSelectedRequest(null)
                                         }}
-                                    >
-                                        <XCircle className="w-4 h-4" />
                                         <span>رفض</span>
+                                </Button>
+
+                                {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
+                                    <Button
+                                        variant="glass"
+                                        className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl h-12 w-12 p-0 flex items-center justify-center transition-colors"
+                                        onClick={() => {
+                                            if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                                                deleteProductRequest(selectedRequest.id)
+                                                setSelectedRequest(null)
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="w-5 h-5" />
                                     </Button>
-                                </div>
+                                )}
                             </div>
-                        </motion.div>
                     </div>
-                )}
-            </AnimatePresence>
+                        </motion.div>
         </div>
+    )
+}
+            </AnimatePresence >
+        </div >
     )
 }
