@@ -103,6 +103,14 @@ export default function AdminSettingsPage() {
 
                         <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 space-y-3">
                             <h4 className="text-sm font-bold text-slate-300">معلومات تشخيصية:</h4>
+
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">الحساب الحالي:</span>
+                                <span className="text-primary font-bold">
+                                    {currentUser?.name || "غير معروف"} ({currentUser?.role === 'admin' ? 'إدمن' : 'موظف'})
+                                </span>
+                            </div>
+
                             <div className="flex items-center justify-between text-xs">
                                 <span className="text-slate-500">حالة الإذن:</span>
                                 <span className={`font-mono ${notificationPermissionStatus === 'granted' ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -120,15 +128,25 @@ export default function AdminSettingsPage() {
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-slate-500">معرف الجهاز (Token):</span>
                                     {fcmToken && (
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(fcmToken)
-                                                toast.success("تم نسخ المعرف!")
-                                            }}
-                                            className="text-[10px] text-primary hover:underline"
-                                        >
-                                            نسخ المعرف
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(fcmToken)
+                                                    toast.success("تم نسخ المعرف!")
+                                                }}
+                                                className="text-[10px] text-primary hover:underline"
+                                            >
+                                                نسخ
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => window.location.reload()}
+                                                className="text-[10px] text-yellow-500 hover:underline"
+                                            >
+                                                تحديث المعرف
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="p-2 bg-black/40 rounded border border-white/5 text-[10px] font-mono break-all text-slate-400">
@@ -136,10 +154,14 @@ export default function AdminSettingsPage() {
                                 </div>
                             </div>
 
-                            {/* iOS Specific Help */}
-                            <div className="pt-2 border-t border-white/5">
+                            <div className="pt-2 border-t border-white/5 space-y-2">
+                                <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    ⚠️ **لماذا لا يصل الإشعار؟** <br />
+                                    • الزر يرسل إشعار لـ **الحساب المفتوح حالياً** فقط. إذا كان هاتفك مفتوحاً بحساب مختلف (عميل مثلاً) لن يصله هذا الاختبار. <br />
+                                    • جرب إغلاق المتصفح (أو التطبيق) في الهاتف تماماً ثم اضغط الزر من الكمبيوتر لتلقي "إشعار خلفية".
+                                </p>
                                 <p className="text-[11px] text-yellow-500/80 leading-relaxed">
-                                    💡 **لمستخدمي الآيفون (iOS):** لكي تصلك الإشعارات، يجب عليك إضافة الموقع للشاشة الرئيسية (Add to Home Screen) ثم فتحه من هناك.
+                                    💡 **لمستخدمي الآيفون (iOS):** يجب إضافة الموقع للشاشة الرئيسية (Add to Home Screen) وفتحه مرة واحدة على الأقل لكي يتم التسجيل.
                                 </p>
                             </div>
                         </div>

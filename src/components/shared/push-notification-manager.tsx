@@ -13,7 +13,6 @@ export function PushNotificationManager() {
     useEffect(() => {
         const syncToken = async () => {
             if (fcmToken && currentUser && currentUser.id) {
-                // Determine collection based on role
                 const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
 
                 try {
@@ -30,6 +29,29 @@ export function PushNotificationManager() {
 
         syncToken()
     }, [fcmToken, currentUser])
+
+    // Foreground notification handling
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+            import('firebase/messaging').then(({ getMessaging, onMessage }) => {
+                const messaging = getMessaging()
+                onMessage(messaging, (payload) => {
+                    console.log('Foreground message received:', payload)
+                    // Display a nice toast since the system won't show a notification when app is in focus
+                    import('sonner').then(({ toast }) => {
+                        toast.info(payload.notification?.title || payload.data?.title || "تنبيه جديد", {
+                            description: payload.notification?.body || payload.data?.body || "",
+                            icon: "🔔",
+                            action: payload.data?.link ? {
+                                label: "عرض",
+                                onClick: () => window.location.href = payload.data?.link as string
+                            } : undefined
+                        })
+                    })
+                })
+            })
+        }
+    }, [])
 
     return null // Headless component
 }
