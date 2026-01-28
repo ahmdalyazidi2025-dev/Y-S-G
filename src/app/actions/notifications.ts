@@ -188,20 +188,10 @@ export async function sendPushToUsers(
             return { success: false, error: "لم يتم العثور على أجهزة مسجلة لهؤلاء العملاء" }
         }
 
-        // 2. Send messages (Data-only)
+        // 2. Send messages (Truly Data-only)
         const message = {
-            // notification: { title, body },
             data: { title, body, link },
             webpush: {
-                notification: {
-                    title,
-                    body,
-                    icon: '/app-icon-v2.png',
-                    badge: '/app-icon-v2.png',
-                    tag: 'ysg-notification',
-                    renotify: true,
-                    vibrate: [200, 100, 200],
-                },
                 fcm_options: { link }
             },
             tokens: uniqueTokens,
