@@ -71,7 +71,24 @@ export default function AdminSettingsPage() {
                         <ArrowRight className="w-5 h-5 text-white" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">إعدادات المتجر</h1>
+                <h1 className="text-2xl font-bold flex-1 flex flex-col">
+                    <span>إعدادات المتجر</span>
+                    <span className="text-[10px] text-slate-500 font-mono">آخر تحديث: 2026-01-28 12:15 PM</span>
+                </h1>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-yellow-500 gap-1 h-9 rounded-full border border-yellow-500/20"
+                    onClick={() => {
+                        if (confirm("سيتم تصفير مخزن المتصفح وتجميد الصفحة ثانية لإجبار التحديث. هل أنت متأكد؟")) {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.reload();
+                        }
+                    }}
+                >
+                    تحديث القالب والقوة ⚡
+                </Button>
                 <Button
                     className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-6"
                     onClick={handleSubmit}
