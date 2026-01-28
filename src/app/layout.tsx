@@ -31,6 +31,7 @@ import { PwaRegistration } from "@/components/pwa-registration";
 import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
 import { NotificationManager } from "@/components/shared/notification-manager";
 import { SystemNotifications } from "@/components/shared/system-notifications";
+import { PushNotificationManager } from "@/components/shared/push-notification-manager";
 
 export default function RootLayout({
   children,
@@ -60,6 +61,7 @@ export default function RootLayout({
             <PwaInstallPrompt />
             <NotificationManager />
             <SystemNotifications />
+            <PushNotificationManager />
             {children}
             <Toaster position="top-center" expand={false} richColors />
           </StoreProvider>

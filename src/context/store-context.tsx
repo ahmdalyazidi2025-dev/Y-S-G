@@ -17,6 +17,7 @@ import {
     sendPasswordResetEmail // Added
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
+import { sendPushNotification } from "@/app/actions/notifications"
 
 export type Banner = {
     id: string
@@ -833,6 +834,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 read: false,
                 createdAt: Timestamp.now()
             }))
+
+            // 3. Send Push Notification
+            await sendPushNotification(
+                order.customerId,
+                "تحديث طلبك",
+                statusMessages[status],
+                `/customer/invoices` // Deep link to order history
+            )
         }
 
         toast.info(`تم تحديث الحالة: ${status}`)
@@ -900,6 +909,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
             createdAt: Timestamp.now()
         }))
+
+        // Send Push if Admin replying to a Customer
+        if (isAdmin && customerId && customerId !== "guest") {
+            await sendPushNotification(
+                customerId,
+                "رسالة جديدة من الدعم الفني",
+                text,
+                "/customer/chat"
+            )
+        }
     }
 
     const markMessagesRead = async (customerId?: string) => {
