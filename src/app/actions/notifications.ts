@@ -36,13 +36,37 @@ export async function sendPushNotification(
         const tokens = userData.fcmTokens as string[]
 
         // 2. Send messages
-        // Use 'data' payload ONLY to force background SW handling for max customization
         const message = {
+            notification: {
+                title,
+                body,
+            },
             data: {
                 title,
                 body,
                 link,
-                icon: '/app-icon-v2.png',
+            },
+            webpush: {
+                headers: {
+                    Urgency: 'high'
+                },
+                notification: {
+                    body,
+                    icon: '/app-icon-v2.png',
+                    badge: '/app-icon-v2.png', // Small monochrome icon for status bar
+                    tag: 'ysg-notification',
+                    renotify: true,
+                    requireInteraction: true,
+                },
+                fcm_options: {
+                    link,
+                }
+            },
+            android: {
+                priority: 'high' as const,
+                notification: {
+                    icon: 'stock_ticker_update',
+                }
             },
             tokens: tokens,
         }

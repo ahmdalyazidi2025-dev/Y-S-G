@@ -12,9 +12,11 @@ import Link from "next/link"
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification } from "@/app/actions/notifications"
+import { useFcmToken } from "@/hooks/use-fcm-token"
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
+    const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
 
     // Sync state when storeSettings loads from Firebase
@@ -97,6 +99,30 @@ export default function AdminSettingsPage() {
                             >
                                 إرسال تجربة الآن
                             </Button>
+                        </div>
+
+                        <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 space-y-3">
+                            <h4 className="text-sm font-bold text-slate-300">معلومات تشخيصية:</h4>
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">حالة الإذن:</span>
+                                <span className={`font-mono ${notificationPermissionStatus === 'granted' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {notificationPermissionStatus === 'granted' ? 'مسموح ✅' :
+                                        notificationPermissionStatus === 'denied' ? 'مرفوض ❌' : 'غير محدد ⚠️'}
+                                </span>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-xs text-slate-500">معرف الجهاز (Token):</span>
+                                <div className="p-2 bg-black/40 rounded border border-white/5 text-[10px] font-mono break-all text-slate-400">
+                                    {fcmToken || 'جاري استخراج المعرف... تأكد من السماح بالإشعارات'}
+                                </div>
+                            </div>
+
+                            {/* iOS Specific Help */}
+                            <div className="pt-2 border-t border-white/5">
+                                <p className="text-[11px] text-yellow-500/80 leading-relaxed">
+                                    💡 **لمستخدمي الآيفون (iOS):** لكي تصلك الإشعارات، يجب عليك إضافة الموقع للشاشة الرئيسية (Add to Home Screen) ثم فتحه من هناك.
+                                </p>
+                            </div>
                         </div>
                     </Section>
                 </div>
