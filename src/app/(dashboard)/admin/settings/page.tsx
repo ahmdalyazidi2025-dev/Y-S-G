@@ -58,7 +58,11 @@ export default function AdminSettingsPage() {
             {
                 loading: "جاري إرسال الإشعار...",
                 success: (data) => {
-                    if (data.success) return `تم الإرسال بنجاح إلى ${data.sentCount} جهاز! 📱`
+                    if (data.success) {
+                        playSound('newMessage')
+                        hapticFeedback('success')
+                        return `تم الإرسال بنجاح إلى ${data.sentCount} جهاز! 📱`
+                    }
                     return `فشل الإرسال: ${data.error}`
                 },
                 error: (err) => {
@@ -412,7 +416,11 @@ export default function AdminSettingsPage() {
                                                         broadcastPushNotification("تنبيه عام 🚨", "هذا إشعار تجريبي مرسل لجميع الأجهزة المسجلة."),
                                                         {
                                                             loading: "جاري بث الإشعار للكل...",
-                                                            success: (res: any) => `تم الإرسال لـ ${res.sentCount} جهاز! 📢`,
+                                                            success: (res: any) => {
+                                                                playSound('newMessage')
+                                                                hapticFeedback('success')
+                                                                return `تم الإرسال لـ ${res.sentCount} جهاز! 📢`
+                                                            },
                                                             error: "فشل البث"
                                                         }
                                                     )
