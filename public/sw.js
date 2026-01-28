@@ -21,7 +21,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[sw.js] Received background message ', payload);
 
-    const notificationTitle = payload.notification?.title || payload.data?.title || 'تنبيه جديد';
+    const notificationTitle = payload.data?.title || payload.notification?.title || 'تنبيه من المتجر 🔔';
     const notificationOptions = {
         body: payload.data?.body || '',
         icon: payload.data?.icon || '/app-icon-v2.png',
@@ -68,7 +68,7 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // --- Existing PWA logic below ---
-const CACHE_NAME = 'ysg-sales-v8'; // Forced update for notification fix
+const CACHE_NAME = 'ysg-sales-v9'; // Forced update for background feedback fix
 const ASSETS = [
     '/',
     '/manifest.json',

@@ -52,9 +52,6 @@ export async function sendPushNotification(
             },
             android: {
                 priority: 'high' as const,
-                notification: {
-                    icon: 'stock_ticker_update',
-                }
             },
             tokens: tokens,
         }
