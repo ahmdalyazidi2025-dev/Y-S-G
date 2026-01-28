@@ -91,14 +91,45 @@ export default function AdminSettingsPage() {
                                 <h3 className="font-bold text-white mb-1">تجربة الإشعارات 🔔</h3>
                                 <p className="text-sm text-slate-400">أرسل إشعار تجريبي لهاتفك الآن للتأكد من عمل النظام بشكل صحيح.</p>
                             </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleTestNotification}
-                                className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 h-12 px-6 rounded-xl"
-                            >
-                                إرسال تجربة الآن
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleTestNotification}
+                                    className="border-primary/30 text-primary hover:bg-primary/10 h-12 px-6 rounded-xl"
+                                >
+                                    إرسال لجهازي
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Targeted Test */}
+                        <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                            <h4 className="text-sm font-bold text-primary mb-3">إرسال لعميل محدد (للتجربة على الهاتف):</h4>
+                            <div className="flex gap-2">
+                                <select
+                                    className="flex-1 bg-black/40 border-white/10 rounded-xl text-sm px-4 h-11 text-white"
+                                    onChange={(e) => {
+                                        const cid = e.target.value;
+                                        if (cid) {
+                                            const customer = customers.find(c => c.id === cid);
+                                            toast.promise(
+                                                sendPushNotification(cid, "تجربة إشعار عميل 🔔", `مرحباً ${customer?.name || ''}، هذا إشعار تجريبي من الإدارة.`, "/customer/invoices"),
+                                                {
+                                                    loading: "جاري الإرسال للعميل...",
+                                                    success: (res: any) => res.success ? `وصلت لـ ${res.sentCount} من أجهزة العميل! ✅` : `فشل: ${res.error}`,
+                                                    error: "حدث خطأ"
+                                                }
+                                            )
+                                        }
+                                    }}
+                                >
+                                    <option value="">اختر عميلاً للإرسال له...</option>
+                                    {customers.map(c => (
+                                        <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         <div className="mt-4 p-4 bg-white/5 rounded-xl border border-white/5 space-y-3">
