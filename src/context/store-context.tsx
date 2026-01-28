@@ -1144,6 +1144,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             "/customer?notifications=open"
         )
 
+        // Local feedback for admin
+        playSound('newMessage')
+        hapticFeedback('medium')
+
         toast.success("تم إرسال الإشعار")
     }
 
@@ -1244,6 +1248,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             // Trigger Batch Push Notification for the whole segment
             const targetIds = targetCustomers.map(c => c.id)
             sendPushToUsers(targetIds, title, body, "/customer?notifications=open")
+
+            // Local feedback for admin
+            playSound('newMessage')
+            hapticFeedback('success')
 
             toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
         } catch (error) {
