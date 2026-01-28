@@ -15,8 +15,11 @@ export function useSounds() {
             // Priority: Custom sound from settings -> Default sound from sounds.ts
             let audioSource = ""
 
-            if (storeSettings.sounds?.[event]) {
-                audioSource = storeSettings.sounds[event]!
+            // Type casting to bypass potential indexing issues with dynamic properties
+            const sounds = storeSettings.sounds as any;
+
+            if (sounds?.[event]) {
+                audioSource = sounds[event]
             } else {
                 // Mapping Event to default sounds
                 switch (event) {
@@ -35,15 +38,18 @@ export function useSounds() {
                     case 'generalPush':
                         audioSource = defaultSounds.notification
                         break
-                        if (!audioSource) return
-
-                        const audio = new Audio(audioSource)
-                        audio.volume = event === 'newOrder' ? 0.8 : 0.5
-                        audio.play().catch(e => console.error(`[useSounds] Play failed for ${event}:`, e))
-                } catch (e) {
-                    console.error(`[useSounds] Init failed for ${event}:`, e)
                 }
             }
 
-            return { playSound }
+            if (!audioSource) return
+
+            const audio = new Audio(audioSource)
+            audio.volume = event === 'newOrder' ? 0.8 : 0.5
+            audio.play().catch(e => console.error(`[useSounds] Play failed for ${event}:`, e))
+        } catch (e) {
+            console.error(`[useSounds] Init failed for ${event}:`, e)
         }
+    }
+
+    return { playSound }
+}
