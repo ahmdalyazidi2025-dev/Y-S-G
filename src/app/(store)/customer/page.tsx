@@ -21,14 +21,20 @@ import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skelet
 
 
 
+import { useSearchParams } from "next/navigation"
+
 export default function CustomerHome() {
     const { products, banners, categories, loading } = useStore() // Assume loading is available
+    const searchParams = useSearchParams()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
+
+    // Deep linking: Detect if notifications should be open
+    const shouldOpenNotifications = searchParams.get("notifications") === "open"
 
     const handleRefresh = async () => {
         // In a real app, refresh data here
@@ -86,7 +92,7 @@ export default function CustomerHome() {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
                                 </div>
-                                <CustomerNotifications />
+                                <CustomerNotifications forceOpen={shouldOpenNotifications} />
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 "use client"
-
+import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,26 @@ import { formatDistanceToNow } from "date-fns"
 import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
-export function CustomerNotifications() {
+interface CustomerNotificationsProps {
+    forceOpen?: boolean;
+}
+
+export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps) {
     const { notifications, markNotificationRead, markAllNotificationsRead, currentUser } = useStore()
+    const [isOpen, setIsOpen] = useState(false)
+
+    useEffect(() => {
+        if (forceOpen) {
+            setIsOpen(true)
+        }
+    }, [forceOpen])
+
+    useEffect(() => {
+        if (isOpen) {
+            // Small delay to ensure UI opens first
+            setTimeout(() => markAllNotificationsRead(), 500)
+        }
+    }, [isOpen, markAllNotificationsRead])
 
     // Filter notifications for current user
     const userNotifications = notifications.filter(n => n.userId === currentUser?.id).sort((a, b) => {
@@ -19,12 +37,7 @@ export function CustomerNotifications() {
     const unreadCount = userNotifications.filter(n => !n.read).length
 
     return (
-        <Sheet onOpenChange={(open) => {
-            if (open) {
-                // Small delay to ensure UI opens first
-                setTimeout(() => markAllNotificationsRead(), 500)
-            }
-        }}>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <div className="relative">
                     <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 border border-border bg-card hover:bg-accent shadow-lg group">

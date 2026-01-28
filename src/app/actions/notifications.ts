@@ -164,6 +164,66 @@ export async function broadcastPushNotification(
     }
 }
 
+export async function sendPushToUsers(
+    userIds: string[],
+    title: string,
+    body: string,
+    link: string = "/customer?notifications=open"
+) {
+    if (!userIds || userIds.length === 0) return { success: false, error: "No user IDs provided" }
+
+    try {
+        const allTokens: string[] = []
+
+        // 1. Fetch tokens for all users
+        // Use Promise.all to fetch in parallel for better performance
+        const fetchPromises = userIds.map(async (uid) => {
+            let doc = await adminDb.collection("customers").doc(uid).get()
+            if (!doc.exists) {
+                doc = await adminDb.collection("staff").doc(uid).get()
+            }
+            if (doc.exists) {
+                const data = doc.data()
+                if (data?.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    return data.fcmTokens
+                }
+            }
+            return []
+        })
+
+        const tokenGroups = await Promise.all(fetchPromises)
+        tokenGroups.forEach(group => allTokens.push(...group))
+
+        const uniqueTokens = Array.from(new Set(allTokens))
+
+        if (uniqueTokens.length === 0) {
+            return { success: false, error: "لم يتم العثور على أجهزة مسجلة لهؤلاء العملاء" }
+        }
+
+        // 2. Send messages
+        const message = {
+            notification: { title, body },
+            data: { title, body, link },
+            webpush: {
+                notification: {
+                    body,
+                    icon: '/app-icon-v2.png',
+                    badge: '/app-icon-v2.png',
+                },
+                fcm_options: { link }
+            },
+            tokens: uniqueTokens,
+        }
+
+        const response = await adminMessaging.sendEachForMulticast(message)
+        return { success: true, sentCount: response.successCount }
+
+    } catch (error) {
+        console.error("Batch Push Error:", error)
+        return { success: false, error: "حدث خطأ في السيرفر أثناء إرسال الإشعارات الجماعية" }
+    }
+}
+
 export async function getRegisteredTokensCount() {
     try {
         let count = 0

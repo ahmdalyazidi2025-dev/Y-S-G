@@ -17,7 +17,7 @@ import {
     sendPasswordResetEmail // Added
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
-import { sendPushNotification } from "@/app/actions/notifications"
+import { sendPushNotification, sendPushToUsers } from "@/app/actions/notifications"
 
 export type Banner = {
     id: string
@@ -743,14 +743,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await firebaseSignOut(secondaryAuth);
 
             // Send Welcome Notification (First time interaction)
+            const welcomeTitle = "مرحباً بك في YSG GROUP! 👋"
+            const welcomeBody = "سعداء بانضمامك إلينا! 🌹 هذا القسم مخصص لإشعاراتك الخاصة، حيث ستصلك تحديثات حالة الطلب والعروض الحصرية هنا."
+
             await addDoc(collection(db, "notifications"), sanitizeData({
                 userId: uid,
-                title: "مرحباً بك في YSG GROUP! 👋",
-                body: "سعداء بانضمامك إلينا! 🌹 هذا القسم مخصص لإشعاراتك الخاصة، حيث ستصلك تحديثات حالة الطلب والعروض الحصرية هنا.",
+                title: welcomeTitle,
+                body: welcomeBody,
                 type: "success",
                 read: false,
                 createdAt: Timestamp.now()
             }))
+
+            // Trigger Welcome Push
+            sendPushNotification(uid, welcomeTitle, welcomeBody, "/customer?notifications=open")
 
             // Send Welcome Chat Message
             await addDoc(collection(db, "messages"), sanitizeData({
@@ -1086,6 +1092,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             read: false,
             createdAt: Timestamp.now()
         }))
+
+        // Trigger Push Notification with deep link to notifications sheet
+        sendPushNotification(
+            notification.userId,
+            notification.title,
+            notification.body,
+            "/customer?notifications=open"
+        )
+
         toast.success("تم إرسال الإشعار")
     }
 
@@ -1182,6 +1197,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         try {
             await Promise.all(batchPromises)
+
+            // Trigger Batch Push Notification for the whole segment
+            const targetIds = targetCustomers.map(c => c.id)
+            sendPushToUsers(targetIds, title, body, "/customer?notifications=open")
+
             toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
         } catch (error) {
             console.error(error)
