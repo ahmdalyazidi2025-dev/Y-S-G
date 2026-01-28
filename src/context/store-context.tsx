@@ -1227,6 +1227,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         try {
             await Promise.all(batchPromises)
+
+            // Trigger Global Push Notification for Chat
+            const targetIds = customers.map(c => c.id)
+            sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
+
             toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
         } catch (error) {
             console.error(error)

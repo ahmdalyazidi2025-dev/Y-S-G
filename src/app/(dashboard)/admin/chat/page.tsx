@@ -75,7 +75,7 @@ export default function AdminChatPage() {
             await sendGlobalMessage(msg)
             setMsg("")
         } else if (selectedCustomer) {
-            sendMessage(`${msg} (@${selectedCustomer})`, true)
+            sendMessage(`${msg} (@${selectedCustomer})`, true, selectedCustomer)
             setMsg("")
         }
     }
