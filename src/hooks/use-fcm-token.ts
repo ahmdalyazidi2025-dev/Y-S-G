@@ -21,8 +21,9 @@ export const useFcmToken = () => {
                     setNotificationPermissionStatus(permission)
 
                     if (permission === 'granted') {
-                        // Get active service worker registration from sw.js
-                        const registration = await navigator.serviceWorker.getRegistration('/sw.js')
+                        // Wait for service worker to be ready
+                        await navigator.serviceWorker.ready;
+                        const registration = await navigator.serviceWorker.getRegistration();
 
                         if (!VAPID_KEY) {
                             console.warn("VAPID Key is missing in .env (NEXT_PUBLIC_FIREBASE_VAPID_KEY). Notification token cannot be retrieved.")
