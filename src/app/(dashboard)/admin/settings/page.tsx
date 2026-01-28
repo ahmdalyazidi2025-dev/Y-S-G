@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useStore, StoreSettings } from "@/context/store-context"
 import { CouponManager } from "@/components/admin/coupon-manager"
-// import { toast } from "sonner"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,15 +11,43 @@ import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, Sh
 import Link from "next/link"
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
+import { sendPushNotification } from "@/app/actions/notifications"
 
 export default function AdminSettingsPage() {
-    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff } = useStore()
+    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
 
     // Sync state when storeSettings loads from Firebase
     useEffect(() => {
         setFormData(storeSettings)
     }, [storeSettings])
+
+    const handleTestNotification = async () => {
+        if (!currentUser?.id) {
+            toast.error("حدث خطأ: لم يتم العثور على بيانات المستخدم")
+            return
+        }
+
+        toast.promise(
+            sendPushNotification(
+                currentUser.id,
+                "تجربة الإشعارات 🔔",
+                "نظام الإشعارات يعمل بنجاح! شكلك ومضمونك 10/10 ✨",
+                "/admin/settings"
+            ),
+            {
+                loading: "جاري إرسال الإشعار...",
+                success: (data) => {
+                    if (data.success) return "تم الإرسال! راقب هاتفك 📱"
+                    return `فشل الإرسال: ${data.error}`
+                },
+                error: (err) => {
+                    console.error("Test Notification Error:", err)
+                    return "حدث خطأ أثناء الإرسال"
+                }
+            }
+        )
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -52,6 +80,26 @@ export default function AdminSettingsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* Notification Test Section */}
+                <div className="col-span-1 lg:col-span-2">
+                    <Section icon={<Info className="w-5 h-5" />} title="اختبار النظام">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5 gap-4">
+                            <div>
+                                <h3 className="font-bold text-white mb-1">تجربة الإشعارات 🔔</h3>
+                                <p className="text-sm text-slate-400">أرسل إشعار تجريبي لهاتفك الآن للتأكد من عمل النظام بشكل صحيح.</p>
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleTestNotification}
+                                className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 h-12 px-6 rounded-xl"
+                            >
+                                إرسال تجربة الآن
+                            </Button>
+                        </div>
+                    </Section>
+                </div>
 
                 {/* Features Section */}
                 <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (المربعات العلوية)">
