@@ -7,8 +7,9 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag } from "lucide-react"
+import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload } from "lucide-react"
 import Link from "next/link"
+import { useSounds, SoundEvent } from "@/hooks/use-sounds"
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
@@ -68,6 +69,38 @@ export default function AdminSettingsPage() {
         setFormData(prev => ({ ...prev, [key]: value }))
         // Subtle feedback for typing/changing
         hapticFeedback('light')
+    }
+
+    const { playSound } = useSounds()
+
+    const handleSoundUpload = (event: SoundEvent, file: File) => {
+        if (!file.type.startsWith('audio/')) {
+            toast.error("يرجى اختيار ملف صوتي صحيح")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            const base64 = e.target?.result as string
+            setFormData(prev => ({
+                ...prev,
+                sounds: {
+                    ...prev.sounds,
+                    [event]: base64
+                }
+            }))
+            toast.success("تم تجهيز الصوت المخصص، تذكر الضغط على حفظ.")
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const resetSound = (event: SoundEvent) => {
+        setFormData(prev => {
+            const newSounds = { ...prev.sounds }
+            delete newSounds[event]
+            return { ...prev, sounds: newSounds }
+        })
+        toast.info("تم العودة للصوت الافتراضي لهذه المهمة.")
     }
 
     return (
@@ -508,8 +541,134 @@ export default function AdminSettingsPage() {
 
 
                 {/* Security Section removed from here - moved to Entity Management */}
+                {/* Alerts & Sounds Section */}
+                <Section icon={<Music className="w-5 h-5" />} title="إدارة التنبيهات والأصوات">
+                    <div className="space-y-4">
+                        <p className="text-xs text-slate-500 mb-4">
+                            قم بتخصيص نغمات التنبيه لكل حدث في النظام لجعل تجربتك فريدة.
+                        </p>
+
+                        <div className="space-y-6">
+                            <SoundRow
+                                title="طلب جديد 💰"
+                                description="تنبيه الإدارة عند وصول طلب جديد"
+                                event="newOrder"
+                                currentSound={formData.sounds?.newOrder}
+                                onUpload={(file) => handleSoundUpload('newOrder', file)}
+                                onPlay={() => {
+                                    if (formData.sounds?.newOrder) {
+                                        const audio = new Audio(formData.sounds.newOrder)
+                                        audio.play()
+                                    } else {
+                                        playSound('newOrder')
+                                    }
+                                }}
+                                onReset={() => resetSound('newOrder')}
+                            />
+
+                            <SoundRow
+                                title="رسالة دردشة 💬"
+                                description="تنبيه عند وصول رسالة شات جديدة"
+                                event="newMessage"
+                                currentSound={formData.sounds?.newMessage}
+                                onUpload={(file) => handleSoundUpload('newMessage', file)}
+                                onPlay={() => {
+                                    if (formData.sounds?.newMessage) {
+                                        const audio = new Audio(formData.sounds.newMessage)
+                                        audio.play()
+                                    } else {
+                                        playSound('newMessage')
+                                    }
+                                }}
+                                onReset={() => resetSound('newMessage')}
+                            />
+
+                            <SoundRow
+                                title="تحديث حالة الطلب 📦"
+                                description="تنبيه العميل عند تغيير حالة طلبه"
+                                event="statusUpdate"
+                                currentSound={formData.sounds?.statusUpdate}
+                                onUpload={(file) => handleSoundUpload('statusUpdate', file)}
+                                onPlay={() => {
+                                    if (formData.sounds?.statusUpdate) {
+                                        const audio = new Audio(formData.sounds.statusUpdate)
+                                        audio.play()
+                                    } else {
+                                        playSound('statusUpdate')
+                                    }
+                                }}
+                                onReset={() => resetSound('statusUpdate')}
+                            />
+                        </div>
+                    </div>
+                </Section>
             </form>
         </div >
+    )
+}
+
+function SoundRow({ title, description, event, currentSound, onUpload, onPlay, onReset }: {
+    title: string,
+    description: string,
+    event: SoundEvent,
+    currentSound?: string,
+    onUpload: (file: File) => void,
+    onPlay: () => void,
+    onReset: () => void
+}) {
+    return (
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5 gap-4">
+            <div className="flex-1">
+                <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-white text-sm">{title}</h4>
+                    {currentSound && <span className="px-2 py-0.5 bg-primary/20 text-primary text-[8px] rounded-full">مخصص ✨</span>}
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5">{description}</p>
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onPlay}
+                    className="h-10 w-10 border border-white/5 hover:bg-white/10"
+                >
+                    <Volume2 className="w-4 h-4 text-primary" />
+                </Button>
+
+                <div className="relative">
+                    <input
+                        type="file"
+                        id={`file-${event}`}
+                        className="hidden"
+                        accept="audio/*"
+                        onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
+                    />
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => document.getElementById(`file-${event}`)?.click()}
+                        className="h-10 w-10 border border-white/5 hover:bg-white/10"
+                    >
+                        <Upload className="w-4 h-4 text-slate-400" />
+                    </Button>
+                </div>
+
+                {currentSound && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={onReset}
+                        className="h-10 w-10 border border-white/5 hover:bg-rose-500/10"
+                    >
+                        <RotateCcw className="w-4 h-4 text-rose-400" />
+                    </Button>
+                )}
+            </div>
+        </div>
     )
 }
 

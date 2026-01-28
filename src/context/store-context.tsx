@@ -188,6 +188,12 @@ export type StoreSettings = {
     geminiReferenceImageUrl?: string
     enableCoupons?: boolean
     enableAIChat?: boolean // New Toggle
+    sounds?: {
+        newOrder?: string;      // Admin: New order alert
+        newMessage?: string;    // Direct/Global chat alert
+        statusUpdate?: string;  // Customer: Order status change alert
+        systemPop?: string;     // Generic small notification
+    }
 }
 
 type StoreContextType = {
@@ -248,6 +254,7 @@ type StoreContextType = {
     guestId: string
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
+    playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'systemPop') => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -257,7 +264,6 @@ const MOCK_SETTINGS: StoreSettings = {
     shippingDesc: "لكل الطلبات التي تفوق 500 ريال",
     paymentTitle: "الدفع عند الاستلام",
     paymentDesc: "الدفع عند استلام طلبك",
-    enableCoupons: true,
     supportTitle: "دعم مخصص",
     supportDesc: "الدعم 6 أيام في الأسبوع خلال الدوام الرسمي",
     aboutTitle: "مجموعة يحيى سلمان غزواني التجارية",
@@ -278,6 +284,9 @@ const MOCK_SETTINGS: StoreSettings = {
     logoUrl: "", // Optional store logo URL for branding
     geminiCustomPrompt: "",
     geminiReferenceImageUrl: "",
+    enableCoupons: true,
+    enableAIChat: true,
+    sounds: {} // Defaults will be handled in the hook fallbacks
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -376,6 +385,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return () => unsubscribe()
     }, [])
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
+
+    // Sound Logic inside Provider (No circular hook dependency)
+    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'systemPop') => {
+        if (typeof window === 'undefined') return
+        try {
+            const defaultSounds = {
+                newOrder: "data:audio/wav;base64,UklGRiQIAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAIAACAgYCBgoKDA4SEhYUGhobHBweIiIiJCQoKCwwMDQ4ODxAQERITExQVFhcXFxgZGRobGxwcHR4eHyAgISIiIyQkJSUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/",
+                newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                systemPop: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
+            }
+            const source = storeSettings.sounds?.[event] || defaultSounds[event]
+            if (source) {
+                const audio = new Audio(source)
+                audio.volume = event === 'newOrder' ? 0.8 : 0.5
+                audio.play().catch(e => console.error("Sound play failed", e))
+            }
+        } catch (e) {
+            console.error("Sound init failed", e)
+        }
+    }
 
     const toDate = useCallback((ts: Timestamp | Date | { seconds: number, nanoseconds: number } | null | undefined): Date => {
         if (!ts) return new Date()
@@ -635,6 +665,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setCart([])
             toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
             hapticFeedback('success')
+            playSound('newOrder') // Trigger sound for new order
         } catch (e) {
             console.error("Order Creation Error:", e)
             toast.error("فشل إرسال الطلب (خطأ في الرقم التسلسلي)")
@@ -848,6 +879,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 statusMessages[status],
                 `/customer/invoices` // Deep link to order history
             )
+
+            // Play Status Update Sound for Customer
+            playSound('statusUpdate')
         }
 
         toast.info(`تم تحديث الحالة: ${status}`)
@@ -906,24 +940,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // Existing logic for admin was: text includes (@id). 
         // Let's keep it robust:
 
-        await addDoc(collection(db, "messages"), sanitizeData({
-            senderId: isAdmin ? "admin" : (currentUser?.id || customerId),
-            senderName: isAdmin ? "الإدارة" : (currentUser?.name || customerName),
-            text,
-            isAdmin,
-            read: false, // Default unread
-            userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
-            createdAt: Timestamp.now()
-        }))
-
-        // Send Push if Admin replying to a Customer
-        if (isAdmin && customerId && customerId !== "guest") {
-            await sendPushNotification(
-                customerId,
-                "رسالة جديدة من الدعم الفني",
+        try {
+            await addDoc(collection(db, "messages"), sanitizeData({
+                senderId: isAdmin ? "admin" : (currentUser?.id || customerId),
+                senderName: isAdmin ? "الإدارة" : (currentUser?.name || customerName),
                 text,
-                "/customer/chat"
-            )
+                isAdmin,
+                read: false, // Default unread
+                userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
+                createdAt: Timestamp.now()
+            }))
+
+            // Send Push if Admin replying to a Customer
+            if (isAdmin && customerId && customerId !== "guest") {
+                await sendPushNotification(
+                    customerId,
+                    "رسالة جديدة من الدعم الفني",
+                    text,
+                    "/customer/chat"
+                )
+            }
+
+            // Play Sound
+            playSound('newMessage')
+
+        } catch (e) {
+            console.error("Send Message Error:", e)
+            toast.error("فشل إرسال الرسالة")
         }
     }
 
@@ -1232,6 +1275,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             const targetIds = customers.map(c => c.id)
             sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
 
+            // Play Sound
+            playSound('newMessage')
+
             toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
         } catch (error) {
             console.error(error)
@@ -1321,7 +1367,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead
+            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound
         }}>
             {children}
         </StoreContext.Provider>
