@@ -16,17 +16,29 @@ import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCou
 import { useFcmToken } from "@/hooks/use-fcm-token"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useSearchParams } from "next/navigation"
+import { Lock, Shield, UserPlus } from "lucide-react"
+import { StaffManager } from "@/components/admin/staff-manager"
+import { verifyGeminiKey } from "@/app/actions/gemini"
+import { Switch } from "@/components/ui/switch"
+
+const PROTECTED_PIN = "4422707";
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
-    const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data'>('identity')
+    const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data' | 'entity'>('identity')
+
+    // Security State
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [pin, setPin] = useState("")
 
     const TABS = [
         { id: 'identity', label: 'هوية المتجر', icon: <ShoppingBag className="w-5 h-5" />, color: 'text-blue-400' },
         { id: 'alerts', label: 'التنبيهات', icon: <Music className="w-5 h-5" />, color: 'text-purple-400' },
+        { id: 'entity', label: 'إدارة الكيان', icon: <Shield className="w-5 h-5" />, color: 'text-amber-400' },
         { id: 'coupons', label: 'القسائم', icon: <FileText className="w-5 h-5" />, color: 'text-pink-400' },
         { id: 'data', label: 'النظام والبيانات', icon: <BarChart3 className="w-5 h-5" />, color: 'text-emerald-400' },
     ] as const
@@ -37,10 +49,20 @@ export default function AdminSettingsPage() {
         })
     }, [])
 
+    const searchParams = useSearchParams()
+
     // Sync state when storeSettings loads from Firebase
     useEffect(() => {
         setFormData(storeSettings)
     }, [storeSettings])
+
+    // Load tab from URL
+    useEffect(() => {
+        const tab = searchParams.get('tab') as any
+        if (tab && ['identity', 'alerts', 'coupons', 'data', 'entity'].includes(tab)) {
+            setActiveTab(tab)
+        }
+    }, [searchParams])
 
     const handleTestNotification = async () => {
         if (!currentUser?.id) {
@@ -115,6 +137,43 @@ export default function AdminSettingsPage() {
             return { ...prev, sounds: newSounds }
         })
         toast.info("تم العودة للصوت الافتراضي لهذه المهمة.")
+    }
+
+    const verifyPin = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (pin === PROTECTED_PIN) {
+            setIsAuthenticated(true)
+            toast.success("تم تأكيد الرمز")
+        } else {
+            toast.error("رمز الدخول غير صحيح")
+        }
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                    <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <div className="text-center space-y-2">
+                    <h1 className="text-2xl font-bold text-white">منطقة محمية</h1>
+                    <p className="text-slate-400 text-sm">أدخل رمز الحماية الخاص بالإدارة للوصول للاعدادات</p>
+                </div>
+                <form onSubmit={verifyPin} className="max-w-xs w-full space-y-4">
+                    <Input
+                        type="password"
+                        placeholder="رمز الحماية"
+                        className="bg-black/40 border-white/10 text-center text-lg tracking-widest h-12"
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value)}
+                        autoFocus
+                    />
+                    <Button type="submit" className="w-full bg-primary text-black font-bold h-12">
+                        دخول لصفحة الإعدادات
+                    </Button>
+                </form>
+            </div>
+        )
     }
 
     return (
@@ -629,6 +688,35 @@ export default function AdminSettingsPage() {
                                 </div>
                             </Section>
                         )}
+
+                        {activeTab === 'entity' && (
+                            <div className="grid grid-cols-1 gap-6">
+                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                                    <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                إلزام العميل بالاسم ورقم الجوال
+                                            </Label>
+                                            <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                        </div>
+                                        <div
+                                            onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
+                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
+                                        >
+                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
+                                        </div>
+                                    </div>
+                                </Section>
+
+                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                                    <StaffManager />
+                                </Section>
+
+                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                                    <SecuritySettingsPorted />
+                                </Section>
+                            </div>
+                        )}
                     </motion.div>
                 </AnimatePresence>
             </form>
@@ -716,6 +804,252 @@ function Section({ children, icon, title }: { children: React.ReactNode, icon: R
             </div>
             {children}
         </div>
+    )
+}
+
+function SecuritySettingsPorted() {
+    const { updateAdminCredentials, storeSettings, updateStoreSettings } = useStore()
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
+
+    const handleUpdate = async () => {
+        if (!username || !password) return
+        await updateAdminCredentials(username, password)
+        setUsername("")
+        setPassword("")
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Gemini API Key Section */}
+            <div className="space-y-4 p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-lg">✨</span>
+                        </div>
+                        <div>
+                            <Label className="text-white font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
+                            <p className="text-xs text-slate-400 mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
+                            <div className="flex items-center gap-3">
+                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
+                                    {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
+                                </span>
+                                <Switch
+                                    checked={storeSettings.enableAIChat !== false}
+                                    onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
+                                    className="data-[state=checked]:bg-green-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {storeSettings.enableAIChat !== false && (
+                    <>
+                        <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                        <div className="flex gap-2">
+                            <GeminiKeyInput />
+                        </div>
+                    </>
+                )}
+
+                {/* Advanced Gemini Settings */}
+                <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+                    <Label className="text-white font-bold flex items-center gap-2">
+                        <span className="text-lg">🤖</span>
+                        تخصيص المساعد (اختياري)
+                    </Label>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">تعليمات تعديل/تحسين الصور (Prompt) - مثال: "اجعل الخلفية بيضاء نقية"</Label>
+                        <CustomPromptInput />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs text-slate-400">رابط صورة مرجعية (للمقارنة)</Label>
+                        <ReferenceImageInput />
+                    </div>
+                </div>
+            </div>
+
+            <hr className="border-white/5" />
+
+            {/* Admin Credentials */}
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label>اسم المستخدم الجديد</Label>
+                    <Input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="bg-black/20 border-white/10"
+                        placeholder="ادخل اسم مستخدم جديد"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label>كلمة المرور الجديدة</Label>
+                    <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="bg-black/20 border-white/10"
+                        placeholder="ادخل كلمة مرور جديدة"
+                    />
+                </div>
+                <Button
+                    type="button"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white"
+                    onClick={handleUpdate}
+                    disabled={!username || !password}
+                >
+                    تحديث بيانات الدخول
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+function GeminiKeyInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>(() => {
+        const existing = storeSettings.aiApiKeys || []
+        const filled = [...existing]
+        while (filled.length < 3) filled.push({ key: "", status: "unchecked" })
+        return filled.slice(0, 3)
+    })
+
+    const saveToStore = (newKeys: typeof keys) => {
+        updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
+    }
+
+    const updateKey = (index: number, val: string) => {
+        const newKeys = [...keys]
+        newKeys[index] = { ...newKeys[index], key: val, status: "unchecked" }
+        setKeys(newKeys)
+    }
+
+    const handleBlur = () => saveToStore(keys)
+
+    const updateStatus = (index: number, status: "valid" | "invalid" | "unchecked") => {
+        const newKeys = [...keys]
+        newKeys[index] = { ...newKeys[index], status }
+        setKeys(newKeys)
+        saveToStore(newKeys)
+    }
+
+    return (
+        <div className="w-full">
+            <Label className="mb-2 block text-xs text-slate-400">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
+            {keys.map((k, i) => (
+                <SingleAIKeyInput
+                    key={i}
+                    index={i}
+                    keyData={k}
+                    onChange={(val: string) => updateKey(i, val)}
+                    onBlur={handleBlur}
+                    onStatusChange={(status: "valid" | "invalid" | "unchecked") => updateStatus(i, status)}
+                />
+            ))}
+        </div>
+    )
+}
+
+function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: any) {
+    const [show, setShow] = useState(false)
+    const [checking, setChecking] = useState(false)
+
+    const handleVerify = async () => {
+        if (!keyData.key) return
+        setChecking(true)
+        try {
+            const result = await verifyGeminiKey(keyData.key)
+            if (result.success) {
+                onStatusChange("valid")
+                toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)
+            } else {
+                onStatusChange("invalid")
+                toast.error(`مفتاح ${index + 1} لا يعمل ❌`)
+            }
+        } catch (e) {
+            onStatusChange("invalid")
+            toast.error("خطأ في التحقق")
+        } finally {
+            setChecking(false)
+        }
+    }
+
+    return (
+        <div className="flex gap-2 mb-2">
+            <div className="relative flex-1">
+                <Input
+                    type={show ? "text" : "password"}
+                    value={keyData.key}
+                    onChange={(e) => onChange(e.target.value)}
+                    onBlur={onBlur}
+                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-emerald-500/50" : keyData.status === "invalid" ? "border-rose-500/50" : ""}`}
+                    placeholder={`Key #${index + 1}`}
+                />
+                <button
+                    type="button"
+                    onClick={() => setShow(!show)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs"
+                >
+                    {show ? "إخفاء" : "عرض"}
+                </button>
+            </div>
+            <Button
+                type="button"
+                onClick={handleVerify}
+                disabled={checking || !keyData.key}
+                size="sm"
+                variant="secondary"
+                className="h-10"
+            >
+                {checking ? "..." : keyData.status === "valid" ? "✅" : "تحقق"}
+            </Button>
+        </div>
+    )
+}
+
+function CustomPromptInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [value, setValue] = useState(storeSettings.geminiCustomPrompt || "")
+
+    const handleBlur = () => {
+        if (value !== storeSettings.geminiCustomPrompt) {
+            updateStoreSettings({ ...storeSettings, geminiCustomPrompt: value })
+            toast.success("تم حفظ التعليمات الخاصة")
+        }
+    }
+
+    return (
+        <textarea
+            className="w-full bg-black/20 border-white/10 rounded-xl p-3 text-sm h-24 outline-none resize-none text-right"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+        />
+    )
+}
+
+function ReferenceImageInput() {
+    const { storeSettings, updateStoreSettings } = useStore()
+    const [value, setValue] = useState(storeSettings.geminiReferenceImageUrl || "")
+
+    const handleBlur = () => {
+        if (value !== storeSettings.geminiReferenceImageUrl) {
+            updateStoreSettings({ ...storeSettings, geminiReferenceImageUrl: value })
+            toast.success("تم حفظ رابط الصورة المرجعية")
+        }
+    }
+
+    return (
+        <Input
+            className="bg-black/20 border-white/10"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+        />
     )
 }
 

@@ -19,7 +19,7 @@ const NAV_ITEMS = [
     { title: "طلبات التوفير", icon: Camera, href: "/admin/requests", color: "text-purple-400" },
     { title: "صور العرض", icon: LugideImage, href: "/admin/banners", color: "text-pink-400" },
     { title: "الدردشة", icon: MessageCircle, href: "/admin/chat", color: "text-indigo-400" },
-    { title: "إدارة الكيان", icon: Shield, href: "/admin/entity", color: "text-emerald-400" },
+    { title: "إدارة الكيان", icon: Shield, href: "/admin/settings?tab=entity", color: "text-emerald-400" },
     { title: "حالة النظام", icon: Activity, href: "/admin/system", color: "text-rose-400" },
     { title: "الإعدادات", icon: Settings, href: "/admin/settings", color: "text-slate-400" },
 ]
@@ -164,7 +164,7 @@ export function AdminMobileNav() {
         { title: "العملاء", icon: Users, href: "/admin/customers" },
         { title: "الطلبات", icon: ClipboardList, href: "/admin/orders" },
         { title: "الدردشة", icon: MessageCircle, href: "/admin/chat" },
-        { title: "إدارة الكيان", icon: Shield, href: "/admin/entity" },
+        { title: "إدارة الكيان", icon: Shield, href: "/admin/settings?tab=entity" },
         { title: "الإعدادات", icon: Settings, href: "/admin/settings" },
     ]
 
