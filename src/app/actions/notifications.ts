@@ -149,10 +149,17 @@ export async function broadcastPushNotification(
 
         const response = await adminMessaging.sendEachForMulticast(message)
 
+        // Cleanup invalid tokens if any
+        if (response.failureCount > 0) {
+            // Processing broadcast cleanup is complex, for now we log it.
+            // In a production app, we'd map back and remove failed tokens.
+            console.log(`Broadcast: ${response.failureCount} tokens failed delivery.`)
+        }
+
         return { success: true, sentCount: response.successCount }
 
     } catch (error) {
         console.error("Broadcast Error:", error)
-        return { success: false, error: "حدث خطأ في السيرفر" }
+        return { success: false, error: "حدث خطأ في السيرفر أثناء البث" }
     }
 }
