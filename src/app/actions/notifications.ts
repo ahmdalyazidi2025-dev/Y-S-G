@@ -35,12 +35,8 @@ export async function sendPushNotification(
 
         const tokens = userData.fcmTokens as string[]
 
-        // 2. Send messages
+        // 2. Send messages (Data-only to prevent browser duplication)
         const message = {
-            notification: {
-                title,
-                body,
-            },
             data: {
                 title,
                 body,
@@ -53,10 +49,11 @@ export async function sendPushNotification(
                 notification: {
                     body,
                     icon: '/app-icon-v2.png',
-                    badge: '/app-icon-v2.png', // Small monochrome icon for status bar
+                    badge: '/app-icon-v2.png',
                     tag: 'ysg-notification',
                     renotify: true,
                     requireInteraction: true,
+                    vibrate: [200, 100, 200],
                 },
                 fcm_options: {
                     link,
@@ -134,13 +131,17 @@ export async function broadcastPushNotification(
         }
 
         const message = {
-            notification: { title, body },
+            // notification: { title, body },
             data: { title, body, link },
             webpush: {
                 notification: {
+                    title,
                     body,
                     icon: '/app-icon-v2.png',
                     badge: '/app-icon-v2.png',
+                    tag: 'ysg-notification',
+                    renotify: true,
+                    vibrate: [200, 100, 200],
                 },
                 fcm_options: { link }
             },
@@ -149,15 +150,11 @@ export async function broadcastPushNotification(
 
         const response = await adminMessaging.sendEachForMulticast(message)
 
-        // Cleanup invalid tokens if any
         if (response.failureCount > 0) {
-            // Processing broadcast cleanup is complex, for now we log it.
-            // In a production app, we'd map back and remove failed tokens.
             console.log(`Broadcast: ${response.failureCount} tokens failed delivery.`)
         }
 
         return { success: true, sentCount: response.successCount }
-
     } catch (error) {
         console.error("Broadcast Error:", error)
         return { success: false, error: "حدث خطأ في السيرفر أثناء البث" }
@@ -200,15 +197,19 @@ export async function sendPushToUsers(
             return { success: false, error: "لم يتم العثور على أجهزة مسجلة لهؤلاء العملاء" }
         }
 
-        // 2. Send messages
+        // 2. Send messages (Data-only)
         const message = {
-            notification: { title, body },
+            // notification: { title, body },
             data: { title, body, link },
             webpush: {
                 notification: {
+                    title,
                     body,
                     icon: '/app-icon-v2.png',
                     badge: '/app-icon-v2.png',
+                    tag: 'ysg-notification',
+                    renotify: true,
+                    vibrate: [200, 100, 200],
                 },
                 fcm_options: { link }
             },

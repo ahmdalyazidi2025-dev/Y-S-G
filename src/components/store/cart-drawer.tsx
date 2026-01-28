@@ -48,7 +48,9 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         // Check Expiry
         if (coupon.expiryDate) {
             const now = new Date()
-            const expiry = coupon.expiryDate instanceof Date ? coupon.expiryDate : (coupon.expiryDate as any).toDate()
+            const expiry = coupon.expiryDate instanceof Date
+                ? coupon.expiryDate
+                : (coupon.expiryDate as { toDate: () => Date }).toDate()
             if (expiry < now) {
                 setCouponError("الكوبون منتهي الصلاحية")
                 setAppliedCoupon(null)

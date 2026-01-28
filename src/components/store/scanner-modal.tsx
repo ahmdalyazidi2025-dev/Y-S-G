@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode"
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat } from "@zxing/library"
 import { Button } from "@/components/ui/button"
 import { X, ImageIcon, Zap, AlertTriangle, Layers } from "lucide-react"
 import { toast } from "sonner"
@@ -23,7 +23,10 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     const [isBatchMode, setIsBatchMode] = useState(false)
     const [showNotFound, setShowNotFound] = useState(false)
     const [lastScanned, setLastScanned] = useState("")
-    const scannerRef = useRef<Html5Qrcode | null>(null)
+    const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
+
+    const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     const playBeep = (type: 'success' | 'error') => {
         const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -35,13 +38,13 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
         if (type === 'success') {
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime); // 1000Hz (BEEP)
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.1);
         } else {
             oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(200, audioContext.currentTime); // Low buzz
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
             gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.3);
@@ -49,18 +52,17 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     };
 
     const stopCamera = useCallback(async () => {
-        if (scannerRef.current && scannerRef.current.isScanning) {
-            await scannerRef.current.stop()
-            scannerRef.current = null
+        if (codeReaderRef.current) {
+            codeReaderRef.current.reset()
+            codeReaderRef.current = null
             setIsFlashOn(false)
         }
     }, [])
 
-    const handleScan = useCallback((decodedText: string) => {
-        if (decodedText === lastScanned) return // Prevent duplicate triggering in short time
+    const handleScanResult = useCallback((decodedText: string) => {
+        if (decodedText === lastScanned) return
 
-        // Clear last scanned after 2 seconds to allow re-scanning same item in batch mode
-        setTimeout(() => setLastScanned(""), 2500)
+        setTimeout(() => setLastScanned(""), 2000)
         setLastScanned(decodedText)
 
         if (onScan) {
@@ -81,20 +83,6 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 addToCart(product)
                 toast.success(`تم إضافة ${product.name} للسلة`)
             } else {
-                // If not batch mode, maybe redirect to product? Or just close?
-                // Default behavior was closing, but usually we want to see the product.
-                // For now, let's keep it simple: Add to cart? Or just close?
-                // The prompt didn't specify regular mode change, just batch mode addition.
-                // Existing code just closed it.
-                // Let's assume existing behavior for single scan was to open detail (handled outside?)
-                // Actually existing code just did onClose().
-                // We'll update it to add to cart if in batch mode.
-                // Wait, if not batch mode, what happens? Existing code just calls onClose().
-                // The caller (CustomerHome) usually doesn't listen to onScan unless custom logic.
-                // Existing CustomerHome scanner usage doesn't pass onScan.
-                // So this branch is executed.
-                // If single scan, we might want to open details.
-                // But for now, let's just stick to the requested "Batch Scan" improvements.
                 onClose()
             }
         } else {
@@ -102,7 +90,6 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 playBeep('error')
                 toast.error("المنتج غير موجود")
                 hapticFeedback('error')
-                // Don't stop camera in batch mode, just notify
             } else {
                 setShowNotFound(true)
                 hapticFeedback('warning')
@@ -112,72 +99,59 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     }, [lastScanned, onScan, onClose, stopCamera, scanProduct, isBatchMode, addToCart])
 
     const startCamera = useCallback(async () => {
-        // Give the modal a moment to render properly
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
-            const html5QrCode = new Html5Qrcode("reader", {
-                formatsToSupport: [
-                    Html5QrcodeSupportedFormats.EAN_13,
-                    Html5QrcodeSupportedFormats.EAN_8,
-                    Html5QrcodeSupportedFormats.UPC_A,
-                    Html5QrcodeSupportedFormats.UPC_E,
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.ITF,
-                    Html5QrcodeSupportedFormats.DATA_MATRIX,
-                    Html5QrcodeSupportedFormats.CODE_93,
-                    Html5QrcodeSupportedFormats.CODABAR,
-                ],
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
-                },
-                verbose: false
-            })
-            scannerRef.current = html5QrCode
+            const hints = new Map();
+            const formats = [
+                BarcodeFormat.EAN_13,
+                BarcodeFormat.EAN_8,
+                BarcodeFormat.CODE_128,
+                BarcodeFormat.CODE_39,
+                BarcodeFormat.UPC_A,
+                BarcodeFormat.UPC_E,
+                BarcodeFormat.QR_CODE,
+                BarcodeFormat.DATA_MATRIX,
+                BarcodeFormat.ITF,
+                BarcodeFormat.RSS_14,
+                BarcodeFormat.PDF_417
+            ];
+            hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+            hints.set(DecodeHintType.TRY_HARDER, true);
 
-            // Try simpler config first
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                {
-                    fps: 25, // Increased from 10 to 25 for much smoother scanning
-                    qrbox: (viewfinderWidth, viewfinderHeight) => {
-                        // Dynamically adjust qrbox for better mobile focus
-                        const size = Math.min(viewfinderWidth, viewfinderHeight);
-                        return {
-                            width: size * 0.8,
-                            height: size * 0.45 // Rectangular box often works better for product barcodes/parts
-                        };
-                    },
-                    disableFlip: false,
-                    aspectRatio: 1.0
-                },
-                (decodedText) => {
-                    handleScan(decodedText)
-                },
-                () => { }
-            )
-            setError(null)
-        } catch (err) {
-            console.error("Failed to start scanner:", err)
-            // Fallback: try without explicit facingMode if environment failed
-            try {
-                if (scannerRef.current) {
-                    await scannerRef.current.start(
-                        { facingMode: "user" }, // Try front cam as fallback or just default
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => handleScan(decodedText),
-                        () => { }
-                    )
-                    setError(null)
-                }
-            } catch (fallbackErr) {
-                setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.")
-                console.error(fallbackErr)
+            const reader = new BrowserMultiFormatReader(hints);
+            codeReaderRef.current = reader;
+
+            const devices = await reader.listVideoInputDevices();
+            setVideoDevices(devices);
+
+            if (devices.length === 0) {
+                throw new Error("No video devices found");
             }
+
+            // Select environment camera (back) if possible
+            const backCam = devices.find((d: MediaDeviceInfo) =>
+                d.label.toLowerCase().includes('back') ||
+                d.label.toLowerCase().includes('environment') ||
+                d.label.toLowerCase().includes('خلفي')
+            ) || devices[0];
+
+            await reader.decodeFromVideoDevice(
+                backCam.deviceId,
+                videoRef.current!,
+                (result) => {
+                    if (result) {
+                        handleScanResult(result.getText());
+                    }
+                }
+            );
+
+            setError(null);
+        } catch (err) {
+            console.error("Failed to start ZXing scanner:", err);
+            setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
         }
-    }, [handleScan])
+    }, [handleScanResult])
 
     useEffect(() => {
         if (isOpen && !showNotFound) {
@@ -189,19 +163,21 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     }, [isOpen, showNotFound, startCamera, stopCamera])
 
     const toggleFlash = async () => {
-        if (!scannerRef.current) return
+        if (!videoRef.current) return
         try {
-            // @ts-expect-error - getRunningTrack is not in the type definition but exists at runtime
-            const track = scannerRef.current.getRunningTrack()
-            if (track && track.getCapabilities()?.torch) {
+            const stream = videoRef.current.srcObject as MediaStream
+            const track = stream.getVideoTracks()[0]
+            if (track && (track.getCapabilities() as any)?.torch) {
                 const nextState = !isFlashOn
+                // @ts-expect-error - torch is valid in Chromium but not in standard types
                 await track.applyConstraints({ advanced: [{ torch: nextState }] })
                 setIsFlashOn(nextState)
             } else {
-                toast.error("الفلاش غير مدعوم على هذا الجهاز أو لم يتم تشغيل الكاميرا")
+                toast.error("الفلاش غير مدعوم على هذا الجهاز")
             }
         } catch (e) {
             console.error(e)
+            toast.error("خطأ في تشغيل الفلاش")
         }
     }
 
@@ -209,21 +185,29 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         const file = e.target.files?.[0]
         if (!file) return
 
-        // 1. Try Standard Scan
-        const html5QrCode = new Html5Qrcode("reader")
         try {
-            const decodedText = await html5QrCode.scanFile(file, true)
-            handleScan(decodedText)
-        } catch (err) {
-            console.log("Standard scan failed, trying AI...", err)
+            const hints = new Map();
+            hints.set(DecodeHintType.TRY_HARDER, true);
+            const reader = new BrowserMultiFormatReader(hints);
 
-            // 2. Fallback to Gemini AI
+            // Convert file to image element
+            const imageUrl = URL.createObjectURL(file);
+            const img = new Image();
+            img.src = imageUrl;
+
+            await new Promise((resolve) => { img.onload = resolve; });
+
             try {
-                // Read file as base64
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onloadend = async () => {
-                    const base64data = reader.result as string;
+                const result = await reader.decodeFromImageElement(img);
+                handleScanResult(result.getText());
+            } catch (err) {
+                console.log("ZXing image scan failed, trying AI...", err);
+
+                // Fallback to Gemini AI
+                const readerBase64 = new FileReader();
+                readerBase64.readAsDataURL(file);
+                readerBase64.onloadend = async () => {
+                    const base64data = readerBase64.result as string;
 
                     if (!storeSettings?.googleGeminiApiKey) {
                         toast.error("لم يتم العثور على باركود (تأكد من إضاءة الصورة)")
@@ -238,16 +222,18 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
                     if (aiResult.found && aiResult.code) {
                         toast.success("تم قراءة الباركود بالذكاء الاصطناعي!")
-                        handleScan(aiResult.code)
+                        handleScanResult(aiResult.code)
                     } else {
                         toast.error("حتى الذكاء الاصطناعي لم يستطع قراءة الباركود! تأكد من وضوح الصورة")
                         hapticFeedback('error')
                     }
                 }
-            } catch (aiError) {
-                console.error(aiError)
-                toast.error("فشل في قراءة الصورة")
+            } finally {
+                URL.revokeObjectURL(imageUrl);
             }
+        } catch (err) {
+            console.error(err)
+            toast.error("فشل في قراءة الصورة")
         } finally {
             e.target.value = ""
         }
@@ -263,7 +249,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     </Button>
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-black/40 rounded-full backdrop-blur-md border border-white/10">
                         <Zap className={`w-4 h-4 ${isFlashOn ? "text-yellow-400 fill-current" : "text-slate-400"}`} />
-                        <span className="text-sm font-bold text-white">ماسح الباركود</span>
+                        <span className="text-sm font-bold text-white">ماسح الباركود الفائق</span>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setIsBatchMode(!isBatchMode)} className={`rounded-full backdrop-blur-md transition-colors ${isBatchMode ? "bg-primary text-white" : "bg-black/20 text-white"}`}>
                         <Layers className="w-5 h-5" />
@@ -284,8 +270,13 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
                 {/* Scanner View */}
                 <div className="flex-1 relative bg-black overflow-hidden">
-                    {/* The Reader Element - Full Screen */}
-                    <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full" />
+                    {/* The Video Element - ZXing uses this directly */}
+                    <video
+                        ref={videoRef}
+                        className="w-full h-full object-cover"
+                        playsInline
+                        muted
+                    />
 
                     {/* Scanner Guide Overlay */}
                     {!showNotFound && (

@@ -11,7 +11,8 @@ import { useStore } from "@/context/store-context" // Add import
 
 export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
     const pathname = usePathname()
-    const { storeSettings } = useStore() // Get settings
+    const { storeSettings } = useStore()
+    console.log("Store contact:", storeSettings?.contactPhone)
 
     const navItems = [
         { name: "المتجر", icon: LayoutDashboard, href: "/customer" },

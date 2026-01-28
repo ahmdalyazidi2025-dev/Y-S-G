@@ -59,7 +59,6 @@ export default function RootLayout({
           <StoreProvider>
             <PwaRegistration />
             <PwaInstallPrompt />
-            <NotificationManager />
             <SystemNotifications />
             <PushNotificationManager />
             {children}
