@@ -553,6 +553,21 @@ export default function AdminSettingsPage() {
                                                 }}
                                                 onReset={() => resetSound('statusUpdate')}
                                             />
+                                            <SoundRow
+                                                title="إشعار عام للعميل 🔔"
+                                                description="الصوت الذي يسمعه العميل عند وصول تنبيه أو عرض"
+                                                event="generalPush"
+                                                currentSound={formData.sounds?.generalPush}
+                                                onUpload={(file) => handleSoundUpload('generalPush', file)}
+                                                onPlay={() => {
+                                                    if (formData.sounds?.generalPush) {
+                                                        new Audio(formData.sounds.generalPush).play()
+                                                    } else {
+                                                        playSound('generalPush')
+                                                    }
+                                                }}
+                                                onReset={() => resetSound('generalPush')}
+                                            />
                                         </div>
                                     </div>
                                 </Section>

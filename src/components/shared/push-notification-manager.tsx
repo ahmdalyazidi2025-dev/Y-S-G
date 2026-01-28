@@ -5,12 +5,13 @@ import { useFcmToken } from "@/hooks/use-fcm-token"
 import { useStore } from "@/context/store-context"
 import { doc, setDoc, arrayUnion } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { playNotificationSound } from "@/lib/sounds"
 import { hapticFeedback } from "@/lib/haptics"
+import { useSounds } from "@/hooks/use-sounds"
 
 export function PushNotificationManager() {
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const { currentUser } = useStore()
+    const { playSound } = useSounds()
 
     useEffect(() => {
         const syncToken = async () => {
@@ -40,8 +41,8 @@ export function PushNotificationManager() {
                 onMessage(messaging, (payload) => {
                     console.log('Foreground message received:', payload)
 
-                    // 1. Play Sound (using reliable base64)
-                    playNotificationSound()
+                    // 1. Play Sound (dynamic from settings)
+                    playSound('generalPush')
 
                     // 2. Trigger Haptics
                     hapticFeedback('success')
