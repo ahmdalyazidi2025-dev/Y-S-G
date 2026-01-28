@@ -181,7 +181,6 @@ export type StoreSettings = {
     footerPrivacy: string
     footerReturns: string
     requireCustomerInfoOnCheckout: boolean
-    googleGeminiApiKey?: string // Legacy, deprecate soon
     aiApiKeys?: { key: string, status: "valid" | "invalid" | "unchecked" }[] // Multi-key support
     logoUrl?: string
     geminiCustomPrompt?: string
@@ -192,7 +191,6 @@ export type StoreSettings = {
         newOrder?: string;      // Admin: New order alert
         newMessage?: string;    // Direct/Global chat alert
         statusUpdate?: string;  // Customer: Order status change alert
-        systemPop?: string;     // Generic small notification
         generalPush?: string;   // Customer: Global/Bulk notification alert
     }
 }
@@ -255,7 +253,7 @@ type StoreContextType = {
     guestId: string
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
-    playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'systemPop') => void
+    playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush') => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -281,7 +279,6 @@ const MOCK_SETTINGS: StoreSettings = {
     footerPrivacy: "الشروط والأحكام",
     footerReturns: "سياسة الاسترجاع",
     requireCustomerInfoOnCheckout: false,
-    googleGeminiApiKey: "", // Added default empty key
     logoUrl: "", // Optional store logo URL for branding
     geminiCustomPrompt: "",
     geminiReferenceImageUrl: "",
@@ -388,14 +385,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
 
     // Sound Logic inside Provider (No circular hook dependency)
-    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'systemPop') => {
+    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush') => {
         if (typeof window === 'undefined') return
         try {
             const defaultSounds = {
                 newOrder: "data:audio/wav;base64,UklGRiQIAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAIAACAgYCBgoKDA4SEhYUGhobHBweIiIiJCQoKCwwMDQ4ODxAQERITExQVFhcXFxgZGRobGxwcHR4eHyAgISIiIyQkJSUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/",
                 newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
                 statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                systemPop: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
+                generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
             }
             const source = storeSettings.sounds?.[event] || defaultSounds[event]
             if (source) {
@@ -855,12 +852,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Create Persistent Notification for Customer
         const statusMessages: Record<string, string> = {
-            accepted: "تمت الموافقة على طلبك! سيتم تجهيزه قريباً",
-            rejected: "عذراً، تم رفض الطلب. يرجى مراجعة التفاصيل",
-            processing: "بدأ تجهيز طلبك",
-            shipped: "تم شحن طلبك (في الطريق)",
-            delivered: "تم توصيل الطلب بنجاح",
-            canceled: "تم إلغاء الطلب"
+            processing: `🛠️ نعمل بجد! طلبك رقم #${orderId} الآن في مرحلة التحضير والتحقق.`,
+            shipped: `🚚 بشرى سارة! طلبك رقم #${orderId} في الطريق إليك. ترقب وصوله!`,
+            delivered: `✨ تم التوصيل! تم تسليم طلبك رقم #${orderId} بنجاح. نسعد بخدمتك دائماً.`,
+            canceled: `🚫 تنبيه: تم إلغاء طلبك رقم #${orderId}. نعتذر عن أي إزعاج.`
         }
 
         if (statusMessages[status]) {

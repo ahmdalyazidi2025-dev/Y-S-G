@@ -26,7 +26,7 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
                 </Button>
             </div>
 
-            <div id={id} className="w-[800px] p-12 bg-[#080b12] text-white font-sans relative overflow-hidden fixed top-[-9999px] left-[-9999px]">
+            <div id={id} className="w-[800px] p-12 bg-[#080b12] text-white font-sans relative overflow-hidden absolute top-0 left-0 opacity-0 pointer-events-none -z-50">
                 {/* Background Decorative Elements */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full -mr-32 -mt-32" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -ml-32 -mb-32" />

@@ -9,60 +9,80 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
 
     return (
         <>
-            {/* Print Styles - Hide everything except invoice when printing */}
+            {/* Print Styles - Robust and aggressive to force white background and hide UI */}
             <style jsx global>{`
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 10mm;
+                        margin: 10mm !important;
                     }
                     
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        color-adjust: exact !important;
+                    /* Force white background and black text on ALL elements including :root */
+                    :root, html, body {
+                        --background: 0 0% 100% !important;
+                        --foreground: 0 0% 0% !important;
+                        background-color: white !important;
+                        background: white !important;
+                        color: black !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        color-scheme: light !important;
                     }
-                    
-                    body * {
-                        visibility: hidden;
+
+                    /* Disable dark mode classes if present */
+                    .dark {
+                        --background: 0 0% 100% !important;
+                        background-color: white !important;
+                        color: black !important;
                     }
-                    
-                    #invoice-${order.id}, #invoice-${order.id} * {
-                        visibility: visible;
-                    }
-                    
-                    #invoice-${order.id} {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        margin: 0;
-                        padding: 0;
-                        background: white;
-                        page-break-after: avoid;
-                    }
-                    
-                    /* Prevent content from breaking across pages */
-                    table, .no-break {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                    }
-                    
-                    /* Hide navigation and other UI elements */
-                    nav, header, footer, .no-print, button {
+
+                    /* Hide ALL common UI elements and non-print stuff */
+                    nav, aside, header, footer, button, .no-print, 
+                    [role="dialog"], [role="presentation"], .glass-card:not(#invoice-${order.id}),
+                    .fixed:not(#invoice-${order.id} *), .absolute:not(#invoice-${order.id} *) {
                         display: none !important;
                     }
                     
-                    /* Ensure images print */
-                    img {
-                        max-width: 100%;
-                        page-break-inside: avoid;
+                    /* Hide EVERYTHING and then show only the invoice */
+                    body > * {
+                        display: none !important;
                     }
                     
-                    /* Scale content to fit */
                     #invoice-${order.id} {
-                        transform: scale(0.95);
-                        transform-origin: top left;
+                        display: block !important;
+                        visibility: visible !important;
+                        position: relative !important;
+                        width: 100% !important;
+                        max-width: none !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                        color: black !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        left: auto !important;
+                        top: auto !important;
+                        transform: none !important;
+                        z-index: auto !important;
+                    }
+
+                    /* Ensure tables look good */
+                    table {
+                        width: 100% !important;
+                        border-collapse: collapse !important;
+                        background: white !important;
+                    }
+                    
+                    th, td {
+                        border: 1px solid #000 !important;
+                        color: black !important;
+                        background: white !important;
+                        padding: 8px !important;
+                    }
+
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                 }
             `}</style>

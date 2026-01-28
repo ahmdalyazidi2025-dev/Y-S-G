@@ -16,7 +16,7 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
-    pending: { label: "مسودة (مخفي)", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
+    pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
     processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
     shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
     delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
@@ -357,23 +357,25 @@ export default function AdminOrdersPage() {
                             <div className="space-y-3">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase">تحديث حالة الطلب</h4>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>).map((statusKey) => (
-                                        <Button
-                                            key={statusKey}
-                                            variant="glass"
-                                            className={cn(
-                                                "h-10 text-[10px] font-bold rounded-lg",
-                                                selectedOrder.status === statusKey ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color : "hover:bg-white/5"
-                                            )}
-                                            onClick={() => {
-                                                updateOrderStatus(selectedOrder.id, statusKey)
-                                                setSelectedOrder({ ...selectedOrder, status: statusKey })
-                                                hapticFeedback('medium')
-                                            }}
-                                        >
-                                            {STATUS_CONFIG[statusKey].label}
-                                        </Button>
-                                    ))}
+                                    {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>)
+                                        .filter(key => !['accepted', 'rejected'].includes(key))
+                                        .map((statusKey) => (
+                                            <Button
+                                                key={statusKey}
+                                                variant="glass"
+                                                className={cn(
+                                                    "h-10 text-[10px] font-bold rounded-lg",
+                                                    selectedOrder.status === statusKey ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color : "hover:bg-white/5"
+                                                )}
+                                                onClick={() => {
+                                                    updateOrderStatus(selectedOrder.id, statusKey)
+                                                    setSelectedOrder({ ...selectedOrder, status: statusKey })
+                                                    hapticFeedback('medium')
+                                                }}
+                                            >
+                                                {STATUS_CONFIG[statusKey].label}
+                                            </Button>
+                                        ))}
                                 </div>
                             </div>
                         </motion.div>

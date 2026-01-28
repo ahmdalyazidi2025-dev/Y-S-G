@@ -7,7 +7,7 @@ import { X, ImageIcon, Zap, AlertTriangle, Layers } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/context/store-context"
 import { hapticFeedback } from "@/lib/haptics"
-import { extractBarcodeAction } from "@/app/actions/gemini"
+import { extractBarcodeAI } from "@/app/actions/ai"
 
 interface ScannerModalProps {
     isOpen: boolean
@@ -209,14 +209,15 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 readerBase64.onloadend = async () => {
                     const base64data = readerBase64.result as string;
 
-                    if (!storeSettings?.googleGeminiApiKey) {
+                    const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
+                    if (validKeys.length === 0) {
                         toast.error("لم يتم العثور على باركود (تأكد من إضاءة الصورة)")
                         return
                     }
 
                     toast.info("جاري استخدام الذكاء الاصطناعي لقراءة الباركود...")
-                    const aiResult = await extractBarcodeAction(
-                        storeSettings.googleGeminiApiKey,
+                    const aiResult = await extractBarcodeAI(
+                        storeSettings.aiApiKeys || [],
                         base64data
                     )
 

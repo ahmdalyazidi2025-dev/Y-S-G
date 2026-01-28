@@ -21,35 +21,36 @@ export default function AdminChatPage() {
     const conversations = useMemo(() => {
         const convs: Record<string, Conversation> = {}
 
+        // Initialize with customers to ensure names are correct
+        customers.forEach(c => {
+            convs[c.id] = {
+                customerId: c.id,
+                customerName: c.name || "عميل بدون اسم",
+                unreadCount: 0
+            }
+        })
+
         messages.forEach(m => {
-            if (m.senderId === "admin") return
-            if (!convs[m.senderId]) {
-                convs[m.senderId] = {
-                    customerId: m.senderId,
-                    customerName: m.senderName,
+            if (m.isAdmin) return // Admin messages don't create new conversations in list
+
+            const cid = m.senderId
+            if (!convs[cid]) {
+                convs[cid] = {
+                    customerId: cid,
+                    customerName: m.senderName || "عميل غير معروف",
                     lastMessage: m.text,
                     lastMessageDate: m.createdAt,
                     unreadCount: 0
                 }
             } else {
-                if (m.createdAt > convs[m.senderId]!.lastMessageDate!) {
-                    convs[m.senderId].lastMessage = m.text
-                    convs[m.senderId].lastMessageDate = m.createdAt
+                if (!convs[cid].lastMessageDate || m.createdAt > convs[cid].lastMessageDate!) {
+                    convs[cid].lastMessage = m.text
+                    convs[cid].lastMessageDate = m.createdAt
                 }
             }
         })
 
-        customers.forEach(c => {
-            if (!convs[c.id]) {
-                convs[c.id] = {
-                    customerId: c.id,
-                    customerName: c.name,
-                    unreadCount: 0
-                }
-            }
-        })
-
-        return Object.values(convs).sort((a, b) => {
+        return Object.values(convs).filter(c => c.lastMessage || customers.some(cust => cust.id === c.customerId)).sort((a, b) => {
             if (!a.lastMessageDate) return 1
             if (!b.lastMessageDate) return -1
             return b.lastMessageDate.getTime() - a.lastMessageDate.getTime()

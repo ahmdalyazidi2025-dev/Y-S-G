@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload } from "lucide-react"
 import Link from "next/link"
-import { useSounds, SoundEvent } from "@/hooks/use-sounds"
+// import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
@@ -19,10 +19,12 @@ import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 import { Lock, Shield, UserPlus } from "lucide-react"
 import { StaffManager } from "@/components/admin/staff-manager"
-import { verifyGeminiKey } from "@/app/actions/gemini"
+import { verifyAIKey } from "@/app/actions/ai"
 import { Switch } from "@/components/ui/switch"
 
 const PROTECTED_PIN = "4422707";
+
+type SoundEvent = 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush';
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
@@ -107,7 +109,7 @@ export default function AdminSettingsPage() {
         hapticFeedback('light')
     }
 
-    const { playSound } = useSounds()
+    const { playSound } = useStore()
 
     const handleSoundUpload = (event: SoundEvent, file: File) => {
         if (!file.type.startsWith('audio/')) {
@@ -962,7 +964,7 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
         if (!keyData.key) return
         setChecking(true)
         try {
-            const result = await verifyGeminiKey(keyData.key)
+            const result = await verifyAIKey(keyData.key)
             if (result.success) {
                 onStatusChange("valid")
                 toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)

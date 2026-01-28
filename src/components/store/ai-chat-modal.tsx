@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useStore } from "@/context/store-context"
 // import { GoogleGenerativeAI } from "@google/generative-ai" // Removed: Client-side
-import { verifyGeminiKey, generateGeminiResponse } from "@/app/actions/gemini" // Removed: Server-side
+// import { verifyGeminiKey, generateGeminiResponse } from "@/app/actions/gemini" // Removed
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import Link from "next/link"
@@ -345,8 +345,8 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 </motion.div>
                             ))}
 
-                            {/* Check if key is missing and show Contact Admin Hint if messages length > 1 (meaning user tried to talk) */}
-                            {(!storeSettings.googleGeminiApiKey && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
+                            {/* Check if keys are missing and show Contact Admin Hint if messages length > 1 (meaning user tried to talk) */}
+                            {((!storeSettings.aiApiKeys || storeSettings.aiApiKeys.filter(k => k.status === 'valid').length === 0) && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

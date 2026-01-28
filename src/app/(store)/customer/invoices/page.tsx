@@ -32,7 +32,7 @@ export default function InvoicesPage() {
 
     const handleDownloadPDF = async (order: Order) => {
         hapticFeedback('light')
-        const success = await generateOrderPDF('premium-invoice-customer', order.id)
+        const success = await generateOrderPDF('premium-invoice-target', order.id)
         if (success) toast.success("تم تجهيز وتحميل الفاتورة")
         else toast.error("فشل في تجهيز الفاتورة")
     }
@@ -285,7 +285,7 @@ export default function InvoicesPage() {
             </Drawer.Root>
 
             {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
-            {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-customer" />}
+            {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-target" />}
         </div >
     )
 }

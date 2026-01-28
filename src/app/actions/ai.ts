@@ -154,3 +154,55 @@ export async function analyzeImageAI(
     }
     return { type: "unknown", error: "All keys failed" }
 }
+
+/**
+ * Extract Barcode/Part Number with Multi-Key Rotation
+ */
+export async function extractBarcodeAI(
+    apiKeys: AIKeyStatus[],
+    imageBase64: string
+): Promise<{ found: boolean, code: string }> {
+
+    const validKeys = apiKeys.filter(k => k.key && k.status !== "invalid")
+    if (validKeys.length === 0) return { found: false, code: "" }
+
+    const prompt = `Extract barcode/part number from image. Return JSON: { "found": boolean, "code": string }. No Markdown.`;
+
+    for (const keyObj of validKeys) {
+        try {
+            const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${cleanKey(keyObj.key)}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: MODEL_ID,
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                { type: "text", text: prompt },
+                                { type: "image_url", image_url: { url: imageBase64 } }
+                            ]
+                        }
+                    ]
+                })
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                const text = data.choices?.[0]?.message?.content || ""
+                try {
+                    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim()
+                    return JSON.parse(cleanJson)
+                } catch {
+                    continue
+                }
+            }
+        } catch (e) {
+            console.warn("Barcode Key fail", e)
+        }
+    }
+    return { found: false, code: "" }
+}

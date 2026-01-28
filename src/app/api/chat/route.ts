@@ -6,27 +6,32 @@ export async function POST(req: Request) {
     try {
         const { messages } = await req.json();
 
-        // 1. Fetch Key from settings/ai_config
-        const docRef = doc(db, "settings", "ai_config");
+        // 1. Fetch Keys from settings/global (unified settings)
+        const docRef = doc(db, "settings", "global");
         const docSnap = await getDoc(docRef);
 
-        let apiKey = "";
+        let apiKeys: { key: string, status: "valid" | "invalid" | "unchecked" }[] = [];
 
         if (docSnap.exists()) {
             const data = docSnap.data();
-            // Try common field names just in case, but prioritize gemini_api_key
-            apiKey = data.gemini_api_key || data.api_key || "";
+            apiKeys = data.aiApiKeys || [];
         }
 
-        if (!apiKey) {
-            // Fallback error message as per requirements or generic 401
-            return NextResponse.json({ error: "المفتاح غير موجود في الإعدادات" }, { status: 401 });
+        const validKeys = apiKeys.filter(k => k.key && k.status !== "invalid");
+
+        if (validKeys.length === 0) {
+            return NextResponse.json({
+                error: "المفاتيح غير موجودة أو غير صالحة",
+                details: "يرجى إضافة مفاتيح AI في إعدادات المتجر."
+            }, { status: 401 });
         }
+
+        // Use the first valid key (rotation can be added if needed, but for simplicity we use the first)
+        const apiKey = validKeys[0].key.trim();
 
         // 2. Prepare Gemini Payload
-        // Convert messages to Gemini format
         const contents = messages
-            .filter((m: any) => m.role !== "system") // Filter out system messages from standard flow if any, as we send instruction separately
+            .filter((m: any) => m.role !== "system")
             .map((m: any) => ({
                 role: m.role === "assistant" || m.role === "ai" ? "model" : "user",
                 parts: [{ text: m.content }]

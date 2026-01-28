@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { toast } from "sonner"
 import Image from "next/image"
-import { analyzeImageAction } from "@/app/actions/gemini"
+import { analyzeImageAI } from "@/app/actions/ai"
 
 interface SmartCameraModalProps {
     isOpen: boolean
@@ -127,23 +127,25 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         setIsAnalyzing(true)
         setAnalysisResult(null) // Reset previous result
 
-        // Check if API Key exists
-        if (!storeSettings.googleGeminiApiKey) {
-            console.warn("Gemini API Key is missing in store settings");
+        // Check if API Keys exist
+        const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
+        if (validKeys.length === 0) {
+            console.warn("No valid AI API Keys found in store settings");
             setTimeout(() => {
                 setIsAnalyzing(false)
                 setAnalysisResult("NO_KEY")
-                toast.error("مفتاح الذكاء الاصطناعي مفقود! يرجى إضافته في الإعدادات")
+                toast.error("مفاتيح الذكاء الاصطناعي مفقودة أو غير صالحة! يرجى إضافتها في الإعدادات")
             }, 500)
             return
         }
 
         try {
-            const result = await analyzeImageAction(
-                storeSettings.googleGeminiApiKey,
+            const prompt = `You are an expert automotive parts specialist. Analyze this image. If it is a CAR, identify Make, Model, Year. If it is a PART, identify Name and Part Number. If NEITHER, return "UNKNOWN". ${storeSettings.geminiCustomPrompt || ""}`
+
+            const result = await analyzeImageAI(
+                storeSettings.aiApiKeys || [],
                 imageBase64,
-                storeSettings.geminiCustomPrompt,
-                storeSettings.geminiReferenceImageUrl
+                prompt
             )
             setAnalysisResult(JSON.stringify(result))
         } catch (error) {
