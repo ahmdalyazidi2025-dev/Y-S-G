@@ -18,6 +18,9 @@ const REQUEST_STATUS = {
 export default function AdminRequestsPage() {
     const { productRequests, updateProductRequestStatus } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
+    const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
+
+    const filteredRequests = productRequests.filter(r => r.status === statusFilter)
 
     return (
         <div className="space-y-6">
@@ -30,14 +33,35 @@ export default function AdminRequestsPage() {
                 <h1 className="text-2xl font-bold flex-1">طلبات المنتجات</h1>
             </div>
 
+            {/* Filter Tabs */}
+            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
+                {(['pending', 'fulfilled', 'rejected'] as const).map((status) => (
+                    <button
+                        key={status}
+                        onClick={() => setStatusFilter(status)}
+                        className={cn(
+                            "px-6 py-2 rounded-xl text-xs font-bold transition-all",
+                            statusFilter === status
+                                ? "bg-primary text-white shadow-lg"
+                                : "text-slate-400 hover:text-white"
+                        )}
+                    >
+                        {REQUEST_STATUS[status].label}
+                        <span className="mr-2 opacity-50">
+                            ({productRequests.filter(r => r.status === status).length})
+                        </span>
+                    </button>
+                ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {productRequests.length === 0 ? (
+                {filteredRequests.length === 0 ? (
                     <div className="col-span-full p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
                         <Camera className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                        لا توجد طلبات لتوفير منتجات حالياً
+                        {statusFilter === 'pending' ? "لا توجد طلبات جديدة حالياً" : "لا توجد طلبات في هذا القسم"}
                     </div>
                 ) : (
-                    productRequests.map((request) => {
+                    filteredRequests.map((request) => {
                         const status = REQUEST_STATUS[request.status]
                         return (
                             <div

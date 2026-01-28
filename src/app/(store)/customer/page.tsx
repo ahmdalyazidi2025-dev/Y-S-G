@@ -80,19 +80,20 @@ export default function CustomerHome() {
                             </Link>
                         </div>
 
-                        {/* Search Bar - Sticky */}
-                        <div className="sticky top-[72px] z-40 bg-[#080b12]/80 backdrop-blur-xl py-3 -mx-4 px-4 transition-all border-b border-white/5 shadow-2xl">
-                            <div className="flex gap-3">
-                                <div className="relative flex-1 group">
-                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40 group-focus-within:text-primary transition-colors z-10" />
-                                    <Input
-                                        placeholder="ابحث عن منتج، باركود..."
-                                        className="bg-white/90 border-white/40 shadow-inner backdrop-blur-xl rounded-2xl pr-12 text-right h-12 text-sm focus:ring-2 focus:ring-primary/50 text-black placeholder:text-slate-500"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
+                        {/* Search Bar - Floating & Transparent */}
+                        <div className="fixed top-4 inset-x-4 z-[100] transition-all">
+                            <div className="relative group">
+                                <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-primary transition-colors z-10" />
+                                <Input
+                                    placeholder="ابحث عن قطعة غيار، باركود..."
+                                    className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-white placeholder:text-white/40 relative z-10"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex gap-2">
+                                    <CustomerNotifications forceOpen={shouldOpenNotifications} />
                                 </div>
-                                <CustomerNotifications forceOpen={shouldOpenNotifications} />
                             </div>
                         </div>
                     </div>

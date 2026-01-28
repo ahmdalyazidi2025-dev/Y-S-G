@@ -125,6 +125,10 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     Html5QrcodeSupportedFormats.QR_CODE,
                     Html5QrcodeSupportedFormats.CODE_128,
                     Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.ITF,
+                    Html5QrcodeSupportedFormats.DATA_MATRIX,
+                    Html5QrcodeSupportedFormats.CODE_93,
+                    Html5QrcodeSupportedFormats.CODABAR,
                 ],
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
@@ -137,9 +141,17 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             await html5QrCode.start(
                 { facingMode: "environment" },
                 {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    disableFlip: false
+                    fps: 25, // Increased from 10 to 25 for much smoother scanning
+                    qrbox: (viewfinderWidth, viewfinderHeight) => {
+                        // Dynamically adjust qrbox for better mobile focus
+                        const size = Math.min(viewfinderWidth, viewfinderHeight);
+                        return {
+                            width: size * 0.8,
+                            height: size * 0.45 // Rectangular box often works better for product barcodes/parts
+                        };
+                    },
+                    disableFlip: false,
+                    aspectRatio: 1.0
                 },
                 (decodedText) => {
                     handleScan(decodedText)

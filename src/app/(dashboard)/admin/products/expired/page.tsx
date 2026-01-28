@@ -36,6 +36,36 @@ export default function ExpiredProductsPage() {
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">العروض المنتهية</h1>
+
+                {expiredProducts.length > 0 && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            className="border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl px-4 h-10 text-xs"
+                            onClick={() => {
+                                if (confirm("هل أنت متأكد من حذف جميع العروض المنتهية؟")) {
+                                    expiredProducts.forEach(p => deleteProduct(p.id))
+                                    hapticFeedback('warning')
+                                }
+                            }}
+                        >
+                            <Trash2 className="w-4 h-4 ml-2" />
+                            حذف الكل
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="border-primary/30 text-primary hover:bg-primary/10 rounded-xl px-4 h-10 text-xs"
+                            onClick={() => {
+                                expiredProducts.forEach(p => handleRepublish(p, true))
+                                hapticFeedback('success')
+                            }}
+                        >
+                            <Timer className="w-4 h-4 ml-2" />
+                            تجديد الكل
+                        </Button>
+                    </div>
+                )}
+
                 <div className="bg-orange-500/10 text-orange-400 px-4 py-1.5 rounded-full border border-orange-500/20 flex items-center gap-2">
                     <History className="w-4 h-4" />
                     <span className="text-xs font-bold">{expiredProducts.length} منتج</span>
@@ -48,49 +78,47 @@ export default function ExpiredProductsPage() {
                     <p className="font-bold">لا توجد عروض منتهية حالياً</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {expiredProducts.map(product => (
-                        <div key={product.id} className="glass-card group relative flex flex-col items-center p-4">
-                            <div className="w-24 h-24 mb-4 relative">
+                        <div key={product.id} className="glass-card group relative flex flex-col p-3 border-white/5 hover:border-white/20 transition-all">
+                            <div className="aspect-square mb-3 relative rounded-xl overflow-hidden bg-black/40">
                                 <Image
                                     src={(product.images && product.images[0]) || "/placeholder.jpg"}
                                     alt={product.name}
-                                    width={96}
-                                    height={96}
-                                    className="object-contain rounded-xl"
+                                    fill
+                                    className="object-contain p-2 opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all"
                                     unoptimized
                                 />
-                                <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+                                <div className="absolute top-2 right-2 bg-red-500/80 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">
                                     منتهي
                                 </div>
                             </div>
 
-                            <h3 className="font-bold text-white mb-1">{product.name}</h3>
-                            <p className="text-xs text-slate-500 mb-4">{product.category}</p>
+                            <div className="space-y-1 mb-4">
+                                <h3 className="font-bold text-white text-xs line-clamp-1">{product.name}</h3>
+                                <p className="text-[10px] text-slate-500">{product.category}</p>
+                            </div>
 
-                            <div className="flex flex-col w-full gap-2">
+                            <div className="flex flex-col gap-1.5">
                                 <Button
-                                    className="w-full bg-primary hover:bg-primary/90 text-white gap-2 h-10 rounded-xl"
+                                    className="w-full bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/20 h-8 rounded-lg text-[10px] gap-1.5"
                                     onClick={() => handleRepublish(product, true)}
                                 >
-                                    <Timer className="w-4 h-4" />
-                                    <span className="text-xs">إعادة نشر (24 ساعة)</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-white/10 hover:bg-white/5 text-white gap-2 h-10 rounded-xl"
-                                    onClick={() => handleRepublish(product, false)}
-                                >
-                                    <Play className="w-4 h-4" />
-                                    <span className="text-xs">إعادة نشر (بدون عداد)</span>
+                                    <Timer className="w-3 h-3" />
+                                    <span>تجديد (24س)</span>
                                 </Button>
                                 <Button
                                     variant="ghost"
-                                    className="w-full text-red-500 hover:bg-red-500/10 h-10 rounded-xl gap-2 mt-2"
-                                    onClick={() => deleteProduct(product.id)}
+                                    className="w-full text-red-400 hover:bg-red-500/10 h-8 rounded-lg text-[10px] gap-1.5"
+                                    onClick={() => {
+                                        if (confirm("حذف هذا العرض؟")) {
+                                            deleteProduct(product.id)
+                                            hapticFeedback('light')
+                                        }
+                                    }}
                                 >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="text-xs">حذف نهائي</span>
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>حذف</span>
                                 </Button>
                             </div>
                         </div>
