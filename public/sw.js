@@ -64,7 +64,7 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // --- Existing PWA logic below ---
-const CACHE_NAME = 'ysg-sales-v3'; // Incremented to force update
+const CACHE_NAME = 'ysg-sales-v5'; // Forced update for notification fix
 const ASSETS = [
     '/',
     '/manifest.json',
