@@ -188,9 +188,10 @@ export default function AdminRequestsPage() {
                                         onClick={() => {
                                             updateProductRequestStatus(selectedRequest.id, "rejected")
                                             setSelectedRequest(null)
-                                        }}
+                                                >
+                                        <XCircle className="w-4 h-4" />
                                         <span>رفض</span>
-                                </Button>
+                                    </Button>
 
                                 {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
                                     <Button
