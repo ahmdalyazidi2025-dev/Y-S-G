@@ -73,6 +73,10 @@ export async function sendPushNotification(
 
         const response = await adminMessaging.sendEachForMulticast(message)
 
+        if (response.successCount === 0) {
+            return { success: false, error: "فشل الإرسال: لم يتم قبول الرسالة من قبل أي جهاز. تأكد من أن هاتفك مسجل." }
+        }
+
         // 3. Cleanup invalid tokens
         if (response.failureCount > 0) {
             const failedTokens: string[] = []

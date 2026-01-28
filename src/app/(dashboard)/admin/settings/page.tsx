@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
             {
                 loading: "جاري إرسال الإشعار...",
                 success: (data) => {
-                    if (data.success) return "تم الإرسال! راقب هاتفك 📱"
+                    if (data.success) return `تم الإرسال بنجاح إلى ${data.sentCount} جهاز! 📱`
                     return `فشل الإرسال: ${data.error}`
                 },
                 error: (err) => {

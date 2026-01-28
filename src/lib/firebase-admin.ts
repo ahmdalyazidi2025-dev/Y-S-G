@@ -1,16 +1,19 @@
 import admin from 'firebase-admin'
 
 if (!admin.apps.length) {
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-        ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-        : undefined
-
-    if (serviceAccount) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-        })
-    } else {
-        console.warn("FIREBASE_SERVICE_ACCOUNT not found in environment variables. Server-side notifications will fail.")
+    try {
+        const saString = process.env.FIREBASE_SERVICE_ACCOUNT
+        if (!saString) {
+            console.warn("FIREBASE_SERVICE_ACCOUNT is missing");
+        } else {
+            const serviceAccount = JSON.parse(saString);
+            admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+            });
+            console.log("Firebase Admin initialized successfully");
+        }
+    } catch (error) {
+        console.error("Failed to initialize Firebase Admin:", error);
     }
 }
 
