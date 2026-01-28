@@ -11,7 +11,7 @@ import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, Sh
 import Link from "next/link"
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
-import { sendPushNotification } from "@/app/actions/notifications"
+import { sendPushNotification, broadcastPushNotification } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
 
 export default function AdminSettingsPage() {
@@ -99,6 +99,23 @@ export default function AdminSettingsPage() {
                                     className="border-primary/30 text-primary hover:bg-primary/10 h-12 px-6 rounded-xl"
                                 >
                                     إرسال لجهازي
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={async () => {
+                                        toast.promise(
+                                            broadcastPushNotification("تنبيه عام 🚨", "هذا إشعار تجريبي مرسل لجميع الأجهزة المسجلة."),
+                                            {
+                                                loading: "جاري بث الإشعار للكل...",
+                                                success: (res: any) => `تم الإرسال لـ ${res.sentCount} جهاز! 📢`,
+                                                error: "فشل البث"
+                                            }
+                                        )
+                                    }}
+                                    className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 h-12 px-6 rounded-xl"
+                                >
+                                    بث للجميع
                                 </Button>
                             </div>
                         </div>

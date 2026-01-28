@@ -100,3 +100,59 @@ export async function sendPushNotification(
         return { success: false, error: "Server error" }
     }
 }
+
+export async function broadcastPushNotification(
+    title: string,
+    body: string,
+    link: string = "/"
+) {
+    try {
+        const allTokens: string[] = []
+
+        // 1. Get tokens from staff
+        const staffDocs = await adminDb.collection("staff").get()
+        staffDocs.forEach(doc => {
+            const data = doc.data()
+            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                allTokens.push(...data.fcmTokens)
+            }
+        })
+
+        // 2. Get tokens from customers
+        const customerDocs = await adminDb.collection("customers").get()
+        customerDocs.forEach(doc => {
+            const data = doc.data()
+            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                allTokens.push(...data.fcmTokens)
+            }
+        })
+
+        const uniqueTokens = Array.from(new Set(allTokens))
+
+        if (uniqueTokens.length === 0) {
+            return { success: false, error: "لا يوجد أجهزة مسجلة في النظام" }
+        }
+
+        const message = {
+            notification: { title, body },
+            data: { title, body, link },
+            webpush: {
+                notification: {
+                    body,
+                    icon: '/app-icon-v2.png',
+                    badge: '/app-icon-v2.png',
+                },
+                fcm_options: { link }
+            },
+            tokens: uniqueTokens,
+        }
+
+        const response = await adminMessaging.sendEachForMulticast(message)
+
+        return { success: true, sentCount: response.successCount }
+
+    } catch (error) {
+        console.error("Broadcast Error:", error)
+        return { success: false, error: "حدث خطأ في السيرفر" }
+    }
+}
