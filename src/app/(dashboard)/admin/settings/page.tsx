@@ -110,8 +110,27 @@ export default function AdminSettingsPage() {
                                         notificationPermissionStatus === 'denied' ? 'مرفوض ❌' : 'غير محدد ⚠️'}
                                 </span>
                             </div>
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">مفتاح VAPID:</span>
+                                <span className={process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'text-emerald-400' : 'text-rose-400'}>
+                                    {process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? 'متوفر ✅' : 'مفقود ❌'}
+                                </span>
+                            </div>
                             <div className="space-y-1">
-                                <span className="text-xs text-slate-500">معرف الجهاز (Token):</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-slate-500">معرف الجهاز (Token):</span>
+                                    {fcmToken && (
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(fcmToken)
+                                                toast.success("تم نسخ المعرف!")
+                                            }}
+                                            className="text-[10px] text-primary hover:underline"
+                                        >
+                                            نسخ المعرف
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="p-2 bg-black/40 rounded border border-white/5 text-[10px] font-mono break-all text-slate-400">
                                     {fcmToken || 'جاري استخراج المعرف... تأكد من السماح بالإشعارات'}
                                 </div>
