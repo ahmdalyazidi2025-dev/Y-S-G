@@ -24,6 +24,9 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     const [showNotFound, setShowNotFound] = useState(false)
     const [lastScanned, setLastScanned] = useState("")
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
+    const [zoom, setZoom] = useState(1)
+    const [canZoom, setCanZoom] = useState(false)
+    const [zoomRange, setZoomRange] = useState({ min: 1, max: 1, step: 0.1 })
 
     const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -167,6 +170,15 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 if (Object.keys(advanced).length > 0) {
                     await track.applyConstraints({ advanced: [advanced] } as any);
                 }
+
+                if (capabilities.zoom) {
+                    setCanZoom(true);
+                    setZoomRange({
+                        min: capabilities.zoom.min || 1,
+                        max: capabilities.zoom.max || 1,
+                        step: capabilities.zoom.step || 0.1
+                    });
+                }
             }
 
             setError(null);
@@ -175,6 +187,19 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
         }
     }, [handleScanResult])
+
+    const handleZoomChange = async (value: number) => {
+        setZoom(value);
+        const stream = videoRef.current?.srcObject as MediaStream;
+        const track = stream?.getVideoTracks()[0];
+        if (track && track.applyConstraints && canZoom) {
+            try {
+                await track.applyConstraints({ advanced: [{ zoom: value }] } as any);
+            } catch (e) {
+                console.error("Zoom failed", e);
+            }
+        }
+    };
 
     useEffect(() => {
         if (isOpen && !showNotFound) {
@@ -324,6 +349,27 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                                     إذا لم يعمل الباركود، اضغط على زر "قراءة رقم القطعة" بالأسفل
                                 </p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Zoom Control */}
+                    {canZoom && (
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-4 z-20">
+                            <div className="w-1.5 h-48 bg-black/40 rounded-full relative overflow-hidden backdrop-blur-md border border-white/10">
+                                <input
+                                    type="range"
+                                    min={zoomRange.min}
+                                    max={zoomRange.max}
+                                    step={zoomRange.step}
+                                    value={zoom}
+                                    onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                                    className="absolute -rotate-90 w-48 h-1.5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+                                    style={{ direction: 'ltr' }}
+                                />
+                            </div>
+                            <span className="text-white text-[10px] font-bold bg-black/40 px-2 py-1 rounded-md backdrop-blur-md">
+                                {zoom.toFixed(1)}x
+                            </span>
                         </div>
                     )}
 
