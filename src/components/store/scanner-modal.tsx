@@ -104,20 +104,18 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         try {
             const hints = new Map();
             const formats = [
-                BarcodeFormat.EAN_13,
-                BarcodeFormat.EAN_8,
                 BarcodeFormat.CODE_128,
                 BarcodeFormat.CODE_39,
+                BarcodeFormat.EAN_13,
+                BarcodeFormat.EAN_8,
                 BarcodeFormat.UPC_A,
-                BarcodeFormat.UPC_E,
                 BarcodeFormat.QR_CODE,
-                BarcodeFormat.DATA_MATRIX,
                 BarcodeFormat.ITF,
-                BarcodeFormat.RSS_14,
-                BarcodeFormat.PDF_417
+                BarcodeFormat.DATA_MATRIX
             ];
             hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
             hints.set(DecodeHintType.TRY_HARDER, true);
+            hints.set(DecodeHintType.CHARACTER_SET, 'utf-8');
 
             const reader = new BrowserMultiFormatReader(hints);
             codeReaderRef.current = reader;
@@ -140,9 +138,11 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 {
                     video: {
                         deviceId: { exact: backCam.deviceId },
-                        width: { min: 1280, ideal: 1920, max: 2560 }, // Request Full HD if possible
+                        width: { min: 1280, ideal: 1920, max: 2560 },
                         height: { min: 720, ideal: 1080, max: 1440 },
-                        facingMode: "environment"
+                        facingMode: "environment",
+                        focusMode: { ideal: "continuous" } as any, // Try to force continuous focus
+                        whiteBalanceMode: { ideal: "continuous" } as any
                     }
                 },
                 videoRef.current!,
@@ -288,20 +288,26 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
                     {/* Scanner Guide Overlay */}
                     {!showNotFound && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                            <div className="w-64 h-40 border-2 border-primary/50 rounded-2xl relative bg-primary/5">
-                                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-xl" />
-                                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-xl" />
-                                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-xl" />
-                                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+                            <div className="w-72 h-48 border-2 border-primary/50 rounded-2xl relative bg-primary/5">
+                                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+                                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+                                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+                                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
 
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-[90%] h-[2px] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,1)] animate-scan" />
+                                    <div className="w-[90%] h-[2px] bg-red-500 shadow-[0_0_15px_rgba(239,68,68,1)] animate-scan" />
                                 </div>
                             </div>
-                            <p className="absolute bottom-32 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">
-                                ضع الباركود داخل الإطار
-                            </p>
+
+                            <div className="mt-8 flex flex-col items-center gap-3">
+                                <p className="text-white/90 text-sm font-bold bg-black/60 px-6 py-2.5 rounded-full backdrop-blur-md border border-white/10 shadow-2xl">
+                                    ضع الباركود أو رقم القطعة داخل الإطار
+                                </p>
+                                <p className="text-primary/90 text-[10px] font-bold bg-primary/10 px-4 py-1.5 rounded-full backdrop-blur-sm border border-primary/20 animate-pulse">
+                                    إذا لم يعمل الباركود، اضغط على زر "قراءة رقم القطعة" بالأسفل
+                                </p>
+                            </div>
                         </div>
                     )}
 
