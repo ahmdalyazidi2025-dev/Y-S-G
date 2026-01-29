@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
-import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord } from "@/lib/export-utils"
+import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord, exportStaffToWord } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
@@ -552,6 +552,24 @@ export default function AdminSettingsPage() {
                                         >
                                             <FileText className="w-5 h-5" />
                                             استخراج جدول Word
+                                        </Button>
+                                    </div>
+
+                                    <div className="p-6 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-4">
+                                        <div className="flex items-center gap-3 text-purple-400">
+                                            <Shield className="w-6 h-6" />
+                                            <div>
+                                                <h4 className="font-bold">سجل بيانات الموظفين (Word)</h4>
+                                                <p className="text-xs text-slate-500">جدول يحتوي على بيانات الموظفين والمسؤولين وصلاحياتهم.</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            onClick={() => exportStaffToWord(staff)}
+                                            className="w-full h-14 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-bold text-lg gap-2"
+                                        >
+                                            <FileText className="w-5 h-5" />
+                                            استخراج سجل الموظفين
                                         </Button>
                                     </div>
 

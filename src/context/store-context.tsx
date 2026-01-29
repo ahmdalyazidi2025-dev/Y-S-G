@@ -77,6 +77,7 @@ export type StaffMember = {
     id: string
     name: string
     email: string
+    username?: string
     role: "staff" | "admin"
     permissions: string[]
     createdAt?: Date | Timestamp | null

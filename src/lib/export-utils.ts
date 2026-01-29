@@ -38,7 +38,7 @@ export function exportToCSV(data: any[], filename: string) {
     }
 }
 
-import { Customer, Order } from "@/context/store-context";
+import { Customer, Order, StaffMember } from "@/context/store-context";
 
 export function exportComprehensiveReport(customers: Customer[], orders: Order[]) {
     // 1. Prepare Data structure: Flat Table (Customer + Order details per row)
@@ -189,6 +189,63 @@ export function exportCustomersToWord(customers: Customer[]) {
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", `سجل_العملاء_${new Date().toISOString().split('T')[0]}.doc`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+export function exportStaffToWord(staff: StaffMember[]) {
+    if (!staff || staff.length === 0) return
+
+    const rows = staff.map(s => {
+        return `
+            <tr>
+                <td style="padding:10px; border:1px solid #000;">${s.name}</td>
+                <td style="padding:10px; border:1px solid #000;">${s.username}</td>
+                <td style="padding:10px; border:1px solid #000;">${s.email || "-"}</td>
+                <td style="padding:10px; border:1px solid #000;">${s.role === 'admin' ? 'مدير' : 'موظف'}</td>
+            </tr>
+        `;
+    }).join("");
+
+    const htmlContent = `
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: 'Arial', sans-serif; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th { background-color: #f0f0f0; font-weight: bold; padding: 10px; border: 1px solid #000; }
+                td { padding: 8px; border: 1px solid #000; }
+                h1 { text-align: center; color: #333; }
+                .meta { text-align: center; margin-bottom: 20px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <h1>سجل بيانات الموظفين</h1>
+            <div class="meta">تاريخ الاستخراج: ${new Date().toLocaleDateString('ar-EG')}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>اسم المستخدم</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الصلاحية</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `سجل_الموظفين_${new Date().toISOString().split('T')[0]}.doc`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
