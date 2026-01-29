@@ -21,12 +21,10 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
     const [isBatchMode, setIsBatchMode] = useState(false)
-    const [showNotFound, setShowNotFound] = useState(false)
     const [lastScanned, setLastScanned] = useState("")
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
-    const [zoom, setZoom] = useState(1)
-    const [canZoom, setCanZoom] = useState(false)
-    const [zoomRange, setZoomRange] = useState({ min: 1, max: 1, step: 0.1 })
+    const [isAiScanning, setIsAiScanning] = useState(false)
+    const autoOCRTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -101,6 +99,36 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         }
     }, [lastScanned, onScan, onClose, stopCamera, scanProduct, isBatchMode, addToCart])
 
+    const triggerAutoOCR = useCallback(async () => {
+        if (!videoRef.current || isAiScanning || showNotFound) return;
+
+        try {
+            setIsAiScanning(true);
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0);
+                const base64data = canvas.toDataURL('image/jpeg', 0.8);
+                const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || [];
+
+                if (validKeys.length > 0) {
+                    const aiResult = await extractBarcodeAI(storeSettings.aiApiKeys || [], base64data);
+                    if (aiResult.found && aiResult.code) {
+                        handleScanResult(aiResult.code);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Auto OCR failed", e);
+        } finally {
+            setIsAiScanning(false);
+            // Schedule next attempt in 4 seconds if still open
+            autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 4000);
+        }
+    }, [isAiScanning, showNotFound, storeSettings.aiApiKeys, handleScanResult]);
+
     const startCamera = useCallback(async () => {
         await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -139,8 +167,8 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
             const videoConstraints: any = {
                 deviceId: { exact: backCam.deviceId },
-                width: { min: 1280, ideal: 1920, max: 2560 },
-                height: { min: 720, ideal: 1080, max: 1440 },
+                width: { min: 1280, ideal: 1920 },
+                height: { min: 720, ideal: 1080 },
                 facingMode: "environment"
             };
 
@@ -157,6 +185,9 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 }
             );
 
+            // Start Auto OCR loop
+            autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 3000);
+
             // Try to enable continuous focus and auto-exposure if the browser supports it via track
             const stream = videoRef.current?.srcObject as MediaStream;
             const track = stream?.getVideoTracks()[0];
@@ -166,18 +197,14 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
                 if (capabilities.whiteBalanceMode?.includes('continuous')) advanced.whiteBalanceMode = 'continuous';
                 if (capabilities.exposureMode?.includes('continuous')) advanced.exposureMode = 'continuous';
+                if (capabilities.zoom) {
+                    // Automatically zoom slightly (1.5x) if supported, for easier capture
+                    const idealZoom = Math.min(1.5, capabilities.zoom.max || 1.5);
+                    advanced.zoom = idealZoom;
+                }
 
                 if (Object.keys(advanced).length > 0) {
                     await track.applyConstraints({ advanced: [advanced] } as any);
-                }
-
-                if (capabilities.zoom) {
-                    setCanZoom(true);
-                    setZoomRange({
-                        min: capabilities.zoom.min || 1,
-                        max: capabilities.zoom.max || 1,
-                        step: capabilities.zoom.step || 0.1
-                    });
                 }
             }
 
@@ -186,20 +213,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             console.error("Failed to start ZXing scanner:", err);
             setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
         }
-    }, [handleScanResult])
-
-    const handleZoomChange = async (value: number) => {
-        setZoom(value);
-        const stream = videoRef.current?.srcObject as MediaStream;
-        const track = stream?.getVideoTracks()[0];
-        if (track && track.applyConstraints && canZoom) {
-            try {
-                await track.applyConstraints({ advanced: [{ zoom: value }] } as any);
-            } catch (e) {
-                console.error("Zoom failed", e);
-            }
-        }
-    };
+    }, [handleScanResult, triggerAutoOCR])
 
     useEffect(() => {
         if (isOpen && !showNotFound) {
@@ -207,6 +221,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         }
         return () => {
             stopCamera()
+            if (autoOCRTimeoutRef.current) clearTimeout(autoOCRTimeoutRef.current)
         }
     }, [isOpen, showNotFound, startCamera, stopCamera])
 
@@ -341,35 +356,19 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                                 </div>
                             </div>
 
-                            <div className="mt-8 flex flex-col items-center gap-3">
-                                <p className="text-white/90 text-sm font-bold bg-black/60 px-6 py-2.5 rounded-full backdrop-blur-md border border-white/10 shadow-2xl">
-                                    ضع الباركود أو رقم القطعة داخل الإطار
-                                </p>
-                                <p className="text-primary/90 text-[10px] font-bold bg-primary/10 px-4 py-1.5 rounded-full backdrop-blur-sm border border-primary/20 animate-pulse">
-                                    إذا لم يعمل الباركود، اضغط على زر "قراءة رقم القطعة" بالأسفل
+                            <div className="mt-8">
+                                <p className="text-white/90 text-sm font-bold bg-black/60 px-8 py-3 rounded-full backdrop-blur-md border border-white/10 shadow-2xl">
+                                    وجه الكاميرا نحو الباركود أو رقم القطعة
                                 </p>
                             </div>
-                        </div>
-                    )}
 
-                    {/* Zoom Control */}
-                    {canZoom && (
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-4 z-20">
-                            <div className="w-1.5 h-48 bg-black/40 rounded-full relative overflow-hidden backdrop-blur-md border border-white/10">
-                                <input
-                                    type="range"
-                                    min={zoomRange.min}
-                                    max={zoomRange.max}
-                                    step={zoomRange.step}
-                                    value={zoom}
-                                    onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-                                    className="absolute -rotate-90 w-48 h-1.5 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(var(--primary),0.5)]"
-                                    style={{ direction: 'ltr' }}
-                                />
-                            </div>
-                            <span className="text-white text-[10px] font-bold bg-black/40 px-2 py-1 rounded-md backdrop-blur-md">
-                                {zoom.toFixed(1)}x
-                            </span>
+                            {/* AI Scanning Status Indicator */}
+                            {isAiScanning && (
+                                <div className="absolute top-24 flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-full backdrop-blur-sm border border-primary/20 animate-pulse">
+                                    <div className="w-2 h-2 bg-primary rounded-full" />
+                                    <span className="text-[10px] text-primary-foreground font-bold uppercase tracking-widest">AI Scanning</span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -421,51 +420,11 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-4 z-20 pointer-events-none">
                         <Button
                             variant="glass"
-                            className="pointer-events-auto h-12 rounded-full px-6 gap-2 bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60"
+                            className="pointer-events-auto h-12 rounded-full px-8 gap-2 bg-black/40 backdrop-blur-md border border-white/10 hover:bg-black/60 shadow-xl"
                             onClick={() => document.getElementById("file-upload")?.click()}
                         >
-                            <ImageIcon className="w-5 h-5" />
-                            <span>من الصور</span>
-                        </Button>
-
-                        {/* New OCR Button */}
-                        <Button
-                            variant="glass"
-                            className="pointer-events-auto h-12 rounded-full px-6 gap-2 bg-primary/80 backdrop-blur-md border border-primary/20 hover:bg-primary text-white"
-                            onClick={async () => {
-                                if (!videoRef.current) return;
-                                try {
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = videoRef.current.videoWidth;
-                                    canvas.height = videoRef.current.videoHeight;
-                                    const ctx = canvas.getContext('2d');
-                                    if (!ctx) return;
-                                    ctx.drawImage(videoRef.current, 0, 0);
-                                    const base64data = canvas.toDataURL('image/jpeg', 0.95);
-
-                                    const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
-                                    if (validKeys.length === 0) {
-                                        toast.error("يرجى تفعيل مفاتيح الذكاء الاصطناعي في الإعدادات أولاً")
-                                        return
-                                    }
-
-                                    toast.info("جاري التعرف على رقم القطعة...");
-                                    hapticFeedback('medium');
-
-                                    const aiResult = await extractBarcodeAI(storeSettings.aiApiKeys || [], base64data);
-
-                                    if (aiResult.found && aiResult.code) {
-                                        handleScanResult(aiResult.code);
-                                    } else {
-                                        toast.error("فشل التعرف على الرقم. يرجى التقليب أو تحسين الإضاءة");
-                                    }
-                                } catch (e) {
-                                    console.error("OCR capture failed", e);
-                                    toast.error("حدث خطأ أثناء محاولة قراءة النص");
-                                }
-                            }}
-                        >
-                            <span className="font-bold">قراءة رقم القطعة</span>
+                            <ImageIcon className="w-5 h-5 text-white" />
+                            <span className="text-white font-bold">من معرض الصور</span>
                         </Button>
 
                         <input
