@@ -256,9 +256,15 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 const reader = new BrowserMultiFormatReader(hints);
                 codeReaderRef.current = reader;
                 // Since we already have the stream running in the video element, pass it to ZXing
-                reader.decodeFromVideoElement(videoRef.current!, (result) => {
-                    if (result) handleScanResult(result.getText())
-                })
+                reader.decodeFromVideoElement(videoRef.current!)
+                    .then((result) => {
+                        if (result) handleScanResult(result.getText())
+                    })
+                    .catch((err) => {
+                        if (err && err.name !== 'NotFoundException') {
+                            console.error("ZXing Decode Error", err)
+                        }
+                    })
             }
 
         } catch (err) {
@@ -339,7 +345,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             const track = stream.getVideoTracks()[0]
             if (track && (track.getCapabilities() as any)?.torch) {
                 const nextState = !isFlashOn
-                // @ts-expect-error - torch is valid in Chromium but not in standard types
+                // Cast to any to access advanced torch constraint
                 await (track as any).applyConstraints({ advanced: [{ torch: nextState }] })
                 setIsFlashOn(nextState)
             } else {
