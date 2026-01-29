@@ -59,17 +59,22 @@ export async function POST(req: Request) {
                     const data = await listResponse.json();
                     const models = data.models || [];
 
-                    // Strict Priority for Free Tier (Flash is best)
-                    // We specifically look for "gemini-1.5-flash" (stable) or "-001/002"
-                    const flashStable = models.find((m: any) => m.name === "models/gemini-1.5-flash" || m.name === "gemini-1.5-flash");
-                    const flashLegacy = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
+                    // Priority: 
+                    // 1. Stable 1.5 Flash (Free & Fast)
+                    // 2. Any 1.5 Flash variant
+                    // 3. Any Flash variant (e.g. 2.0-flash)
+                    // 4. Any 1.5 Pro
+                    // 5. Any Gemini model (Fallback safety net)
 
-                    // Only use Pro if Flash is absolutely missing, and prefer 1.5-pro over generic "pro"
-                    const proStable = models.find((m: any) => m.name.includes("gemini-1.5-pro"));
+                    const flash15 = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
+                    const anyFlash = models.find((m: any) => m.name.includes("flash"));
+                    const pro15 = models.find((m: any) => m.name.includes("gemini-1.5-pro"));
+                    const anyGemini = models.find((m: any) => m.name.includes("gemini"));
 
-                    if (flashStable) chosenModel = flashStable.name;
-                    else if (flashLegacy) chosenModel = flashLegacy.name;
-                    else if (proStable) chosenModel = proStable.name;
+                    if (flash15) chosenModel = flash15.name;
+                    else if (anyFlash) chosenModel = anyFlash.name;
+                    else if (pro15) chosenModel = pro15.name;
+                    else if (anyGemini) chosenModel = anyGemini.name;
 
                     chosenModel = chosenModel.replace(/^models\//, "");
                 } else {
@@ -98,7 +103,7 @@ export async function POST(req: Request) {
                     const status = response.status;
                     const msg = errData.error?.message || "Unknown";
 
-                    errors.push(`${keyLabel} [Generate]: ${status} - ${msg}`);
+                    errors.push(`${keyLabel} [Generate][Model:${chosenModel}]: ${status} - ${msg}`);
                     continue; // Try next key
                 }
 
