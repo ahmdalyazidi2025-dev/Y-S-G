@@ -42,10 +42,12 @@ export async function POST(req: Request) {
         };
 
         // 3. Loop through keys until one works (Rotation Logic)
-        let lastError = null;
+        const errors = [];
 
-        for (const keyObj of validKeys) {
+        for (let i = 0; i < validKeys.length; i++) {
+            const keyObj = validKeys[i];
             const apiKey = keyObj.key.trim();
+            const keyLabel = `Key #${i + 1} (...${apiKey.slice(-4)})`;
 
             try {
                 // A. Dynamic Model Discovery per key
@@ -66,6 +68,10 @@ export async function POST(req: Request) {
                     else if (pro) chosenModel = pro.name;
 
                     chosenModel = chosenModel.replace(/^models\//, "");
+                } else {
+                    const err = await listResponse.json().catch(() => ({}));
+                    errors.push(`${keyLabel} [ModelList]: ${listResponse.status} - ${err.error?.message || "Error"}`);
+                    continue; // If we can't list models, key is likely bad
                 }
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
@@ -79,23 +85,13 @@ export async function POST(req: Request) {
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    console.warn(`Key ends with ...${apiKey.slice(-4)} failed:`, errData);
+                    console.warn(`${keyLabel} failed:`, errData);
 
-                    if (response.status === 429) {
-                        // Quota limit, try next key
-                        lastError = { status: 429, message: "تم تجاوز حد الاستخدام (Quota Exceeded)" };
-                        continue;
-                    }
+                    const status = response.status;
+                    const msg = errData.error?.message || "Unknown";
 
-                    if (response.status === 401 || response.status === 403) {
-                        lastError = { status: 401, message: "المفتاح غير صالح أو محظور" };
-                        continue;
-                    }
-
-                    // For other errors, might be payload related, so maybe don't retry? 
-                    // But for safety let's try next key if available, worst case all fail.
-                    lastError = { status: response.status, message: errData.error?.message || "Error" };
-                    continue;
+                    errors.push(`${keyLabel} [Generate]: ${status} - ${msg}`);
+                    continue; // Try next key
                 }
 
                 const data = await response.json();
@@ -105,16 +101,18 @@ export async function POST(req: Request) {
 
             } catch (error: any) {
                 console.error("Key Attempt Error:", error);
-                lastError = { status: 500, message: error.message };
+                errors.push(`${keyLabel} [Exception]: ${error.message}`);
                 continue;
             }
         }
 
         // If loop finishes without return, all keys failed
+        console.error("All keys failed:", errors);
         return NextResponse.json({
-            error: lastError?.status === 429 ? "ضغط مرتفع" : "خطأ في الاتصال",
-            details: lastError?.message || "فشلت جميع المفاتيح المتوفرة. يرجى المحاولة لاحقاً."
-        }, { status: lastError?.status || 500 });
+            error: "فشل الاتصال بجميع المفاتيح",
+            details: errors.join(" | ")
+        }, { status: 429 }); // Using 429 to show the specific error details in UI
+
 
     } catch (error: any) {
         console.error("Chat Route Error:", error);

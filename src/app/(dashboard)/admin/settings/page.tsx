@@ -835,7 +835,7 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
 
             if (result.success) {
                 onStatusChange("valid")
-                toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)
+                toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅ (تذكر حفظ الإعدادات!)`)
             } else {
                 onStatusChange("invalid")
                 toast.error(`خطأ: ${result.error || "المفتاح غير صالح"}`)
