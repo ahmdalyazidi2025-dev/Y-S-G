@@ -8,6 +8,8 @@ import Image from "next/image"
 import { useStore, ProductRequest } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { Switch } from "@/components/ui/switch"
+import { toast } from "sonner"
 
 const REQUEST_STATUS = {
     pending: { label: "قيد المراجعة", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
@@ -16,7 +18,7 @@ const REQUEST_STATUS = {
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus, deleteProductRequest } = useStore()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
 
@@ -31,6 +33,20 @@ export default function AdminRequestsPage() {
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">طلبات المنتجات</h1>
+
+                <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
+                    <span className={`text-xs font-bold transition-colors ${storeSettings.enableProductRequests !== false ? "text-green-400" : "text-slate-500"}`}>
+                        {storeSettings.enableProductRequests !== false ? "استقبال الطلبات مفعل" : "استقبال الطلبات متوقف"}
+                    </span>
+                    <Switch
+                        checked={storeSettings.enableProductRequests !== false}
+                        onCheckedChange={(checked) => {
+                            updateStoreSettings({ ...storeSettings, enableProductRequests: checked })
+                            toast.success(checked ? "تم تفعيل استقبال الطلبات" : "تم إيقاف استقبال الطلبات")
+                        }}
+                        className="data-[state=checked]:bg-green-500"
+                    />
+                </div>
             </div>
 
             {/* Filter Tabs */}

@@ -61,15 +61,17 @@ export function SmartFAB({ onRequest, onChat }: Omit<SmartFABProps, 'onScan'>) {
                                     <MessageSquare className="w-5 h-5" />
                                 </motion.button>
                             )}
-                            <motion.button
-                                initial={{ scale: 0, opacity: 0, y: 10 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0, opacity: 0, y: 10 }}
-                                onClick={() => { onRequest(); setIsOpen(false); hapticFeedback('light') }}
-                                className="w-12 h-12 bg-[#1c2a36] border border-white/10 rounded-full flex items-center justify-center shadow-xl text-primary"
-                            >
-                                <PlusCircle className="w-5 h-5" />
-                            </motion.button>
+                            {storeSettings.enableProductRequests !== false && (
+                                <motion.button
+                                    initial={{ scale: 0, opacity: 0, y: 10 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0, opacity: 0, y: 10 }}
+                                    onClick={() => { onRequest(); setIsOpen(false); hapticFeedback('light') }}
+                                    className="w-12 h-12 bg-[#1c2a36] border border-white/10 rounded-full flex items-center justify-center shadow-xl text-primary"
+                                >
+                                    <PlusCircle className="w-5 h-5" />
+                                </motion.button>
+                            )}
                         </>
                     )}
                 </AnimatePresence>

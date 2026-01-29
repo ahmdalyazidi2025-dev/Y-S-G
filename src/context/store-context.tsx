@@ -189,6 +189,7 @@ export type StoreSettings = {
     geminiReferenceImageUrl?: string
     enableCoupons?: boolean
     enableAIChat?: boolean // New Toggle
+    enableProductRequests?: boolean // New Toggle for Product Requests
     sounds?: {
         newOrder?: string;      // Admin: New order alert
         newMessage?: string;    // Direct/Global chat alert
@@ -287,6 +288,7 @@ const MOCK_SETTINGS: StoreSettings = {
     geminiReferenceImageUrl: "",
     enableCoupons: true,
     enableAIChat: true,
+    enableProductRequests: true,
     sounds: {} // Defaults will be handled in the hook fallbacks
 }
 

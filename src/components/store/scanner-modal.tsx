@@ -28,7 +28,7 @@ declare global {
 }
 
 export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan }: ScannerModalProps) {
-    const { scanProduct, addToCart } = useStore()
+    const { scanProduct, addToCart, storeSettings } = useStore() // Added storeSettings
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
     const [isBatchMode, setIsBatchMode] = useState(false)
@@ -500,7 +500,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                                 }}>
                                     مسح مجدداً
                                 </Button>
-                                {onRequestProduct && (
+                                {onRequestProduct && storeSettings.enableProductRequests !== false && (
                                     <Button className="flex-1 bg-primary h-12 rounded-xl" onClick={() => {
                                         onClose()
                                         onRequestProduct()
