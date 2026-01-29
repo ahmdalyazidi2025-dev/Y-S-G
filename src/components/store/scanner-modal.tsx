@@ -186,19 +186,18 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
             const videoConstraints: any = {
                 deviceId: { exact: backCam.deviceId },
-                width: { min: 1280, ideal: 1920, max: 3840 }, // Push for 4K if available for dense barcodes
-                height: { min: 720, ideal: 1080, max: 2160 },
+                width: { min: 640, ideal: 1920, max: 3840 },
+                height: { min: 480, ideal: 1080, max: 2160 },
                 facingMode: "environment",
                 frameRate: { ideal: 30 }
             };
 
+            setLastScanned(""); // Reset scanner state for clean start
             await reader.decodeFromConstraints(
                 { video: videoConstraints },
                 videoRef.current!,
                 (result) => {
                     if (result) {
-                        // Success! Reset zoom for next time
-                        applySmartZoom(1);
                         handleScanResult(result.getText());
                     }
                 }
@@ -213,19 +212,22 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             // 2. Precision Auto-Zoom (Help resolve small barcodes without user manually clicking)
             zoomTimeoutRef.current = setTimeout(() => {
                 applySmartZoom(2.0); // Automatically zoom in if nothing found
-                toast.info("جاري محاولة التقريب التلقائي للتركيز...", { duration: 2000 });
             }, 3500);
 
             // Enable continuous focus immediately
-            const stream = videoRef.current?.srcObject as MediaStream;
-            const track = stream?.getVideoTracks()[0];
-            if (track && track.applyConstraints) {
-                const capabilities = (track as any).getCapabilities?.() || {};
-                const advanced: any = {};
-                if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
-                if (Object.keys(advanced).length > 0) {
-                    await track.applyConstraints({ advanced: [advanced] } as any);
+            try {
+                const stream = videoRef.current?.srcObject as MediaStream;
+                const track = stream?.getVideoTracks()[0];
+                if (track && track.applyConstraints) {
+                    const capabilities = (track as any).getCapabilities?.() || {};
+                    const advanced: any = {};
+                    if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
+                    if (Object.keys(advanced).length > 0) {
+                        await track.applyConstraints({ advanced: [advanced] } as any);
+                    }
                 }
+            } catch (e) {
+                console.warn("Advanced constraints failed", e);
             }
 
             setError(null);
