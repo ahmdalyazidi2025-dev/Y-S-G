@@ -25,7 +25,9 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     const [lastScanned, setLastScanned] = useState("")
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
     const [isAiScanning, setIsAiScanning] = useState(false)
+    const [currentZoom, setCurrentZoom] = useState(1)
     const autoOCRTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const zoomTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -130,23 +132,40 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         }
     }, [isAiScanning, showNotFound, storeSettings.aiApiKeys, handleScanResult]);
 
+    const applySmartZoom = useCallback(async (zoomLevel: number) => {
+        const stream = videoRef.current?.srcObject as MediaStream;
+        const track = stream?.getVideoTracks()[0];
+        if (track && track.applyConstraints) {
+            try {
+                const capabilities = (track as any).getCapabilities?.() || {};
+                if (capabilities.zoom) {
+                    const target = Math.min(zoomLevel, capabilities.zoom.max || zoomLevel);
+                    await track.applyConstraints({ advanced: [{ zoom: target }] } as any);
+                    setCurrentZoom(target);
+                }
+            } catch (e) {
+                console.warn("Zoom failed", e);
+            }
+        }
+    }, []);
+
     const startCamera = useCallback(async () => {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
             const hints = new Map();
             const formats = [
-                BarcodeFormat.CODE_128,
-                BarcodeFormat.CODE_39,
+                BarcodeFormat.CODE_128, // Primary for automotive
+                BarcodeFormat.CODE_39,  // Common for OEM
+                BarcodeFormat.ITF,      // Used in logistics
                 BarcodeFormat.EAN_13,
                 BarcodeFormat.EAN_8,
                 BarcodeFormat.UPC_A,
                 BarcodeFormat.QR_CODE,
-                BarcodeFormat.ITF,
                 BarcodeFormat.DATA_MATRIX
             ];
             hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
-            hints.set(DecodeHintType.TRY_HARDER, true);
+            hints.set(DecodeHintType.TRY_HARDER, true); // Vital for small barcodes
             hints.set(DecodeHintType.CHARACTER_SET, 'utf-8');
 
             const reader = new BrowserMultiFormatReader(hints);
@@ -159,7 +178,6 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 throw new Error("No video devices found");
             }
 
-            // Select environment camera (back) if possible
             const backCam = devices.find((d: MediaDeviceInfo) =>
                 d.label.toLowerCase().includes('back') ||
                 d.label.toLowerCase().includes('environment') ||
@@ -168,41 +186,43 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
             const videoConstraints: any = {
                 deviceId: { exact: backCam.deviceId },
-                width: { min: 1280, ideal: 1920 },
-                height: { min: 720, ideal: 1080 },
-                facingMode: "environment"
+                width: { min: 1280, ideal: 1920, max: 3840 }, // Push for 4K if available for dense barcodes
+                height: { min: 720, ideal: 1080, max: 2160 },
+                facingMode: "environment",
+                frameRate: { ideal: 30 }
             };
 
             await reader.decodeFromConstraints(
-                {
-                    video: videoConstraints
-                },
+                { video: videoConstraints },
                 videoRef.current!,
                 (result) => {
                     if (result) {
+                        // Success! Reset zoom for next time
+                        applySmartZoom(1);
                         handleScanResult(result.getText());
                     }
                 }
             );
 
-            // Start Auto OCR loop - Faster for automotive trial
-            autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 2000);
+            // 1. Auto AI Fallback (If Enabled)
+            const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || [];
+            if (validKeys.length > 0) {
+                autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 3000);
+            }
 
-            // Try to enable continuous focus and auto-exposure if the browser supports it via track
+            // 2. Precision Auto-Zoom (Help resolve small barcodes without user manually clicking)
+            zoomTimeoutRef.current = setTimeout(() => {
+                applySmartZoom(2.0); // Automatically zoom in if nothing found
+                toast.info("جاري محاولة التقريب التلقائي للتركيز...", { duration: 2000 });
+            }, 3500);
+
+            // Enable continuous focus immediately
             const stream = videoRef.current?.srcObject as MediaStream;
             const track = stream?.getVideoTracks()[0];
             if (track && track.applyConstraints) {
                 const capabilities = (track as any).getCapabilities?.() || {};
                 const advanced: any = {};
                 if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
-                if (capabilities.whiteBalanceMode?.includes('continuous')) advanced.whiteBalanceMode = 'continuous';
-                if (capabilities.exposureMode?.includes('continuous')) advanced.exposureMode = 'continuous';
-                if (capabilities.zoom) {
-                    // Automatically zoom slightly (1.5x) if supported, for easier capture
-                    const idealZoom = Math.min(1.5, capabilities.zoom.max || 1.5);
-                    advanced.zoom = idealZoom;
-                }
-
                 if (Object.keys(advanced).length > 0) {
                     await track.applyConstraints({ advanced: [advanced] } as any);
                 }
@@ -213,7 +233,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             console.error("Failed to start ZXing scanner:", err);
             setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
         }
-    }, [handleScanResult, triggerAutoOCR])
+    }, [handleScanResult, triggerAutoOCR, storeSettings.aiApiKeys, applySmartZoom])
 
     useEffect(() => {
         if (isOpen && !showNotFound) {
@@ -222,6 +242,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         return () => {
             stopCamera()
             if (autoOCRTimeoutRef.current) clearTimeout(autoOCRTimeoutRef.current)
+            if (zoomTimeoutRef.current) clearTimeout(zoomTimeoutRef.current)
         }
     }, [isOpen, showNotFound, startCamera, stopCamera])
 
@@ -367,6 +388,19 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                                 <div className="absolute top-24 flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-full backdrop-blur-sm border border-primary/20 animate-pulse">
                                     <div className="w-2 h-2 bg-primary rounded-full" />
                                     <span className="text-[10px] text-primary-foreground font-bold uppercase tracking-widest">AI Scanning</span>
+                                </div>
+                            )}
+
+                            {/* Zoom Indicator */}
+                            {currentZoom > 1 && (
+                                <div className="absolute top-24 flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm border border-white/20">
+                                    <span className="text-[10px] text-white font-bold uppercase tracking-widest">{currentZoom.toFixed(1)}x Zoom</span>
+                                    <button
+                                        className="ml-2 pointer-events-auto text-[10px] bg-white/20 px-2 py-0.5 rounded-full hover:bg-white/40"
+                                        onClick={() => applySmartZoom(1)}
+                                    >
+                                        إلغاء التقريب
+                                    </button>
                                 </div>
                             )}
                         </div>
