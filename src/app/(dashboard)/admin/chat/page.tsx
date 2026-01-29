@@ -231,8 +231,9 @@ export default function AdminChatPage() {
                             ))
                         )}
                     </div>
+                )}
 
-            {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
+                {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
                     <div className="flex flex-col gap-2 bg-[#1c2a36] p-3 rounded-2xl border border-white/10">
                         {mode === "broadcast" && (
                             <Input
@@ -266,5 +267,6 @@ export default function AdminChatPage() {
                     </div>
                 )}
             </div>
-            )
+        </div>
+    )
 }
