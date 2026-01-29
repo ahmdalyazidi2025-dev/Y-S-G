@@ -3,8 +3,10 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { X, Save, User, Phone, Lock, Hash, MapPin, Check } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Customer, useStore } from "@/context/store-context"
 
@@ -190,16 +192,12 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             {/* 2. Password */}
                             <div className="space-y-2">
                                 <Label>{initialCustomer ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}</Label>
-                                <div className="relative">
-                                    <Lock className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
-                                    <Input
-                                        required={!initialCustomer}
-                                        type="password"
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    />
-                                </div>
+                                <PasswordInput
+                                    required={!initialCustomer}
+                                    className="bg-black/20 border-white/10 pr-10 text-right"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                />
                             </div>
 
                             {/* 3. Name */}
