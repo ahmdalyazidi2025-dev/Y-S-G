@@ -170,12 +170,16 @@ export const printOrderInvoice = (order: Order, settings: StoreSettings) => {
 
             <div class="totals">
                 <div class="total-row">
-                    <span>المجموع الفرعي:</span>
+                    <span>المجموع قبل الضريبة:</span>
                     <span>${order.total.toFixed(2)} ر.س</span>
                 </div>
+                <div class="total-row">
+                    <span>ضريبة القيمة المضافة (15%):</span>
+                    <span>${(order.total * 0.15).toFixed(2)} ر.س</span>
+                </div>
                 <div class="total-row grand-total">
-                    <span>الإجمالي النهائي:</span>
-                    <span>${order.total.toFixed(2)} ر.س</span>
+                    <span>الإجمالي شامل الضريبة:</span>
+                    <span>${(order.total * 1.15).toFixed(2)} ر.س</span>
                 </div>
             </div>
 

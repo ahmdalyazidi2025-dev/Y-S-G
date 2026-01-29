@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endOfDay, startOfDay } from "date-fns"
 import { printOrderInvoice } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
+import { toast } from "sonner"
 
 const STATUS_CONFIG = {
     pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
@@ -279,6 +280,18 @@ export default function AdminOrdersPage() {
                                     >
                                         <Printer className="w-4 h-4" />
                                         <span className="text-xs">طباعة فاتورة</span>
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
+                                        onClick={() => {
+                                            printOrderInvoice(selectedOrder, storeSettings)
+                                            toast.info("يرجى اختيار 'حفظ كـ PDF' من نافذة الطباعة")
+                                        }}
+                                    >
+                                        <FileDown className="w-4 h-4" />
+                                        <span className="text-xs">تحميل PDF</span>
                                     </Button>
                                     <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/5 rounded-full">
                                         <XCircle className="w-5 h-5 text-slate-400" />
