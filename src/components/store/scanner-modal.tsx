@@ -274,6 +274,83 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         return () => stopCamera()
     }, [isOpen, showNotFound, startCamera, stopCamera])
 
+    const captureAndScanFrame = useCallback(async () => {
+        if (!videoRef.current || (!nativeDetectorRef.current && !codeReaderRef.current)) return;
+
+        hapticFeedback('light');
+        toast.info("جاري التقاط صورة عالية الدقة...");
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth || 1920;
+            canvas.height = videoRef.current.videoHeight || 1080;
+            const ctx = canvas.getContext('2d');
+
+            if (ctx) {
+                // Apply contrast filter for better readability
+                ctx.filter = 'contrast(1.2) brightness(1.1)';
+                ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+                // 1. Try Native Detector on the captured frame
+                if (nativeDetectorRef.current && 'createImageBitmap' in window) {
+                    try {
+                        const bitmap = await createImageBitmap(canvas);
+                        const results = await nativeDetectorRef.current.detect(bitmap);
+                        if (results.length > 0) {
+                            handleScanResult(results[0].rawValue);
+                            return;
+                        }
+                    } catch (e) {
+                        console.log("Native frame scan failed", e);
+                    }
+                }
+
+                // 2. Fallback to ZXing on the Captured Frame
+                const hints = new Map();
+                hints.set(DecodeHintType.TRY_HARDER, true);
+                hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.EAN_13]);
+                const reader = new BrowserMultiFormatReader(hints);
+
+                try {
+                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                    const img = new Image();
+                    img.src = imgData;
+                    await new Promise(r => img.onload = r);
+                    const result = await reader.decodeFromImageElement(img);
+                    if (result) {
+                        handleScanResult(result.getText());
+                        return;
+                    }
+                } catch (e) {
+                    console.log("ZXing frame scan failed");
+                }
+
+                toast.error("لم يتم العثور على باركود في الصورة الملتقطة");
+            }
+        } catch (e) {
+            console.error("Frame capture failed", e);
+        }
+    }, [handleScanResult]);
+
+    const toggleFlash = async () => {
+        if (!videoRef.current) return
+        try {
+            const stream = videoRef.current.srcObject as MediaStream
+            const track = stream.getVideoTracks()[0]
+            if (track && (track.getCapabilities() as any)?.torch) {
+                const nextState = !isFlashOn
+                // @ts-expect-error - torch is valid in Chromium but not in standard types
+                await (track as any).applyConstraints({ advanced: [{ torch: nextState }] })
+                setIsFlashOn(nextState)
+            } else {
+                toast.error("الفلاش غير مدعوم على هذا الجهاز")
+            }
+        } catch (e) {
+            console.error(e)
+            toast.error("خطأ في تشغيل الفلاش")
+        }
+    }
+
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
