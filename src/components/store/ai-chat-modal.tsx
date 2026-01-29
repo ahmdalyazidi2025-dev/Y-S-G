@@ -121,28 +121,24 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                // Use the simplified error message or the detailed one
+                // Prioritize 'details' as it contains the verbose log from server
                 const errorMessage = errorData.details || errorData.error || `خطأ ${response.status}: فشل الاتصال`;
 
-                // Show detailed toast for debugging
-                toast.error("خطأ في الذكاء الاصطناعي", {
-                    description: errorMessage,
-                    duration: 5000,
-                });
+                console.error("Chat Error Data:", errorData);
 
-                if (response.status === 401 || response.status === 403) {
-                    const errorText = "المفتاح الموجود في قاعدة البيانات غير صالح ❌";
-                    setMessages(prev => [...prev, {
-                        id: (Date.now() + 1).toString(),
-                        role: "ai",
-                        content: `${errorText}\n\nالتفاصيل: ${errorMessage}`,
-                        timestamp: new Date()
-                    }]);
-                    setIsLoading(false);
-                    return;
-                }
+                // Show basic toast
+                toast.error("خطأ في النظام", { description: "راجع الرسالة في المحادثة للتفاصيل" });
 
-                throw new Error(errorMessage)
+                // ALWAYS show the error message in the chat bubble for the user to copy
+                setMessages(prev => [...prev, {
+                    id: (Date.now() + 1).toString(),
+                    role: "ai",
+                    content: `🔴 تم اكتشاف خطأ من المصدر:\n\n${errorMessage}\n\n(يرجى نسخ هذا الخطأ وإرساله للدعم الفني)`,
+                    timestamp: new Date()
+                }]);
+
+                setIsLoading(false);
+                return;
             }
 
             const result = await response.json()
