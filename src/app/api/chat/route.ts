@@ -59,13 +59,17 @@ export async function POST(req: Request) {
                     const data = await listResponse.json();
                     const models = data.models || [];
 
-                    const flashLatest = models.find((m: any) => m.name.includes("gemini-1.5-flash-latest"));
-                    const flash = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
-                    const pro = models.find((m: any) => m.name.includes("gemini-pro"));
+                    // Strict Priority for Free Tier (Flash is best)
+                    // We specifically look for "gemini-1.5-flash" (stable) or "-001/002"
+                    const flashStable = models.find((m: any) => m.name === "models/gemini-1.5-flash" || m.name === "gemini-1.5-flash");
+                    const flashLegacy = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
 
-                    if (flashLatest) chosenModel = flashLatest.name;
-                    else if (flash) chosenModel = flash.name;
-                    else if (pro) chosenModel = pro.name;
+                    // Only use Pro if Flash is absolutely missing, and prefer 1.5-pro over generic "pro"
+                    const proStable = models.find((m: any) => m.name.includes("gemini-1.5-pro"));
+
+                    if (flashStable) chosenModel = flashStable.name;
+                    else if (flashLegacy) chosenModel = flashLegacy.name;
+                    else if (proStable) chosenModel = proStable.name;
 
                     chosenModel = chosenModel.replace(/^models\//, "");
                 } else {
@@ -73,6 +77,10 @@ export async function POST(req: Request) {
                     errors.push(`${keyLabel} [ModelList]: ${listResponse.status} - ${err.error?.message || "Error"}`);
                     continue; // If we can't list models, key is likely bad
                 }
+
+                // FORCE 'gemini-1.5-flash' if the selection logic failed but we still want to try 
+                // (e.g. if list was empty but call succeeded?)
+                // Actually, if we found nothing, chosenModel is already "gemini-1.5-flash" (default).
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
 
