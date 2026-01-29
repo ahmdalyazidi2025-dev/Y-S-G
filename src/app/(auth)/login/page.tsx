@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { Lock, User, ArrowRight } from "lucide-react"
+import { Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react"
 import { useStore } from "@/context/store-context"
 
 function LoginForm() {
@@ -19,6 +19,7 @@ function LoginForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
+    const [showPassword, setShowPassword] = useState(false)
     const [showForgotPassword, setShowForgotPassword] = useState(false)
     const [recoveryEmail, setRecoveryEmail] = useState("")
     const { login, resetPassword } = useStore() // Use resetPassword from store
@@ -205,11 +206,20 @@ function LoginForm() {
                                     <div className="space-y-1">
                                         <Label htmlFor="password" className="text-xs text-slate-400 mr-1">كلمة المرور</Label>
                                         <div className="relative group">
-                                            <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-primary transition-colors focus:outline-none z-20"
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </button>
                                             <Input
                                                 id="password"
-                                                type="password"
+                                                type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
                                                 className="bg-white/5 border-white/10 h-14 rounded-xl pr-12 text-right text-white relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-500 font-bold text-lg tracking-widest"
                                                 required

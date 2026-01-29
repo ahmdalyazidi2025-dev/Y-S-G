@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2, CheckCircle, Circle, PlusSquare, Lock } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
 
 export function StaffManager() {
     const { staff, addStaff, deleteStaff, updateStaff, currentUser, resetPassword } = useStore() // Added resetPassword
@@ -246,12 +247,11 @@ export function StaffManager() {
                     {!editingId && (
                         <div className="space-y-1">
                             <Label className="text-[10px]">كلمة المرور</Label>
-                            <Input
-                                type="password"
+                            <PasswordInput
                                 placeholder="••••••••"
                                 value={newStaff.password}
                                 onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                                className="bg-black/40 h-10 text-xs"
+                                className="bg-black/40 h-10 text-xs text-right"
                             />
                         </div>
                     )}
