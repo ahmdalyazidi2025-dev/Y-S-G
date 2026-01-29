@@ -2,8 +2,12 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft, Search } from "lucide-react"
-// ... imports
-
+import { useStore, Conversation } from "@/context/store-context"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { ar } from "date-fns/locale"
+import Link from "next/link"
 export default function AdminChatPage() {
     const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, customers } = useStore()
     const [msg, setMsg] = useState("")
@@ -224,44 +228,43 @@ export default function AdminChatPage() {
                                     </div>
                                     <ChevronLeft className="w-4 h-4 text-slate-600" />
                                 </div>
-                            ))}
+                            ))
+                        )}
+                    </div>
+
+            {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
+                    <div className="flex flex-col gap-2 bg-[#1c2a36] p-3 rounded-2xl border border-white/10">
+                        {mode === "broadcast" && (
+                            <Input
+                                placeholder="عنوان الإشعار..."
+                                className="bg-black/20 border-white/5 rounded-xl h-10 mb-1"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
+                        )}
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder={mode === "broadcast" ? "نص الإشعار..." : "اكتب رسالتك..."}
+                                className="bg-black/20 border-white/5 rounded-xl h-12"
+                                value={msg}
+                                onChange={(e) => setMsg(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            />
+                            <Button
+                                size="icon"
+                                className={cn(
+                                    "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all border border-white/10 shadow-lg",
+                                    mode === "broadcast" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
+                                        mode === "global_chat" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
+                                            "bg-primary hover:bg-primary/90 shadow-primary/20"
+                                )}
+                                onClick={handleSend}
+                            >
+                                <Send className="w-5 h-5 text-white" />
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
-
-            {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
-                <div className="flex flex-col gap-2 bg-[#1c2a36] p-3 rounded-2xl border border-white/10">
-                    {mode === "broadcast" && (
-                        <Input
-                            placeholder="عنوان الإشعار..."
-                            className="bg-black/20 border-white/5 rounded-xl h-10 mb-1"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                    )}
-                    <div className="flex gap-2">
-                        <Input
-                            placeholder={mode === "broadcast" ? "نص الإشعار..." : "اكتب رسالتك..."}
-                            className="bg-black/20 border-white/5 rounded-xl h-12"
-                            value={msg}
-                            onChange={(e) => setMsg(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                        />
-                        <Button
-                            size="icon"
-                            className={cn(
-                                "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all border border-white/10 shadow-lg",
-                                mode === "broadcast" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
-                                    mode === "global_chat" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
-                                        "bg-primary hover:bg-primary/90 shadow-primary/20"
-                            )}
-                            onClick={handleSend}
-                        >
-                            <Send className="w-5 h-5 text-white" />
-                        </Button>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
+            )
 }
