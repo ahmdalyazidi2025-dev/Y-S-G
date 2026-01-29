@@ -136,8 +136,15 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 d.label.toLowerCase().includes('خلفي')
             ) || devices[0];
 
-            await reader.decodeFromVideoDevice(
-                backCam.deviceId,
+            await reader.decodeFromConstraints(
+                {
+                    video: {
+                        deviceId: { exact: backCam.deviceId },
+                        width: { min: 1280, ideal: 1920, max: 2560 }, // Request Full HD if possible
+                        height: { min: 720, ideal: 1080, max: 1440 },
+                        facingMode: "environment"
+                    }
+                },
                 videoRef.current!,
                 (result) => {
                     if (result) {
@@ -366,7 +373,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                                     const ctx = canvas.getContext('2d');
                                     if (!ctx) return;
                                     ctx.drawImage(videoRef.current, 0, 0);
-                                    const base64data = canvas.toDataURL('image/jpeg', 0.8);
+                                    const base64data = canvas.toDataURL('image/jpeg', 0.95);
 
                                     const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
                                     if (validKeys.length === 0) {
