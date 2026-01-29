@@ -368,7 +368,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     {/* Scanner Guide Overlay */}
                     {!showNotFound && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                            <div className="w-72 h-48 border-2 border-primary/50 rounded-2xl relative bg-primary/5">
+                            <div className="w-[85%] h-52 border-2 border-primary/50 rounded-2xl relative bg-primary/5">
                                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
                                 <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
                                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
