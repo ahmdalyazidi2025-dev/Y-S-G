@@ -134,16 +134,17 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 d.label.toLowerCase().includes('خلفي')
             ) || devices[0];
 
+            const videoConstraints: any = {
+                deviceId: { exact: backCam.deviceId },
+                width: { min: 1280, ideal: 1920, max: 2560 },
+                height: { min: 720, ideal: 1080, max: 1440 },
+                facingMode: "environment"
+            };
+
+            // Some browsers support advanced constraints like focusMode and zoom
             await reader.decodeFromConstraints(
                 {
-                    video: {
-                        deviceId: { exact: backCam.deviceId },
-                        width: { min: 1280, ideal: 1920, max: 2560 },
-                        height: { min: 720, ideal: 1080, max: 1440 },
-                        facingMode: "environment",
-                        focusMode: { ideal: "continuous" } as any, // Try to force continuous focus
-                        whiteBalanceMode: { ideal: "continuous" } as any
-                    }
+                    video: videoConstraints
                 },
                 videoRef.current!,
                 (result) => {
@@ -152,6 +153,21 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     }
                 }
             );
+
+            // Try to enable continuous focus and auto-exposure if the browser supports it via track
+            const stream = videoRef.current?.srcObject as MediaStream;
+            const track = stream?.getVideoTracks()[0];
+            if (track && track.applyConstraints) {
+                const capabilities = (track as any).getCapabilities?.() || {};
+                const advanced: any = {};
+                if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
+                if (capabilities.whiteBalanceMode?.includes('continuous')) advanced.whiteBalanceMode = 'continuous';
+                if (capabilities.exposureMode?.includes('continuous')) advanced.exposureMode = 'continuous';
+
+                if (Object.keys(advanced).length > 0) {
+                    await track.applyConstraints({ advanced: [advanced] } as any);
+                }
+            }
 
             setError(null);
         } catch (err) {
