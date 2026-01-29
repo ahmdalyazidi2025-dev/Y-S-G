@@ -45,7 +45,30 @@ export async function POST(req: Request) {
         };
 
         // Use 'gemini-1.5-flash-latest' which is often more stable than the short alias
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        // 3. Dynamic Model Discovery (Critical Fix)
+        // Check which models are available for this key to avoid "Model Not Found" errors
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const listResponse = await fetch(listUrl, { method: "GET" });
+        let chosenModel = "gemini-1.5-flash"; // Default fallback
+
+        if (listResponse.ok) {
+            const data = await listResponse.json();
+            const models = data.models || [];
+
+            // Priority: Flash Latest -> Flash -> Pro -> Any Gemini
+            const flashLatest = models.find((m: any) => m.name.includes("gemini-1.5-flash-latest"));
+            const flash = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
+            const pro = models.find((m: any) => m.name.includes("gemini-pro"));
+
+            if (flashLatest) chosenModel = flashLatest.name;
+            else if (flash) chosenModel = flash.name;
+            else if (pro) chosenModel = pro.name;
+
+            // Ensure model name doesn't have double 'models/' prefix if API returns it
+            chosenModel = chosenModel.replace(/^models\//, "");
+        }
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
 
         // 4. Native Fetch to Google API
         const response = await fetch(url, {
