@@ -3,7 +3,19 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, Lock, Search } from "lucide-react"
-// ... imports
+import { useStore, Customer } from "@/context/store-context"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { toast } from "sonner"
+import { Textarea } from "@/components/ui/textarea"
+import Link from "next/link"
+import { format } from "date-fns"
+import { ar } from "date-fns/locale"
+import { cn } from "@/lib/utils"
+import { AdminCustomerForm } from "@/components/admin/customer-form"
+import { PasswordReveal } from "@/components/admin/password-reveal"
+import React from "react"
 
 export default function CustomersPage() {
     const { customers, deleteCustomer, sendNotificationToGroup, orders, sendNotification } = useStore()
@@ -148,7 +160,7 @@ export default function CustomersPage() {
 
                     <div className="flex gap-2">
                         <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
-                            <DialogTrigger asChild>
+                            <DialogTrigger>
                                 <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4 w-full sm:w-auto justify-center">
                                     <ShieldCheck className="w-4 h-4" />
                                     <span>بث</span>
