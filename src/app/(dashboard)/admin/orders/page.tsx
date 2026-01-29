@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endOfDay, startOfDay } from "date-fns"
-import { printOrderInvoice } from "@/lib/print-utils"
+import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { toast } from "sonner"
 
@@ -285,10 +285,16 @@ export default function AdminOrdersPage() {
                                         variant="ghost"
                                         size="sm"
                                         className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
-                                        onClick={() => {
-                                            printOrderInvoice(selectedOrder, storeSettings)
-                                            toast.info("يرجى اختيار 'حفظ كـ PDF' من نافذة الطباعة")
-                                        }}
+                                        onClick={() => handleShareWhatsApp(selectedOrder)}
+                                    >
+                                        <Share2 className="w-4 h-4" />
+                                        <span className="text-xs">واتساب</span>
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
+                                        onClick={() => downloadOrderPDF(selectedOrder, storeSettings)}
                                     >
                                         <FileDown className="w-4 h-4" />
                                         <span className="text-xs">تحميل PDF</span>
