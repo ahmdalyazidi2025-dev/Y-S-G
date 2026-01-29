@@ -333,6 +333,9 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                     <Button variant="ghost" size="icon" onClick={() => setIsBatchMode(!isBatchMode)} className={`rounded-full backdrop-blur-md transition-colors ${isBatchMode ? "bg-primary text-white" : "bg-white/10 text-white"}`}>
                         <Layers className="w-5 h-5" />
                     </Button>
+                    <Button variant="ghost" size="icon" onClick={toggleFlash} className="rounded-full bg-white/10 text-white backdrop-blur-md">
+                        <Zap className={`w-6 h-6 ${isFlashOn ? "text-yellow-400 fill-current" : "text-white"}`} />
+                    </Button>
                 </div>
 
                 {/* Main View */}
