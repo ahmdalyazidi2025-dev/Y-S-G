@@ -44,52 +44,21 @@ export async function POST(req: Request) {
         // 3. Loop through keys until one works (Rotation Logic)
         const errors = [];
 
+        // Models to try in order of priority
+        // We prioritize 1.5-flash as it is the most stable/cost-effective
+        const TARGET_MODEL = "gemini-1.5-flash"; // Or switch to "gemini-2.0-flash-exp" if needed
+
         for (let i = 0; i < validKeys.length; i++) {
             const keyObj = validKeys[i];
             const apiKey = keyObj.key.trim();
             const keyLabel = `Key #${i + 1} (...${apiKey.slice(-4)})`;
 
             try {
-                // A. Dynamic Model Discovery per key
-                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-                const listResponse = await fetch(listUrl, { method: "GET" });
-                let chosenModel = "gemini-1.5-flash"; // Default
+                // Modified Logic: Skip "List Models" to save Quota & Latency.
+                // Directly attempt generation with the target model.
 
-                if (listResponse.ok) {
-                    const data = await listResponse.json();
-                    const models = data.models || [];
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${TARGET_MODEL}:generateContent?key=${apiKey}`;
 
-                    // Priority: 
-                    // 1. Stable 1.5 Flash (Free & Fast)
-                    // 2. Any 1.5 Flash variant
-                    // 3. Any Flash variant (e.g. 2.0-flash)
-                    // 4. Any 1.5 Pro
-                    // 5. Any Gemini model (Fallback safety net)
-
-                    const flash15 = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
-                    const anyFlash = models.find((m: any) => m.name.includes("flash"));
-                    const pro15 = models.find((m: any) => m.name.includes("gemini-1.5-pro"));
-                    const anyGemini = models.find((m: any) => m.name.includes("gemini"));
-
-                    if (flash15) chosenModel = flash15.name;
-                    else if (anyFlash) chosenModel = anyFlash.name;
-                    else if (pro15) chosenModel = pro15.name;
-                    else if (anyGemini) chosenModel = anyGemini.name;
-
-                    chosenModel = chosenModel.replace(/^models\//, "");
-                } else {
-                    const err = await listResponse.json().catch(() => ({}));
-                    errors.push(`${keyLabel} [ModelList]: ${listResponse.status} - ${err.error?.message || "Error"}`);
-                    continue; // If we can't list models, key is likely bad
-                }
-
-                // FORCE 'gemini-1.5-flash' if the selection logic failed but we still want to try 
-                // (e.g. if list was empty but call succeeded?)
-                // Actually, if we found nothing, chosenModel is already "gemini-1.5-flash" (default).
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
-
-                // B. Native Fetch to Google API
                 const response = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -103,12 +72,22 @@ export async function POST(req: Request) {
                     const status = response.status;
                     const msg = errData.error?.message || "Unknown";
 
-                    errors.push(`${keyLabel} [Generate][Model:${chosenModel}]: ${status} - ${msg}`);
+                    // Handle specific error codes if needed
+                    if (status === 429 || status === 503) {
+                        errors.push(`${keyLabel} [Quota/Overload]: ${msg}`);
+                    } else {
+                        errors.push(`${keyLabel} [Error]: ${status} - ${msg}`);
+                    }
                     continue; // Try next key
                 }
 
                 const data = await response.json();
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+                if (!text) {
+                    errors.push(`${keyLabel} [Empty Response]`);
+                    continue;
+                }
 
                 return NextResponse.json({ text });
 
@@ -121,10 +100,18 @@ export async function POST(req: Request) {
 
         // If loop finishes without return, all keys failed
         console.error("All keys failed:", errors);
+
+        let finalError = errors.join(" | ");
+        const isQuota = errors.some(e => e.includes("429") || e.includes("RESOURCE_EXHAUSTED") || e.includes("Quota"));
+
+        if (isQuota) {
+            finalError += "\n\n💡 نصيحة هامة: الخطأ (Quota) يعني أن 'المشروع' في جوجل انتهى رصيده. إنشاء مفتاح جديد في نفس المشروع لن يحل المشكلة. يجب إنشاء 'مشروع جديد' (New Project) في حساب جوجل واستخراج مفتاح منه.";
+        }
+
         return NextResponse.json({
             error: "فشل الاتصال بجميع المفاتيح",
-            details: errors.join(" | ")
-        }, { status: 429 }); // Using 429 to show the specific error details in UI
+            details: finalError
+        }, { status: 429 });
 
 
     } catch (error: any) {
