@@ -27,25 +27,14 @@ export async function POST(req: Request) {
         }
 
         if (!validModel) {
-            // If all failed, return the error of the last attempt or a generic one
+            // If all failed, return the error
             return NextResponse.json({
                 success: false,
-                error: "لم يتم العثور على أي نموذج مدعوم (Gemini Flash/Pro). تأكد من صلاحيات المفتاح."
+                error: "لم يتم العثور على أي نموذج مدعوم (Gemini Flash/Pro). تأكد من صحة المفتاح."
             }, { status: 400 });
         }
 
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("Gemini Verification Error:", errorData);
-
-            return NextResponse.json({
-                success: false,
-                error: errorData.error?.message || "المفتاح غير صالح أو انتهت صلاحيته"
-            }, { status: 400 });
-        }
-
-        return NextResponse.json({ success: true, message: "Valid Key" });
+        return NextResponse.json({ success: true, message: "Valid Key", model: validModel });
 
     } catch (error: any) {
         console.error("Internal Verification Error:", error);
