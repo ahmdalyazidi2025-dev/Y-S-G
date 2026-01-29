@@ -352,6 +352,47 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                             <ImageIcon className="w-5 h-5" />
                             <span>من الصور</span>
                         </Button>
+
+                        {/* New OCR Button */}
+                        <Button
+                            variant="glass"
+                            className="pointer-events-auto h-12 rounded-full px-6 gap-2 bg-primary/80 backdrop-blur-md border border-primary/20 hover:bg-primary text-white"
+                            onClick={async () => {
+                                if (!videoRef.current) return;
+                                try {
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = videoRef.current.videoWidth;
+                                    canvas.height = videoRef.current.videoHeight;
+                                    const ctx = canvas.getContext('2d');
+                                    if (!ctx) return;
+                                    ctx.drawImage(videoRef.current, 0, 0);
+                                    const base64data = canvas.toDataURL('image/jpeg', 0.8);
+
+                                    const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
+                                    if (validKeys.length === 0) {
+                                        toast.error("يرجى تفعيل مفاتيح الذكاء الاصطناعي في الإعدادات أولاً")
+                                        return
+                                    }
+
+                                    toast.info("جاري التعرف على رقم القطعة...");
+                                    hapticFeedback('medium');
+
+                                    const aiResult = await extractBarcodeAI(storeSettings.aiApiKeys || [], base64data);
+
+                                    if (aiResult.found && aiResult.code) {
+                                        handleScanResult(aiResult.code);
+                                    } else {
+                                        toast.error("فشل التعرف على الرقم. يرجى التقليب أو تحسين الإضاءة");
+                                    }
+                                } catch (e) {
+                                    console.error("OCR capture failed", e);
+                                    toast.error("حدث خطأ أثناء محاولة قراءة النص");
+                                }
+                            }}
+                        >
+                            <span className="font-bold">قراءة رقم القطعة</span>
+                        </Button>
+
                         <input
                             id="file-upload"
                             type="file"

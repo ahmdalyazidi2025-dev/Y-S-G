@@ -675,7 +675,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const scanProduct = (barcode: string) => {
-        const product = products.find(p => p.barcode === barcode)
+        const normalize = (s: string) => s.replace(/[-\s]/g, "").toUpperCase()
+        const normalizedInput = normalize(barcode)
+
+        const product = products.find(p => {
+            const normalizedStored = normalize(p.barcode || "")
+            return normalizedStored === normalizedInput || (p.barcode === barcode)
+        })
+
         if (product) {
             addToCart(product)
             return product

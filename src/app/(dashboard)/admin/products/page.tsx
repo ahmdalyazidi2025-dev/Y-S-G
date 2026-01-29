@@ -21,7 +21,14 @@ export default function ProductsPage() {
         const isExpired = p.discountEndDate && new Date(p.discountEndDate) < new Date()
         if (isExpired) return false // Hide expired from main list
 
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.barcode.includes(searchQuery)
+        const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "")
+        const normalizedQuery = normalize(searchQuery)
+
+        const matchesSearch =
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            normalize(p.barcode || "").includes(normalizedQuery) ||
+            (p.barcode || "").includes(searchQuery)
+
         const matchesCategory = selectedCategory === "الكل" || p.category === selectedCategory
 
         // When searching, we want to look inside the selected category if one is selected,
