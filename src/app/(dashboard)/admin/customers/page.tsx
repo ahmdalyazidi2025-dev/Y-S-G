@@ -79,14 +79,13 @@ export default function CustomersPage() {
             matchesTab = segments[activeTab](c);
         }
 
-        // 2. Search Filter
         if (!searchQuery) return matchesTab;
 
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-            c.name.toLowerCase().includes(query) ||
-            c.phone.includes(query) ||
-            c.email.toLowerCase().includes(query) ||
+            (c.name && c.name.toLowerCase().includes(query)) ||
+            (c.phone && c.phone.includes(query)) ||
+            (c.email && c.email.toLowerCase().includes(query)) ||
             (c.username && c.username.toLowerCase().includes(query));
 
         return matchesTab && matchesSearch;
