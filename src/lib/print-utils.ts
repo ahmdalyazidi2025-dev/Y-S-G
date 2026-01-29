@@ -131,41 +131,48 @@ const getInvoiceHTML = (order: Order, settings: StoreSettings) => `
         </div>
     </div>
 
-    <table>
+    <table style="font-size: 13px;">
         <thead>
             <tr>
-                <th style="border-radius: 0 8px 8px 0;">المنتج</th>
-                <th style="text-align: center;">الكمية</th>
-                <th style="text-align: center;">السعر</th>
-                <th style="border-radius: 8px 0 0 8px; text-align: left;">الإجمالي</th>
+                <th style="border-radius: 0 8px 8px 0; width: 35%;">المنتج</th>
+                <th style="text-align: center; width: 10%;">الكمية</th>
+                <th style="text-align: center; width: 15%;">سعر الوحدة</th>
+                <th style="text-align: center; width: 15%;">الضريبة (15%)</th>
+                <th style="border-radius: 8px 0 0 8px; text-align: left; width: 25%;">المجموع شامل</th>
             </tr>
         </thead>
         <tbody>
-            ${order.items.map(item => `
-                <tr>
-                    <td>
-                        <strong>${item.name}</strong>
-                        ${item.unit ? `<br><small style="color: #666;">${item.unit}</small>` : ''}
-                    </td>
-                    <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: center;">${item.price.toFixed(2)} ر.س</td>
-                    <td style="text-align: left; font-weight: bold;">${(item.price * item.quantity).toFixed(2)} ر.س</td>
-                </tr>
-            `).join('')}
+            ${order.items.map(item => {
+    const vatPerUnit = item.price * 0.15;
+    const totalPerUnit = item.price * 1.15;
+    const lineTotal = totalPerUnit * item.quantity;
+    return `
+                    <tr>
+                        <td>
+                            <strong>${item.name}</strong>
+                            ${item.unit ? `<br><small style="color: #666;">${item.unit}</small>` : ''}
+                        </td>
+                        <td style="text-align: center;">${item.quantity}</td>
+                        <td style="text-align: center;">${item.price.toFixed(2)} ر.س</td>
+                        <td style="text-align: center;">${vatPerUnit.toFixed(2)} ر.س</td>
+                        <td style="text-align: left; font-weight: bold;">${lineTotal.toFixed(2)} ر.س</td>
+                    </tr>
+                `;
+}).join('')}
         </tbody>
     </table>
 
     <div class="totals">
         <div class="total-row">
-            <span>المجموع قبل الضريبة:</span>
+            <span>المجموع (قبل الضريبة):</span>
             <span>${order.total.toFixed(2)} ر.س</span>
         </div>
         <div class="total-row">
-            <span>ضريبة القيمة المضافة (15%):</span>
+            <span>إجمالي الضريبة (15%):</span>
             <span>${(order.total * 0.15).toFixed(2)} ر.س</span>
         </div>
         <div class="total-row grand-total">
-            <span>الإجمالي شامل الضريبة:</span>
+            <span>الإجمالي النهائي:</span>
             <span>${(order.total * 1.15).toFixed(2)} ر.س</span>
         </div>
     </div>
