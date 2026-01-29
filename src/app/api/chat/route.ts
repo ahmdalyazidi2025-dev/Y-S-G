@@ -44,7 +44,8 @@ export async function POST(req: Request) {
             }
         };
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // Use 'gemini-1.5-flash-latest' which is often more stable than the short alias
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
         // 4. Native Fetch to Google API
         const response = await fetch(url, {
