@@ -21,6 +21,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
     const [isBatchMode, setIsBatchMode] = useState(false)
+    const [showNotFound, setShowNotFound] = useState(false)
     const [lastScanned, setLastScanned] = useState("")
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([])
     const [isAiScanning, setIsAiScanning] = useState(false)
