@@ -389,15 +389,10 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
                     <Button
                         className="flex-1 bg-primary text-white h-12 rounded-xl gap-2 shadow-lg shadow-primary/20"
-                        onClick={() => {
-                            // Manual Trigger / Macro Mode (Future)
-                            // For now, it forces a refocus
-                            startCamera()
-                            toast.info("جاري التركيز...")
-                        }}
+                        onClick={captureAndScanFrame}
                     >
                         <ScanLine className="w-4 h-4" />
-                        <span>تركيز بؤري</span>
+                        <span>مسح دقيق (صورة)</span>
                     </Button>
                 </div>
 
