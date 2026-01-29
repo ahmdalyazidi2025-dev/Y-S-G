@@ -23,7 +23,7 @@ const Switch = React.forwardRef<
         <span
             className={cn(
                 "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform",
-                checked ? "translate-x-5 bg-white" : "translate-x-0 bg-slate-400"
+                checked ? "translate-x-5 rtl:-translate-x-5 bg-white" : "translate-x-0 bg-slate-400"
             )}
         />
     </button>

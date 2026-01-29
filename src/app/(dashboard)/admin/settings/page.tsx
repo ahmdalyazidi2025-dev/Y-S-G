@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
-import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup } from "@/lib/export-utils"
+import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
@@ -27,7 +27,7 @@ const PROTECTED_PIN = "4422707";
 type SoundEvent = 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush';
 
 export default function AdminSettingsPage() {
-    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser } = useStore()
+    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
@@ -198,20 +198,7 @@ export default function AdminSettingsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[10px] text-yellow-500/60 hover:text-yellow-400 gap-1 h-10 rounded-2xl border border-yellow-500/10 hover:border-yellow-500/30 transition-all font-bold"
-                        onClick={() => {
-                            if (confirm("سيتم تصفير المخزن المؤقت وإعادة تحميل الصفحة. هل أنت متأكد؟")) {
-                                localStorage.clear();
-                                sessionStorage.clear();
-                                window.location.reload();
-                            }
-                        }}
-                    >
-                        إعادة تهيئة النظام ⚡
-                    </Button>
+
                     <Button
                         onClick={handleSubmit}
                         className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-2xl h-12 px-10 shadow-lg shadow-primary/20 transition-all active:translate-y-0.5 font-black uppercase tracking-wider"
@@ -451,119 +438,7 @@ export default function AdminSettingsPage() {
 
                         {activeTab === 'alerts' && (
                             <div className="space-y-6">
-                                <Section icon={<Info className="w-5 h-5" />} title="اختبار النظام وتنبيهات الإشعارات">
-                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-black/20 p-5 rounded-2xl border border-white/5 gap-4">
-                                        <div>
-                                            <h3 className="font-bold text-white mb-1 flex items-center gap-2">
-                                                تجربة الإشعارات 🔔
-                                                <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full">FCM Test</span>
-                                            </h3>
-                                            <p className="text-sm text-slate-400">أرسل إشعار تجريبي لهاتفك الآن للتأكد من وصول التنبيهات.</p>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={handleTestNotification}
-                                                className="border-primary/30 text-primary hover:bg-primary/10 h-12 px-8 rounded-2xl font-bold"
-                                            >
-                                                إرسال لجهازي
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={async () => {
-                                                    toast.promise(
-                                                        broadcastPushNotification("تنبيه عام 🚨", "هذا إشعار تجريبي مرسل لجميع الأجهزة المسجلة."),
-                                                        {
-                                                            loading: "جاري بث الإشعار للكل...",
-                                                            success: (res: any) => {
-                                                                playSound('newMessage')
-                                                                hapticFeedback('success')
-                                                                return `تم الإرسال لـ ${res.sentCount} جهاز! 📢`
-                                                            },
-                                                            error: "فشل البث"
-                                                        }
-                                                    )
-                                                }}
-                                                className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 h-12 px-8 rounded-2xl font-bold"
-                                            >
-                                                بث للجميع
-                                            </Button>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                                            <h4 className="text-sm font-bold text-primary mb-3">إرسال لعميل محدد:</h4>
-                                            <select
-                                                className="w-full bg-black/40 border-white/10 rounded-xl text-sm px-4 h-12 text-white outline-none focus:ring-1 focus:ring-primary"
-                                                onChange={(e) => {
-                                                    const cid = e.target.value;
-                                                    if (cid) {
-                                                        const customer = customers.find(c => c.id === cid);
-                                                        toast.promise(
-                                                            sendPushNotification(cid, "تجربة إشعار عميل 🔔", `مرحباً ${customer?.name || ''}، هذا إشعار تجريبي من الإدارة.`, "/customer/invoices"),
-                                                            {
-                                                                loading: "جاري الإرسال للعميل...",
-                                                                success: (res: any) => res.success ? `وصلت لـ ${res.sentCount} من أجهزة العميل! ✅` : `فشل: ${res.error}`,
-                                                                error: "حدث خطأ"
-                                                            }
-                                                        )
-                                                    }
-                                                }}
-                                            >
-                                                <option value="">اختر عميلاً للإرسال له...</option>
-                                                {customers.map(c => {
-                                                    const tokenCount = (c as any).fcmTokens?.length || 0;
-                                                    return (
-                                                        <option key={c.id} value={c.id}>
-                                                            {c.name} ({c.phone}) - {tokenCount === 0 ? 'لا يوجد أجهزة ❌' : `${tokenCount} أجهزة ✅`}
-                                                        </option>
-                                                    );
-                                                })}
-                                            </select>
-                                        </div>
-
-                                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3 text-xs">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-500">حالة الإذن:</span>
-                                                <span className={cn("font-bold", notificationPermissionStatus === 'granted' ? 'text-emerald-400' : 'text-rose-400')}>
-                                                    {notificationPermissionStatus === 'granted' ? 'مسموح ✅' : 'مرفوض/غير نشط ⚠️'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-500">إجمالي الأجهزة المسجلة:</span>
-                                                <span className="text-primary font-bold">{totalDevices || '...'}</span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (fcmToken && currentUser?.id) {
-                                                        const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
-                                                        import('firebase/firestore').then(async ({ doc, setDoc, arrayUnion, getFirestore }) => {
-                                                            const app = (await import('@/lib/firebase')).app;
-                                                            const db = getFirestore(app);
-                                                            toast.promise(
-                                                                setDoc(doc(db, collectionName, currentUser.id), {
-                                                                    fcmTokens: arrayUnion(fcmToken)
-                                                                }, { merge: true }),
-                                                                {
-                                                                    loading: "جاري المزامنة...",
-                                                                    success: "تم الربط بنجاح! ✅",
-                                                                    error: "فشلت المزامنة"
-                                                                }
-                                                            )
-                                                        })
-                                                    }
-                                                }}
-                                                className="w-full h-10 border border-primary/20 rounded-xl text-primary hover:bg-primary/10 transition-colors font-bold"
-                                            >
-                                                ربط جهازي الحالي يدوياً ⚡
-                                            </button>
-                                        </div>
-                                    </div>
-                                </Section>
 
                                 <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
                                     <div className="space-y-4">
@@ -662,24 +537,48 @@ export default function AdminSettingsPage() {
                                         </Button>
                                     </div>
 
+                                    <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 space-y-4">
+                                        <div className="flex items-center gap-3 text-blue-400">
+                                            <UserPlus className="w-6 h-6" />
+                                            <div>
+                                                <h4 className="font-bold">سجل بيانات العملاء (Word)</h4>
+                                                <p className="text-xs text-slate-500">جدول منظم يحتوي على بيانات التسجيل لكل عميل (للطباعة أو الحفظ).</p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            onClick={() => exportCustomersToWord(customers)}
+                                            className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold text-lg gap-2"
+                                        >
+                                            <FileText className="w-5 h-5" />
+                                            استخراج جدول Word
+                                        </Button>
+                                    </div>
+
                                     <div className="p-6 bg-slate-900/50 rounded-2xl border border-white/5 space-y-4">
                                         <div className="flex items-center gap-3 text-yellow-500">
                                             <ShoppingBag className="w-6 h-6" />
                                             <div>
                                                 <h4 className="font-bold">الصندوق الأسود (Full Backup)</h4>
-                                                <p className="text-xs text-slate-500">نسخة احتياطية كاملة للنظام (JSON) تتضمن المنتجات، العملاء، والطلبات.</p>
+                                                <p className="text-xs text-slate-500">نسخة احتياطية كاملة وشاملة للنظام (JSON) تتضمن كل شيء (العملاء، الطلبات، المنتجات، المحادثات، إلخ).</p>
                                             </div>
                                         </div>
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={() => exportFullSystemBackup({
+                                                backupDate: new Date(),
                                                 settings: storeSettings,
                                                 products,
                                                 categories,
                                                 staff,
                                                 customers,
-                                                orders
+                                                orders,
+                                                coupons,
+                                                banners,
+                                                productRequests,
+                                                messages,
+                                                notifications
                                             })}
                                             className="w-full h-14 bg-slate-800 hover:bg-slate-700 border-white/5 text-slate-200 rounded-2xl font-bold gap-2"
                                         >
@@ -751,7 +650,7 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                     variant="ghost"
                     size="icon"
                     onClick={onPlay}
-                    className="h-10 w-10 border border-white/5 hover:bg-white/10"
+                    className="h-10 w-10 border border-white/5 hover:bg-white/10 rounded-full"
                 >
                     <Volume2 className="w-4 h-4 text-primary" />
                 </Button>
@@ -769,7 +668,7 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                         variant="ghost"
                         size="icon"
                         onClick={() => document.getElementById(`file-${event}`)?.click()}
-                        className="h-10 w-10 border border-white/5 hover:bg-white/10"
+                        className="h-10 w-10 border border-white/5 hover:bg-white/10 rounded-full"
                     >
                         <Upload className="w-4 h-4 text-slate-400" />
                     </Button>
@@ -781,7 +680,7 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                         variant="ghost"
                         size="icon"
                         onClick={onReset}
-                        className="h-10 w-10 border border-white/5 hover:bg-rose-500/10"
+                        className="h-10 w-10 border border-white/5 hover:bg-rose-500/10 rounded-full"
                     >
                         <RotateCcw className="w-4 h-4 text-rose-400" />
                     </Button>
@@ -810,16 +709,7 @@ function Section({ children, icon, title }: { children: React.ReactNode, icon: R
 }
 
 function SecuritySettingsPorted() {
-    const { updateAdminCredentials, storeSettings, updateStoreSettings } = useStore()
-    const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
-
-    const handleUpdate = async () => {
-        if (!username || !password) return
-        await updateAdminCredentials(username, password)
-        setUsername("")
-        setPassword("")
-    }
+    const { storeSettings, updateStoreSettings } = useStore()
 
     return (
         <div className="space-y-6">
@@ -856,57 +746,9 @@ function SecuritySettingsPorted() {
                     </>
                 )}
 
-                {/* Advanced Gemini Settings */}
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
-                    <Label className="text-white font-bold flex items-center gap-2">
-                        <span className="text-lg">🤖</span>
-                        تخصيص المساعد (اختياري)
-                    </Label>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs text-slate-400">تعليمات تعديل/تحسين الصور (Prompt) - مثال: "اجعل الخلفية بيضاء نقية"</Label>
-                        <CustomPromptInput />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-xs text-slate-400">رابط صورة مرجعية (للمقارنة)</Label>
-                        <ReferenceImageInput />
-                    </div>
-                </div>
             </div>
 
-            <hr className="border-white/5" />
-
-            {/* Admin Credentials */}
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>اسم المستخدم الجديد</Label>
-                    <Input
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل اسم مستخدم جديد"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label>كلمة المرور الجديدة</Label>
-                    <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="bg-black/20 border-white/10"
-                        placeholder="ادخل كلمة مرور جديدة"
-                    />
-                </div>
-                <Button
-                    type="button"
-                    className="w-full bg-red-500 hover:bg-red-600 text-white"
-                    onClick={handleUpdate}
-                    disabled={!username || !password}
-                >
-                    تحديث بيانات الدخول
-                </Button>
-            </div>
+            {/* Admin Credentials - REMOVED */}
         </div>
     )
 }
@@ -1005,7 +847,7 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
                 disabled={checking || !keyData.key}
                 size="sm"
                 variant="secondary"
-                className="h-10"
+                className="h-10 rounded-xl"
             >
                 {checking ? "..." : keyData.status === "valid" ? "✅" : "تحقق"}
             </Button>
@@ -1013,45 +855,5 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
     )
 }
 
-function CustomPromptInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [value, setValue] = useState(storeSettings.geminiCustomPrompt || "")
 
-    const handleBlur = () => {
-        if (value !== storeSettings.geminiCustomPrompt) {
-            updateStoreSettings({ ...storeSettings, geminiCustomPrompt: value })
-            toast.success("تم حفظ التعليمات الخاصة")
-        }
-    }
-
-    return (
-        <textarea
-            className="w-full bg-black/20 border-white/10 rounded-xl p-3 text-sm h-24 outline-none resize-none text-right"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={handleBlur}
-        />
-    )
-}
-
-function ReferenceImageInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
-    const [value, setValue] = useState(storeSettings.geminiReferenceImageUrl || "")
-
-    const handleBlur = () => {
-        if (value !== storeSettings.geminiReferenceImageUrl) {
-            updateStoreSettings({ ...storeSettings, geminiReferenceImageUrl: value })
-            toast.success("تم حفظ رابط الصورة المرجعية")
-        }
-    }
-
-    return (
-        <Input
-            className="bg-black/20 border-white/10"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={handleBlur}
-        />
-    )
-}
 

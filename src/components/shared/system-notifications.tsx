@@ -158,15 +158,32 @@ export function SystemNotifications() {
         }
 
         if (isAdminUser && requests.length > prevRequestsLength.current) {
-            playAlertSound()
-            toast.warning("طلب توفير منتج جديد", {
-                description: "قام أحد العملاء بطلب توفير منتج",
-                icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
-                action: {
-                    label: "عرض",
-                    onClick: () => window.location.href = `/admin/products`
-                }
+            // Find the new request (latest one)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const sortedRequests = [...requests].sort((a, b) => {
+                const timeA = (a.createdAt as any).toMillis ? (a.createdAt as any).toMillis() : new Date(a.createdAt).getTime()
+                const timeB = (b.createdAt as any).toMillis ? (b.createdAt as any).toMillis() : new Date(b.createdAt).getTime()
+                return timeB - timeA
             })
+            const newRequest = sortedRequests[0]
+
+            if (newRequest) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const reqTime = (newRequest.createdAt as any).toMillis ? (newRequest.createdAt as any).toMillis() : new Date(newRequest.createdAt).getTime()
+                const isRecent = (Date.now() - reqTime) < 60000 // created in last minute
+
+                if (isRecent) {
+                    playAlertSound()
+                    toast.warning("طلب توفير منتج جديد", {
+                        description: "قام أحد العملاء بطلب توفير منتج",
+                        icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
+                        action: {
+                            label: "عرض",
+                            onClick: () => window.location.href = `/admin/products`
+                        }
+                    })
+                }
+            }
         }
         prevRequestsLength.current = requests.length
     }, [requests, isAdminUser])

@@ -3,9 +3,7 @@
 import { useUsageStats } from "@/hooks/use-usage-stats"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Database, HardDrive, ExternalLink, AlertTriangle, CheckCircle2, Bell, RefreshCw, Volume2, Smartphone } from "lucide-react"
-import { hapticFeedback } from "@/lib/haptics"
-import { playNotificationSound } from "@/lib/sounds"
+import { ArrowRight, Database, HardDrive, ExternalLink, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
@@ -14,12 +12,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'
 
 export default function SystemMonitorPage() {
     const stats = useUsageStats()
-
-    const handleTestFeedback = () => {
-        playNotificationSound()
-        hapticFeedback('success')
-        toast.success("تم اختبار الصوت والاهتزاز بنجاح! إذا لم تسمع شيئاً، تأكد من وضع الهاتف العام ومن أذونات المتصفح.")
-    }
 
     const forceUpdateSW = async () => {
         if ('serviceWorker' in navigator) {
@@ -169,6 +161,7 @@ export default function SystemMonitorPage() {
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }}
                                     formatter={(value: any) => formatBytes(value)}
+                                    itemStyle={{ color: '#fff' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -188,7 +181,12 @@ export default function SystemMonitorPage() {
                                     <span className="text-slate-300 capitalize">
                                         {entry.name === 'products' ? 'المنتجات' :
                                             entry.name === 'orders' ? 'الطلبات' :
-                                                entry.name === 'customers' ? 'العملاء' : entry.name}
+                                                entry.name === 'customers' ? 'العملاء' :
+                                                    entry.name === 'banners' ? 'اللافتات' :
+                                                        entry.name === 'requests' ? 'الطلبات الخاصة' :
+                                                            entry.name === 'notifications' ? 'الإشعارات' :
+                                                                entry.name === 'categories' ? 'الأقسام' :
+                                                                    entry.name}
                                     </span>
                                 </div>
                                 <span className="font-mono text-slate-500">{formatBytes(entry.value)}</span>
@@ -202,27 +200,15 @@ export default function SystemMonitorPage() {
             <Card className="glass-card border-white/5 relative overflow-hidden">
                 <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-yellow-400" />
-                        <span>اختبار التنبيهات والتحديثات</span>
+                        <RefreshCw className="w-5 h-5 text-emerald-400" />
+                        <span>تحديث النظام</span>
                     </CardTitle>
-                    <CardDescription>تحقق من عمل الصوت والاهتزاز وتحديث ملفات الموقع</CardDescription>
+                    <CardDescription>تحديث ملفات الموقع للحصول على آخر النسخ</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Button
-                        onClick={handleTestFeedback}
-                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl"
-                    >
-                        <div className="flex flex-col items-center">
-                            <div className="flex items-center gap-2">
-                                <Volume2 className="w-4 h-4 text-primary" />
-                                <Smartphone className="w-4 h-4 text-primary" />
-                            </div>
-                            <span className="text-xs mt-1">اختبار الصوت والاهتزاز</span>
-                        </div>
-                    </Button>
+                <CardContent>
                     <Button
                         onClick={forceUpdateSW}
-                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl"
+                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl w-full"
                     >
                         <div className="flex flex-col items-center">
                             <RefreshCw className="w-4 h-4 text-emerald-400" />

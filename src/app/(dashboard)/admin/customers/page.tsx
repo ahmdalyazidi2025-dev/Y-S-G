@@ -2,17 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, Lock } from "lucide-react"
-import Link from "next/link"
-import { useStore, Customer } from "@/context/store-context"
-import { AdminCustomerForm } from "@/components/admin/customer-form"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { PasswordReveal } from "@/components/admin/password-reveal"
-import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, Lock, Search } from "lucide-react"
+// ... imports
 
 export default function CustomersPage() {
     const { customers, deleteCustomer, sendNotificationToGroup, orders, sendNotification } = useStore()
@@ -21,6 +12,7 @@ export default function CustomersPage() {
     const [isBroadcastOpen, setIsBroadcastOpen] = useState(false)
     const [broadcastMsg, setBroadcastMsg] = useState("")
     const [targetCategory, setTargetCategory] = useState<string>("vip")
+    const [searchQuery, setSearchQuery] = useState("")
 
     // Notification State
     const [isNotifyOpen, setIsNotifyOpen] = useState(false)
@@ -69,8 +61,23 @@ export default function CustomersPage() {
     }
 
     const filteredCustomers = customers.filter(c => {
-        if (activeTab === "all") return true
-        return segments[activeTab](c)
+        // 1. Tab Filter
+        let matchesTab = true;
+        if (activeTab !== "all") {
+            matchesTab = segments[activeTab](c);
+        }
+
+        // 2. Search Filter
+        if (!searchQuery) return matchesTab;
+
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+            c.name.toLowerCase().includes(query) ||
+            c.phone.includes(query) ||
+            c.email.toLowerCase().includes(query) ||
+            (c.username && c.username.toLowerCase().includes(query));
+
+        return matchesTab && matchesSearch;
     })
 
     const handleBroadcast = async () => {
@@ -117,72 +124,88 @@ export default function CustomersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
-                    </Button>
-                </Link>
-                <h1 className="text-2xl font-bold flex-1">إدارة العملاء</h1>
-                <div className="flex gap-2">
-                    <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
-                        <DialogTrigger>
-                            <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4">
-                                <ShieldCheck className="w-4 h-4" />
-                                <span>بث رسالة</span>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="glass-card border-white/5 text-white max-w-md">
-                            <DialogHeader>
-                                <DialogTitle className="text-right">إرسال إشعار لمجموعة</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2">
-                                    <Label className="block text-right">الفئة المستهدفة</Label>
-                                    <select
-                                        className="w-full bg-black/20 border-white/10 rounded-xl h-10 px-3 text-right text-sm text-white"
-                                        value={targetCategory}
-                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetCategory(e.target.value)}
-                                    >
-                                        <option value="all">الكل ({customers.length})</option>
-                                        <option value="vip">كبار العملاء (VIP)</option>
-                                        <option value="active">النشطين (طلبات &lt; 30 يوم)</option>
-                                        <option value="semi_active">شبة نشطين (30-90 يوم)</option>
-                                        <option value="interactive">متفاعلين (دخول بدون شراء)</option>
-                                        <option value="dormant">خاملين (&gt; 90 يوم)</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="block text-right">عنوان الإشعار</Label>
-                                    <Input
-                                        className="bg-black/20 border-white/10 rounded-xl text-right"
-                                        placeholder="مثال: خصم خاص لك!"
-                                        value={notifyTitle}
-                                        onChange={(e) => setNotifyTitle(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="block text-right">نص الإشعار</Label>
-                                    <Textarea
-                                        className="bg-black/20 border-white/10 rounded-xl text-right h-32"
-                                        placeholder="اكتب تفاصيل العرض هنا..."
-                                        value={broadcastMsg}
-                                        onChange={(e) => setBroadcastMsg(e.target.value)}
-                                    />
-                                </div>
-                                <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl font-bold" onClick={handleBroadcast}>
-                                    إرسال للمجموعة
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <Link href="/admin">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
+                            <ArrowRight className="w-5 h-5" />
+                        </Button>
+                    </Link>
+                    <h1 className="text-2xl font-bold">إدارة العملاء</h1>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    {/* Search Input */}
+                    <div className="relative flex-1 sm:w-64">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                            className="bg-white/5 border-white/10 rounded-full pr-10 text-right h-10 w-full focus:bg-white/10 transition-colors"
+                            placeholder="بحث باسم، جوال، أو بريد العميل..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4 w-full sm:w-auto justify-center">
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span>بث</span>
                                 </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                    <Button
-                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4"
-                        onClick={handleAddNew}
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span>إضافة عميل</span>
-                    </Button>
+                            </DialogTrigger>
+                            <DialogContent className="glass-card border-white/5 text-white max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle className="text-right">إرسال إشعار لمجموعة</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label className="block text-right">الفئة المستهدفة</Label>
+                                        <select
+                                            className="w-full bg-black/20 border-white/10 rounded-xl h-10 px-3 text-right text-sm text-white"
+                                            value={targetCategory}
+                                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetCategory(e.target.value)}
+                                        >
+                                            <option value="all">الكل ({customers.length})</option>
+                                            <option value="vip">كبار العملاء (VIP)</option>
+                                            <option value="active">النشطين (طلبات &lt; 30 يوم)</option>
+                                            <option value="semi_active">شبة نشطين (30-90 يوم)</option>
+                                            <option value="interactive">متفاعلين (دخول بدون شراء)</option>
+                                            <option value="dormant">خاملين (&gt; 90 يوم)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="block text-right">عنوان الإشعار</Label>
+                                        <Input
+                                            className="bg-black/20 border-white/10 rounded-xl text-right"
+                                            placeholder="مثال: خصم خاص لك!"
+                                            value={notifyTitle}
+                                            onChange={(e) => setNotifyTitle(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="block text-right">نص الإشعار</Label>
+                                        <Textarea
+                                            className="bg-black/20 border-white/10 rounded-xl text-right h-32"
+                                            placeholder="اكتب تفاصيل العرض هنا..."
+                                            value={broadcastMsg}
+                                            onChange={(e) => setBroadcastMsg(e.target.value)}
+                                        />
+                                    </div>
+                                    <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl font-bold" onClick={handleBroadcast}>
+                                        إرسال للمجموعة
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                        <Button
+                            className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4 w-full sm:w-auto justify-center"
+                            onClick={handleAddNew}
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>إضافة</span>
+                        </Button>
+                    </div>
                 </div>
             </div>
 

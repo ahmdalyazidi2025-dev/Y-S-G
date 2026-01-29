@@ -23,7 +23,7 @@ export default function AnalyticsPage() {
         }
     }, [currentUser, router])
 
-    const [timeRange, setTimeRange] = useState<"day" | "week" | "month" | "year" | "custom">("week")
+    const [timeRange, setTimeRange] = useState<"all" | "day" | "week" | "month" | "year" | "custom">("week")
     const [customStart, setCustomStart] = useState("")
     const [customEnd, setCustomEnd] = useState("")
 
@@ -33,6 +33,7 @@ export default function AnalyticsPage() {
         let end = new Date()
 
         switch (timeRange) {
+            case "all": start.setFullYear(2000); break; // All time
             case "day": start.setHours(0, 0, 0, 0); break;
             case "week": start.setDate(now.getDate() - 7); break;
             case "month": start.setMonth(now.getMonth() - 1); break;
@@ -49,6 +50,7 @@ export default function AnalyticsPage() {
                 break;
         }
 
+        // If timeRange is 'all', just return all orders (or filter by start date 2000 which effectively is all)
         return orders.filter(o => {
             const date = new Date(o.createdAt)
             if (timeRange === "custom") {
@@ -59,7 +61,6 @@ export default function AnalyticsPage() {
     }, [orders, timeRange, customStart, customEnd])
 
     // 1. Calculate Revenue Over Time
-    // 1. Calculate Revenue Over Time
     const revenueData = useMemo(() => {
         let periods = 7
         let timeUnit: 'hour' | 'day' | 'month' = 'day'
@@ -68,6 +69,7 @@ export default function AnalyticsPage() {
         const endDate = timeRange === "custom" && customEnd ? new Date(customEnd) : now
         if (timeRange === "custom" && customEnd) endDate.setHours(23, 59, 59, 999)
 
+        if (timeRange === "all") { periods = 12; timeUnit = 'month' }
         if (timeRange === "month") periods = 30
         if (timeRange === "year") { periods = 12; timeUnit = 'month' }
         if (timeRange === "day") { periods = 24; timeUnit = 'hour' }
@@ -78,7 +80,7 @@ export default function AnalyticsPage() {
             const diffTime = Math.abs(end.getTime() - start.getTime())
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
             periods = diffDays + 1 // Inclusive
-            if (periods > 60) timeUnit = 'month' // Switch to monthly view for long ranges? Maybe not for now to keep it simple
+            if (periods > 60) timeUnit = 'month'
         }
 
         const dataPoints = []
@@ -109,7 +111,7 @@ export default function AnalyticsPage() {
                 label = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
                 periodOrders = orders.filter(o => {
                     const od = new Date(o.createdAt)
-                    return od.getDate() === date.getDate() && od.getHours() === date.getHours()
+                    return od.getDate() === date.getDate() && od.getHours() === date.getHours() && od.getFullYear() === date.getFullYear() && od.getMonth() === date.getMonth()
                 })
             } else if (timeUnit === 'month') {
                 label = date.toLocaleDateString('ar-SA', { month: 'short', year: '2-digit' })
@@ -160,6 +162,7 @@ export default function AnalyticsPage() {
     }, [filteredOrders])
 
     const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0)
+    const uniqueCustomers = new Set(filteredOrders.map(o => o.customerId)).size
 
     return (
         <div className="space-y-6 pb-20">
@@ -200,7 +203,7 @@ export default function AnalyticsPage() {
                 )}
 
                 <div className="bg-white/5 p-1 rounded-xl border border-white/10 flex gap-1 self-end">
-                    {(["day", "week", "month", "year", "custom"] as const).map((r) => (
+                    {(["all", "day", "week", "month", "year", "custom"] as const).map((r) => (
                         <button
                             key={r}
                             onClick={() => setTimeRange(r)}
@@ -209,6 +212,7 @@ export default function AnalyticsPage() {
                                 timeRange === r ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
+                            {r === "all" && "الكل"}
                             {r === "day" && "اليوم"}
                             {r === "week" && "الأسبوع"}
                             {r === "month" && "الشهر"}
@@ -240,7 +244,7 @@ export default function AnalyticsPage() {
                         <CardDescription className="text-blue-400 font-bold">الطلبات النشطة</CardDescription>
                         <CardTitle className="text-2xl text-white flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
-                            {orders.filter(o => o.status === "processing" || o.status === "pending").length}
+                            {filteredOrders.filter(o => o.status === "processing" || o.status === "pending").length}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -249,7 +253,7 @@ export default function AnalyticsPage() {
                         <CardDescription className="text-violet-400 font-bold">قاعدة العملاء</CardDescription>
                         <CardTitle className="text-2xl text-white flex items-center gap-2">
                             <Package className="w-5 h-5" />
-                            {useStore().customers.length}
+                            {uniqueCustomers}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -257,7 +261,7 @@ export default function AnalyticsPage() {
                     <CardHeader className="pb-2">
                         <CardDescription className="text-purple-400 font-bold">المنتجات المباعة</CardDescription>
                         <CardTitle className="text-lg text-white">
-                            {orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
+                            {filteredOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -265,7 +269,7 @@ export default function AnalyticsPage() {
                     <CardHeader className="pb-2">
                         <CardDescription className="text-orange-400 font-bold">متوسط السلة</CardDescription>
                         <CardTitle className="text-lg text-white">
-                            {orders.length > 0 ? (totalRevenue / orders.length).toFixed(0) : 0}
+                            {filteredOrders.length > 0 ? (totalRevenue / filteredOrders.length).toFixed(0) : 0}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -306,7 +310,7 @@ export default function AnalyticsPage() {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" horizontal={false} />
                                 <XAxis type="number" stroke="#ffffff" hide />
                                 <YAxis dataKey="name" type="category" stroke="#ffffff" fontSize={11} width={100} tickLine={false} axisLine={false} tick={{ fill: 'white', fontWeight: 'bold' }} />
-                                <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} />
+                                <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                                 <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -335,7 +339,7 @@ export default function AnalyticsPage() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="flex flex-wrap gap-4 justify-center absolute bottom-4">
