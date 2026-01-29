@@ -15,30 +15,38 @@ const cleanKey = (k: string) => k?.trim() || ""
 /**
  * Verify a single API Key (OpenRouter)
  */
+/**
+ * Verify a single API Key (Google Gemini Direct)
+ */
 export async function verifyAIKey(apiKey: string): Promise<{ success: boolean, error?: string }> {
     const cleanedKey = cleanKey(apiKey)
     if (!cleanedKey) return { success: false, error: "المفتاح فارغ" }
 
     try {
-        // Simple generation test
-        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+        // Use a simple prompt to verify the key
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanedKey}`;
+
+        const response = await fetch(url, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${cleanedKey}`,
                 "Content-Type": "application/json",
-                // "HTTP-Referer": "https://your-site.com", // Optional for OpenRouter rankings
             },
             body: JSON.stringify({
-                model: MODEL_ID,
-                messages: [{ role: "user", content: "Test connection" }],
-                max_tokens: 5
+                contents: [{ parts: [{ text: "Test Connection" }] }]
             }),
-            cache: "no-store"
+            cache: "no-store",
+            // Remove Authorization header as Google API uses ?key= query param for API Keys usually, 
+            // but standard is Query Param for Client Keys or Bearer for OAuth. 
+            // For AI Studio Keys, query param is standard.
         })
 
         if (!response.ok) {
             const err = await response.json().catch(() => ({}))
             console.error("Verification Failed:", err)
+
+            if (response.status === 400 && err.error?.status === 'INVALID_ARGUMENT') {
+                return { success: false, error: "المفتاح غير صحيح (Invalid Key)" }
+            }
             return { success: false, error: err.error?.message || `HTTP Error ${response.status}` }
         }
 

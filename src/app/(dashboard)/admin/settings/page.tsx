@@ -824,17 +824,25 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
         if (!keyData.key) return
         setChecking(true)
         try {
-            const result = await verifyAIKey(keyData.key)
+            // Use dedicated API route for better reliability and debugging
+            const response = await fetch('/api/verify-gemini', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: keyData.key })
+            })
+
+            const result = await response.json()
+
             if (result.success) {
                 onStatusChange("valid")
                 toast.success(`مفتاح ${index + 1} يعمل بنجاح ✅`)
             } else {
                 onStatusChange("invalid")
-                toast.error(`مفتاح ${index + 1} لا يعمل ❌`)
+                toast.error(`خطأ: ${result.error || "المفتاح غير صالح"}`)
             }
         } catch (e) {
             onStatusChange("invalid")
-            toast.error("خطأ في التحقق")
+            toast.error("فشل الاتصال بالخادم")
         } finally {
             setChecking(false)
         }
