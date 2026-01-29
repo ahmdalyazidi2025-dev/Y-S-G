@@ -9,11 +9,8 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endOfDay, startOfDay } from "date-fns"
-import { InvoiceTemplate } from "@/components/shared/invoice-template"
-import { toast } from "sonner"
+import { printOrderInvoice } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
-import { PremiumInvoice } from "@/components/shared/premium-invoice"
-import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
     pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
@@ -26,7 +23,7 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, customers } = useStore()
+    const { orders, updateOrderStatus, customers, storeSettings } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
     const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
@@ -55,13 +52,6 @@ export default function AdminOrdersPage() {
         const url = `https://wa.me/?text=${encodeURIComponent(text)}`
         window.open(url, '_blank')
         hapticFeedback('success')
-    }
-
-    const handleDownloadPDF = async (order: Order) => {
-        hapticFeedback('light')
-        const success = await generateOrderPDF('premium-invoice-target', order.id)
-        if (success) toast.success("تم تجهيز وتحميل الفاتورة")
-        else toast.error("فشل في تجهيز الفاتورة")
     }
 
     const filteredOrders = orders.filter(o => {
@@ -285,28 +275,10 @@ export default function AdminOrdersPage() {
                                         variant="ghost"
                                         size="sm"
                                         className="text-blue-400 hover:bg-blue-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-blue-400/20"
-                                        onClick={() => window.print()}
+                                        onClick={() => printOrderInvoice(selectedOrder, storeSettings)}
                                     >
                                         <Printer className="w-4 h-4" />
-                                        <span className="text-xs">طباعة</span>
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
-                                        onClick={() => handleShareWhatsApp(selectedOrder)}
-                                    >
-                                        <Share2 className="w-4 h-4" />
-                                        <span className="text-xs">واتساب</span>
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-primary hover:bg-primary/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-primary/20"
-                                        onClick={() => handleDownloadPDF(selectedOrder)}
-                                    >
-                                        <FileDown className="w-4 h-4" />
-                                        <span className="text-xs">PDF</span>
+                                        <span className="text-xs">طباعة فاتورة</span>
                                     </Button>
                                     <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/5 rounded-full">
                                         <XCircle className="w-5 h-5 text-slate-400" />
@@ -383,8 +355,7 @@ export default function AdminOrdersPage() {
                 )}
             </AnimatePresence>
 
-            {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
-            {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-target" />}
+            {/* Removed InvoiceTemplate and PremiumInvoice */}
         </div>
     )
 }

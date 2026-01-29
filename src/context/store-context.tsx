@@ -102,6 +102,7 @@ export type Order = {
     customerPhone?: string
     customerLocation?: string
     customerId: string
+    paymentMethod?: string
     items: CartItem[]
     total: number
     status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected"
