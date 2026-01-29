@@ -9,32 +9,58 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "المفتاح مفقود" }, { status: 400 });
         }
 
-        const models = ["gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"];
-        let validModel = "";
+        // Strategy: List available models to verify key permissions and find the correct model name
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+        const listResponse = await fetch(listUrl, { method: "GET" });
 
-        for (const model of models) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Test" }] }] })
-            });
+        if (!listResponse.ok) {
+            const errorData = await listResponse.json().catch(() => ({}));
+            console.error("Gemini List Models Error:", errorData);
 
-            if (response.ok) {
-                validModel = model;
-                break;
+            const status = errorData.error?.status || listResponse.status;
+            const message = errorData.error?.message || "Unknown Error";
+
+            if (status === 'PERMISSION_DENIED' || status === 403) {
+                return NextResponse.json({
+                    success: false,
+                    error: "صلاحيات مرفوضة (403). تأكد من تفعيل خدمة 'Generative Language API' في Google Cloud Console لهذا المفتاح."
+                }, { status: 400 });
             }
-        }
+            if (status === 'INVALID_ARGUMENT' || status === 400) {
+                return NextResponse.json({
+                    success: false,
+                    error: "المفتاح غير صحيح (Invalid Key)."
+                }, { status: 400 });
+            }
 
-        if (!validModel) {
-            // If all failed, return the error
             return NextResponse.json({
                 success: false,
-                error: "لم يتم العثور على أي نموذج مدعوم (Gemini Flash/Pro). تأكد من صحة المفتاح."
+                error: `خطأ من جوجل (${status}): ${message}`
             }, { status: 400 });
         }
 
-        return NextResponse.json({ success: true, message: "Valid Key", model: validModel });
+        const data = await listResponse.json();
+        const models = data.models || [];
+
+        // Look for any Flash model
+        const flashModel = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
+        const proModel = models.find((m: any) => m.name.includes("gemini-pro"));
+        const anyGemini = models.find((m: any) => m.name.includes("gemini"));
+
+        const validModel = flashModel?.name || proModel?.name || anyGemini?.name;
+
+        if (!validModel) {
+            return NextResponse.json({
+                success: false,
+                error: "المفتاح صحيح، ولكن لا يوجد أي موديل Gemini متاح لهذا الحساب."
+            }, { status: 400 });
+        }
+
+        // Clean model name (remove 'models/' prefix if present for cleaner usage later if needed)
+        // ensure we return just the ID if possible, but the API usually expects 'models/gemini-...' or just 'gemini-...'
+        // simpler to keep full name from list response 'models/gemini-1.5-flash-001'
+
+        return NextResponse.json({ success: true, message: `Valid! Found: ${validModel}`, model: validModel });
 
     } catch (error: any) {
         console.error("Internal Verification Error:", error);
