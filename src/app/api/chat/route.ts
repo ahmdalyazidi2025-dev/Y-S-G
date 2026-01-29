@@ -26,9 +26,6 @@ export async function POST(req: Request) {
             }, { status: 401 });
         }
 
-        // Use the first valid key
-        const apiKey = validKeys[0].key.trim();
-
         // 3. Prepare Gemini Payload
         const contents = messages
             .filter((m: any) => m.role !== "system")
@@ -44,64 +41,80 @@ export async function POST(req: Request) {
             }
         };
 
-        // Use 'gemini-1.5-flash-latest' which is often more stable than the short alias
-        // 3. Dynamic Model Discovery (Critical Fix)
-        // Check which models are available for this key to avoid "Model Not Found" errors
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-        const listResponse = await fetch(listUrl, { method: "GET" });
-        let chosenModel = "gemini-1.5-flash"; // Default fallback
+        // 3. Loop through keys until one works (Rotation Logic)
+        let lastError = null;
 
-        if (listResponse.ok) {
-            const data = await listResponse.json();
-            const models = data.models || [];
+        for (const keyObj of validKeys) {
+            const apiKey = keyObj.key.trim();
 
-            // Priority: Flash Latest -> Flash -> Pro -> Any Gemini
-            const flashLatest = models.find((m: any) => m.name.includes("gemini-1.5-flash-latest"));
-            const flash = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
-            const pro = models.find((m: any) => m.name.includes("gemini-pro"));
+            try {
+                // A. Dynamic Model Discovery per key
+                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                const listResponse = await fetch(listUrl, { method: "GET" });
+                let chosenModel = "gemini-1.5-flash"; // Default
 
-            if (flashLatest) chosenModel = flashLatest.name;
-            else if (flash) chosenModel = flash.name;
-            else if (pro) chosenModel = pro.name;
+                if (listResponse.ok) {
+                    const data = await listResponse.json();
+                    const models = data.models || [];
 
-            // Ensure model name doesn't have double 'models/' prefix if API returns it
-            chosenModel = chosenModel.replace(/^models\//, "");
-        }
+                    const flashLatest = models.find((m: any) => m.name.includes("gemini-1.5-flash-latest"));
+                    const flash = models.find((m: any) => m.name.includes("gemini-1.5-flash"));
+                    const pro = models.find((m: any) => m.name.includes("gemini-pro"));
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
+                    if (flashLatest) chosenModel = flashLatest.name;
+                    else if (flash) chosenModel = flash.name;
+                    else if (pro) chosenModel = pro.name;
 
-        // 4. Native Fetch to Google API
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+                    chosenModel = chosenModel.replace(/^models\//, "");
+                }
 
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            console.error("Gemini API Error:", JSON.stringify(errData, null, 2));
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:generateContent?key=${apiKey}`;
 
-            if (response.status === 400) {
-                return NextResponse.json({ error: "خطأ في الطلب", details: errData.error?.message }, { status: 400 });
-            } else if (response.status === 401 || response.status === 403) {
-                return NextResponse.json({
-                    error: "المفتاح غير صالح",
-                    details: "المفتاح المسجل في الإعدادات مرفوض من Google. يرجى تحديثه."
-                }, { status: 401 });
-            } else if (response.status === 429) {
-                return NextResponse.json({
-                    error: "ضغط مرتفع",
-                    details: "تم تجاوز حد الاستخدام المجاني. يرجى المحاولة لاحقاً."
-                }, { status: 429 });
+                // B. Native Fetch to Google API
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    console.warn(`Key ends with ...${apiKey.slice(-4)} failed:`, errData);
+
+                    if (response.status === 429) {
+                        // Quota limit, try next key
+                        lastError = { status: 429, message: "تم تجاوز حد الاستخدام (Quota Exceeded)" };
+                        continue;
+                    }
+
+                    if (response.status === 401 || response.status === 403) {
+                        lastError = { status: 401, message: "المفتاح غير صالح أو محظور" };
+                        continue;
+                    }
+
+                    // For other errors, might be payload related, so maybe don't retry? 
+                    // But for safety let's try next key if available, worst case all fail.
+                    lastError = { status: response.status, message: errData.error?.message || "Error" };
+                    continue;
+                }
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+                return NextResponse.json({ text });
+
+            } catch (error: any) {
+                console.error("Key Attempt Error:", error);
+                lastError = { status: 500, message: error.message };
+                continue;
             }
-
-            throw new Error(errData.error?.message || `Error ${response.status}`);
         }
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-        return NextResponse.json({ text });
+        // If loop finishes without return, all keys failed
+        return NextResponse.json({
+            error: lastError?.status === 429 ? "ضغط مرتفع" : "خطأ في الاتصال",
+            details: lastError?.message || "فشلت جميع المفاتيح المتوفرة. يرجى المحاولة لاحقاً."
+        }, { status: lastError?.status || 500 });
 
     } catch (error: any) {
         console.error("Chat Route Error:", error);
