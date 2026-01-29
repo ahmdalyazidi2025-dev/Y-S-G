@@ -3,25 +3,31 @@ import html2canvas from 'html2canvas';
 
 export const generateOrderPDF = async (orderElementId: string, orderId: string) => {
     const element = document.getElementById(orderElementId);
-    if (!element) return;
+    if (!element) {
+        console.error("PDF Element not found:", orderElementId);
+        return false;
+    }
 
     try {
+        // Ensure fonts are loaded
+        await document.fonts.ready;
         // Wait a bit to ensure the element is rendered and images are loaded
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         const canvas = await html2canvas(element, {
-            scale: 2, // 2 is usually enough and more stable
+            scale: 2,
             useCORS: true,
             backgroundColor: '#080b12',
-            logging: true, // Enable logging for debugging
-            allowTaint: false,
+            logging: true,
+            allowTaint: true, // Allow tainting if CORS fails (might help with mixed content)
             onclone: (clonedDoc) => {
                 const el = clonedDoc.getElementById(orderElementId);
                 if (el) {
                     el.style.opacity = '1';
                     el.style.visibility = 'visible';
                     el.style.display = 'block';
-                    el.style.position = 'relative';
+                    el.style.position = 'relative'; // Important for html2canvas
+                    el.style.zIndex = '9999';
                 }
             }
         });

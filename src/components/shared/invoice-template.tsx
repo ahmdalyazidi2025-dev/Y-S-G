@@ -29,11 +29,11 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                     
                     /* Position the invoice directly on the page */
                     #invoice-${order.id} {
-                        position: fixed;
+                        position: absolute;
                         top: 0;
                         left: 0;
-                        width: 100vw;
-                        height: 100vh;
+                        width: 100%;
+                        height: auto;
                         margin: 0;
                         padding: 20px;
                         background: white;
