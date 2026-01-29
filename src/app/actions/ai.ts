@@ -166,7 +166,10 @@ export async function extractBarcodeAI(
     const validKeys = apiKeys.filter(k => k.key && k.status !== "invalid")
     if (validKeys.length === 0) return { found: false, code: "" }
 
-    const prompt = `Extract barcode/part number from image. Return JSON: { "found": boolean, "code": string }. No Markdown.`;
+    const prompt = `Extract the primary product barcode or automotive part number (OEM code) from the image. 
+Automotive part numbers often look like '90915-YZZE1', '04152-YZZA1', or similar hyphenated/alphanumeric patterns.
+Ignore serial numbers, batch codes, or warehouse tracking labels.
+Return JSON ONLY: { "found": boolean, "code": string }.`;
 
     for (const keyObj of validKeys) {
         try {

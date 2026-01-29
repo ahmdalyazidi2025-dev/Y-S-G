@@ -180,41 +180,35 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
                 },
                 videoRef.current!,
                 (result) => {
-                    if (result) {
-                        handleScanResult(result.getText());
+                    // Start Auto OCR loop - Faster for automotive trial
+                    autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 2000);
+
+                    // Try to enable continuous focus and auto-exposure if the browser supports it via track
+                    const stream = videoRef.current?.srcObject as MediaStream;
+                    const track = stream?.getVideoTracks()[0];
+                    if (track && track.applyConstraints) {
+                        const capabilities = (track as any).getCapabilities?.() || {};
+                        const advanced: any = {};
+                        if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
+                        if (capabilities.whiteBalanceMode?.includes('continuous')) advanced.whiteBalanceMode = 'continuous';
+                        if (capabilities.exposureMode?.includes('continuous')) advanced.exposureMode = 'continuous';
+                        if (capabilities.zoom) {
+                            // Automatically zoom slightly (1.5x) if supported, for easier capture
+                            const idealZoom = Math.min(1.5, capabilities.zoom.max || 1.5);
+                            advanced.zoom = idealZoom;
+                        }
+
+                        if (Object.keys(advanced).length > 0) {
+                            await track.applyConstraints({ advanced: [advanced] } as any);
+                        }
                     }
+
+                    setError(null);
+                } catch (err) {
+                    console.error("Failed to start ZXing scanner:", err);
+                    setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
                 }
-            );
-
-            // Start Auto OCR loop
-            autoOCRTimeoutRef.current = setTimeout(triggerAutoOCR, 3000);
-
-            // Try to enable continuous focus and auto-exposure if the browser supports it via track
-            const stream = videoRef.current?.srcObject as MediaStream;
-            const track = stream?.getVideoTracks()[0];
-            if (track && track.applyConstraints) {
-                const capabilities = (track as any).getCapabilities?.() || {};
-                const advanced: any = {};
-                if (capabilities.focusMode?.includes('continuous')) advanced.focusMode = 'continuous';
-                if (capabilities.whiteBalanceMode?.includes('continuous')) advanced.whiteBalanceMode = 'continuous';
-                if (capabilities.exposureMode?.includes('continuous')) advanced.exposureMode = 'continuous';
-                if (capabilities.zoom) {
-                    // Automatically zoom slightly (1.5x) if supported, for easier capture
-                    const idealZoom = Math.min(1.5, capabilities.zoom.max || 1.5);
-                    advanced.zoom = idealZoom;
-                }
-
-                if (Object.keys(advanced).length > 0) {
-                    await track.applyConstraints({ advanced: [advanced] } as any);
-                }
-            }
-
-            setError(null);
-        } catch (err) {
-            console.error("Failed to start ZXing scanner:", err);
-            setError("فشل في تشغيل الكاميرا. تأكد من منح الأذونات اللازمة.");
-        }
-    }, [handleScanResult, triggerAutoOCR])
+        }, [handleScanResult, triggerAutoOCR])
 
     useEffect(() => {
         if (isOpen && !showNotFound) {
