@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap } from "lucide-react"
+import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Product } from "@/context/store-context"
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 
 export default function ProductsPage() {
-    const { products, deleteProduct, categories } = useStore()
+    const { products, deleteProduct, updateProduct, categories } = useStore()
     const searchParams = useSearchParams()
 
     // Initialize search with URL param or empty string
@@ -72,6 +72,18 @@ export default function ProductsPage() {
         setIsFormOpen(true)
     }
 
+    const handleStopOffer = (product: Product) => {
+        if (confirm(`هل أنت متأكد من إنهاء عرض "${product.name}" واستعادة سعره الأصلي؟`)) {
+            const originalPrice = product.oldPricePiece || product.pricePiece
+            updateProduct(product.id, {
+                discountEndDate: undefined, // Fix: Use undefined for optional Date
+                pricePiece: originalPrice,
+                oldPricePiece: 0,
+                oldPriceDozen: 0
+            })
+        }
+    }
+
     // Tab Button Component
     const TabButton = ({ id, label, icon: Icon, count, color }: any) => (
         <button
@@ -111,7 +123,7 @@ export default function ProductsPage() {
                     className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-6 shadow-lg shadow-primary/20"
                     onClick={handleAddNew}
                 >
-                    <Plus className="w-4 h-4" />
+                    <PackagePlus className="w-5 h-5" />
                     <span>إضافة جديد</span>
                 </Button>
             </div>
@@ -175,7 +187,7 @@ export default function ProductsPage() {
                 />
             </div>
 
-            {/* Category Filter - Only Show in 'All' or 'Offers' tabs usually, but safe to keep always */}
+            {/* Category Filter */}
             {activeTab === 'all' && (
                 <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     <button
@@ -241,23 +253,83 @@ export default function ProductsPage() {
                             </div>
 
                             <div className="flex gap-6 items-center px-4">
-                                {/* Price Display with Unified Logic */}
+                                {/* 1. Cost Price (Internal) */}
+                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6 pl-2 relative">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">التكلفة</p>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-lg font-bold text-amber-500 leading-none">
+                                            {product.costPrice || 0} <small className="text-[10px] mr-0.5">ر.س</small>
+                                        </span>
+                                    </div>
+                                    {/* Visual Divider */}
+                                    <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
+                                </div>
+
+                                {/* 2. Previous Price (Was) - Only distinct if there IS an old price */}
+                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6 min-w-[60px]">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">سابقاً</p>
+                                    <div className="flex flex-col items-end justify-center h-7">
+                                        {product.oldPricePiece ? (
+                                            <span className="text-sm text-red-500 line-through opacity-60 font-medium">
+                                                {product.oldPricePiece}
+                                            </span>
+                                        ) : (
+                                            <span className="text-slate-700 text-xs">-</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 3. Current Price (Now) */}
                                 <div className="text-right space-y-0.5 border-r border-white/5 pr-6">
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">السعر</p>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">حالياً</p>
                                     <div className="flex flex-col items-end">
                                         <span className={cn("text-lg font-bold leading-none", product.oldPricePiece ? "text-green-500" : "text-white")}>
                                             {product.pricePiece} <small className="text-[10px] mr-0.5">ر.س</small>
                                         </span>
-                                        {product.oldPricePiece && (
-                                            <span className="text-[11px] text-red-500 line-through opacity-60 font-medium">
-                                                {product.oldPricePiece}
+                                    </div>
+                                </div>
+
+                                {/* 4. Dozen Price */}
+                                <div className="text-right space-y-0.5 min-w-[80px]">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">الدرزن</p>
+                                    <div className="flex flex-col items-end">
+                                        {product.priceDozen ? (
+                                            <span className="text-lg font-bold text-slate-400 leading-none">
+                                                {product.priceDozen} <small className="text-[10px] mr-0.5">ر.س</small>
                                             </span>
+                                        ) : (
+                                            <span className="text-xs text-slate-600 italic">غير محدد</span>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex gap-1 ml-2">
+                                {/* Special Actions based on Tab */}
+                                {activeTab === 'offers' && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl"
+                                        onClick={() => handleStopOffer(product)}
+                                        title="إيقاف العرض واستعادة السعر"
+                                    >
+                                        <Ban className="w-4 h-4" />
+                                    </Button>
+                                )}
+
+                                {activeTab === 'frozen' && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-xl"
+                                        onClick={() => handleEdit(product)}
+                                        title="تجديد العرض"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </Button>
+                                )}
+
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -289,6 +361,6 @@ export default function ProductsPage() {
                 onClose={() => setIsFormOpen(false)}
                 initialProduct={editingProduct}
             />
-        </div>
+        </div >
     )
 }
