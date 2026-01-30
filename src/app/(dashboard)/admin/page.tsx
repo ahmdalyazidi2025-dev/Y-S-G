@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { useStore, type Product, type Order } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { AdminStatsSkeleton, AdminModuleSkeleton } from "@/components/store/skeletons"
+import { getVisits, DailyVisit } from "@/lib/analytics"
 
 const ADMIN_MODULES = [
     { title: "المنتجات", icon: Package, link: "/admin/products", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
@@ -30,6 +31,7 @@ const ADMIN_MODULES = [
 export default function AdminDashboard() {
     const { orders, customers, products, logout, currentUser } = useStore()
     const [isLoading, setIsLoading] = useState(true)
+    const [todayVisits, setTodayVisits] = useState(0)
     const router = useRouter()
 
     const filteredModules = ADMIN_MODULES.filter(module => {
@@ -57,6 +59,20 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const timer = setTimeout(() => setIsLoading(false), 800)
+
+        const fetchVisits = async () => {
+            const now = new Date()
+            const start = new Date(now)
+            start.setHours(0, 0, 0, 0)
+            const end = new Date(now)
+            end.setHours(23, 59, 59, 999)
+
+            const visits = await getVisits(start, end)
+            const count = visits.reduce((acc, v) => acc + v.count, 0)
+            setTodayVisits(count)
+        }
+        fetchVisits()
+
         return () => clearTimeout(timer)
     }, [])
 
@@ -101,7 +117,7 @@ export default function AdminDashboard() {
 
             {/* Premium Stats Grid - Only for Admins or Staff with 'sales' permission */}
             {(currentUser?.role === 'admin' || currentUser?.permissions?.includes('sales')) && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <AnimatePresence mode="wait">
                         {isLoading ? (
                             [1, 2, 3].map(i => <AdminStatsSkeleton key={i} />)
@@ -132,7 +148,17 @@ export default function AdminDashboard() {
                                     gradient="from-violet-500/20 to-purple-500/5"
                                     border="border-violet-500/20"
                                     iconColor="text-violet-400"
+                                    iconColor="text-violet-400"
                                     href="/admin/customers"
+                                />
+                                <StatsCard
+                                    title="زيارات اليوم"
+                                    value={todayVisits.toLocaleString()}
+                                    icon={Users}
+                                    gradient="from-pink-500/20 to-rose-500/5"
+                                    border="border-pink-500/20"
+                                    iconColor="text-pink-400"
+                                    href="/admin/analytics"
                                 />
                             </>
                         )}
