@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Product, useStore } from "@/context/store-context"
-import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit } from "lucide-react"
+import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -171,9 +171,9 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             name: formData.name,
             price: Number(formData.pricePiece) || 0,
             pricePiece: Number(formData.pricePiece) || 0,
-            oldPricePiece: formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
+            oldPricePiece: showCountdown && formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
             priceDozen: formData.priceDozen ? Number(formData.priceDozen) : 0,
-            oldPriceDozen: formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
+            oldPriceDozen: showCountdown && formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
             unit: formData.unit,
             barcode: formData.barcode,
             image: formData.images[0] || formData.image || "", // Prefer first image in array
@@ -260,16 +260,16 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
-                            {/* Countdown Toggle & Input */}
+                            {/* Offer Mode Toggle */}
                             <div className="space-y-4 bg-black/10 p-4 rounded-3xl border border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-xl transition-colors ${showCountdown ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
-                                            <Clock className="w-5 h-5" />
+                                            <Tag className="w-5 h-5" />
                                         </div>
                                         <div className="flex flex-col items-start">
-                                            <span className="text-sm font-bold text-white">تفعيل العداد التنازلي</span>
-                                            <span className="text-[10px] text-slate-400">تحفيز العميل بانتهاء العرض</span>
+                                            <span className="text-sm font-bold text-white">هذا المنتج "عرض خاص"؟</span>
+                                            <span className="text-[10px] text-slate-400">تفعيل الخصومات والمؤقت</span>
                                         </div>
                                     </div>
                                     <div
@@ -280,23 +280,31 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     </div>
                                 </div>
 
-                                {showCountdown && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        className="pt-2 border-t border-white/5 space-y-2"
-                                    >
-                                        <Label className="text-slate-400 text-[10px] pr-1 text-right block w-full">تاريخ ووقت انتهاء العرض</Label>
-                                        <Input
-                                            type="datetime-local"
-                                            dir="ltr" // Force LTR for correct date/time format display
-                                            className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50 text-center font-mono"
-                                            value={formData.discountEndDate}
-                                            onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
-                                            required={showCountdown}
-                                        />
-                                    </motion.div>
-                                )}
+                                <AnimatePresence>
+                                    {showCountdown && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="pt-4 border-t border-white/5 space-y-4 overflow-hidden"
+                                        >
+                                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4">
+                                                <div className="flex gap-2 items-center mb-2 text-orange-400">
+                                                    <Clock className="w-4 h-4" />
+                                                    <span className="text-xs font-bold">تاريخ انتهاء العرض</span>
+                                                </div>
+                                                <Input
+                                                    type="datetime-local"
+                                                    dir="ltr"
+                                                    className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50 text-center font-mono w-full"
+                                                    value={formData.discountEndDate}
+                                                    onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
+                                                    required={showCountdown}
+                                                />
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             {/* Image Inputs (Grid) */}
@@ -422,32 +430,38 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Piece Pricing */}
-                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الحبة</h3>
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className={`space-y-3 p-4 rounded-3xl border transition-colors ${showCountdown ? 'bg-orange-500/5 border-orange-500/10' : 'bg-black/10 border-white/5'}`}>
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">
+                                    {showCountdown ? "تسعير العرض (للحبة)" : "سعر البيع (للحبة)"}
+                                </h3>
+                                <div className={showCountdown ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
                                     <div className="space-y-1">
-                                        <Label className="text-[10px] text-green-500 font-bold block text-right pr-2 uppercase">السعر الحالي (المخفض)</Label>
+                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${showCountdown ? 'text-green-500' : 'text-slate-400'}`}>
+                                            {showCountdown ? "السعر الجديد (بعد الخصم)" : "السعر"}
+                                        </Label>
                                         <Input
                                             required
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className="bg-green-500/5 border-green-500/20 h-12 rounded-xl text-center text-green-500 font-bold focus:ring-green-500/50"
+                                            className={`h-12 rounded-xl text-center font-bold ${showCountdown ? 'bg-green-500/10 border-green-500/20 text-green-500 focus:ring-green-500/50' : 'bg-white/5 border-white/10 text-white focus:ring-primary/50'}`}
                                             value={formData.pricePiece}
                                             onChange={(e) => setFormData({ ...formData, pricePiece: e.target.value })}
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأصلي (قبل الخصم)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
-                                            value={formData.oldPricePiece}
-                                            onChange={(e) => setFormData({ ...formData, oldPricePiece: e.target.value })}
-                                        />
-                                    </div>
+                                    {showCountdown && (
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر القديم (مشطوب)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                                value={formData.oldPricePiece}
+                                                onChange={(e) => setFormData({ ...formData, oldPricePiece: e.target.value })}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -468,31 +482,37 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Dozen Pricing */}
-                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الدرزن</h3>
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className={`space-y-3 p-4 rounded-3xl border transition-colors ${showCountdown ? 'bg-orange-500/5 border-orange-500/10' : 'bg-black/10 border-white/5'}`}>
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">
+                                    {showCountdown ? "تسعير العرض (للدرزن - اختياري)" : "سعر البيع (للدرزن - اختياري)"}
+                                </h3>
+                                <div className={showCountdown ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
                                     <div className="space-y-1">
-                                        <Label className="text-[10px] text-green-500 font-bold block text-right pr-2 uppercase">السعر الحالي (المخفض)</Label>
+                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${showCountdown ? 'text-green-500' : 'text-slate-400'}`}>
+                                            {showCountdown ? "السعر الجديد (بعد الخصم)" : "السعر"}
+                                        </Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className="bg-green-500/5 border-green-500/20 h-12 rounded-xl text-center text-green-500 font-bold focus:ring-green-500/50"
+                                            className={`h-12 rounded-xl text-center font-bold ${showCountdown ? 'bg-green-500/10 border-green-500/20 text-green-500 focus:ring-green-500/50' : 'bg-white/5 border-white/10 text-white focus:ring-primary/50'}`}
                                             value={formData.priceDozen}
                                             onChange={(e) => setFormData({ ...formData, priceDozen: e.target.value })}
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأصلي (قبل الخصم)</Label>
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            placeholder="0.00"
-                                            className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
-                                            value={formData.oldPriceDozen}
-                                            onChange={(e) => setFormData({ ...formData, oldPriceDozen: e.target.value })}
-                                        />
-                                    </div>
+                                    {showCountdown && (
+                                        <div className="space-y-1">
+                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر القديم (مشطوب)</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                                value={formData.oldPriceDozen}
+                                                onChange={(e) => setFormData({ ...formData, oldPriceDozen: e.target.value })}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

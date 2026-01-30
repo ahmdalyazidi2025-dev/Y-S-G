@@ -692,8 +692,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         if (!normalizedInput) return null
 
+        // Filter out drafts first
+        const activeProducts = products.filter(p => !p.isDraft)
+
         // 1. Exact or Normalized match on Barcode
-        let product = products.find(p => {
+        let product = activeProducts.find(p => {
             if (!p.barcode) return false
             const normalizedStored = normalize(p.barcode)
             return normalizedStored === normalizedInput || p.barcode === barcode
@@ -701,7 +704,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Partial match (Common in automotive when barcode includes batch info)
         if (!product) {
-            product = products.find(p => {
+            product = activeProducts.find(p => {
                 if (!p.barcode) return false
                 const normalizedStored = normalize(p.barcode)
                 // If scanned is 90915YZZE1 and stored is 90915-YZZE1-A
@@ -711,7 +714,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 3. Match against product name (many store part numbers in the name field)
         if (!product) {
-            product = products.find(p => {
+            product = activeProducts.find(p => {
                 const normalizedName = normalize(p.name)
                 return normalizedName.includes(normalizedInput) || normalizedInput.includes(normalizedName)
             })

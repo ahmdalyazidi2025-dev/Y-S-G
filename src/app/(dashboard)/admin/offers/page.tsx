@@ -274,7 +274,11 @@ export default function OffersPage() {
                                                     انتهى {product.discountEndDate ? formatDistanceToNow(new Date(product.discountEndDate), { addSuffix: true, locale: arSA }) : ''}
                                                 </p>
                                                 <div className="flex gap-2">
-                                                    <Button size="sm" className="h-8 w-full bg-white/10 hover:bg-white/20">
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-8 w-full bg-white/10 hover:bg-white/20"
+                                                        onClick={() => handleEdit(product)}
+                                                    >
                                                         <PlayCircle className="w-3 h-3 ml-2" /> تجديد العرض
                                                     </Button>
                                                     <Link href={`/admin/products?search=${product.barcode || product.name}`} target="_blank">

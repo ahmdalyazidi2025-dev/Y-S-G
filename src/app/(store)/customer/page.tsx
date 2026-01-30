@@ -44,6 +44,8 @@ export default function CustomerHome() {
     const activeBanners = banners.filter(b => b.active)
 
     const filteredProducts = products.filter(product => {
+        if (product.isDraft) return false;
+
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (product.barcode && product.barcode.includes(searchQuery))
 
