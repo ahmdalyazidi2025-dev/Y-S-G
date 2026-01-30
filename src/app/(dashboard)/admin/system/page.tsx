@@ -212,7 +212,7 @@ export default function SystemMonitorPage() {
                     >
                         <div className="flex flex-col items-center">
                             <RefreshCw className="w-4 h-4 text-emerald-400" />
-                            <span className="text-xs mt-1">تحديث ملفات الموقع (V10)</span>
+                            <span className="text-xs mt-1">تحديث ملفات الموقع (V11)</span>
                         </div>
                     </Button>
                 </CardContent>
