@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Category, useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
+import { compressImage } from "@/lib/image-utils"
+import { toast } from "sonner"
 
 interface CategoryFormProps {
     isOpen: boolean
@@ -53,15 +55,29 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         return () => clearTimeout(timer);
     }, [initialCategory, isOpen])
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            setFormData(prev => ({ ...prev, image: reader.result as string }))
+        if (!file.type.startsWith('image/')) {
+            toast.error("يرجى اختيار ملف صورة صحيح")
+            return
         }
-        reader.readAsDataURL(file)
+
+        const loadingToast = toast.loading("جاري معالجة الصورة...")
+
+        try {
+            // Compress category image (Max 800px is enough for icons/cards)
+            const compressedBase64 = await compressImage(file, 800, 0.8)
+            setFormData(prev => ({ ...prev, image: compressedBase64 }))
+            toast.dismiss(loadingToast)
+            toast.success("تم رفع الصورة بنجاح")
+        } catch (error) {
+            console.error("Image processing error:", error)
+            toast.dismiss(loadingToast)
+            toast.error("فشل معالجة الصورة")
+        }
+        e.target.value = "" // Reset input
     }
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -9,7 +9,7 @@ import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { compressImage, applyBrandingTemplate } from "@/lib/image-utils"
+import { compressImage } from "@/lib/image-utils"
 import { toast } from "sonner"
 import ScannerModal from "@/components/store/scanner-modal"
 import { ImageEditorModal } from "@/components/admin/image-editor-modal"
@@ -102,19 +102,21 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         if (useBranding) {
             setEditingFile(files[0]);
             setIsEditorOpen(true);
-            // Clear input so selecting same file works again
             e.target.value = "";
             return;
         }
 
-        // Standard Processing
+        const loadingToast = toast.loading("جاري معالجة وضغط الصور...");
+
         try {
             const newImages: string[] = []
             for (let i = 0; i < files.length; i++) {
                 const file = files[i]
                 if (!file.type.startsWith('image/')) continue
 
-                const compressedBase64 = await compressImage(file)
+                // Compress image before adding
+                // Max width 1200px, Quality 0.8 -> Good balance
+                const compressedBase64 = await compressImage(file, 1200, 0.8)
                 newImages.push(compressedBase64)
             }
 
@@ -124,10 +126,12 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 image: prev.image || newImages[0] || ""
             }))
 
-            if (newImages.length > 0) toast.success(`تم تحميل ${newImages.length} صورة بنجاح`)
+            toast.dismiss(loadingToast);
+            if (newImages.length > 0) toast.success(`تم إضافة ${newImages.length} صورة بنجاح`)
         } catch (error) {
             console.error("Compression error:", error)
-            toast.error("حدث خطأ أثناء معالجة الصور")
+            toast.dismiss(loadingToast);
+            toast.error("حدث خطأ أثناء معالجة الصور، يرجى المحاولة مرة أخرى")
         }
         e.target.value = "";
     }
