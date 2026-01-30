@@ -596,42 +596,39 @@ export default function AdminSettingsPage() {
                                         تحميل نسخة احتياطية Offline
                                     </Button>
                                 </div>
-
-                            </div>
-                                </div>
-                </Section>
+                            </Section>
                         )}
 
-                {activeTab === 'entity' && (
-                    <div className="grid grid-cols-1 gap-6">
-                        <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                            <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
-                                <div className="flex flex-col gap-1">
-                                    <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
-                                        إلزام العميل بالاسم ورقم الجوال
-                                    </Label>
-                                    <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
-                                </div>
-                                <div
-                                    onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
-                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
-                                >
-                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
-                                </div>
+                        {activeTab === 'entity' && (
+                            <div className="grid grid-cols-1 gap-6">
+                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                                    <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                إلزام العميل بالاسم ورقم الجوال
+                                            </Label>
+                                            <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                        </div>
+                                        <div
+                                            onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
+                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
+                                        >
+                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
+                                        </div>
+                                    </div>
+                                </Section>
+
+                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                                    <StaffManager />
+                                </Section>
+
+                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                                    <SecuritySettingsPorted />
+                                </Section>
                             </div>
-                        </Section>
-
-                        <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
-                            <StaffManager />
-                        </Section>
-
-                        <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                            <SecuritySettingsPorted />
-                        </Section>
-                    </div>
-                )}
-            </motion.div>
-        </AnimatePresence>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </form >
         </div >
     )
