@@ -10,9 +10,14 @@ import { Input } from "@/components/ui/input"
 import { AdminProductForm } from "@/components/admin/product-form"
 import { cn } from "@/lib/utils"
 
+import { useSearchParams } from "next/navigation"
+
 export default function ProductsPage() {
     const { products, deleteProduct, categories } = useStore()
-    const [searchQuery, setSearchQuery] = useState("")
+    const searchParams = useSearchParams()
+
+    // Initialize search with URL param or empty string
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)

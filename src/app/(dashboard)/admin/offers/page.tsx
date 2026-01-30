@@ -6,12 +6,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
     Tag, Timer, FileEdit, Archive, CheckCircle2,
     AlertCircle, ArrowRight, PlayCircle, StopCircle,
-    Calendar, Sparkles, Filter
+    Calendar, Sparkles, Filter, Package
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { AdminProductForm } from "@/components/admin/product-form"
 import { formatDistanceToNow } from "date-fns"
 import { arSA } from "date-fns/locale"
 
@@ -36,6 +37,14 @@ export default function OffersPage() {
     const { products, updateProduct } = useStore()
     const [activeTab, setActiveTab] = useState<"active" | "expired" | "drafts">("active")
     const [searchQuery, setSearchQuery] = useState("")
+    const [isFormOpen, setIsFormOpen] = useState(false)
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+    // --- Actions ---
+    const handleEdit = (product: Product) => {
+        setEditingProduct(product)
+        setIsFormOpen(true)
+    }
 
     // --- Logic & Filtering ---
     const allOffers = products.filter(p => {
@@ -200,12 +209,23 @@ export default function OffersPage() {
                                                 </div>
 
                                                 <div className="flex gap-2">
-                                                    <Button size="sm" variant="outline" className="h-8 border-slate-700 hover:bg-slate-800 text-slate-300">
-                                                        <FileEdit className="w-3 h-3 ml-2" /> تعديل
-                                                    </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="h-8 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                                                        variant="outline"
+                                                        onClick={() => handleEdit(product)}
+                                                        className="h-8 border-slate-700 hover:bg-slate-800 text-slate-300"
+                                                    >
+                                                        <FileEdit className="w-3 h-3 ml-2" /> تعديل
+                                                    </Button>
+                                                    <Link href={`/admin/products?search=${product.barcode || product.name}`} target="_blank">
+                                                        <Button size="sm" variant="ghost" className="h-8 px-2 text-slate-400 hover:text-white">
+                                                            <Package className="w-4 h-4 ml-1" />
+                                                            <ArrowRight className="w-3 h-3 -rotate-45" />
+                                                        </Button>
+                                                    </Link>
+                                                    <Button
+                                                        size="sm"
+                                                        className="h-8 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 ml-auto"
                                                         onClick={() => handleStopOffer(product.id)}
                                                     >
                                                         <StopCircle className="w-3 h-3 ml-2" /> إيقاف
@@ -253,9 +273,17 @@ export default function OffersPage() {
                                                 <p className="text-xs text-red-400 font-bold mb-3">
                                                     انتهى {product.discountEndDate ? formatDistanceToNow(new Date(product.discountEndDate), { addSuffix: true, locale: arSA }) : ''}
                                                 </p>
-                                                <Button size="sm" className="h-8 w-full bg-white/10 hover:bg-white/20">
-                                                    <PlayCircle className="w-3 h-3 ml-2" /> تجديد العرض
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button size="sm" className="h-8 w-full bg-white/10 hover:bg-white/20">
+                                                        <PlayCircle className="w-3 h-3 ml-2" /> تجديد العرض
+                                                    </Button>
+                                                    <Link href={`/admin/products?search=${product.barcode || product.name}`} target="_blank">
+                                                        <Button size="sm" variant="ghost" className="h-8 px-2 text-slate-400 hover:text-white">
+                                                            <Package className="w-4 h-4 ml-1" />
+                                                            <ArrowRight className="w-3 h-3 -rotate-45" />
+                                                        </Button>
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -309,9 +337,20 @@ export default function OffersPage() {
                                                     >
                                                         <CheckCircle2 className="w-3 h-3 ml-2" /> نشر الآن
                                                     </Button>
-                                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-400 hover:bg-white/10">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => handleEdit(product)}
+                                                        className="h-8 w-8 p-0 rounded-full text-slate-400 hover:bg-white/10"
+                                                    >
                                                         <FileEdit className="w-4 h-4" />
                                                     </Button>
+                                                    <Link href={`/admin/products?search=${product.barcode || product.name}`} target="_blank">
+                                                        <Button size="sm" variant="ghost" className="h-8 px-2 text-slate-400 hover:text-white">
+                                                            <Package className="w-4 h-4 ml-1" />
+                                                            <ArrowRight className="w-3 h-3 -rotate-45" />
+                                                        </Button>
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </div>
@@ -322,6 +361,12 @@ export default function OffersPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            <AdminProductForm
+                isOpen={isFormOpen}
+                onClose={() => setIsFormOpen(false)}
+                initialProduct={editingProduct}
+            />
         </div>
     )
 }
