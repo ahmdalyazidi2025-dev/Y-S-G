@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { Customer, useStore } from "@/context/store-context"
 
 interface CustomerFormProps {
@@ -27,7 +30,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         email: "", // Added email field
         password: "",
         location: "",
-        allowedCategories: "all" as string[] | "all"
+        allowedCategories: "all" as string[] | "all",
+        referredBy: ""
     })
 
     useEffect(() => {
@@ -46,6 +50,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     password: initialCustomer.password || "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
                     allowedCategories: initialCustomer.allowedCategories || "all",
+                    referredBy: initialCustomer.referredBy || ""
                 })
             } else {
                 setFormData({
@@ -56,6 +61,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     password: "",
                     location: "",
                     allowedCategories: "all",
+                    referredBy: ""
                 })
             }
         }, 0);
@@ -75,7 +81,31 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         }
     }
 
-    const performSave = () => {
+    const performSave = async () => {
+        // Validation: Check Referral Code
+        if (formData.referredBy) {
+            try {
+                // Check if referral code exists
+                const q = query(collection(db, "customers"), where("referralCode", "==", formData.referredBy));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    toast.error("كود الدعوة غير صحيح", {
+                        description: "تأكد من كتابة الكود بشكل صحيح (مثل: AHM1234)"
+                    })
+                    return; // Stop saving
+                }
+
+                // Optional: Prevent self-referral (scenarios where user somehow guesses their own future code?)
+                // Hard to check before creation, but generally checking existence is enough.
+
+            } catch (e) {
+                console.error("Validation Error:", e)
+                toast.error("حدث خطأ أثناء التحقق من كود الدعوة")
+                return;
+            }
+        }
+
         // Use provided email OR generate fake one based on username
         const finalEmail = formData.email && formData.email.includes('@')
             ? formData.email
@@ -89,7 +119,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 username: formData.username,
                 password: formData.password || undefined,
                 location: formData.location,
-                allowedCategories: formData.allowedCategories
+                allowedCategories: formData.allowedCategories,
+                referredBy: formData.referredBy
             })
         } else {
             addCustomer({
@@ -99,7 +130,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 username: formData.username,
                 password: formData.password,
                 location: formData.location,
-                allowedCategories: formData.allowedCategories
+                allowedCategories: formData.allowedCategories,
+                referredBy: formData.referredBy
             } as any)
         }
         setShowConfirm(false)
@@ -240,6 +272,22 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                     />
                                 </div>
                             </div>
+
+                            {/* Referral Code (New) */}
+                            {!initialCustomer && (
+                                <div className="space-y-2">
+                                    <Label className="text-slate-400">كود الدعوة (اختياري)</Label>
+                                    <div className="relative">
+                                        <Hash className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                        <Input
+                                            className="bg-black/20 border-white/10 pr-10 text-right uppercase placeholder:normal-case"
+                                            placeholder="كود العميل الذي قام بالدعوة"
+                                            value={formData.referredBy}
+                                            onChange={(e) => setFormData({ ...formData, referredBy: e.target.value.toUpperCase() })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Category Access Control */}
                             <div className="space-y-3 pt-2 border-t border-white/10">

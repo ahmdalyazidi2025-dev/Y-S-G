@@ -23,8 +23,21 @@ function LandingContent() {
   }, [isFromLogout]);
 
   // --- Auto-Redirect Logic ---
-  const { currentUser, loading } = useStore() // Need to import useStore
+  const { products, categories, storeSettings, currentUser, loading } = useStore()
+  const [selectedCategory, setSelectedCategory] = useState("الكل")
   const router = useRouter() // Need to import useRouter
+
+  const activeCategories = categories.filter(c => !c.isHidden)
+
+  const filteredProducts = products.filter(product => {
+    // Filter out drafts
+    if (product.isDraft) return false
+
+    if (selectedCategory !== "الكل" && product.category !== selectedCategory) {
+      return false
+    }
+    return true
+  })
 
   useEffect(() => {
     if (!loading && currentUser && !isFromLogout) {
@@ -168,7 +181,7 @@ function LandingContent() {
                             <div className="absolute inset-0 bg-white/5 blur-[40px] rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
                             <div className="relative w-28 h-28 rounded-[32px] bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 will-change-transform">
                               <div className="absolute inset-0 rounded-[32px] border border-t-white/40 border-b-transparent opacity-50" />
-                              <ShoppingBag className="w-12 h-12 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] group-hover:text-primary transition-colors duration-300" />
+                              <ShoppingBag className="w-12 h-12 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]" />
                             </div>
                           </div>
 

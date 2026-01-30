@@ -4,9 +4,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import {
-    collection, addDoc, onSnapshot, query, orderBy,
+    collection, addDoc, onSnapshot, query, orderBy, where,
     updateDoc, doc, deleteDoc, Timestamp, getDoc, setDoc, runTransaction,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDocs
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDocs, limit
 } from "firebase/firestore"
 import { db, auth, getSecondaryAuth } from "@/lib/firebase"
 import {
@@ -44,6 +44,9 @@ export type Product = {
     images?: string[]
     description?: string // Added optional description
     discountEndDate?: Date
+    isDraft?: boolean // New: Draft status (hidden from store)
+    notes?: string // New: Internal admin notes
+    costPrice?: number // New: Admin only cost price
 }
 
 export type CartItem = Product & {
@@ -57,7 +60,8 @@ export type Category = {
     nameAr: string
     nameEn: string
     image?: string
-    icon?: string
+    icon?: any
+    isHidden?: boolean // New: Visibility toggle
 }
 
 export interface Customer {
@@ -71,6 +75,9 @@ export interface Customer {
     lastActive?: Date | null
     createdAt?: Date | Timestamp | null
     allowedCategories?: string[] | "all"
+    referralCode?: string
+    referredBy?: string
+    referralCount?: number
 }
 
 export type StaffMember = {
@@ -94,6 +101,8 @@ export type User = {
     location?: string
     permissions?: string[]
     allowedCategories?: string[] | "all"
+    referralCode?: string
+    referralCount?: number
 }
 
 export type Order = {
@@ -461,7 +470,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
+        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), (snap: QuerySnapshot<DocumentData>) => {
             setOrders(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Order, "id">
                 return {
@@ -778,6 +787,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
             const uid = userCredential.user.uid;
 
+            // --- REFERRAL SYSTEM (Generate Early) ---
+            const referralCode = (username.substring(0, 3) + Math.floor(1000 + Math.random() * 9000)).toUpperCase();
+
             // 3. Create Username Mapping (Username -> Real Email)
             // Always map the username so they can login with it
             await setDoc(doc(db, "usernames", username.toLowerCase()), {
@@ -792,8 +804,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 role: "customer",
                 email: email,
                 username: username,
-                permissions: [] // Customers don't have admin panel permissions
+                permissions: [], // Customers don't have admin panel permissions
+                referralCode,
+                referralCount: 0
             });
+
+            if (data.referredBy) {
+                try {
+                    const q = query(collection(db, "customers"), where("referralCode", "==", data.referredBy));
+                    const snap = await getDocs(q);
+                    if (!snap.empty) {
+                        const referrerDoc = snap.docs[0];
+                        const referrerData = referrerDoc.data();
+                        const newCount = (referrerData.referralCount || 0) + 1;
+
+                        await updateDoc(referrerDoc.ref, {
+                            referralCount: newCount
+                        });
+
+                        // --- REWARDS CHECKS ---
+                        if (newCount === 3) {
+                            // Milestone Reached: 3 Referrals
+                            const couponCode = `GIFT-${referrerData.username?.substring(0, 4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+                            // 1. Create Coupon
+                            await addDoc(collection(db, "coupons"), {
+                                code: couponCode,
+                                discount: 15,
+                                type: "percentage",
+                                active: true,
+                                expiryDate: null, // No expiry or set one? Let's say unlimited for now
+                                usageLimit: 1, // One time use
+                                usedCount: 0,
+                                createdAt: Timestamp.now(),
+                                createdReason: "referral_reward",
+                                ownerId: referrerDoc.id
+                            });
+
+                            // 2. Notify Referrer
+                            const title = "🎁 مبروك! حصلت على هدية";
+                            const body = `شكراً لدعوتك 3 أصدقاء! لقد حصلت على كوبون خصم 15% خاص بك: ${couponCode}`;
+
+                            await addDoc(collection(db, "notifications"), {
+                                userId: referrerDoc.id,
+                                title,
+                                body,
+                                type: "success",
+                                read: false,
+                                createdAt: Timestamp.now()
+                            });
+
+                            // Send Push
+                            sendPushNotification(referrerDoc.id, title, body, "/customer?notifications=open");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Referral Error:", err);
+                }
+            }
 
             // 5. Create Customer Document
             await setDoc(doc(db, "customers", uid), sanitizeData({
@@ -801,6 +869,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 id: uid,
                 email: email, // Store the actual used email
                 username: username,
+                referralCode, // Save Generated Code
+                referralCount: 0,
                 createdAt: Timestamp.now()
             }))
 

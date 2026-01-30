@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Product, useStore } from "@/context/store-context"
-import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon } from "lucide-react"
+import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,6 +42,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         oldPriceDozen: "",
         description: "",
         discountEndDate: "",
+        costPrice: "",
+        notes: "",
     })
 
     const [showCountdown, setShowCountdown] = useState(false)
@@ -64,6 +66,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     oldPriceDozen: initialProduct.oldPriceDozen?.toString() || "",
                     description: initialProduct.description || "",
                     discountEndDate: initialProduct.discountEndDate ? new Date(initialProduct.discountEndDate).toISOString().slice(0, 16) : "",
+                    costPrice: initialProduct.costPrice?.toString() || "",
+                    notes: initialProduct.notes || "",
                 })
                 setShowCountdown(!!initialProduct.discountEndDate)
             } else {
@@ -80,6 +84,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     oldPriceDozen: "",
                     description: "",
                     discountEndDate: "",
+                    costPrice: "",
+                    notes: "",
                 })
                 setShowCountdown(false)
             }
@@ -159,7 +165,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         })
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent, isDraft = false) => {
         e.preventDefault()
         const productData = {
             name: formData.name,
@@ -175,6 +181,9 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             category: formData.category,
             description: formData.description,
             discountEndDate: showCountdown && formData.discountEndDate ? new Date(formData.discountEndDate) : null,
+            costPrice: formData.costPrice ? Number(formData.costPrice) : 0,
+            notes: formData.notes,
+            isDraft: isDraft
         }
 
         if (initialProduct) {
@@ -442,6 +451,22 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
+
+                            {/* Cost Price */}
+                            <div className="space-y-3 bg-yellow-500/5 p-4 rounded-3xl border border-yellow-500/10 mb-4">
+                                <h3 className="text-xs font-bold text-yellow-500 text-right pr-1 italic">التكلفة (خاص للإدارة)</h3>
+                                <div className="space-y-1">
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        className="bg-yellow-500/5 border-yellow-500/20 h-12 rounded-xl text-center text-yellow-100 font-bold focus:ring-yellow-500/50"
+                                        value={formData.costPrice}
+                                        onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
                             {/* Dozen Pricing */}
                             <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
                                 <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الدرزن</h3>
@@ -481,10 +506,28 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 />
                             </div>
 
-                            <div className="pt-2">
-                                <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]">
+                            <div className="space-y-2">
+                                <Label className="text-slate-400 text-xs pr-1 text-right block w-full">ملاحظات إدارية (للمسودة)</Label>
+                                <textarea
+                                    className="w-full bg-black/20 border border-white/10 rounded-2xl p-4 text-white text-right text-sm focus:ring-1 focus:ring-primary outline-none min-h-[80px]"
+                                    placeholder="ملاحظات لا تظهر للعميل..."
+                                    value={formData.notes}
+                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="pt-2 grid grid-cols-2 gap-3">
+                                <Button
+                                    type="button"
+                                    onClick={(e) => handleSubmit(e, true)}
+                                    className="h-14 bg-white/5 hover:bg-white/10 text-slate-300 rounded-2xl gap-2 border border-white/10 font-bold transition-all active:scale-[0.98]"
+                                >
+                                    <FileEdit className="w-5 h-5" />
+                                    <span>حفظ كمسودة</span>
+                                </Button>
+                                <Button type="submit" className="h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]">
                                     <Plus className="w-6 h-6" />
-                                    <span>{initialProduct ? "حفظ التغييرات" : "إضافة المنتج"}</span>
+                                    <span>{initialProduct ? "حفظ وتفعيل" : "نشر المنتج"}</span>
                                 </Button>
                             </div>
                         </form >

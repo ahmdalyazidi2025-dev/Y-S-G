@@ -135,13 +135,9 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                                     <td className="py-4 px-3 text-center">
                                         <span className="font-bold text-base text-red-600">{taxAmount.toFixed(2)}</span>
                                     </td>
-                                    <td className="py-4 px-3 text-center">
-                                        <span className="font-black text-base text-slate-900">{priceWithTax.toFixed(2)}</span>
-                                    </td>
                                     <td className="py-4 px-4 text-left">
                                         <div className="text-right">
-                                            <p className="font-black text-lg text-slate-900">{totalWithTax.toFixed(2)} ر.س</p>
-                                            <p className="text-xs text-slate-500 font-bold">({totalBeforeTax.toFixed(2)} + {totalTax.toFixed(2)})</p>
+                                            <p className="font-black text-lg text-slate-900">{totalBeforeTax.toFixed(2)} ر.س</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -156,19 +152,19 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                         {/* Subtotal before tax */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">المجموع قبل الضريبة:</span>
-                            <span className="font-black text-lg">{order.total.toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg">{(order.total / 1.15).toFixed(2)} ر.س</span>
                         </div>
 
                         {/* VAT 15% */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">ضريبة القيمة المضافة (15%):</span>
-                            <span className="font-black text-lg text-red-600">{(order.total * 0.15).toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg text-red-600">{(order.total - (order.total / 1.15)).toFixed(2)} ر.س</span>
                         </div>
 
                         {/* Total with tax */}
                         <div className="flex justify-between bg-slate-900 text-white font-black text-xl p-5 rounded-xl shadow-lg mt-3">
                             <span>الإجمالي شامل الضريبة:</span>
-                            <span className="text-2xl">{(order.total * 1.15).toFixed(2)} ر.س</span>
+                            <span className="text-2xl">{order.total.toFixed(2)} ر.س</span>
                         </div>
                     </div>
                 </div>

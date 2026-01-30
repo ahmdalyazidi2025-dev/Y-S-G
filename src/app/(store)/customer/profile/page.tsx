@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Mail, Calendar, Wallet, Clock } from "lucide-react"
+import { ArrowRight, User, Phone, Lock, Save, ShieldCheck, Mail, Calendar, Wallet, Clock, Gift, Copy, Users } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
@@ -60,6 +60,53 @@ export default function ProfilePage() {
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">My Profile</p>
                 </div>
             </div>
+
+            {/* Referral Card */}
+            {currentUser.referralCode && (
+                <div className="glass-card p-6 relative overflow-hidden group mb-6">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+                    <div className="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all" />
+
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-purple-500/20 rounded-xl text-purple-400">
+                                <Gift className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white text-lg">ادعُ أصدقاءك</h3>
+                                <p className="text-xs text-slate-400">شارك الكود الخاص بك واكسب معنا</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-black/30 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-slate-500 mb-1">كود الدعوة الخاص بك</span>
+                                <code className="font-mono text-2xl font-black text-purple-400 tracking-widest">
+                                    {currentUser.referralCode}
+                                </code>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-10 w-10 rounded-full bg-purple-500/10 text-purple-400 hover:bg-purple-500 hover:text-white transition-all"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(currentUser.referralCode || "")
+                                    toast.success("تم نسخ الكود")
+                                    hapticFeedback('success')
+                                }}
+                            >
+                                <Copy className="w-5 h-5" />
+                            </Button>
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+                            <Users className="w-4 h-4 text-purple-500" />
+                            <span>عدد من قمت بدعوتهم: </span>
+                            <span className="font-bold text-white">{currentUser.referralCount || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4">
