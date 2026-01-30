@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -12,6 +12,7 @@ import { useStore } from "@/context/store-context"
 const NAV_ITEMS = [
     { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
     { title: "المنتجات", icon: Package, href: "/admin/products", color: "text-blue-400" },
+    { title: "العروض", icon: Tag, href: "/admin/offers", color: "text-green-400" },
     { title: "الأقسام", icon: Layers, href: "/admin/categories", color: "text-primary" },
     { title: "العملاء", icon: Users, href: "/admin/customers", color: "text-teal-400" },
     { title: "الإحصائيات", icon: BarChart3, href: "/admin/reports", color: "text-indigo-400" },
@@ -47,6 +48,7 @@ export function AdminSidebar() {
 
         const perms: Record<string, string> = {
             "/admin/products": "products",
+            "/admin/offers": "products",
             "/admin/categories": "products",
             "/admin/customers": "customers",
             "/admin/reports": "sales",
@@ -161,6 +163,7 @@ export function AdminMobileNav() {
     const BOTTOM_ITEMS = [
         { title: "الرئيسية", icon: LayoutDashboard, href: "/admin" },
         { title: "المنتجات", icon: Package, href: "/admin/products" },
+        { title: "العروض", icon: Tag, href: "/admin/offers" },
         { title: "العملاء", icon: Users, href: "/admin/customers" },
         { title: "الطلبات", icon: ClipboardList, href: "/admin/orders" },
         { title: "الدردشة", icon: MessageCircle, href: "/admin/chat" },
@@ -176,6 +179,7 @@ export function AdminMobileNav() {
                 if (item.href === "/admin") return true
                 const perms: Record<string, string> = {
                     "/admin/products": "products",
+                    "/admin/offers": "products",
                     "/admin/customers": "customers",
                     "/admin/orders": "orders",
                     "/admin/chat": "chat",
