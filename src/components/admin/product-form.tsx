@@ -292,15 +292,45 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                             exit={{ height: 0, opacity: 0 }}
                                             className="pt-4 border-t border-white/5 space-y-4 overflow-hidden"
                                         >
-                                            <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4">
-                                                <div className="flex gap-2 items-center mb-2 text-orange-400">
-                                                    <Clock className="w-4 h-4" />
-                                                    <span className="text-xs font-bold">تاريخ انتهاء العرض</span>
+                                            {/* Quick Duration Buttons */}
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {[
+                                                    { label: "24 ساعة", hours: 24 },
+                                                    { label: "3 أيام", hours: 72 },
+                                                    { label: "أسبوع", hours: 168 },
+                                                    { label: "شهر", hours: 720 },
+                                                ].map((duration) => (
+                                                    <button
+                                                        key={duration.hours}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const date = new Date();
+                                                            date.setHours(date.getHours() + duration.hours);
+                                                            // Format for datetime-local: YYYY-MM-DDTHH:mm
+                                                            const formatted = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                                                            setFormData({ ...formData, discountEndDate: formatted });
+                                                        }}
+                                                        className="bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 border border-white/5 hover:border-orange-500/30 rounded-xl py-2 text-[10px] font-bold text-slate-400 transition-all active:scale-95"
+                                                    >
+                                                        {duration.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 rounded-2xl p-1 relative group">
+                                                <div className="flex items-center justify-between px-4 py-2 pointer-events-none">
+                                                    <div className="flex items-center gap-2 text-orange-400">
+                                                        <Clock className="w-4 h-4" />
+                                                        <span className="text-xs font-bold">تاريخ انتهاء العرض</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-slate-400 font-mono">
+                                                        {formData.discountEndDate ? new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { weekday: 'short', day: 'numeric', month: 'short' }) : 'اختر التاريخ'}
+                                                    </div>
                                                 </div>
                                                 <Input
                                                     type="datetime-local"
                                                     dir="ltr"
-                                                    className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50 text-center font-mono w-full"
+                                                    className="bg-transparent border-none h-12 rounded-xl text-white px-4 focus:ring-0 text-center font-mono w-full cursor-pointer hover:bg-white/5 transition-colors text-sm"
                                                     value={formData.discountEndDate}
                                                     onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
                                                     required={showCountdown}
