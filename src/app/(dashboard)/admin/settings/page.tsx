@@ -573,73 +573,67 @@ export default function AdminSettingsPage() {
                                         </Button>
                                     </div>
 
-                                    <div className="p-6 bg-slate-900/50 rounded-2xl border border-white/5 space-y-4">
-                                        <div className="flex items-center gap-3 text-yellow-500">
-                                            <ShoppingBag className="w-6 h-6" />
-                                            <div>
-                                                <h4 className="font-bold">الصندوق الأسود (Full Backup)</h4>
-                                                <p className="text-xs text-slate-500">نسخة احتياطية كاملة وشاملة للنظام (JSON) تتضمن كل شيء (العملاء، الطلبات، المنتجات، المحادثات، إلخ).</p>
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => exportFullSystemBackup({
-                                                backupDate: new Date(),
-                                                settings: storeSettings,
-                                                products,
-                                                categories,
-                                                staff,
-                                                customers,
-                                                orders,
-                                                coupons,
-                                                banners,
-                                                productRequests,
-                                                messages,
-                                                notifications
-                                            })}
-                                            className="w-full h-14 bg-slate-800 hover:bg-slate-700 border-white/5 text-slate-200 rounded-2xl font-bold gap-2"
-                                        >
-                                            <Save className="w-5 h-5" />
-                                            تحميل نسخة احتياطية Offline
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => exportFullSystemBackup({
+                                            backupDate: new Date(),
+                                            settings: storeSettings,
+                                            products,
+                                            categories,
+                                            staff,
+                                            customers,
+                                            orders,
+                                            coupons,
+                                            banners,
+                                            productRequests,
+                                            messages,
+                                            notifications
+                                        })}
+                                        className="w-full h-14 bg-slate-800 hover:bg-slate-700 border-white/5 text-slate-200 rounded-2xl font-bold gap-2"
+                                    >
+                                        <Save className="w-5 h-5" />
+                                        تحميل نسخة احتياطية Offline
+                                    </Button>
                                 </div>
-                            </Section>
-                        )}
 
-                        {activeTab === 'entity' && (
-                            <div className="grid grid-cols-1 gap-6">
-                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                                    <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
-                                        <div className="flex flex-col gap-1">
-                                            <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
-                                                إلزام العميل بالاسم ورقم الجوال
-                                            </Label>
-                                            <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
-                                        </div>
-                                        <div
-                                            onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
-                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
-                                        >
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
-                                        </div>
-                                    </div>
-                                </Section>
-
-                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
-                                    <StaffManager />
-                                </Section>
-
-                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                                    <SecuritySettingsPorted />
-                                </Section>
                             </div>
+                                </div>
+                </Section>
                         )}
-                    </motion.div>
-                </AnimatePresence>
-            </form>
-        </div>
+
+                {activeTab === 'entity' && (
+                    <div className="grid grid-cols-1 gap-6">
+                        <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                            <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                                <div className="flex flex-col gap-1">
+                                    <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                        إلزام العميل بالاسم ورقم الجوال
+                                    </Label>
+                                    <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                </div>
+                                <div
+                                    onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
+                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
+                                >
+                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
+                                </div>
+                            </div>
+                        </Section>
+
+                        <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                            <StaffManager />
+                        </Section>
+
+                        <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                            <SecuritySettingsPorted />
+                        </Section>
+                    </div>
+                )}
+            </motion.div>
+        </AnimatePresence>
+            </form >
+        </div >
     )
 }
 

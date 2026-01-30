@@ -6,7 +6,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import {
     collection, addDoc, onSnapshot, query, orderBy,
     updateDoc, doc, deleteDoc, Timestamp, getDoc, setDoc, runTransaction,
-    QuerySnapshot, DocumentSnapshot, DocumentData
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDocs
 } from "firebase/firestore"
 import { db, auth, getSecondaryAuth } from "@/lib/firebase"
 import {
@@ -253,7 +253,8 @@ type StoreContextType = {
     updateAdminCredentials: (username: string, password: string) => Promise<void>
     authInitialized: boolean
     resetPassword: (email: string) => Promise<boolean>
-    loading: boolean // Added
+    cleanupOrphanedUsers: () => Promise<number> // Added
+    loading: boolean
     guestId: string
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
@@ -870,8 +871,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const deleteCustomer = async (customerId: string) => {
+        // 1. Get Customer to find username (if we want to be precise) or just try to delete common patterns
+        // We need to delete: customers/{id}, users/{id}, usernames/{username}
+
+        const customer = customers.find(c => c.id === customerId)
+
         await deleteDoc(doc(db, "customers", customerId))
-        toast.error("تم حذف العميل")
+        await deleteDoc(doc(db, "users", customerId)) // Delete Auth Profile
+
+        if (customer?.username) {
+            await deleteDoc(doc(db, "usernames", customer.username.toLowerCase()))
+        }
+
+        toast.error("تم حذف العميل وبيانات دخوله نهائياً")
     }
 
     const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
@@ -1145,9 +1157,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const deleteStaff = async (memberId: string) => {
         try {
+            const member = staff.find(s => s.id === memberId)
+
             await deleteDoc(doc(db, "staff", memberId))
             await deleteDoc(doc(db, "users", memberId)) // Revoke login access
-            toast.error("تم حذف الموظف وسحب الصلاحيات")
+
+            if (member?.username) {
+                await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))
+            } else if (member?.email && member.email.includes("@ysg.local")) {
+                // Try to guess username from legacy email if not present
+                const username = member.email.split("@")[0]
+                await deleteDoc(doc(db, "usernames", username))
+            }
+
+            toast.error("تم حذف الموظف وسحب الصلاحيات نهائياً")
         } catch (e) {
             console.error("Delete Staff Error:", e)
             toast.error("فشل حذف الموظف")
@@ -1410,6 +1433,69 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         router.push("/login")
     }
 
+    const cleanupOrphanedUsers = async () => {
+        try {
+            console.log("Starting cleanup...")
+            // 1. Get all users from 'users' collection
+            const usersSnap = await getDocs(collection(db, "users"))
+            const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
+
+            // 2. Get valid IDs from customers and staff
+            // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
+            const customersSnap = await getDocs(collection(db, "customers"))
+            const staffSnap = await getDocs(collection(db, "staff"))
+
+            const validIds = new Set([
+                ...customersSnap.docs.map(d => d.id),
+                ...staffSnap.docs.map(d => d.id)
+            ])
+
+            // 3. Find orphans (User exists but no Customer/Staff profile)
+            // EXCEPTION: Hardcoded admins or special accounts if any? 
+            // Our logic: Every user MUST be either in 'customers' or 'staff'.
+            // Special case: The "admin" user might be created manually? 
+            // Usually we add them to staff. If not, we might delete them!
+            // Let's protect specific IDs or emails if needed. 
+            // For now, assume all legitimate users are in staff/customers.
+
+            const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
+
+            const orphans = allUsers.filter(u =>
+                !validIds.has(u.id) &&
+                !safeEmails.includes(u.email || "") &&
+                u.id !== currentUser?.id // Don't delete self just in case
+            )
+
+            console.log(`Found ${orphans.length} orphans`, orphans)
+
+            if (orphans.length === 0) {
+                toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
+                return 0
+            }
+
+            // 4. Delete them
+            const deletePromises = orphans.map(async (u) => {
+                // Delete User Doc
+                await deleteDoc(doc(db, "users", u.id))
+                // Delete Username Mapping
+                if (u.username) {
+                    await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
+                }
+            })
+
+            await Promise.all(deletePromises)
+
+            const count = orphans.length
+            toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
+            return count
+
+        } catch (error) {
+            console.error("Cleanup Error:", error)
+            toast.error("حدث خطأ أثناء التنظيف")
+            throw error
+        }
+    }
+
     return (
         <StoreContext.Provider value={{
             products, cart, orders, categories, customers, banners, productRequests,
@@ -1423,7 +1509,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound
+            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound,
+            cleanupOrphanedUsers
         }}>
             {children}
         </StoreContext.Provider>

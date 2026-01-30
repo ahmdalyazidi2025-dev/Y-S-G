@@ -325,7 +325,7 @@ export default function CustomersPage() {
                                         size="icon"
                                         className="h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-400/10"
                                         onClick={() => {
-                                            if (confirm("هل أنت متأكد من حذف هذا العميل؟")) {
+                                            if (confirm("تحذير هام: سيتم حذف هذا العميل نهائياً من النظام ولن يتمكن من الدخول مجدداً. هل أنت متأكد؟")) {
                                                 deleteCustomer(customer.id)
                                             }
                                         }}

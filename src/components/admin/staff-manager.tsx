@@ -197,7 +197,11 @@ export function StaffManager() {
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-400/10"
-                                onClick={() => deleteStaff(member.id)}
+                                onClick={() => {
+                                    if (confirm("تحذير هام: سيتم حذف حساب الموظف نهائياً وسحب كافة الصلاحيات. لن يتمكن من الدخول مجدداً.\nهل أنت متأكد؟")) {
+                                        deleteStaff(member.id)
+                                    }
+                                }}
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
