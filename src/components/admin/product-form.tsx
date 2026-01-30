@@ -317,24 +317,19 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                                 ))}
                                             </div>
 
-                                            <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 rounded-2xl p-1 relative group">
-                                                <div className="flex items-center justify-between px-4 py-2 pointer-events-none">
-                                                    <div className="flex items-center gap-2 text-orange-400">
+                                            <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 rounded-xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-3 text-orange-400">
+                                                    <div className="p-2 bg-orange-500/10 rounded-lg">
                                                         <Clock className="w-4 h-4" />
-                                                        <span className="text-xs font-bold">تاريخ انتهاء العرض</span>
                                                     </div>
-                                                    <div className="text-[10px] text-slate-400 font-mono">
-                                                        {formData.discountEndDate ? new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { weekday: 'short', day: 'numeric', month: 'short' }) : 'اختر التاريخ'}
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-slate-300">ينتهي العرض في:</span>
+                                                        <span className="text-[10px] text-orange-400/80">اختر مدة من الأزرار أعلاه</span>
                                                     </div>
                                                 </div>
-                                                <Input
-                                                    type="datetime-local"
-                                                    dir="ltr"
-                                                    className="bg-transparent border-none h-12 rounded-xl text-white px-4 focus:ring-0 text-center font-mono w-full cursor-pointer hover:bg-white/5 transition-colors text-sm"
-                                                    value={formData.discountEndDate}
-                                                    onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
-                                                    required={showCountdown}
-                                                />
+                                                <div className="text-sm font-bold text-white font-mono bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
+                                                    {formData.discountEndDate ? new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '---'}
+                                                </div>
                                             </div>
                                         </motion.div>
                                     )}
