@@ -11,8 +11,7 @@ import { useStore } from "@/context/store-context"
 
 const NAV_ITEMS = [
     { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
-    { title: "المنتجات", icon: Package, href: "/admin/products", color: "text-blue-400" },
-    { title: "العروض", icon: Tag, href: "/admin/offers", color: "text-green-400" },
+    { title: "المنتجات والعروض", icon: Package, href: "/admin/products", color: "text-blue-400" },
     { title: "الأقسام", icon: Layers, href: "/admin/categories", color: "text-primary" },
     { title: "العملاء", icon: Users, href: "/admin/customers", color: "text-teal-400" },
     { title: "الإحصائيات", icon: BarChart3, href: "/admin/reports", color: "text-indigo-400" },
@@ -162,8 +161,7 @@ export function AdminMobileNav() {
     // Simplified items for mobile bottom bar
     const BOTTOM_ITEMS = [
         { title: "الرئيسية", icon: LayoutDashboard, href: "/admin" },
-        { title: "المنتجات", icon: Package, href: "/admin/products" },
-        { title: "العروض", icon: Tag, href: "/admin/offers" },
+        { title: "المنتجات والعروض", icon: Package, href: "/admin/products" },
         { title: "العملاء", icon: Users, href: "/admin/customers" },
         { title: "الطلبات", icon: ClipboardList, href: "/admin/orders" },
         { title: "الدردشة", icon: MessageCircle, href: "/admin/chat" },
