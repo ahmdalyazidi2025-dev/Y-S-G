@@ -35,11 +35,23 @@ function CountdownTimer({ date }: { date: Date }) {
 export default function OffersPage() {
     const { products, updateProduct } = useStore()
     const [activeTab, setActiveTab] = useState<"active" | "expired" | "drafts">("active")
+    const [searchQuery, setSearchQuery] = useState("")
 
     // --- Logic & Filtering ---
-    const activeOffers = products.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) > new Date())
-    const expiredOffers = products.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) <= new Date())
-    const drafts = products.filter(p => p.isDraft)
+    const allOffers = products.filter(p => {
+        // Search Filter
+        const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "")
+        const normalizedQuery = normalize(searchQuery)
+        const matchesSearch =
+            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            normalize(p.barcode || "").includes(normalizedQuery);
+
+        return matchesSearch
+    })
+
+    const activeOffers = allOffers.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) > new Date())
+    const expiredOffers = allOffers.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) <= new Date())
+    const drafts = allOffers.filter(p => p.isDraft)
 
     // --- Actions ---
     const handlePublish = async (id: string) => {
@@ -97,6 +109,19 @@ export default function OffersPage() {
                         </h1>
                         <p className="text-slate-400 font-medium mt-1">إدارة الحملات الترويجية والمسودات</p>
                     </div>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative w-full md:w-96">
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                    </div>
+                    <input
+                        className="w-full h-12 bg-black/20 border border-white/10 rounded-2xl pr-10 pl-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                        placeholder="ابحث عن عرض بالاسم أو الباركود..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                 </div>
             </div>
 

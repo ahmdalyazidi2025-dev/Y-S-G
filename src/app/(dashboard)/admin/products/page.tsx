@@ -197,6 +197,16 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
+                                {/* Cost Price Display */}
+                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6">
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">التكلفة (حبة)</p>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-lg font-bold text-amber-500 leading-none">
+                                            {product.costPrice || 0} <small className="text-[10px] mr-0.5">ر.س</small>
+                                        </span>
+                                    </div>
+                                </div>
+
                                 {/* Dozen Price Display */}
                                 <div className="text-right space-y-0.5 min-w-[80px]">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">الدرزن</p>
