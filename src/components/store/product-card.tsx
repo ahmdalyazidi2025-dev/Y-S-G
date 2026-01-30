@@ -11,7 +11,24 @@ import { motion } from "framer-motion"
 export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: () => void, index?: number }) {
     const { addToCart } = useStore()
 
+    // --- Smart Price Logic ---
+    const isExpired = item.discountEndDate && new Date(item.discountEndDate).getTime() < new Date().getTime()
+
+    // Piece Pricing
+    const effectivePricePiece = isExpired && item.oldPricePiece
+        ? item.oldPricePiece
+        : item.pricePiece
+
+    const displayOldPricePiece = isExpired ? null : item.oldPricePiece
+
+    // Dozen Pricing
     const hasDozen = item.priceDozen && item.priceDozen > 0
+    const effectivePriceDozen = isExpired && item.oldPriceDozen
+        ? item.oldPriceDozen
+        : (item.priceDozen || 0)
+
+    const displayOldPriceDozen = isExpired ? null : item.oldPriceDozen
+    // -------------------------
 
     return (
         <motion.div
@@ -74,12 +91,17 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                         <div className="flex items-center justify-between bg-accent/50 hover:bg-accent rounded-xl p-1.5 pl-2 border border-border transition-colors group/btn">
                             <div className="flex flex-col items-start px-2">
                                 <span className="text-[10px] text-muted-foreground group-hover/btn:text-foreground transition-colors">بالحبة</span>
-                                <span className="text-sm font-black text-foreground">{item.pricePiece} <span className="text-[10px] text-primary font-normal">ر.س</span></span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-black text-foreground">{effectivePricePiece} <span className="text-[10px] text-primary font-normal">ر.س</span></span>
+                                    {displayOldPricePiece && (
+                                        <span className="text-[10px] text-red-400 line-through decoration-red-400/50">{displayOldPricePiece}</span>
+                                    )}
+                                </div>
                             </div>
                             <Button
                                 size="sm"
                                 onClick={(e) => {
-                                    addToCart(item, "حبة", item.pricePiece)
+                                    addToCart(item, "حبة", effectivePricePiece)
                                 }}
                                 className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn:animate-pulse"
                             >
@@ -92,13 +114,18 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                             <div className="flex items-center justify-between bg-accent/50 hover:bg-accent rounded-xl p-1.5 pl-2 border border-border transition-colors group/btn-dozen">
                                 <div className="flex flex-col items-start px-2">
                                     <span className="text-[10px] text-muted-foreground group-hover/btn-dozen:text-foreground transition-colors">بالكرتون</span>
-                                    <span className="text-sm font-black text-foreground">{item.priceDozen} <span className="text-[10px] text-purple-500 font-normal">ر.س</span></span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black text-foreground">{effectivePriceDozen} <span className="text-[10px] text-purple-500 font-normal">ر.س</span></span>
+                                        {displayOldPriceDozen && (
+                                            <span className="text-[10px] text-red-400 line-through decoration-red-400/50">{displayOldPriceDozen}</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <Button
                                     size="sm"
                                     onClick={(e) => {
                                         e.stopPropagation()
-                                        addToCart(item, "كرتون", item.priceDozen!)
+                                        addToCart(item, "كرتون", effectivePriceDozen)
                                     }}
                                     className="h-10 w-10 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn-dozen:animate-pulse"
                                 >

@@ -27,7 +27,20 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
         : (product.image ? [product.image] : [])
 
     const hasDozen = product.priceDozen && product.priceDozen > 0
-    const currentPrice = selectedUnit === "حبة" ? product.pricePiece : product.priceDozen
+
+    // --- Smart Price Logic ---
+    const isExpired = product.discountEndDate && new Date(product.discountEndDate).getTime() < new Date().getTime()
+
+    const effectivePricePiece = isExpired && product.oldPricePiece
+        ? product.oldPricePiece
+        : product.pricePiece
+
+    const effectivePriceDozen = isExpired && product.oldPriceDozen
+        ? product.oldPriceDozen
+        : (product.priceDozen || 0)
+
+    const currentPrice = selectedUnit === "حبة" ? effectivePricePiece : effectivePriceDozen
+    // -------------------------
 
     const handleAddToCart = () => {
         if (!currentPrice) return
@@ -153,7 +166,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                         )}
                                     >
                                         <span className="text-xs block mb-1 opacity-70">حبة</span>
-                                        <span className="text-lg font-bold block">{product.pricePiece} <small className="text-[10px]">ر.س</small></span>
+                                        <span className="text-lg font-bold block">{effectivePricePiece} <small className="text-[10px]">ر.س</small></span>
                                     </button>
 
                                     {hasDozen && (
@@ -167,7 +180,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                             )}
                                         >
                                             <span className="text-xs block mb-1 opacity-70">كرتون</span>
-                                            <span className="text-lg font-bold block">{product.priceDozen} <small className="text-[10px]">ر.س</small></span>
+                                            <span className="text-lg font-bold block">{effectivePriceDozen} <small className="text-[10px]">ر.س</small></span>
                                         </button>
                                     )}
                                 </div>
