@@ -5,11 +5,12 @@ import { useStore } from "@/context/store-context"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
-import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar } from "lucide-react"
+import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar, Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { getVisits, DailyVisit } from "@/lib/analytics"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -26,6 +27,46 @@ export default function AnalyticsPage() {
     const [timeRange, setTimeRange] = useState<"all" | "day" | "week" | "month" | "year" | "custom">("week")
     const [customStart, setCustomStart] = useState("")
     const [customEnd, setCustomEnd] = useState("")
+    const [visits, setVisits] = useState<DailyVisit[]>([])
+
+    useEffect(() => {
+        const fetchVisits = async () => {
+            const now = new Date()
+            let start = new Date()
+            let end = new Date()
+
+            // Reset start to begin of today by default for relative ranges
+            // However, for 'day', 'week' etc logic:
+
+            switch (timeRange) {
+                case "all": start.setFullYear(2020); break;
+                case "day": start.setHours(0, 0, 0, 0); break;
+                case "week": start.setDate(now.getDate() - 7); break;
+                case "month": start.setMonth(now.getMonth() - 1); break;
+                case "year": start.setFullYear(now.getFullYear() - 1); break;
+                case "custom":
+                    if (customStart) start = new Date(customStart)
+                    if (customEnd) end = new Date(customEnd)
+                    break;
+            }
+
+            // Adjust end of day
+            end.setHours(23, 59, 59, 999)
+            // Adjust start to beginning of day if not 'custom' or if custom logic needs it
+            if (timeRange !== 'custom') {
+                // Logic above sets start correctly for relative
+            } else {
+                start.setHours(0, 0, 0, 0)
+            }
+
+            const data = await getVisits(start, end)
+            setVisits(data)
+        }
+
+        fetchVisits()
+    }, [timeRange, customStart, customEnd])
+
+    const totalVisits = visits.reduce((acc, v) => acc + v.count, 0)
 
     const filteredOrders = useMemo(() => {
         const now = new Date()
@@ -265,6 +306,15 @@ export default function AnalyticsPage() {
                         </CardTitle>
                     </CardHeader>
                 </Card>
+                <Card className="glass-card border-white/5 bg-pink-500/5 col-span-1">
+                    <CardHeader className="pb-2">
+                        <CardDescription className="text-pink-400 font-bold">الزيارات</CardDescription>
+                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            {totalVisits.toLocaleString()}
+                        </CardTitle>
+                    </CardHeader>
+                </Card>
                 <Card className="glass-card border-white/5 bg-orange-500/5 col-span-1">
                     <CardHeader className="pb-2">
                         <CardDescription className="text-orange-400 font-bold">متوسط السلة</CardDescription>
@@ -274,6 +324,41 @@ export default function AnalyticsPage() {
                     </CardHeader>
                 </Card>
             </div>
+
+            {/* Visits Chart */}
+            <Card className="glass-card border-white/5">
+                <CardHeader>
+                    <CardTitle className="text-white">الزيارات</CardTitle>
+                    <CardDescription>عدد الزوار خلال الفترة المحددة</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={visits}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                stroke="#ffffff"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fill: 'white' }}
+                                tickFormatter={(value) => {
+                                    // Format YYYY-MM-DD to simpler display
+                                    const d = new Date(value);
+                                    return d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
+                                }}
+                            />
+                            <YAxis stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} tick={{ fill: 'white' }} />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#1c2a36', border: '1px solid #ffffff10', borderRadius: '12px' }}
+                                itemStyle={{ color: '#fff' }}
+                                labelFormatter={(label) => new Date(label).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            />
+                            <Bar dataKey="count" name="الزوار" fill="#ec4899" radius={[4, 4, 0, 0]} barSize={40} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}

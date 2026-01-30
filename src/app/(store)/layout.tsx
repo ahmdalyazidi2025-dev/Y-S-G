@@ -15,7 +15,8 @@ import { AiChatModal } from "@/components/store/ai-chat-modal"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { Footer } from "@/components/store/footer"
-import { ThemeToggle } from "@/components/theme-toggle" // Added ThemeToggle import here to be safe
+import { ThemeToggle } from "@/components/theme-toggle"
+import { VisitTracker } from "@/components/analytics/visit-tracker"
 
 export default function StoreLayout({
     children,
@@ -98,6 +99,7 @@ export default function StoreLayout({
                 </div>
 
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
+                    <VisitTracker />
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
                         <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#0f111a]/80 backdrop-blur-xl py-4 -mx-4 px-4 transition-all border-b border-white/5">
                             <div className="flex items-center gap-3">
