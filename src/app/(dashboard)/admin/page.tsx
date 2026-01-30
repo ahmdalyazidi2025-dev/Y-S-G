@@ -148,7 +148,6 @@ export default function AdminDashboard() {
                                     gradient="from-violet-500/20 to-purple-500/5"
                                     border="border-violet-500/20"
                                     iconColor="text-violet-400"
-                                    iconColor="text-violet-400"
                                     href="/admin/customers"
                                 />
                                 <StatsCard
