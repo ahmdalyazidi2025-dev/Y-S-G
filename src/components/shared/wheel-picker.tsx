@@ -103,8 +103,8 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
             </Drawer.Trigger>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
-                <Drawer.Content className="bg-[#0f141f] border-t border-white/10 flex flex-col rounded-t-[20px] h-[50vh] mt-24 fixed bottom-0 left-0 right-0 z-50 outline-none">
-                    <div className="p-4 bg-white/5  rounded-t-[20px] flex-1 flex flex-col">
+                <Drawer.Content className="bg-[#0f141f] border border-white/10 flex flex-col rounded-[20px] h-[50vh] mt-24 fixed bottom-4 left-0 right-0 z-50 outline-none max-w-md mx-auto shadow-2xl">
+                    <div className="p-4 bg-white/5 rounded-[20px] flex-1 flex flex-col">
                         <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/10 mb-6" />
 
                         <div className="flex justify-between items-center mb-6 px-2">
