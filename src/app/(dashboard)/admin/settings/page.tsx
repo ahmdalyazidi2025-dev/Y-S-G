@@ -579,54 +579,80 @@ export default function AdminSettingsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-black/20 p-4 rounded-xl space-y-4 border border-white/5">
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px]">من تاريخ</Label>
-                                                    <Input
-                                                        type="date"
-                                                        value={reportStartDate}
-                                                        onChange={(e) => setReportStartDate(e.target.value)}
-                                                        className="bg-black/40 border-white/10 h-10 text-xs"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px]">إلى تاريخ</Label>
-                                                    <Input
-                                                        type="date"
-                                                        value={reportEndDate}
-                                                        onChange={(e) => setReportEndDate(e.target.value)}
-                                                        className="bg-black/40 border-white/10 h-10 text-xs"
-                                                    />
-                                                </div>
-                                            </div>
+                                        <div className="flex gap-2 justify-end mb-2">
+                                            {(['all', 'today', 'week', 'month'] as const).map(range => (
+                                                <Button
+                                                    key={range}
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const now = new Date()
+                                                        let start = new Date()
+                                                        if (range === 'today') start.setHours(0, 0, 0, 0)
+                                                        if (range === 'week') start.setDate(now.getDate() - 7)
+                                                        if (range === 'month') start.setMonth(now.getMonth() - 1)
+                                                        if (range === 'all') start = new Date('2023-01-01') // Approx start
 
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px]">القسم</Label>
-                                                    <select
-                                                        value={reportCategory}
-                                                        onChange={(e) => setReportCategory(e.target.value)}
-                                                        className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
-                                                    >
-                                                        <option value="all">الكل</option>
-                                                        {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px]">الترتيب</Label>
-                                                    <select
-                                                        value={reportSort}
-                                                        onChange={(e) => setReportSort(e.target.value as any)}
-                                                        className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
-                                                    >
-                                                        <option value="newest">الأحدث إضافة</option>
-                                                        <option value="oldest">الأقدم إضافة</option>
-                                                        <option value="price_high">الأغلى سعراً</option>
-                                                        <option value="price_low">الأرخص سعراً</option>
-                                                        <option value="name">أبجدي (الاسم)</option>
-                                                    </select>
-                                                </div>
+                                                        setReportStartDate(start.toISOString().split('T')[0])
+                                                        setReportEndDate(new Date().toISOString().split('T')[0])
+                                                    }}
+                                                    className="h-7 text-[10px] px-2 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white"
+                                                >
+                                                    {range === 'all' && 'الكل'}
+                                                    {range === 'today' && 'اليوم'}
+                                                    {range === 'week' && 'أسبوع'}
+                                                    {range === 'month' && 'شهر'}
+                                                </Button>
+                                            ))}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">من تاريخ</Label>
+                                                <Input
+                                                    type="date"
+                                                    value={reportStartDate}
+                                                    onChange={(e) => setReportStartDate(e.target.value)}
+                                                    className="bg-black/40 border-white/10 h-10 text-xs"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">إلى تاريخ</Label>
+                                                <Input
+                                                    type="date"
+                                                    value={reportEndDate}
+                                                    onChange={(e) => setReportEndDate(e.target.value)}
+                                                    className="bg-black/40 border-white/10 h-10 text-xs"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">القسم</Label>
+                                                <select
+                                                    value={reportCategory}
+                                                    onChange={(e) => setReportCategory(e.target.value)}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                >
+                                                    <option value="all">الكل</option>
+                                                    {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">الترتيب</Label>
+                                                <select
+                                                    value={reportSort}
+                                                    onChange={(e) => setReportSort(e.target.value as any)}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                >
+                                                    <option value="newest">الأحدث إضافة</option>
+                                                    <option value="oldest">الأقدم إضافة</option>
+                                                    <option value="price_high">الأغلى سعراً</option>
+                                                    <option value="price_low">الأرخص سعراً</option>
+                                                    <option value="name">أبجدي (الاسم)</option>
+                                                </select>
                                             </div>
                                         </div>
 

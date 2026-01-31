@@ -180,18 +180,20 @@
   }
 }
 
-/* Fix Date Input RTL Issues */
+/* Fix Date Input RTL Issues - Reverted forced LTR to avoid text mirroring */
 @layer base {
   input[type="date"],
   input[type="datetime-local"], 
   input[type="month"], 
   input[type="time"] {
-    direction: ltr !important;
+    /* direction: ltr; removed because it causes arabic letters to reverse */
     text-align: right;
+    font-family: 'Arial', sans-serif; /* Standard font */
   }
   input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     opacity: 0.5;
+    /* margin-right: 10px; adjust for RTL */
   }
 }
 
