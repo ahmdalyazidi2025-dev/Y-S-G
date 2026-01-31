@@ -253,8 +253,8 @@ export default function ProductsPage() {
                             </div>
 
                             <div className="flex gap-6 items-center px-4">
-                                {/* 1. Cost Price (Internal) */}
-                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6 pl-2 relative">
+                                {/* 1. Cost Price (Internal) - Hidden on mobile */}
+                                <div className="hidden md:block text-right space-y-0.5 border-r border-white/5 pr-6 pl-2 relative">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">التكلفة</p>
                                     <div className="flex flex-col items-end">
                                         <span className="text-lg font-bold text-amber-500 leading-none">
@@ -265,8 +265,8 @@ export default function ProductsPage() {
                                     <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
                                 </div>
 
-                                {/* 2. Previous Price (Was) - Only distinct if there IS an old price */}
-                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6 min-w-[60px]">
+                                {/* 2. Previous Price (Was) - Hidden on mobile */}
+                                <div className="hidden md:block text-right space-y-0.5 border-r border-white/5 pr-6 min-w-[60px]">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">سابقاً</p>
                                     <div className="flex flex-col items-end justify-center h-7">
                                         {product.oldPricePiece ? (
@@ -279,7 +279,7 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                {/* 3. Current Price (Now) */}
+                                {/* 3. Current Price (Now) - Always Visible */}
                                 <div className="text-right space-y-0.5 border-r border-white/5 pr-6">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">حالياً</p>
                                     <div className="flex flex-col items-end">
@@ -289,8 +289,8 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                {/* 4. Dozen Price */}
-                                <div className="text-right space-y-0.5 min-w-[80px]">
+                                {/* 4. Dozen Price - Hidden on mobile */}
+                                <div className="hidden md:block text-right space-y-0.5 min-w-[80px]">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">الدرزن</p>
                                     <div className="flex flex-col items-end">
                                         {product.priceDozen ? (
