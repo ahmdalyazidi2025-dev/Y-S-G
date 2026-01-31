@@ -147,7 +147,11 @@ export default function CategoriesPage() {
                                     <Button
                                         size="icon"
                                         className="h-9 w-9 rounded-xl bg-blue-600 border border-blue-500 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20"
-                                        onClick={(e) => handleEdit(category, e)}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleEdit(category)
+                                        }}
                                         title="تعديل"
                                     >
                                         <Edit2 className="w-4 h-4" />
@@ -161,7 +165,11 @@ export default function CategoriesPage() {
                                                 ? "bg-red-600 border-red-500 text-white hover:bg-red-500 shadow-red-500/20"
                                                 : "bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-500 shadow-emerald-500/20"
                                         )}
-                                        onClick={(e) => toggleVisibility(category, e)}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            toggleVisibility(category)
+                                        }}
                                         title={category.isHidden ? "إظهار" : "إخفاء"}
                                     >
                                         {category.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -171,6 +179,7 @@ export default function CategoriesPage() {
                                         size="icon"
                                         className="h-9 w-9 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-red-500 hover:border-red-500 shadow-lg"
                                         onClick={(e) => {
+                                            e.preventDefault()
                                             e.stopPropagation() // Prevent link navigation
                                             if (confirm("هل أنت متأكد من حذف هذا القسم؟")) {
                                                 deleteCategory(category.id)
