@@ -26,7 +26,6 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         nameAr: "",
         nameEn: "",
         image: "",
-        image: "",
         icon: "📁",
         isHidden: false,
     })
