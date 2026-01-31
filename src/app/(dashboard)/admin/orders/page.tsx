@@ -13,7 +13,7 @@ import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { toast } from "sonner"
 import { PremiumInvoice } from "@/components/shared/premium-invoice"
-import { DatePickerWizard } from "@/components/shared/date-picker-wizard"
+import { DateRangePicker } from "@/components/shared/date-range-picker"
 
 
 const STATUS_CONFIG = {
@@ -160,22 +160,17 @@ export default function AdminOrdersPage() {
                     </select>
                 </div>
                 {dateRange === "custom" && (
-                    <>
-                        <div className="relative">
-                            <DatePickerWizard
-                                date={customStart ? new Date(customStart) : undefined}
-                                setDate={(d) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
-                                placeholder="من"
-                            />
-                        </div>
-                        <div className="relative">
-                            <DatePickerWizard
-                                date={customEnd ? new Date(customEnd) : undefined}
-                                setDate={(d) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
-                                placeholder="إلى"
-                            />
-                        </div>
-                    </>
+                    <div className="md:col-span-2 relative">
+                        <DateRangePicker
+                            startDate={customStart ? new Date(customStart) : undefined}
+                            endDate={customEnd ? new Date(customEnd) : undefined}
+                            onDateChange={({ start, end }: { start: Date | undefined; end: Date | undefined }) => {
+                                setCustomStart(start ? start.toLocaleDateString('en-CA') : "")
+                                setCustomEnd(end ? end.toLocaleDateString('en-CA') : "")
+                            }}
+                            placeholder="اختر الفترة الزمنية"
+                        />
+                    </div>
                 )}
             </div>
 
