@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { format, getYear, getMonth, setYear, setMonth, setDate, eachYearOfInterval, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth } from "date-fns"
+import { format, getYear, getMonth, setYear, setMonth, setDate as setDayOfMonth, eachYearOfInterval, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth } from "date-fns"
 import { arSA } from "date-fns/locale"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -47,7 +47,7 @@ export function DatePickerWizard({ date, setDate, label, placeholder = "اختر
     }
 
     const handleDaySelect = (d: number) => {
-        const newDate = setDate(viewDate, d)
+        const newDate = setDayOfMonth(viewDate, d)
         setDate(newDate)
         setOpen(false)
     }
@@ -157,7 +157,7 @@ export function DatePickerWizard({ date, setDate, label, placeholder = "اختر
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
                 <div className="relative cursor-pointer group">
                     <div className={cn(
                         "flex items-center justify-between h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:bg-white/5",
