@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
@@ -23,6 +23,7 @@ import { Lock, Shield, UserPlus } from "lucide-react"
 import { StaffManager } from "@/components/admin/staff-manager"
 import { verifyAIKey } from "@/app/actions/ai"
 import { Switch } from "@/components/ui/switch"
+import { printProductList } from "@/lib/print-product-list"
 
 const PROTECTED_PIN = "4422707";
 
@@ -34,6 +35,12 @@ export default function AdminSettingsPage() {
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
     const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data' | 'entity'>('identity')
+
+    // Report State
+    const [reportStartDate, setReportStartDate] = useState("")
+    const [reportEndDate, setReportEndDate] = useState("")
+    const [reportCategory, setReportCategory] = useState("all")
+    const [reportSort, setReportSort] = useState<"newest" | "oldest" | "price_high" | "price_low" | "name">("newest")
 
     // Security State
     const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -151,6 +158,48 @@ export default function AdminSettingsPage() {
         } else {
             toast.error("رمز الدخول غير صحيح")
         }
+    }
+
+    const handlePrintReport = () => {
+        let filtered = [...products]
+
+        // 1. Date Filter
+        if (reportStartDate) {
+            const start = new Date(reportStartDate)
+            start.setHours(0, 0, 0, 0)
+            filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) >= start)
+        }
+        if (reportEndDate) {
+            const end = new Date(reportEndDate)
+            end.setHours(23, 59, 59, 999)
+            filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) <= end)
+        }
+
+        // 2. Category Filter
+        if (reportCategory !== "all") {
+            filtered = filtered.filter(p => p.category === reportCategory)
+        }
+
+        // 3. Sort
+        filtered.sort((a, b) => {
+            if (reportSort === 'name') return a.name.localeCompare(b.name, "ar")
+            if (reportSort === 'price_high') return b.pricePiece - a.pricePiece
+            if (reportSort === 'price_low') return a.pricePiece - b.pricePiece
+            if (reportSort === 'oldest') return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0)
+            // newest
+            return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0)
+        })
+
+        if (filtered.length === 0) {
+            toast.error("لا توجد منتجات تطابق الفلتر!")
+            return
+        }
+
+        const filters = []
+        if (reportCategory !== 'all') filters.push(`القسم: ${reportCategory}`)
+        if (reportStartDate || reportEndDate) filters.push(`الفترة: ${reportStartDate} إلى ${reportEndDate}`)
+
+        printProductList(filtered, "تقرير المنتجات", filters.join(' | '))
     }
 
     if (!isAuthenticated) {
@@ -521,6 +570,76 @@ export default function AdminSettingsPage() {
                         {activeTab === 'data' && (
                             <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
                                 <div className="space-y-6">
+                                    <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
+                                        <div className="flex items-center gap-3 text-emerald-400">
+                                            <FileText className="w-6 h-6" />
+                                            <div>
+                                                <h4 className="font-bold">طباعة تقارير المنتجات</h4>
+                                                <p className="text-xs text-slate-500">طباعة قائمة المنتجات مع تصفيتها حسب التاريخ أو القسم.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-black/20 p-4 rounded-xl space-y-4 border border-white/5">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px]">من تاريخ</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={reportStartDate}
+                                                        onChange={(e) => setReportStartDate(e.target.value)}
+                                                        className="bg-black/40 border-white/10 h-10 text-xs"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px]">إلى تاريخ</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={reportEndDate}
+                                                        onChange={(e) => setReportEndDate(e.target.value)}
+                                                        className="bg-black/40 border-white/10 h-10 text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px]">القسم</Label>
+                                                    <select
+                                                        value={reportCategory}
+                                                        onChange={(e) => setReportCategory(e.target.value)}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                    >
+                                                        <option value="all">الكل</option>
+                                                        {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px]">الترتيب</Label>
+                                                    <select
+                                                        value={reportSort}
+                                                        onChange={(e) => setReportSort(e.target.value as any)}
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                    >
+                                                        <option value="newest">الأحدث إضافة</option>
+                                                        <option value="oldest">الأقدم إضافة</option>
+                                                        <option value="price_high">الأغلى سعراً</option>
+                                                        <option value="price_low">الأرخص سعراً</option>
+                                                        <option value="name">أبجدي (الاسم)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            type="button"
+                                            onClick={handlePrintReport}
+                                            className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-lg shadow-emerald-500/20"
+                                        >
+                                            <Printer className="w-5 h-5" />
+                                            معاينة وطباعة التقرير
+                                        </Button>
+                                    </div>
+
                                     <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
                                         <div className="flex items-center gap-3 text-emerald-400">
                                             <FileText className="w-6 h-6" />

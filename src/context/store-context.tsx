@@ -47,6 +47,7 @@ export type Product = {
     isDraft?: boolean // New: Draft status (hidden from store)
     notes?: string // New: Internal admin notes
     costPrice?: number // New: Admin only cost price
+    createdAt?: Date // New: For date-based filtering
 }
 
 export type CartItem = Product & {
@@ -440,7 +441,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return {
                     ...data,
                     id: doc.id,
-                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined
+                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
+                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
                 } as Product
             }))
         })
@@ -758,7 +760,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const addProduct = async (product: Omit<Product, "id">) => {
         try {
-            const dataToSave = { ...product }
+            const dataToSave = { ...product, createdAt: Timestamp.now() }
             if (!dataToSave.barcode) {
                 dataToSave.barcode = Math.floor(Math.random() * 1000000000000).toString()
             }

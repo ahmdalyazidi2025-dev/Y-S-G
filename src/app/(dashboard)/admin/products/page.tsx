@@ -59,8 +59,49 @@ export default function ProductsPage() {
 
         const matchesCategory = selectedCategory === "الكل" || p.category === selectedCategory
 
-        return matchesSearch && matchesCategory
+        // 3. Date Range Filter
+        let matchesDate = true
+        if (filterStartDate) {
+            const startDate = new Date(filterStartDate)
+            startDate.setHours(0, 0, 0, 0)
+            if (p.createdAt && new Date(p.createdAt) < startDate) matchesDate = false
+            // Fallback: If no createdAt, we assume it matches unless strictly filtering? 
+            // For now, if no createdAt, and filter is on, we might exclude it.
+            if (!p.createdAt) matchesDate = false
+        }
+        if (filterEndDate) {
+            const endDate = new Date(filterEndDate)
+            endDate.setHours(23, 59, 59, 999)
+            if (p.createdAt && new Date(p.createdAt) > endDate) matchesDate = false
+        }
+
+        return matchesSearch && matchesCategory && matchesDate
+    }).sort((a, b) => {
+        // Sorting Logic
+        switch (sortOption) {
+            case "name": return a.name.localeCompare(b.name, "ar")
+            case "price-high": return b.pricePiece - a.pricePiece
+            case "price-low": return a.pricePiece - b.pricePiece
+            case "date-old":
+                return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0)
+            case "date-new":
+            default:
+                // Default new to old. If no date, treat as old.
+                return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0)
+        }
     })
+
+    const handlePrint = () => {
+        let title = "قائمة المنتجات"
+        let filters = []
+
+        if (selectedCategory !== "الكل") filters.push(`القسم: ${selectedCategory}`)
+        if (filterStartDate || filterEndDate) {
+            filters.push(`الفترة: ${filterStartDate || '...'} إلى ${filterEndDate || '...'}`)
+        }
+
+        printProductList(filteredProducts, title, filters.join(' | '))
+    }
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product)
