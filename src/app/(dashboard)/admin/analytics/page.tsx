@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { getVisits, DailyVisit } from "@/lib/analytics"
+import { DatePickerWizard } from "@/components/shared/date-picker-wizard"
+
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -224,20 +226,18 @@ export default function AnalyticsPage() {
                 {timeRange === "custom" && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
                         <div className="relative">
-                            <Input
-                                type="date"
-                                value={customStart}
-                                onChange={(e) => setCustomStart(e.target.value)}
-                                className="bg-white/5 border-white/10 h-8 text-xs w-32"
+                            <DatePickerWizard
+                                date={customStart ? new Date(customStart) : undefined}
+                                setDate={(d) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="من"
                             />
                         </div>
                         <span className="text-slate-500 text-xs">إلى</span>
                         <div className="relative">
-                            <Input
-                                type="date"
-                                value={customEnd}
-                                onChange={(e) => setCustomEnd(e.target.value)}
-                                className="bg-white/5 border-white/10 h-8 text-xs w-32"
+                            <DatePickerWizard
+                                date={customEnd ? new Date(customEnd) : undefined}
+                                setDate={(d) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="إلى"
                             />
                         </div>
                     </div>

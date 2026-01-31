@@ -12,7 +12,9 @@ import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endO
 import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { toast } from "sonner"
-import { PremiumInvoice } from "@/components/shared/premium-invoice" // Import added
+import { PremiumInvoice } from "@/components/shared/premium-invoice"
+import { DatePickerWizard } from "@/components/shared/date-picker-wizard"
+
 
 const STATUS_CONFIG = {
     pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
@@ -160,19 +162,17 @@ export default function AdminOrdersPage() {
                 {dateRange === "custom" && (
                     <>
                         <div className="relative">
-                            <Input
-                                type="date"
-                                value={customStart}
-                                onChange={(e) => setCustomStart(e.target.value)}
-                                className="bg-black/20 border-white/10 text-right h-10 rounded-xl text-xs text-white"
+                            <DatePickerWizard
+                                date={customStart ? new Date(customStart) : undefined}
+                                setDate={(d) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="من"
                             />
                         </div>
                         <div className="relative">
-                            <Input
-                                type="date"
-                                value={customEnd}
-                                onChange={(e) => setCustomEnd(e.target.value)}
-                                className="bg-black/20 border-white/10 text-right h-10 rounded-xl text-xs text-white"
+                            <DatePickerWizard
+                                date={customEnd ? new Date(customEnd) : undefined}
+                                setDate={(d) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="إلى"
                             />
                         </div>
                     </>

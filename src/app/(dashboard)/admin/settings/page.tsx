@@ -23,6 +23,8 @@ import { Lock, Shield, UserPlus } from "lucide-react"
 import { StaffManager } from "@/components/admin/staff-manager"
 import { verifyAIKey } from "@/app/actions/ai"
 import { Switch } from "@/components/ui/switch"
+import { DatePickerWizard } from "@/components/shared/date-picker-wizard"
+
 import { printProductList } from "@/lib/print-product-list"
 
 const PROTECTED_PIN = "4422707";
@@ -609,21 +611,19 @@ export default function AdminSettingsPage() {
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <Label className="text-[10px]">من تاريخ</Label>
-                                                <Input
-                                                    type="date"
-                                                    value={reportStartDate}
-                                                    onChange={(e) => setReportStartDate(e.target.value)}
-                                                    className="bg-black/40 border-white/10 h-10 text-xs"
+                                                <Label className="text-[10px] text-slate-400">من تاريخ</Label>
+                                                <DatePickerWizard
+                                                    date={reportStartDate ? new Date(reportStartDate) : undefined}
+                                                    setDate={(d) => setReportStartDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    placeholder="اختر تاريخ البدء"
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[10px]">إلى تاريخ</Label>
-                                                <Input
-                                                    type="date"
-                                                    value={reportEndDate}
-                                                    onChange={(e) => setReportEndDate(e.target.value)}
-                                                    className="bg-black/40 border-white/10 h-10 text-xs"
+                                                <Label className="text-[10px] text-slate-400">إلى تاريخ</Label>
+                                                <DatePickerWizard
+                                                    date={reportEndDate ? new Date(reportEndDate) : undefined}
+                                                    setDate={(d) => setReportEndDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    placeholder="اختر تاريخ الانتهاء"
                                                 />
                                             </div>
                                         </div>
