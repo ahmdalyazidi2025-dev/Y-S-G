@@ -1578,6 +1578,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    // Filter categories based on visibility
+    const visibleCategories = React.useMemo(() => {
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+            return allCategories
+        }
+        return allCategories.filter(c => !c.isHidden)
+    }, [allCategories, currentUser])
+
     // Filter products based on category visibility
     const visibleProducts = React.useMemo(() => {
         if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
@@ -1585,16 +1593,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         return products.filter(p => {
             // Find the category for this product
-            // Optimally we should have a map, but array find is fine for N < 1000
             const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
-            // If category exists and is hidden, hide product. If category not found, show it (safest) or hide it? 
-            // Usually if category is hidden, product is hidden.
             return category ? !category.isHidden : true
         })
     }, [products, allCategories, currentUser])
 
     const value = {
-        products: visibleProducts, cart, orders, categories, customers, banners, productRequests,
+        products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
         addToCart, removeFromCart, clearCart, createOrder, scanProduct,
         addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
         addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
