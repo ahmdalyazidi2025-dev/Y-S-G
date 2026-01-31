@@ -166,8 +166,8 @@ export function DatePickerWizard({ date, setDate, label, placeholder = "اختر
                         <span className="flex items-center gap-2">
                             <CalendarDays className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
                             {date ? (
-                                <span className="text-white font-medium dir-ltr">
-                                    {format(date, "PPP", { locale: arSA })}
+                                <span className="text-white font-medium font-mono" dir="ltr" style={{ direction: 'ltr', unicodeBidi: 'isolate', display: 'inline-block' }}>
+                                    {format(date, "dd/MM/yyyy")}
                                 </span>
                             ) : (
                                 <span className="text-slate-500">{placeholder}</span>
