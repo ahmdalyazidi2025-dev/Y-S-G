@@ -23,7 +23,7 @@ import { Lock, Shield, UserPlus } from "lucide-react"
 import { StaffManager } from "@/components/admin/staff-manager"
 import { verifyAIKey } from "@/app/actions/ai"
 import { Switch } from "@/components/ui/switch"
-import { DateRangePicker } from "@/components/shared/date-range-picker"
+import { WheelPicker } from "@/components/shared/wheel-picker"
 
 import { printProductList } from "@/lib/print-product-list"
 
@@ -610,16 +610,20 @@ export default function AdminSettingsPage() {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-1 col-span-2">
-                                                <Label className="text-[10px] text-slate-400">الفترة الزمنية</Label>
-                                                <DateRangePicker
-                                                    startDate={reportStartDate ? new Date(reportStartDate) : undefined}
-                                                    endDate={reportEndDate ? new Date(reportEndDate) : undefined}
-                                                    onDateChange={({ start, end }: { start: Date | undefined; end: Date | undefined }) => {
-                                                        setReportStartDate(start ? start.toLocaleDateString('en-CA') : "")
-                                                        setReportEndDate(end ? end.toLocaleDateString('en-CA') : "")
-                                                    }}
-                                                    placeholder="اختر فترة التقرير"
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-slate-400">من تاريخ</Label>
+                                                <WheelPicker
+                                                    date={reportStartDate ? new Date(reportStartDate) : undefined}
+                                                    setDate={(d: Date | undefined) => setReportStartDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    placeholder="اختر تاريخ البدء"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-slate-400">إلى تاريخ</Label>
+                                                <WheelPicker
+                                                    date={reportEndDate ? new Date(reportEndDate) : undefined}
+                                                    setDate={(d: Date | undefined) => setReportEndDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    placeholder="اختر تاريخ الانتهاء"
                                                 />
                                             </div>
                                         </div>

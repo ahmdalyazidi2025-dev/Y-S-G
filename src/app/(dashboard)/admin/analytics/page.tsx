@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { getVisits, DailyVisit } from "@/lib/analytics"
-import { DateRangePicker } from "@/components/shared/date-range-picker"
+import { WheelPicker } from "@/components/shared/wheel-picker"
 
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -225,15 +225,19 @@ export default function AnalyticsPage() {
             <div className="flex flex-col md:flex-row justify-end p-1 gap-4">
                 {timeRange === "custom" && (
                     <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 w-full md:w-auto">
-                        <div className="w-full md:w-[280px]">
-                            <DateRangePicker
-                                startDate={customStart ? new Date(customStart) : undefined}
-                                endDate={customEnd ? new Date(customEnd) : undefined}
-                                onDateChange={({ start, end }: { start: Date | undefined; end: Date | undefined }) => {
-                                    setCustomStart(start ? start.toLocaleDateString('en-CA') : "")
-                                    setCustomEnd(end ? end.toLocaleDateString('en-CA') : "")
-                                }}
-                                placeholder="اختر الفترة الزمنية"
+                        <div className="w-full md:w-[160px]">
+                            <WheelPicker
+                                date={customStart ? new Date(customStart) : undefined}
+                                setDate={(d: Date | undefined) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="من تاريخ"
+                            />
+                        </div>
+                        <span className="text-slate-500 text-xs">إلى</span>
+                        <div className="w-full md:w-[160px]">
+                            <WheelPicker
+                                date={customEnd ? new Date(customEnd) : undefined}
+                                setDate={(d: Date | undefined) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
+                                placeholder="إلى تاريخ"
                             />
                         </div>
                     </div>
