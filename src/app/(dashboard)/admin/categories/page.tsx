@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
@@ -13,6 +13,22 @@ export default function CategoriesPage() {
     const { categories, deleteCategory } = useStore()
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+
+    // Quick Toggle Visibility
+    const toggleVisibility = async (category: Category) => {
+        try {
+            const { doc, updateDoc } = await import("firebase/firestore")
+            const { db } = await import("@/lib/firebase")
+
+            const categoryRef = doc(db, "categories", category.id)
+            await updateDoc(categoryRef, {
+                isHidden: !category.isHidden
+            })
+            // Toast handled by listener or we can add local toast
+        } catch (error) {
+            console.error("Error toggling visibility:", error)
+        }
+    }
 
     const handleEdit = (category: Category) => {
         setEditingCategory(category)
@@ -114,6 +130,21 @@ export default function CategoriesPage() {
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </Button>
+
+                                    <Button
+                                        size="icon"
+                                        className={cn(
+                                            "h-9 w-9 rounded-xl backdrop-blur-md border border-white/20 shadow-lg transition-colors",
+                                            category.isHidden
+                                                ? "bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white"
+                                                : "bg-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500"
+                                        )}
+                                        onClick={() => toggleVisibility(category)}
+                                        title={category.isHidden ? "إظهار" : "إخفاء"}
+                                    >
+                                        {category.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </Button>
+
                                     <Button
                                         size="icon"
                                         className="h-9 w-9 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-red-500 hover:border-red-500 shadow-lg"
