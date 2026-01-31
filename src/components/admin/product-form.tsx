@@ -114,9 +114,9 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 const file = files[i]
                 if (!file.type.startsWith('image/')) continue
 
-                // Compress image before adding
-                // Max width 1200px, Quality 0.8 -> Good balance
-                const compressedBase64 = await compressImage(file, 1200, 0.8)
+                // Compress and CROP image to square before adding
+                // Max width 1000px, Quality 0.8, CropSquare = true
+                const compressedBase64 = await compressImage(file, 1000, 0.8, true)
                 newImages.push(compressedBase64)
             }
 
@@ -140,7 +140,9 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         try {
             // New: Since branding is already applied in the editor, we just compress normally (or just read as base64 since it's already optimized?)
             // The editor returns a file (PNG). We should compress it to ensure it's not huge.
-            const compressedBase64 = await compressImage(processedFile);
+            // The editor returns a file (PNG). We should compress it to ensure it's not huge.
+            // We also enforce square crop here just in case, though Editor usually does it.
+            const compressedBase64 = await compressImage(processedFile, 1000, 0.9, true);
 
             setFormData(prev => ({
                 ...prev,

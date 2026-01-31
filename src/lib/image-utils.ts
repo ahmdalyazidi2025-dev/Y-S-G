@@ -5,7 +5,15 @@
  * @param quality The image quality from 0 to 1 (default: 0.7).
  * @returns A Promise resolving to a Base64 string of the compressed image.
  */
-export async function compressImage(file: File, maxWidth = 1024, quality = 0.7): Promise<string> {
+/**
+ * Compresses an image file to a maximum size and quality.
+ * @param file The original File object.
+ * @param maxWidth The maximum width of the output image (default: 1024px).
+ * @param quality The image quality from 0 to 1 (default: 0.7).
+ * @param cropSquare Whether to crop the image to a square (center crop) before resizing.
+ * @returns A Promise resolving to a Base64 string of the compressed image.
+ */
+export async function compressImage(file: File, maxWidth = 1024, quality = 0.7, cropSquare = false): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -16,8 +24,19 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.7):
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
+                let sx = 0, sy = 0, sWidth = width, sHeight = height;
 
-                if (width > maxWidth) {
+                if (cropSquare) {
+                    const minDim = Math.min(width, height);
+                    sx = (width - minDim) / 2;
+                    sy = (height - minDim) / 2;
+                    sWidth = minDim;
+                    sHeight = minDim;
+
+                    // Destination dimensions
+                    width = maxWidth;
+                    height = maxWidth;
+                } else if (width > maxWidth) {
                     height = (height * maxWidth) / width;
                     width = maxWidth;
                 }
@@ -31,7 +50,11 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.7):
                     return;
                 }
 
-                ctx.drawImage(img, 0, 0, width, height);
+                if (cropSquare) {
+                    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
+                } else {
+                    ctx.drawImage(img, 0, 0, width, height);
+                }
 
                 // Compress specific types as JPEG (good for photos), others as PNG/WebP if needed
                 // Using image/jpeg ensures good compression for photos.
