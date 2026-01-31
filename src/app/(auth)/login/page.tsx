@@ -88,7 +88,8 @@ function LoginForm() {
                         </CardDescription>
                     </div>
 
-                    {baseRole === 'admin' && (
+                    {/* ONLY show role switcher if explicitly requested via URL (e.g. /login?role=admin) */}
+                    {(baseRole === 'admin' || baseRole === 'staff') && (
                         <div className="grid grid-cols-2 gap-3 mt-6">
                             <button
                                 type="button"
