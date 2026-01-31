@@ -90,7 +90,11 @@ export default function AdminDashboard() {
     }, [statsTimeRange])
 
     const filteredOrders = orders.filter(o => new Date(o.createdAt) >= getDateRange())
-    const filteredCustomers = customers.filter(c => new Date(c.joinedAt).getTime() >= getDateRange().getTime())
+    const filteredCustomers = customers.filter(c => {
+        if (!c.createdAt) return false
+        const date = c.createdAt instanceof Date ? c.createdAt : (c.createdAt as any).toDate()
+        return date.getTime() >= getDateRange().getTime()
+    })
 
     // Metrics
     const totalSales = filteredOrders.reduce((sum, o) => sum + o.total, 0)
