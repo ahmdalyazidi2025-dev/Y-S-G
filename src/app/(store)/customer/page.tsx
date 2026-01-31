@@ -117,8 +117,8 @@ export default function CustomerHome() {
 
                 {!hiddenSections.includes('categories') && (
                     <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-[#080b12]/95 backdrop-blur-md border-b border-white/5 -mx-4">
-                        <Link
-                            href="/customer"
+                        <button
+                            onClick={() => setSelectedCategory("الكل")}
                             className={cn(
                                 "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
                                 selectedCategory === "الكل"
@@ -130,23 +130,23 @@ export default function CustomerHome() {
                             {selectedCategory === "الكل" && (
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                             )}
-                        </Link>
+                        </button>
                         {categories.map((cat) => (
-                            <Link
+                            <button
                                 key={cat.id}
-                                href={`/customer/category/${cat.id}`}
+                                onClick={() => setSelectedCategory(cat.nameAr)} // Assuming you filter by nameAr based on page.tsx logic
                                 className={cn(
                                     "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                    selectedCategory === cat.id
+                                    selectedCategory === cat.nameAr
                                         ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
                                         : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                 )}
                             >
                                 <span className="relative z-10">{cat.nameAr}</span>
-                                {selectedCategory === cat.id && (
+                                {selectedCategory === cat.nameAr && (
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                 )}
-                            </Link>
+                            </button>
                         ))}
                         {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
                     </div>

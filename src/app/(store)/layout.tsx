@@ -83,7 +83,27 @@ export default function StoreLayout({
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) },
-        ...(storeSettings.enableProductRequests !== false ? [{ name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) }] : []),
+        {
+            name: "طلب",
+            icon: PlusCircle,
+            onClick: () => {
+                if (storeSettings.enableProductRequests === false) {
+                    // Show alert using built-in alert or sonner toast if available (sonner is imported in root layout, assuming available globally via logic or we can use window.alert for simplicity as requested "show message")
+                    // Better to use Sonner since we have it, but here we can just use alert or simply return.
+                    // User said: "تضهر رسالة اقترحها انت مفادها انه رفع طلبات مغلق تواصل مع الادارة عبر الواتس او عبر الدردشه"
+                    // I'll use a simple alert for now or try to import toast. Let's start with alert to be safe in this file or use Sonner if I can see it. 
+                    // Toaster is in RootLayout. I can import { toast } from "sonner".
+                    import("sonner").then(({ toast }) => {
+                        toast.error("عفواً، رفع الطلبات مغلق حالياً", {
+                            description: "يمكنك التواصل مع الإدارة عبر الواتساب أو الدردشة للمساعدة.",
+                            duration: 4000
+                        })
+                    })
+                } else {
+                    setIsRequestOpen(true)
+                }
+            }
+        },
         { name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount },
     ]
 

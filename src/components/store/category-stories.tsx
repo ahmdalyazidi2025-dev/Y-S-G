@@ -17,16 +17,8 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
 
     const handleCategoryClick = (cat: string, id?: string) => {
         hapticFeedback('light')
-        if (cat === "الكل") {
-            onSelect(cat) // Keep default behavior for "All" on home page
-            router.push('/customer')
-        } else if (id) {
-            // Navigate to dedicated category page
-            router.push(`/customer/category/${id}`)
-        } else {
-            // Fallback for mock data if ID missing
-            onSelect(cat)
-        }
+        // Force local selection instead of navigation
+        onSelect(cat)
     }
 
     return (
