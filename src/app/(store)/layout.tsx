@@ -123,16 +123,16 @@ export default function StoreLayout({
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
                         <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#0f111a]/80 backdrop-blur-xl py-4 -mx-4 px-4 transition-all border-b border-white/5">
                             <div className="flex items-center gap-3">
-                                <Link href="/customer" className="relative group">
+                                <div className="relative group cursor-default">
                                     <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all" />
                                     <Image
                                         src="/logo.jpg"
                                         alt="Logo"
                                         width={42}
                                         height={42}
-                                        className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg group-active:scale-95 transition-transform"
+                                        className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg transition-transform"
                                     />
-                                </Link>
+                                </div>
                                 <div className="hidden sm:block">
                                     <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">Y S G</h1>
                                 </div>

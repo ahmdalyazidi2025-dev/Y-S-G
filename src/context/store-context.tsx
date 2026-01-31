@@ -688,8 +688,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
             // Send Notification
             const notificationMsg = "تم رفع طلبك بنجاح! سنقوم بمراجعته قريباً."
+            const notifUserId = currentUser?.id || guestId || "guest"
+
             await addDoc(collection(db, "notifications"), sanitizeData({
-                userId: customerId,
+                userId: notifUserId,
                 title: "تم رفع طلبك",
                 body: notificationMsg,
                 type: "success",
@@ -698,7 +700,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
 
             await sendPushNotification(
-                customerId,
+                notifUserId,
                 "تم رفع الطلب",
                 notificationMsg,
                 `/customer/invoices`
