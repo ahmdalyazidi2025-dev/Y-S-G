@@ -18,7 +18,7 @@ export default function ProductsPage() {
 
     // Initialize search with URL param or empty string
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
-    const [selectedCategory, setSelectedCategory] = useState("الكل")
+    const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "الكل")
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
