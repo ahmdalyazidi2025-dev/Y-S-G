@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Product, useStore } from "@/context/store-context"
 import { CountdownTimer } from "./countdown-timer"
 import { motion } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: () => void, index?: number }) {
     const { addToCart } = useStore()
@@ -30,6 +31,9 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
     const displayOldPriceDozen = isExpired ? null : item.oldPriceDozen
     // -------------------------
 
+    // Offer Active Logic
+    const hasActiveOffer = item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && !isExpired
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -38,7 +42,14 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
             whileHover={{ y: -5 }}
             className="h-full"
         >
-            <Card className="glass-card h-full border-none overflow-hidden group relative transition-all duration-300 rounded-[2rem]">
+            <Card className={cn(
+                "glass-card h-full border-none overflow-hidden group relative transition-all duration-300 rounded-[2rem]",
+                hasActiveOffer ? "shadow-[0_0_20px_-5px_rgba(234,179,8,0.3)] ring-1 ring-yellow-500/50" : ""
+            )}>
+                {/* Offer Shine Effect */}
+                {hasActiveOffer && (
+                    <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-transparent pointer-events-none z-0" />
+                )}
 
                 <CardContent className="p-0 relative aspect-[4/3] bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center overflow-hidden">
                     {/* Product Image/Icon */}
@@ -65,12 +76,19 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
 
                     {/* Badge & Timer */}
                     <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-20">
-                        {/* Only show Featured if relevant (example logic) */}
-                        <div className="bg-black/40 backdrop-blur-md text-white/90 text-[10px] px-2.5 py-1 rounded-full font-bold border border-white/10 shadow-lg">
-                            جديد
-                        </div>
-                        {item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && (
-                            <CountdownTimer endDate={new Date(item.discountEndDate)} />
+                        {hasActiveOffer ? (
+                            <div className="flex items-center gap-1 bg-yellow-500 text-black text-[10px] px-2.5 py-1 rounded-full font-black shadow-[0_0_15px_-3px_rgba(234,179,8,0.6)] animate-pulse">
+                                <span>🔥</span>
+                                <span>عرض خاص</span>
+                            </div>
+                        ) : (
+                            <div className="bg-black/40 backdrop-blur-md text-white/90 text-[10px] px-2.5 py-1 rounded-full font-bold border border-white/10 shadow-lg">
+                                جديد
+                            </div>
+                        )}
+
+                        {hasActiveOffer && (
+                            <CountdownTimer endDate={new Date(item.discountEndDate!)} />
                         )}
                     </div>
 
