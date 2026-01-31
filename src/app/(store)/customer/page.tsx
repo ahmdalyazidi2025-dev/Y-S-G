@@ -117,8 +117,8 @@ export default function CustomerHome() {
 
                 {!hiddenSections.includes('categories') && (
                     <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-[#080b12]/95 backdrop-blur-md border-b border-white/5 -mx-4">
-                        <button
-                            onClick={() => setSelectedCategory("الكل")}
+                        <Link
+                            href="/customer"
                             className={cn(
                                 "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
                                 selectedCategory === "الكل"
@@ -130,11 +130,11 @@ export default function CustomerHome() {
                             {selectedCategory === "الكل" && (
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                             )}
-                        </button>
+                        </Link>
                         {categories.map((cat) => (
-                            <button
+                            <Link
                                 key={cat.id}
-                                onClick={() => setSelectedCategory(cat.id)}
+                                href={`/customer/category/${cat.id}`}
                                 className={cn(
                                     "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
                                     selectedCategory === cat.id
@@ -146,7 +146,7 @@ export default function CustomerHome() {
                                 {selectedCategory === cat.id && (
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                 )}
-                            </button>
+                            </Link>
                         ))}
                         {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
                     </div>

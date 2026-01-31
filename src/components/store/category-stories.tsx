@@ -6,11 +6,28 @@ import { hapticFeedback } from "@/lib/haptics"
 import { motion } from "framer-motion"
 import Image from "next/image"
 
+import { useRouter } from "next/navigation"
+
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
     const { categories } = useStore()
+    const router = useRouter()
 
     // Default categories if none exist in DB, but we'll use "الكل" + DB categories
     const allCategories = ["الكل", ...categories.map(c => c.nameAr)]
+
+    const handleCategoryClick = (cat: string, id?: string) => {
+        hapticFeedback('light')
+        if (cat === "الكل") {
+            onSelect(cat) // Keep default behavior for "All" on home page
+            router.push('/customer')
+        } else if (id) {
+            // Navigate to dedicated category page
+            router.push(`/customer/category/${id}`)
+        } else {
+            // Fallback for mock data if ID missing
+            onSelect(cat)
+        }
+    }
 
     return (
         <div className="flex gap-4 overflow-x-auto pb-6 no-scrollbar px-4 pt-2">
@@ -25,10 +42,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.05, type: "spring" }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => {
-                            onSelect(cat)
-                            hapticFeedback('light')
-                        }}
+                        onClick={() => handleCategoryClick(cat, dbCat?.id)}
                         className="flex flex-col items-center gap-2 flex-shrink-0 group"
                     >
                         <div className={cn(

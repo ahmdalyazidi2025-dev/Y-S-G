@@ -445,6 +445,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
+        // Filter products for customers based on hidden categories
+        const filteredProducts = products.filter(p => {
+            if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") return true
+            const category = categories.find(c => c.id === p.category || c.nameAr === p.category)
+            return category ? !category.isHidden : true
+        })
+
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
             setAllCategories(snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
         })
@@ -1571,22 +1578,38 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    // Filter products based on category visibility
+    const visibleProducts = React.useMemo(() => {
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+            return products
+        }
+        return products.filter(p => {
+            // Find the category for this product
+            // Optimally we should have a map, but array find is fine for N < 1000
+            const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
+            // If category exists and is hidden, hide product. If category not found, show it (safest) or hide it? 
+            // Usually if category is hidden, product is hidden.
+            return category ? !category.isHidden : true
+        })
+    }, [products, allCategories, currentUser])
+
+    const value = {
+        products: visibleProducts, cart, orders, categories, customers, banners, productRequests,
+        addToCart, removeFromCart, clearCart, createOrder, scanProduct,
+        addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
+        addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+        addBanner, deleteBanner, toggleBanner, addProductRequest,
+        updateProductRequestStatus,
+        deleteProductRequest,
+        messages, sendMessage, broadcastNotification, currentUser, login, logout,
+        updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
+        staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+        coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
+        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound,
+        cleanupOrphanedUsers
+    }
     return (
-        <StoreContext.Provider value={{
-            products, cart, orders, categories, customers, banners, productRequests,
-            addToCart, removeFromCart, clearCart, createOrder, scanProduct,
-            addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
-            addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
-            addBanner, deleteBanner, toggleBanner, addProductRequest,
-            updateProductRequestStatus,
-            deleteProductRequest,
-            messages, sendMessage, broadcastNotification, currentUser, login, logout,
-            updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
-            staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
-            coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-            updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound,
-            cleanupOrphanedUsers
-        }}>
+        <StoreContext.Provider value={value}>
             {children}
         </StoreContext.Provider>
     )
