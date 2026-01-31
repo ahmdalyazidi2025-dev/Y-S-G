@@ -324,7 +324,13 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <span className="text-xs font-bold text-slate-300">ينتهي العرض في:</span>
-                                                        <span className="text-[10px] text-orange-400/80">اختر مدة من الأزرار أعلاه</span>
+                                                        <span className="text-[10px] text-orange-400/80">اختر مدة أو حدد تاريخاً:</span>
+                                                        <input
+                                                            type="datetime-local"
+                                                            className="bg-black/20 border-white/5 rounded-lg text-white text-[10px] mt-1 p-1 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                                            value={formData.discountEndDate}
+                                                            onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
+                                                        />
                                                     </div>
                                                 </div>
                                                 <div className="text-sm font-bold text-white font-mono bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">

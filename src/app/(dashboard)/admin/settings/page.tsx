@@ -7,7 +7,9 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload } from "lucide-react"
+import {
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers
+} from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord, exportStaffToWord } from "@/lib/export-utils"
@@ -624,6 +626,32 @@ export default function AdminSettingsPage() {
 
                                 <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
                                     <SecuritySettingsPorted />
+                                </Section>
+
+                                <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[
+                                            { id: 'search', label: 'شريط البحث' },
+                                            { id: 'offers', label: 'بانر العروض (الأعلى)' },
+                                            { id: 'categories', label: 'شريط الأقسام' },
+                                            { id: 'products', label: 'قائمة المنتجات' }
+                                        ].map((item) => (
+                                            <div key={item.id} className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                                                <Label className="text-white font-bold cursor-pointer">{item.label}</Label>
+                                                <Switch
+                                                    checked={storeSettings.hiddenSections?.includes(item.id as any)}
+                                                    onCheckedChange={(checked) => {
+                                                        const current = storeSettings.hiddenSections || []
+                                                        const updated = checked
+                                                            ? [...current, item.id]
+                                                            : current.filter(id => id !== item.id)
+                                                        updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
+                                                    }}
+                                                    className="data-[state=checked]:bg-red-500"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </Section>
                             </div>
                         )}

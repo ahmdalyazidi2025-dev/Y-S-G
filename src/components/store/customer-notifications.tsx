@@ -75,8 +75,15 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                             >
                                 <div className="flex justify-between items-start gap-3">
                                     <div className="flex-1 space-y-1">
-                                        <h4 className={cn("text-sm font-bold", !notification.read && "text-primary")}>{notification.title}</h4>
-                                        <p className="text-xs text-slate-300 leading-relaxed">{notification.body}</p>
+                                        <h4 className={cn("text-sm font-bold", !notification.read && "text-primary")}>
+                                            {notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")}
+                                        </h4>
+                                        <p className="text-xs text-slate-300 leading-relaxed">
+                                            {/* Mask Chat Body if sensitive */}
+                                            {(notification.title.includes('رسالة') && /[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(notification.body))
+                                                ? "لديك رسالة جديدة من الإدارة 🔒"
+                                                : notification.body}
+                                        </p>
                                         <span className="text-[10px] text-slate-500 block pt-2">
                                             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ar })}
                                         </span>

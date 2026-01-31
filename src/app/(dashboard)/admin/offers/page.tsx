@@ -197,7 +197,11 @@ export default function OffersPage() {
                                             <div className="w-24 h-24 bg-black/20 rounded-2xl relative overflow-hidden shrink-0">
                                                 {product.image ? (
                                                     <Image src={product.image} fill alt={product.name} className="object-cover" />
-                                                ) : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                        <Package className="w-8 h-8 text-slate-600" />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex-1 pt-1">
@@ -266,7 +270,11 @@ export default function OffersPage() {
                                             <div className="w-20 h-20 bg-black/20 rounded-2xl relative overflow-hidden shrink-0 grayscale">
                                                 {product.image ? (
                                                     <Image src={product.image} fill alt={product.name} className="object-cover" />
-                                                ) : <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>}
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                        <Package className="w-8 h-8 text-slate-600" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <h3 className="font-bold text-slate-300 mb-1">{product.name}</h3>
@@ -323,7 +331,11 @@ export default function OffersPage() {
                                             <div className="w-24 h-24 bg-black/20 rounded-2xl relative overflow-hidden shrink-0 border border-white/5">
                                                 {product.image ? (
                                                     <Image src={product.image} fill alt={product.name} className="object-cover" />
-                                                ) : <div className="w-full h-full flex items-center justify-center text-2xl">📝</div>}
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                        <FileEdit className="w-8 h-8 text-slate-600" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex justify-between items-start">

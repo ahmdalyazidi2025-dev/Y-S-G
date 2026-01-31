@@ -24,7 +24,7 @@ import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skelet
 import { useSearchParams } from "next/navigation"
 
 export default function CustomerHome() {
-    const { products, banners, categories, loading } = useStore() // Assume loading is available
+    const { products, banners, categories, loading, storeSettings } = useStore() // Assume loading is available
     const searchParams = useSearchParams()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
@@ -55,12 +55,14 @@ export default function CustomerHome() {
         return matchesSearch && matchesCategory
     })
 
+    const hiddenSections = storeSettings?.hiddenSections || []
+
     return (
         <PullToRefresh onRefresh={handleRefresh}>
             <div className="min-h-screen w-full overflow-x-hidden text-right bg-background relative pb-32">
 
                 {/* HERO BANNER SECTION */}
-                <HeroBanner />
+                {!hiddenSections.includes('offers') && <HeroBanner />}
 
                 {/* HEADER CONTENT (Search, Profile, Bell) */}
                 <div className="relative z-10 px-4 pt-6 mb-44"> {/* Margin bottom pushes content down below the banner text area */}
@@ -83,21 +85,23 @@ export default function CustomerHome() {
                         </div>
 
                         {/* Search Bar - Floating & Transparent */}
-                        <div className="fixed top-4 inset-x-4 z-[100] transition-all">
-                            <div className="relative group">
-                                <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
-                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-primary transition-colors z-10" />
-                                <Input
-                                    placeholder="ابحث عن قطعة غيار، باركود..."
-                                    className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-white placeholder:text-white/40 relative z-10"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                                <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex gap-2">
-                                    <CustomerNotifications forceOpen={shouldOpenNotifications} />
+                        {!hiddenSections.includes('search') && (
+                            <div className="fixed top-4 inset-x-4 z-[100] transition-all">
+                                <div className="relative group">
+                                    <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
+                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-primary transition-colors z-10" />
+                                    <Input
+                                        placeholder="ابحث عن قطعة غيار، باركود..."
+                                        className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-white placeholder:text-white/40 relative z-10"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex gap-2">
+                                        <CustomerNotifications forceOpen={shouldOpenNotifications} />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -105,81 +109,87 @@ export default function CustomerHome() {
                 {/* Categories & Content Starts Here (Below Banner Area) */}
 
                 {/* Category Stories (Mobile) */}
-                <div className="lg:hidden pl-4 relative z-10 mb-6">
-                    <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
-                </div>
+                {!hiddenSections.includes('categories') && (
+                    <div className="lg:hidden pl-4 relative z-10 mb-6">
+                        <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+                    </div>
+                )}
 
-                <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-[#080b12]/95 backdrop-blur-md border-b border-white/5 -mx-4">
-                    <button
-                        onClick={() => setSelectedCategory("الكل")}
-                        className={cn(
-                            "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                            selectedCategory === "الكل"
-                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
-                                : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
-                        )}
-                    >
-                        <span className="relative z-10">الكل</span>
-                        {selectedCategory === "الكل" && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                        )}
-                    </button>
-                    {categories.map((cat) => (
+                {!hiddenSections.includes('categories') && (
+                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-[#080b12]/95 backdrop-blur-md border-b border-white/5 -mx-4">
                         <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategory(cat.id)}
+                            onClick={() => setSelectedCategory("الكل")}
                             className={cn(
                                 "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                selectedCategory === cat.id
+                                selectedCategory === "الكل"
                                     ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
                                     : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                             )}
                         >
-                            <span className="relative z-10">{cat.nameAr}</span>
-                            {selectedCategory === cat.id && (
+                            <span className="relative z-10">الكل</span>
+                            {selectedCategory === "الكل" && (
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                             )}
                         </button>
-                    ))}
-                    {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
-                </div>
+                        {categories.map((cat) => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(cat.id)}
+                                className={cn(
+                                    "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
+                                    selectedCategory === cat.id
+                                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
+                                        : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                                )}
+                            >
+                                <span className="relative z-10">{cat.nameAr}</span>
+                                {selectedCategory === cat.id && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                                )}
+                            </button>
+                        ))}
+                        {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
+                    </div>
+                )}
 
                 {/* Product Grid */}
-                <div className="px-4 relative z-10 min-h-[400px]">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
-                            <span className="w-1.5 h-8 bg-primary rounded-full block" />
-                            {selectedCategory === "الكل" ? "أحدث المنتجات" : selectedCategory}
-                            <span className="text-xs text-muted-foreground font-normal bg-card px-3 py-1 rounded-full border border-border">{filteredProducts.length} منتج</span>
-                        </h2>
-                    </div>
+                {!hiddenSections.includes('products') && (
+                    <div className="px-4 relative z-10 min-h-[400px]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
+                                <span className="w-1.5 h-8 bg-primary rounded-full block" />
+                                {selectedCategory === "الكل" ? "أحدث المنتجات" : selectedCategory}
+                                <span className="text-xs text-muted-foreground font-normal bg-card px-3 py-1 rounded-full border border-border">{filteredProducts.length} منتج</span>
+                            </h2>
+                        </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-6 pb-20">
-                        {filteredProducts.length > 0 ? (
-                            filteredProducts.map((product, index) => (
-                                <ProductCard
-                                    key={product.id}
-                                    item={product}
-                                    index={index}
-                                    onViewDetails={() => setSelectedProduct(product)}
-                                />
-                            ))
-                        ) : loading ? (
-                            // Show 10 skeletons while loading
-                            Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                        ) : (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center gap-6">
-                                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center animate-pulse">
-                                    <Search className="w-10 h-10 text-slate-600" />
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-6 pb-20">
+                            {filteredProducts.length > 0 ? (
+                                filteredProducts.map((product, index) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        item={product}
+                                        index={index}
+                                        onViewDetails={() => setSelectedProduct(product)}
+                                    />
+                                ))
+                            ) : loading ? (
+                                // Show 10 skeletons while loading
+                                Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center gap-6">
+                                    <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center animate-pulse">
+                                        <Search className="w-10 h-10 text-slate-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-slate-300 font-bold text-lg">عفواً، لا توجد منتجات مطابقة</p>
+                                        <p className="text-sm text-slate-500 mt-2">جرب البحث بكلمات أخرى أو تغيير التصنيف</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-slate-300 font-bold text-lg">عفواً، لا توجد منتجات مطابقة</p>
-                                    <p className="text-sm text-slate-500 mt-2">جرب البحث بكلمات أخرى أو تغيير التصنيف</p>
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Ambient Background */}
                 <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">

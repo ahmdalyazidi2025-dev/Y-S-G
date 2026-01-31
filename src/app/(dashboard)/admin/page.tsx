@@ -31,7 +31,8 @@ const ADMIN_MODULES = [
 export default function AdminDashboard() {
     const { orders, customers, products, logout, currentUser } = useStore()
     const [isLoading, setIsLoading] = useState(true)
-    const [todayVisits, setTodayVisits] = useState(0)
+    const [statsTimeRange, setStatsTimeRange] = useState<"today" | "week" | "month" | "year" | "all">("all")
+    const [filteredVisits, setFilteredVisits] = useState(0)
     const router = useRouter()
 
     const filteredModules = ADMIN_MODULES.filter(module => {
@@ -57,33 +58,53 @@ export default function AdminDashboard() {
         router.push("/?logout=true")
     }
 
+    // Calculate date limits based on range
+    const getDateRange = () => {
+        const now = new Date()
+        const start = new Date()
+
+        switch (statsTimeRange) {
+            case "today": start.setHours(0, 0, 0, 0); break;
+            case "week": start.setDate(now.getDate() - 7); break;
+            case "month": start.setMonth(now.getMonth() - 1); break;
+            case "year": start.setFullYear(now.getFullYear() - 1); break;
+            case "all": start.setFullYear(2000); break;
+        }
+        return start
+    }
+
     useEffect(() => {
         const timer = setTimeout(() => setIsLoading(false), 800)
 
         const fetchVisits = async () => {
-            const now = new Date()
-            const start = new Date(now)
-            start.setHours(0, 0, 0, 0)
-            const end = new Date(now)
-            end.setHours(23, 59, 59, 999)
+            const start = getDateRange()
+            const end = new Date()
 
             const visits = await getVisits(start, end)
             const count = visits.reduce((acc, v) => acc + v.count, 0)
-            setTodayVisits(count)
+            setFilteredVisits(count)
         }
         fetchVisits()
 
         return () => clearTimeout(timer)
-    }, [])
+    }, [statsTimeRange])
 
-    const totalSales = orders.reduce((sum, o) => sum + o.total, 0)
+    const filteredOrders = orders.filter(o => new Date(o.createdAt) >= getDateRange())
+    const filteredCustomers = customers.filter(c => new Date(c.joinedAt).getTime() >= getDateRange().getTime())
+
+    // Metrics
+    const totalSales = filteredOrders.reduce((sum, o) => sum + o.total, 0)
+    // Active orders are usually "current" state, not historical, maybe we keep them absolute or filter by "created recently" and "still active"? 
+    // For dashboard, "Active Orders" usually implies "Current Workload". Filtering by date might be confusing if it hides old active orders.
+    // Let's keep Active Orders as "Current Active Workload" (All time pending/processing), but Sales as "Filtered Revenue".
     const pendingOrders = orders.filter(o => o.status === "processing" || o.status === "pending").length
+    const newCustomersCount = statsTimeRange === 'all' ? customers.length : filteredCustomers.length
 
     return (
         <div className="space-y-8 pt-4 pb-20 max-w-7xl mx-auto px-4 md:px-0">
             {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
+                <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative group">
                         <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
                         <NextImage
@@ -102,14 +123,37 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLogout}
-                    className="rounded-full hover:bg-red-500/10 hover:text-red-400 text-slate-400 transition-colors"
-                >
-                    <LogOut className="w-5 h-5" />
-                </Button>
+
+                <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+                    <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                        {(["today", "week", "month", "all"] as const).map((range) => (
+                            <button
+                                key={range}
+                                onClick={() => setStatsTimeRange(range)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-full text-[10px] font-bold transition-all",
+                                    statsTimeRange === range
+                                        ? "bg-primary text-white shadow-lg"
+                                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                                )}
+                            >
+                                {range === "today" && "اليوم"}
+                                {range === "week" && "أسبوع"}
+                                {range === "month" && "شهر"}
+                                {range === "all" && "الكل"}
+                            </button>
+                        ))}
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleLogout}
+                        className="rounded-full hover:bg-red-500/10 hover:text-red-400 text-slate-400 transition-colors"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </Button>
+                </div>
             </div>
 
 
@@ -124,7 +168,7 @@ export default function AdminDashboard() {
                         ) : (
                             <>
                                 <StatsCard
-                                    title="إجمالي المبيعات"
+                                    title={statsTimeRange === 'all' ? "إجمالي المبيعات" : "مبيعات الفترة"}
                                     value={`${totalSales.toLocaleString()} ر.س`}
                                     icon={TrendingUp}
                                     gradient="from-emerald-500/20 to-teal-500/5"
@@ -140,10 +184,11 @@ export default function AdminDashboard() {
                                     border="border-blue-500/20"
                                     iconColor="text-blue-400"
                                     href="/admin/orders"
+                                    subtitle="عبء العمل الحالي"
                                 />
                                 <StatsCard
-                                    title="قاعدة العملاء"
-                                    value={customers.length.toString()}
+                                    title={statsTimeRange === 'all' ? "إجمالي العملاء" : "عملاء جدد"}
+                                    value={newCustomersCount.toString()}
                                     icon={UserCheck}
                                     gradient="from-violet-500/20 to-purple-500/5"
                                     border="border-violet-500/20"
@@ -151,8 +196,8 @@ export default function AdminDashboard() {
                                     href="/admin/customers"
                                 />
                                 <StatsCard
-                                    title="زيارات اليوم"
-                                    value={todayVisits.toLocaleString()}
+                                    title={statsTimeRange === 'today' ? "زيارات اليوم" : "زيارات الفترة"}
+                                    value={filteredVisits.toLocaleString()}
                                     icon={Users}
                                     gradient="from-pink-500/20 to-rose-500/5"
                                     border="border-pink-500/20"
@@ -304,7 +349,7 @@ export default function AdminDashboard() {
 
 
 
-function StatsCard({ title, value, icon: Icon, gradient, border, iconColor, href }: any) {
+function StatsCard({ title, value, icon: Icon, gradient, border, iconColor, href, subtitle }: any) {
     const Content = (
         <div className={cn(
             "relative overflow-hidden h-32 rounded-[2.5rem] p-8 transition-all hover:scale-[1.02] cursor-pointer group bg-black/20 border backdrop-blur-md",
@@ -319,6 +364,7 @@ function StatsCard({ title, value, icon: Icon, gradient, border, iconColor, href
                 <div className="flex flex-col justify-between h-full">
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{title}</p>
                     <p className="text-3xl font-black text-white tracking-tight">{value}</p>
+                    {subtitle && <p className="text-[10px] text-slate-500 font-medium">{subtitle}</p>}
                 </div>
                 <div className={cn(
                     "w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 group-hover:rotate-12 transition-transform",

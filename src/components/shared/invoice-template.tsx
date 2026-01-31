@@ -4,7 +4,7 @@ import { useStore } from "@/context/store-context"
 import { MapPin, Phone } from "lucide-react"
 import Image from "next/image"
 
-export function InvoiceTemplate({ order }: { order: import("@/context/store-context").Order }) {
+export function InvoiceTemplate({ order, isPreview = false }: { order: import("@/context/store-context").Order, isPreview?: boolean }) {
     const { storeSettings } = useStore()
 
     return (
@@ -48,7 +48,7 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                 }
             `}</style>
 
-            <div className="bg-white text-black p-8 max-w-4xl mx-auto hidden print:block" id={`invoice-${order.id}`}>
+            <div className={`bg-white text-black p-8 max-w-4xl mx-auto ${isPreview ? 'block' : 'hidden print:block'}`} id={`invoice-${order.id}`}>
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-6">
                     <div className="flex items-center gap-4">
@@ -105,9 +105,7 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                         <tr className="bg-slate-900 text-white">
                             <th className="text-right py-4 px-4 text-sm font-black">المنتج</th>
                             <th className="text-center py-4 px-3 text-sm font-black">الكمية</th>
-                            <th className="text-center py-4 px-3 text-sm font-black">السعر<br />(قبل الضريبة)</th>
-                            <th className="text-center py-4 px-3 text-sm font-black">الضريبة<br />(15%)</th>
-                            <th className="text-center py-4 px-3 text-sm font-black">السعر<br />(شامل الضريبة)</th>
+                            <th className="text-center py-4 px-3 text-sm font-black">السعر</th>
                             <th className="text-left py-4 px-4 text-sm font-black">الإجمالي</th>
                         </tr>
                     </thead>
@@ -131,9 +129,6 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                                     </td>
                                     <td className="py-4 px-3 text-center">
                                         <span className="font-bold text-base text-slate-700">{priceBeforeTax.toFixed(2)}</span>
-                                    </td>
-                                    <td className="py-4 px-3 text-center">
-                                        <span className="font-bold text-base text-red-600">{taxAmount.toFixed(2)}</span>
                                     </td>
                                     <td className="py-4 px-4 text-left">
                                         <div className="text-right">

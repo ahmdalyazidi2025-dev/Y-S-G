@@ -2,7 +2,7 @@
 
 import { useStore, Order } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -28,6 +28,10 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 export default function InvoicesPage() {
     const { orders, restoreDraftToCart, addToCart } = useStore()
     const [filter, setFilter] = useState<string>("all")
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
+    // ... existing ...
+
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
     const handleDownloadPDF = async (order: Order) => {

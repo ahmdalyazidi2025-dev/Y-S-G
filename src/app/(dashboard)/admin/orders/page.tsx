@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye } from "lucide-react"
 import Link from "next/link"
 import { useStore, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -32,6 +32,10 @@ export default function AdminOrdersPage() {
     const [customEnd, setCustomEnd] = useState("")
     const [selectedCustomer, setSelectedCustomer] = useState("all")
     const [searchQuery, setSearchQuery] = useState("")
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
+    // ... existing code ...
+
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
     const categories = {

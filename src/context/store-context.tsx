@@ -205,6 +205,7 @@ export type StoreSettings = {
         statusUpdate?: string;  // Customer: Order status change alert
         generalPush?: string;   // Customer: Global/Bulk notification alert
     }
+    hiddenSections?: ("products" | "offers" | "categories" | "search")[] // New: Hide specific home sections
 }
 
 type StoreContextType = {

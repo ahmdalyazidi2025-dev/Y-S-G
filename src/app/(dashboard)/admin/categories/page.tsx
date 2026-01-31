@@ -82,8 +82,10 @@ export default function CategoriesPage() {
                                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                                        <Layers className="w-16 h-16 text-slate-700 group-hover:text-primary/50 transition-colors duration-500" />
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-slate-700 transition-colors duration-500">
+                                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center backdrop-blur-sm border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                                            <Layers className="w-6 h-6 text-slate-500 group-hover:text-primary transition-colors duration-500" />
+                                        </div>
                                     </div>
                                 )}
 

@@ -65,8 +65,25 @@ export function NotificationManager() {
             if (msg) {
                 const unsubscribe = onMessage(msg, (payload) => {
                     console.log("Foreground Message:", payload)
-                    toast.message(payload.notification?.title || "إشعار جديد", {
-                        description: payload.notification?.body,
+
+                    let title = payload.notification?.title || "إشعار جديد"
+                    let body = payload.notification?.body || ""
+
+                    // 1. Hide Invoice ID Number from Title (e.g. "Invoice #123 updated" -> "Invoice updated")
+                    // Matches "Invoice #123" or "الفاتورة #123"
+                    title = title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")
+
+                    // 2. Privacy for Chat Messages (Admin to Customer) containing numbers/symbols
+                    // If it looks like a chat message, hide the body content for privacy
+                    if (payload.data?.link?.includes('/chat') || title.includes('رسالة')) {
+                        // Check if body contains numbers or special chars (sensitive info) - User request
+                        if (/[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(body)) {
+                            body = "لديك رسالة جديدة من الإدارة 🔒"
+                        }
+                    }
+
+                    toast.message(title, {
+                        description: body,
                         icon: <BellRing className="w-5 h-5 text-primary" />
                     })
                     // Play sound
