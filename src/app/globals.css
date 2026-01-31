@@ -180,6 +180,21 @@
   }
 }
 
+/* Fix Date Input RTL Issues */
+@layer base {
+  input[type="date"],
+  input[type="datetime-local"], 
+  input[type="month"], 
+  input[type="time"] {
+    direction: ltr !important;
+    text-align: right;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.5;
+  }
+}
+
 body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
