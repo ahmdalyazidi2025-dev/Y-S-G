@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
 import { AdminCategoryForm } from "@/components/admin/category-form"
+import { cn } from "@/lib/utils"
 
 export default function CategoriesPage() {
     const { categories, deleteCategory } = useStore()
@@ -68,11 +69,21 @@ export default function CategoriesPage() {
                     categories.map((category) => (
                         <div
                             key={category.id}
-                            className="group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
+                            className={cn(
+                                "group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10",
+                                category.isHidden && "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 border-dashed border-slate-700"
+                            )}
                         >
                             {/* Image Section */}
                             <div className="h-48 relative overflow-hidden bg-slate-800/50">
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-10 opacity-60" />
+
+                                {category.isHidden && (
+                                    <div className="absolute top-3 right-3 z-30 bg-black/60 backdrop-blur-md text-white px-2 py-1 rounded-lg text-xs font-bold border border-white/10 flex items-center gap-1.5">
+                                        <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                                        <span>مخفي</span>
+                                    </div>
+                                )}
 
                                 {category.image && category.image.startsWith("data:") ? (
                                     <Image

@@ -542,7 +542,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const customerAllowed = currentUser.allowedCategories
 
         if (!customerAllowed || customerAllowed === "all") {
-            setCategories(allCategories)
+            // Filter out hidden categories for general customers
+            setCategories(allCategories.filter(cat => !cat.isHidden))
         } else {
             // Filter categories
             setCategories(allCategories.filter(cat => customerAllowed.includes(cat.id)))

@@ -26,7 +26,9 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         nameAr: "",
         nameEn: "",
         image: "",
+        image: "",
         icon: "📁",
+        isHidden: false,
     })
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     nameEn: initialCategory.nameEn,
                     image: initialCategory.image || "",
                     icon: initialCategory.icon || "📁",
+                    isHidden: initialCategory.isHidden || false,
                 });
                 setVisualType(initialCategory.image ? "image" : "icon");
             } else {
@@ -47,6 +50,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     nameEn: "",
                     image: "",
                     icon: "📁",
+                    isHidden: false,
                 });
                 setVisualType("icon");
             }
@@ -87,6 +91,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
             nameEn: formData.nameEn,
             image: formData.image,
             icon: formData.icon,
+            isHidden: formData.isHidden,
         }
 
         if (initialCategory) {
@@ -132,6 +137,31 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                 accept="image/*"
                                 onChange={handleFileChange}
                             />
+
+                            <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-white text-base">حالة القسم</Label>
+                                    <p className="text-xs text-slate-400">تحديد ما إذا كان القسم ظاهراً للعملاء أم مخفياً</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className={cn("text-xs font-bold transition-colors", !formData.isHidden ? "text-emerald-400" : "text-slate-500")}>
+                                        {!formData.isHidden ? "ظاهر" : "مخفي"}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, isHidden: !prev.isHidden }))}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full relative transition-colors duration-300",
+                                            !formData.isHidden ? "bg-emerald-500/20" : "bg-slate-700"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-4 h-4 rounded-full transition-all duration-300",
+                                            !formData.isHidden ? "left-1 bg-emerald-500" : "left-7 bg-slate-400"
+                                        )} />
+                                    </button>
+                                </div>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
