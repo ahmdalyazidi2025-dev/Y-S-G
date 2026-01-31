@@ -134,8 +134,7 @@ export default function StoreLayout({
                                     />
                                 </Link>
                                 <div className="hidden sm:block">
-                                    <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">YSG SALES</h1>
-                                    <p className="text-[9px] text-primary/80 font-bold tracking-[0.2em] uppercase">Client Portal</p>
+                                    <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">Y S G</h1>
                                 </div>
                             </div>
                         </div>

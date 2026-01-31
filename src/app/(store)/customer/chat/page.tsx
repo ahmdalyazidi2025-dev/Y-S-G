@@ -60,7 +60,14 @@ export default function ChatPage() {
                             "max-w-[80%] p-3 rounded-2xl text-xs space-y-1",
                             m.isAdmin ? "bg-white/10 text-slate-200 self-start rounded-bl-none" : "bg-primary text-white self-end rounded-br-none"
                         )}>
-                            <p className="font-bold text-[8px] opacity-70">{m.senderName}</p>
+                            <div className="flex items-center gap-2 mb-1">
+                                {m.isAdmin && (
+                                    <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20">
+                                        <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                                <p className="font-bold text-[8px] opacity-70">{m.isAdmin ? "Y S G" : m.senderName}</p>
+                            </div>
                             <p>{m.isAdmin ? m.text.replace(`(@${currentCustomerId})`, "").trim() : m.text}</p>
                             <p className="text-[8px] opacity-50 text-left">{format(m.createdAt, "hh:mm a", { locale: ar })}</p>
                         </div>

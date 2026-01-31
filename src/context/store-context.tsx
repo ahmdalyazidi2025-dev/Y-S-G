@@ -686,6 +686,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             setCart([])
             toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
+            // Send Notification
+            const notificationMsg = "تم رفع طلبك بنجاح! سنقوم بمراجعته قريباً."
+            await addDoc(collection(db, "notifications"), sanitizeData({
+                userId: customerId,
+                title: "تم رفع طلبك",
+                body: notificationMsg,
+                type: "success",
+                read: false,
+                createdAt: Timestamp.now()
+            }))
+
+            await sendPushNotification(
+                customerId,
+                "تم رفع الطلب",
+                notificationMsg,
+                `/customer/invoices`
+            )
+
             hapticFeedback('success')
             playSound('newOrder') // Trigger sound for new order
         } catch (e) {
