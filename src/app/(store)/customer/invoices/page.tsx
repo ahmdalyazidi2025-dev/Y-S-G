@@ -263,6 +263,13 @@ export default function InvoicesPage() {
                                         )}
                                         <div className="grid grid-cols-2 gap-3">
                                             <Button
+                                                className="h-14 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-colors gap-2"
+                                                onClick={() => setIsPreviewOpen(true)}
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                                <span>معاينة الفاتورة</span>
+                                            </Button>
+                                            <Button
                                                 className="h-14 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors gap-2"
                                                 onClick={() => window.print()}
                                             >
@@ -289,7 +296,14 @@ export default function InvoicesPage() {
             </Drawer.Root>
 
             {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
-            {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-target" />}
+            {selectedOrder && (
+                <PremiumInvoice
+                    order={selectedOrder}
+                    id="premium-invoice-target"
+                    isPreview={isPreviewOpen}
+                    onClose={() => setIsPreviewOpen(false)}
+                />
+            )}
         </div >
     )
 }

@@ -12,6 +12,7 @@ import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endO
 import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { toast } from "sonner"
+import { PremiumInvoice } from "@/components/shared/premium-invoice" // Import added
 
 const STATUS_CONFIG = {
     pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
@@ -37,6 +38,7 @@ export default function AdminOrdersPage() {
     // ... existing code ...
 
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+    const [invoicePreviewOrder, setInvoicePreviewOrder] = useState<Order | null>(null) // State for invoice preview
 
     const categories = {
         all: "الكل",
@@ -279,11 +281,20 @@ export default function AdminOrdersPage() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
+                                        className="text-white hover:bg-white/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-white/20"
+                                        onClick={() => setInvoicePreviewOrder(selectedOrder)}
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="text-xs">معاينة الفاتورة</span>
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
                                         className="text-blue-400 hover:bg-blue-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-blue-400/20"
                                         onClick={() => printOrderInvoice(selectedOrder, storeSettings)}
                                     >
                                         <Printer className="w-4 h-4" />
-                                        <span className="text-xs">طباعة فاتورة</span>
+                                        <span className="text-xs">طباعة</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -379,6 +390,13 @@ export default function AdminOrdersPage() {
             </AnimatePresence>
 
             {/* Removed InvoiceTemplate and PremiumInvoice */}
+            {invoicePreviewOrder && (
+                <PremiumInvoice
+                    order={invoicePreviewOrder}
+                    isPreview={true}
+                    onClose={() => setInvoicePreviewOrder(null)}
+                />
+            )}
         </div>
     )
 }
