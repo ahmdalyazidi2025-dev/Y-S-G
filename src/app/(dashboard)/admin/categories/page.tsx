@@ -124,7 +124,7 @@ export default function CategoriesPage() {
                                 <div className="absolute top-3 right-3 z-20 flex gap-2 translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 delay-75">
                                     <Button
                                         size="icon"
-                                        className="h-9 w-9 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-primary hover:border-primary shadow-lg"
+                                        className="h-9 w-9 rounded-xl bg-blue-600 border border-blue-500 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20"
                                         onClick={() => handleEdit(category)}
                                         title="تعديل"
                                     >
@@ -134,10 +134,10 @@ export default function CategoriesPage() {
                                     <Button
                                         size="icon"
                                         className={cn(
-                                            "h-9 w-9 rounded-xl backdrop-blur-md border border-white/20 shadow-lg transition-colors",
+                                            "h-9 w-9 rounded-xl border shadow-lg transition-all duration-300",
                                             category.isHidden
-                                                ? "bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white"
-                                                : "bg-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500"
+                                                ? "bg-red-600 border-red-500 text-white hover:bg-red-500 shadow-red-500/20"
+                                                : "bg-emerald-600 border-emerald-500 text-white hover:bg-emerald-500 shadow-emerald-500/20"
                                         )}
                                         onClick={() => toggleVisibility(category)}
                                         title={category.isHidden ? "إظهار" : "إخفاء"}
