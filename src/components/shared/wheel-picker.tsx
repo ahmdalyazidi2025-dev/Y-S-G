@@ -123,7 +123,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10 backdrop-blur-[1px]" />
 
                             {/* Year Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={yearRef}>
+                            <div className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={yearRef}>
                                 {years.map((y) => (
                                     <div
                                         key={y}
@@ -139,7 +139,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Month Column */}
-                            <div className="flex-[2] min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={monthRef}>
+                            <div className="flex-[2] min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={monthRef}>
                                 {months.map((m, i) => (
                                     <div
                                         key={m}
@@ -155,7 +155,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Day Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={dayRef}>
+                            <div className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={dayRef}>
                                 {days.map((d) => (
                                     <div
                                         key={d}
