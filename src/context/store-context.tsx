@@ -209,6 +209,13 @@ export type StoreSettings = {
     hiddenSections?: ("products" | "offers" | "categories" | "search")[] // New: Hide specific home sections
 }
 
+export type JoinRequest = {
+    id: string
+    name: string
+    phone: string
+    createdAt: Date
+}
+
 type StoreContextType = {
     products: Product[]
     cart: CartItem[]
@@ -270,6 +277,9 @@ type StoreContextType = {
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
     playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush') => void
+    joinRequests: JoinRequest[]
+    addJoinRequest: (name: string, phone: string) => Promise<void>
+    deleteJoinRequest: (id: string) => Promise<void>
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -311,6 +321,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [customers, setCustomers] = useState<Customer[]>([])
     const [banners, setBanners] = useState<Banner[]>([])
     const [productRequests, setProductRequests] = useState<ProductRequest[]>([])
+    const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
     const [cart, setCart] = useState<CartItem[]>([])
     const [orders, setOrders] = useState<Order[]>([])
     const [messages, setMessages] = useState<Message[]>([])
@@ -324,7 +335,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        // Generate or retrieve persistent Guest ID
+        // ... (existing Guest ID logic)
         const storedGuestId = localStorage.getItem("ysg_guest_id")
         if (storedGuestId) {
             setGuestId(storedGuestId)
@@ -333,6 +344,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem("ysg_guest_id", newGuestId)
             setGuestId(newGuestId)
         }
+
+        // Join Requests Listener
+        const unsubJoin = onSnapshot(query(collection(db, "joinRequests"), orderBy("createdAt", "desc")), (snap) => {
+            setJoinRequests(snap.docs.map(doc => {
+                const data = doc.data() as JoinRequest
+                return {
+                    ...data,
+                    id: doc.id,
+                    createdAt: data.createdAt ? toDate(data.createdAt) : new Date()
+                }
+            }))
+        })
+        return () => unsubJoin()
     }, [])
 
     // Listen to Auth State Changes
@@ -794,6 +818,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
             console.error("Add Category Error:", e)
             toast.error(`فشل إضافة القسم: ${(e as Error).message}`)
+        }
+    }
+
+    // --- JOIN REQUESTS LOGIC ---
+    // (Type defined at top of file)
+
+    const startJoinRequestsListener = (setRequests: React.Dispatch<React.SetStateAction<JoinRequest[]>>) => {
+        return onSnapshot(query(collection(db, "joinRequests"), orderBy("createdAt", "desc")), (snap) => {
+            setRequests(snap.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: doc.data().createdAt?.toDate() || new Date()
+            } as JoinRequest)))
+        })
+    }
+
+    const addJoinRequest = async (name: string, phone: string) => {
+        try {
+            await addDoc(collection(db, "joinRequests"), {
+                name,
+                phone,
+                createdAt: Timestamp.now()
+            })
+            toast.success("تم إرسال طلب الانضمام بنجاح")
+        } catch (e) {
+            console.error("Add Request Error:", e)
+            toast.error("فشل إرسال الطلب")
+        }
+    }
+
+    const deleteJoinRequest = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "joinRequests", id))
+            toast.success("تم حذف الطلب")
+        } catch (e) {
+            console.error("Delete Request Error:", e)
+            toast.error("فشل حذف الطلب")
         }
     }
 
@@ -1632,7 +1693,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
         staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
         coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead, markMessagesRead, playSound,
+        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
+        markMessagesRead,
+        playSound,
+        joinRequests,
+        addJoinRequest,
+        deleteJoinRequest,
         cleanupOrphanedUsers
     }
     return (

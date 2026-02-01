@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag, UserPlus } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -166,7 +166,8 @@ export function AdminMobileNav() {
         { title: "الطلبات", icon: ClipboardList, href: "/admin/orders" },
         { title: "الدردشة", icon: MessageCircle, href: "/admin/chat" },
 
-        { title: "الإعدادات", icon: Settings, href: "/admin/settings" },
+        { name: "طلبات الانضمام", icon: UserPlus, href: "/admin/join-requests" },
+        { name: "الإعدادات", icon: Settings, href: "/admin/settings" },
     ]
 
     return (
