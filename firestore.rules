@@ -11,16 +11,42 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // Allow public creation of join requests
+    // Public Read, Admin Write
+    match /products/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /categories/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /banners/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /storeSettings/{docId} { allow read: if true; allow write: if isAdmin(); }
+
+    // Orders: Owner or Admin
+    match /orders/{orderId} {
+      allow create: if true; // Allow guests to create orders (or restricted to auth?)
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Join Requests: Admin only (Creation handled by Server Action)
     match /joinRequests/{requestId} {
-      allow create: if true;
       allow read, delete: if isAdmin();
+      allow create: if false; // Block client-side creation, force Server Action
+    }
+
+    // Messages
+    match /messages/{msgId} {
+      allow read, write: if request.auth != null; // Refine later if needed
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+       allow read, write: if request.auth != null; // Refine later
+    }
+
+    match /coupons/{code} {
+       allow read: if true;
+       allow write: if isAdmin();
     }
 
     match /{document=**} {
-      allow read: if true;
-      // TEMPORARY: Allow any authenticated user to write to debug permission issues
-      allow write: if request.auth != null; 
+      allow read, write: if false; // Deny all other access by default
     }
   }
 }
