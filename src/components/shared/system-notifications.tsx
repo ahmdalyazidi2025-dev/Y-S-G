@@ -175,7 +175,7 @@ export function SystemNotifications() {
                 const isRecent = (Date.now() - reqTime) < 60000 // created in last minute
 
                 if (isRecent) {
-                    playAlertSound()
+                    playSound('statusUpdate')
                     toast.warning("طلب توفير منتج جديد", {
                         description: "قام أحد العملاء بطلب توفير منتج",
                         icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,
