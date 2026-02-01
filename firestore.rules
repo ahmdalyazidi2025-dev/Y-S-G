@@ -11,6 +11,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Allow public creation of join requests
+    match /joinRequests/{requestId} {
+      allow create: if true;
+      allow read, delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read: if true;
       // TEMPORARY: Allow any authenticated user to write to debug permission issues

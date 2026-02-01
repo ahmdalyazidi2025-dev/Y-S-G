@@ -19,7 +19,7 @@ const NAV_ITEMS = [
     { title: "طلبات التوفير", icon: Camera, href: "/admin/requests", color: "text-purple-400" },
     { title: "صور العرض", icon: LugideImage, href: "/admin/banners", color: "text-pink-400" },
     { title: "الدردشة", icon: MessageCircle, href: "/admin/chat", color: "text-indigo-400" },
-
+    { title: "طلبات الانضمام", icon: UserPlus, href: "/admin/join-requests", color: "text-emerald-400" },
     { title: "حالة النظام", icon: Activity, href: "/admin/system", color: "text-rose-400" },
     { title: "الإعدادات", icon: Settings, href: "/admin/settings", color: "text-slate-400" },
 ]
@@ -55,7 +55,7 @@ export function AdminSidebar() {
             "/admin/requests": "orders",
             "/admin/banners": "settings",
             "/admin/chat": "chat",
-
+            "/admin/join-requests": "customers", // Map to customers permission
             "/admin/system": "settings",
             "/admin/settings": "settings",
         }
