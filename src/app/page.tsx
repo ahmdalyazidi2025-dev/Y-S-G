@@ -1,4 +1,5 @@
 "use client"
+// Build Trigger: Fix Page Syntax Error
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
