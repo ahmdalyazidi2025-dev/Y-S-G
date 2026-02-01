@@ -42,41 +42,29 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
     const currentDay = tempDate.getDate()
     const days = Array.from({ length: getDaysInMonth(currentYear, currentMonth) }, (_, i) => i + 1)
 
-    // Update temp selection
+    // Scroll handler for auto-selection
     const handleScroll = (type: 'year' | 'month' | 'day', e: React.UIEvent<HTMLDivElement>) => {
-        // Debounce or simple snap handling could be added here if needed for more complex logic
-        // But for visual feedback, we rely on the snap-scrolling css and click selection for now or intersection observer
-        // To keep it simple and robust, we will use click-to-center or just selecting the visible item
-        // Let's implement a simpler "click to select" inside the wheel aimed at the center
-    }
+        const target = e.currentTarget
+        const itemHeight = 40
+        const index = Math.round(target.scrollTop / itemHeight)
 
-    // Scroll to position on open
-    React.useEffect(() => {
-        if (open) {
-            // Tiny timeout to allow DOM to render
-            setTimeout(() => {
-                const yearIndex = years.indexOf(currentYear)
-                const monthIndex = currentMonth
-                const dayIndex = currentDay - 1
-
-                if (yearRef.current) yearRef.current.children[yearIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                if (monthRef.current) monthRef.current.children[monthIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                if (dayRef.current) dayRef.current.children[dayIndex]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }, 100)
+        if (type === 'year') {
+            if (years[index] && years[index] !== currentYear) updateDate('year', years[index])
+        } else if (type === 'month') {
+            // months array is 0-indexed
+            if (months[index] && index !== currentMonth) updateDate('month', index)
+        } else if (type === 'day') {
+            if (days[index] && days[index] !== currentDay) updateDate('day', days[index])
         }
-    }, [open])
-
-    const confirmSelection = () => {
-        setDate(tempDate)
-        setOpen(false)
     }
 
-    const updateDate = (type: 'year' | 'month' | 'day', value: number) => {
-        const newDate = new Date(tempDate)
-        if (type === 'year') newDate.setFullYear(value)
-        if (type === 'month') newDate.setMonth(value)
-        if (type === 'day') newDate.setDate(value)
-        setTempDate(newDate)
+    const scrollToItem = (ref: React.RefObject<HTMLDivElement>, index: number) => {
+        if (ref.current) {
+            ref.current.scrollTo({
+                top: index * 40, // itemHeight
+                behavior: 'smooth'
+            })
+        }
     }
 
     return (
@@ -123,15 +111,19 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10" />
 
                             {/* Year Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={yearRef}>
-                                {years.map((y) => (
+                            <div
+                                className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                ref={yearRef}
+                                onScroll={(e) => handleScroll('year', e)}
+                            >
+                                {years.map((y, i) => (
                                     <div
                                         key={y}
                                         className={cn(
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentYear === y ? "text-primary font-bold text-xl scale-110" : "text-slate-500 text-sm"
                                         )}
-                                        onClick={() => updateDate('year', y)}
+                                        onClick={() => scrollToItem(yearRef, i)}
                                     >
                                         {y.toLocaleString('ar-SA', { useGrouping: false })}
                                     </div>
@@ -139,7 +131,11 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Month Column */}
-                            <div className="flex-[2] min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={monthRef}>
+                            <div
+                                className="flex-[2] min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                ref={monthRef}
+                                onScroll={(e) => handleScroll('month', e)}
+                            >
                                 {months.map((m, i) => (
                                     <div
                                         key={m}
@@ -147,7 +143,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentMonth === i ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
                                         )}
-                                        onClick={() => updateDate('month', i)}
+                                        onClick={() => scrollToItem(monthRef, i)}
                                     >
                                         {m}
                                     </div>
@@ -155,15 +151,19 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Day Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={dayRef}>
-                                {days.map((d) => (
+                            <div
+                                className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                                ref={dayRef}
+                                onScroll={(e) => handleScroll('day', e)}
+                            >
+                                {days.map((d, i) => (
                                     <div
                                         key={d}
                                         className={cn(
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentDay === d ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
                                         )}
-                                        onClick={() => updateDate('day', d)}
+                                        onClick={() => scrollToItem(dayRef, i)}
                                     >
                                         {d.toLocaleString('ar-SA')}
                                     </div>
