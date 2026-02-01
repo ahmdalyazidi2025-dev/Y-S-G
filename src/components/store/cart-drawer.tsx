@@ -206,40 +206,36 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                     <span className="text-white font-bold">{cart.reduce((a, b) => a + b.quantity, 0)} منتج</span>
                                 </div>
 
-                                {/* Inputs */}
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-slate-400 font-bold pr-1 flex items-center gap-1">
-                                            الاسم
-                                            {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500">*</span>}
-                                        </label>
-                                        <div className="relative">
-                                            <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
-                                            <Input
-                                                placeholder={currentUser?.name || "اسم العميل"}
-                                                value={customerName}
-                                                onChange={(e) => setCustomerName(e.target.value)}
-                                                className="h-14 text-right pr-10 pl-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm"
-                                            />
+                                {/* Inputs - Only show if required by settings OR we need them */}
+                                {storeSettings.requireCustomerInfoOnCheckout && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs text-slate-400 font-bold pr-1 flex items-center gap-1">
+                                                البيانات الشخصية
+                                                <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
+                                                <Input
+                                                    placeholder="الاسم"
+                                                    value={customerName}
+                                                    onChange={(e) => setCustomerName(e.target.value)}
+                                                    className="h-14 text-right pr-10 pl-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm font-bold"
+                                                />
+                                            </div>
+                                            <div className="relative">
+                                                <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
+                                                <Input
+                                                    placeholder="رقم الهاتف الشخصي"
+                                                    value={customerPhone}
+                                                    onChange={(e) => setCustomerPhone(e.target.value)}
+                                                    className="h-14 text-right pr-10 pl-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm font-bold"
+                                                    inputMode="numeric"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-slate-400 font-bold pr-1 flex items-center gap-1">
-                                            جوال
-                                            {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500">*</span>}
-                                        </label>
-                                        <div className="relative">
-                                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
-                                            <Input
-                                                placeholder="رقم الجوال"
-                                                value={customerPhone}
-                                                onChange={(e) => setCustomerPhone(e.target.value)}
-                                                className="h-14 text-right pr-10 pl-4 bg-black/20 border-white/5 text-white placeholder:text-slate-500/70 focus:border-primary/50 text-sm"
-                                                inputMode="numeric"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
 
                                 {/* Coupon */}
                                 {storeSettings.enableCoupons !== false && (
@@ -307,41 +303,46 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="flex gap-4">
                                 {view === 'cart' ? (
                                     <>
+                                        {/* Draft Button (Left) */}
                                         <Button
-                                            variant="outline"
-                                            className="h-14 rounded-2xl gap-2 hover:bg-white/5 text-slate-400 border-white/10"
-                                            onClick={onClose}
+                                            variant="secondary"
+                                            className="flex-1 h-14 rounded-2xl gap-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5"
+                                            onClick={() => handleCreateOrder(true)}
                                         >
-                                            <span>متابعة التسوق</span>
-                                            <ChevronDown className="w-5 h-5" />
+                                            <FileText className="w-5 h-5" />
+                                            <span>مسودة</span>
                                         </Button>
+
+                                        {/* Submit Button (Right) */}
                                         <Button
-                                            className="h-14 rounded-2xl gap-2 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+                                            className="flex-[2] h-14 rounded-2xl gap-2 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
                                             onClick={() => setView('checkout')}
                                         >
-                                            <span>متابعة الشراء</span>
+                                            <span>رفع الطلب</span>
                                             <Send className="w-5 h-5 rotate-180" />
                                         </Button>
                                     </>
                                 ) : (
                                     <>
+                                        {/* Back Button */}
                                         <Button
-                                            variant="glass"
-                                            className="h-14 rounded-2xl gap-2"
-                                            onClick={() => handleCreateOrder(true)}
+                                            variant="ghost"
+                                            className="h-14 w-14 rounded-2xl border border-white/5 hover:bg-white/5 text-slate-400"
+                                            onClick={() => setView('cart')}
                                         >
-                                            <FileText className="w-5 h-5" />
-                                            <span>حفظ كمسودة</span>
+                                            <ChevronDown className="w-6 h-6 rotate-90" />
                                         </Button>
+
+                                        {/* Confirm Button */}
                                         <Button
-                                            className="h-14 rounded-2xl gap-2 bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20"
+                                            className="flex-1 h-14 rounded-2xl gap-2 bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20"
                                             onClick={() => handleCreateOrder(false)}
                                         >
                                             <Send className="w-5 h-5" />
-                                            <span>تأكيد الطلب</span>
+                                            <span>تأكيد وإرسال</span>
                                         </Button>
                                     </>
                                 )}
