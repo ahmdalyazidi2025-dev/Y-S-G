@@ -90,8 +90,8 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                         <span className="flex items-center gap-2">
                             <CalendarIcon className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
                             {date ? (
-                                <span className="text-white font-medium font-mono" dir="ltr">
-                                    {format(date, "dd/MM/yyyy")}
+                                <span className="text-white font-medium font-mono" dir="rtl">
+                                    {date.toLocaleDateString('ar-SA')}
                                 </span>
                             ) : (
                                 <span className="text-slate-500">{placeholder}</span>
@@ -118,36 +118,33 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </Button>
                         </div>
 
-                        <div className="flex-1 relative overflow-hidden flex gap-2 h-full" dir="ltr">
+                        <div className="h-[200px] relative overflow-hidden flex gap-2" dir="ltr">
                             {/* Selection Highlight */}
-                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-12 bg-white/5 border-y border-white/10 pointer-events-none z-10 backdrop-blur-[1px]" />
+                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10 backdrop-blur-[1px]" />
 
                             {/* Year Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={yearRef}>
-                                <div className="h-[50%] w-full" />
+                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={yearRef}>
                                 {years.map((y) => (
                                     <div
                                         key={y}
                                         className={cn(
-                                            "h-12 flex items-center justify-center snap-center cursor-pointer transition-all",
+                                            "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentYear === y ? "text-primary font-bold text-xl scale-110" : "text-slate-500 text-sm"
                                         )}
                                         onClick={() => updateDate('year', y)}
                                     >
-                                        {y}
+                                        {y.toLocaleString('ar-SA', { useGrouping: false })}
                                     </div>
                                 ))}
-                                <div className="h-[50%] w-full" />
                             </div>
 
                             {/* Month Column */}
-                            <div className="flex-[2] min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={monthRef}>
-                                <div className="h-[50%] w-full" />
+                            <div className="flex-[2] min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={monthRef}>
                                 {months.map((m, i) => (
                                     <div
                                         key={m}
                                         className={cn(
-                                            "h-12 flex items-center justify-center snap-center cursor-pointer transition-all",
+                                            "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentMonth === i ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
                                         )}
                                         onClick={() => updateDate('month', i)}
@@ -155,25 +152,22 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                                         {m}
                                     </div>
                                 ))}
-                                <div className="h-[50%] w-full" />
                             </div>
 
                             {/* Day Column */}
-                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={dayRef}>
-                                <div className="h-[50%] w-full" />
+                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[80px] text-center" ref={dayRef}>
                                 {days.map((d) => (
                                     <div
                                         key={d}
                                         className={cn(
-                                            "h-12 flex items-center justify-center snap-center cursor-pointer transition-all",
+                                            "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
                                             currentDay === d ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
                                         )}
                                         onClick={() => updateDate('day', d)}
                                     >
-                                        {d}
+                                        {d.toLocaleString('ar-SA')}
                                     </div>
                                 ))}
-                                <div className="h-[50%] w-full" />
                             </div>
 
                         </div>
