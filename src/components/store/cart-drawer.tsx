@@ -5,7 +5,7 @@ import { Drawer } from "vaul"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Trash2, Plus, Minus, FileText, Send, X, User, Phone } from "lucide-react"
+import { Trash2, Plus, Minus, FileText, Send, X, User, Phone, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 
 export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -311,11 +311,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 {view === 'cart' ? (
                                     <>
                                         <Button
-                                            variant="ghost"
-                                            className="h-14 rounded-2xl gap-2 hover:bg-white/5 text-slate-400"
+                                            variant="outline"
+                                            className="h-14 rounded-2xl gap-2 hover:bg-white/5 text-slate-400 border-white/10"
                                             onClick={onClose}
                                         >
-                                            إغلاق
+                                            <span>متابعة التسوق</span>
+                                            <ChevronDown className="w-5 h-5" />
                                         </Button>
                                         <Button
                                             className="h-14 rounded-2xl gap-2 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"

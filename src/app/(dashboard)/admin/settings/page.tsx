@@ -874,11 +874,12 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                     <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => document.getElementById(`file-${event}`)?.click()}
-                        className="h-10 w-10 border border-white/5 hover:bg-white/10 rounded-full"
+                        className="h-10 px-4 border border-white/5 hover:bg-white/10 rounded-full gap-2"
                     >
                         <Upload className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs text-slate-400">تغيير</span>
                     </Button>
                 </div>
 

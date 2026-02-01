@@ -3,12 +3,11 @@
 import { useEffect, useRef } from "react"
 import { useStore } from "@/context/store-context"
 import { toast } from "sonner"
-import { playNewOrderSound, playNotificationSound, playAlertSound } from "@/lib/sounds"
 import { ShoppingBag, MessageSquare, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 export function SystemNotifications() {
-    const { orders, messages, productRequests: requests, currentUser } = useStore()
+    const { orders, messages, productRequests: requests, currentUser, playSound } = useStore()
     const pathname = usePathname()
 
     // track previous counts to detect "new" items vs initial load
@@ -52,13 +51,14 @@ export function SystemNotifications() {
             const isRecent = (Date.now() - orderTime) < 60000 // created in last minute
 
             if (isRecent) {
-                playNewOrderSound()
-                toast.success(`طلب جديد بقيمة ${newOrder.total} د.ع`, {
+                playSound('newOrder')
+                toast.success(`طلب جديد بقيمة ${newOrder.total} ر.س`, {
                     description: `العميل: ${newOrder.customerName}`,
-                    icon: <ShoppingBag className="w-5 h-5 text-green-500" />,
-                    duration: 5000,
+                    icon: <ShoppingBag className="w-6 h-6 text-emerald-500" />,
+                    duration: 8000,
+                    className: "border-2 border-emerald-500/20 bg-emerald-500/5",
                     action: {
-                        label: "عرض",
+                        label: "عرض الطلب",
                         onClick: () => window.location.href = `/admin/orders`
                     }
                 })
@@ -71,24 +71,26 @@ export function SystemNotifications() {
                 const prevStatus = prevOrderStatuses.current[order.id]
                 // If status changed and it's NOT the initial pending state (unless newly created, but that's separate)
                 if (prevStatus && prevStatus !== order.status) {
-                    playNotificationSound() // Soft ping for update
 
                     let msg = `تغيرت حالة الطلب #${order.id.slice(0, 4)}`
                     let icon = <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                    let sound: 'statusUpdate' | 'newOrder' | 'generalPush' = 'statusUpdate'
 
                     if (order.status === 'accepted') {
                         msg = "تمت الموافقة على طلبك! سيصلك قريباً"
-                        playNewOrderSound() // Happy sound!
+                        sound = 'newOrder' // Happy sound!
                         icon = <CheckCircle2 className="w-5 h-5 text-green-500" />
                     } else if (order.status === 'rejected') {
                         msg = "عذراً، تم رفض الطلب. يرجى مراجعة الإشعارات"
-                        playAlertSound()
+                        // Alert sound logic usually maps to statusUpdate or I can reuse generalPush
+                        sound = 'statusUpdate'
                         icon = <AlertTriangle className="w-5 h-5 text-red-500" />
                     } else if (order.status === 'delivered') {
                         msg = "تم توصيل الطلب بنجاح. شكراً لتسوقك!"
-                        playNewOrderSound()
+                        sound = 'newOrder'
                     }
 
+                    playSound(sound)
                     toast(msg, { icon })
                 }
                 prevOrderStatuses.current[order.id] = order.status
@@ -99,7 +101,7 @@ export function SystemNotifications() {
         prevOrdersLength.current = orders.length
         orders.forEach(o => prevOrderStatuses.current[o.id] = o.status)
 
-    }, [orders, isAdminUser, currentUser])
+    }, [orders, isAdminUser, currentUser, playSound])
 
 
     // --------------------------------------------------------------------------
@@ -131,7 +133,7 @@ export function SystemNotifications() {
             if (!isMe && isRecent) {
                 // Determine relevance
                 if (isAdminUser || latestMsg.userId === currentUser?.id || latestMsg.text.includes(`@${currentUser?.id}`)) {
-                    playNotificationSound()
+                    playSound('newMessage')
                     toast.message(latestMsg.senderName, {
                         description: latestMsg.text,
                         icon: <MessageSquare className="w-5 h-5 text-indigo-500" />,
@@ -144,7 +146,7 @@ export function SystemNotifications() {
             }
         }
         prevMessagesLength.current = messages.length
-    }, [messages, isAdminUser, currentUser])
+    }, [messages, isAdminUser, currentUser, playSound])
 
 
     // --------------------------------------------------------------------------
