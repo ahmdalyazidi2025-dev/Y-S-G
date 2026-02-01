@@ -614,7 +614,15 @@ export default function AdminSettingsPage() {
                                                 <Label className="text-[10px] text-slate-400">من تاريخ</Label>
                                                 <WheelPicker
                                                     date={reportStartDate ? new Date(reportStartDate) : undefined}
-                                                    setDate={(d: Date | undefined) => setReportStartDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    setDate={(d: Date | undefined) => {
+                                                        if (d) {
+                                                            const offset = d.getTimezoneOffset()
+                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                            setReportStartDate(localDate.toISOString().split('T')[0])
+                                                        } else {
+                                                            setReportStartDate('')
+                                                        }
+                                                    }}
                                                     placeholder="اختر تاريخ البدء"
                                                 />
                                             </div>
@@ -622,7 +630,15 @@ export default function AdminSettingsPage() {
                                                 <Label className="text-[10px] text-slate-400">إلى تاريخ</Label>
                                                 <WheelPicker
                                                     date={reportEndDate ? new Date(reportEndDate) : undefined}
-                                                    setDate={(d: Date | undefined) => setReportEndDate(d ? d.toISOString().split('T')[0] : '')}
+                                                    setDate={(d: Date | undefined) => {
+                                                        if (d) {
+                                                            const offset = d.getTimezoneOffset()
+                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                            setReportEndDate(localDate.toISOString().split('T')[0])
+                                                        } else {
+                                                            setReportEndDate('')
+                                                        }
+                                                    }}
                                                     placeholder="اختر تاريخ الانتهاء"
                                                 />
                                             </div>

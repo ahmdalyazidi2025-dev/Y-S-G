@@ -248,7 +248,15 @@ export default function AnalyticsPage() {
                         <div className="w-full md:w-[160px]">
                             <WheelPicker
                                 date={customStart ? new Date(customStart) : undefined}
-                                setDate={(d: Date | undefined) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
+                                setDate={(d: Date | undefined) => {
+                                    if (d) {
+                                        const offset = d.getTimezoneOffset()
+                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                        setCustomStart(localDate.toISOString().split('T')[0])
+                                    } else {
+                                        setCustomStart('')
+                                    }
+                                }}
                                 placeholder="من تاريخ"
                             />
                         </div>
@@ -256,7 +264,15 @@ export default function AnalyticsPage() {
                         <div className="w-full md:w-[160px]">
                             <WheelPicker
                                 date={customEnd ? new Date(customEnd) : undefined}
-                                setDate={(d: Date | undefined) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
+                                setDate={(d: Date | undefined) => {
+                                    if (d) {
+                                        const offset = d.getTimezoneOffset()
+                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                        setCustomEnd(localDate.toISOString().split('T')[0])
+                                    } else {
+                                        setCustomEnd('')
+                                    }
+                                }}
                                 placeholder="إلى تاريخ"
                             />
                         </div>
