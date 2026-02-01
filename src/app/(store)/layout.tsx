@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare } from "lucide-react"
+import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2 } from "lucide-react"
 import React, { useState, useRef } from "react" // Added useRef
 import { useStore } from "@/context/store-context"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -140,6 +140,23 @@ export default function StoreLayout({
                         </div>
 
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    const url = window.location.origin
+                                    const text = "تسوق أفضل المنتجات من YSG Store"
+                                    if (navigator.share) {
+                                        navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
+                                    } else {
+                                        navigator.clipboard.writeText(url)
+                                        import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
+                                    }
+                                    hapticFeedback('light')
+                                }}
+                                className="px-3 py-2 bg-white/5 rounded-2xl text-blue-400 hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
+                            >
+                                <Share2 className="w-4 h-4" />
+                            </button>
+
                             <Link
                                 href="/customer/chat"
                                 className="relative px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
