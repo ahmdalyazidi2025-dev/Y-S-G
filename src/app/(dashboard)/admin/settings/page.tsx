@@ -193,7 +193,7 @@ export default function AdminSettingsPage() {
         })
 
         if (filtered.length === 0) {
-            toast.error("لا توجد منتجات تطابق الفلتر!")
+            toast.error(`لا توجد منتجات تطابق الفلتر! (إجمالي المنتجات: ${products.length})`)
             return
         }
 
@@ -594,10 +594,16 @@ export default function AdminSettingsPage() {
                                                         if (range === 'today') start.setHours(0, 0, 0, 0)
                                                         if (range === 'week') start.setDate(now.getDate() - 7)
                                                         if (range === 'month') start.setMonth(now.getMonth() - 1)
-                                                        if (range === 'all') start = new Date('2023-01-01') // Approx start
+                                                        if (range === 'all') start = new Date('2023-01-01')
 
-                                                        setReportStartDate(start.toISOString().split('T')[0])
-                                                        setReportEndDate(new Date().toISOString().split('T')[0])
+                                                        // Helper for local date string
+                                                        const toLocal = (d: Date) => {
+                                                            const offset = d.getTimezoneOffset()
+                                                            return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
+                                                        }
+
+                                                        setReportStartDate(toLocal(start))
+                                                        setReportEndDate(toLocal(now))
                                                     }}
                                                     className="h-7 text-[10px] px-2 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white"
                                                 >
