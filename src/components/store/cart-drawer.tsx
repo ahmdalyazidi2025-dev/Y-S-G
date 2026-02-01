@@ -322,7 +322,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                             onClick={() => setView('checkout')}
                                         >
                                             <span>رفع الطلب</span>
-                                            <Send className="w-5 h-5 rotate-180" />
+                                            <Send className="w-5 h-5 rtl:-scale-x-100" />
                                         </Button>
                                     </>
                                 ) : (
