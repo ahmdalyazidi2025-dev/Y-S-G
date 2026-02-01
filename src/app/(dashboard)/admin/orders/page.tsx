@@ -129,8 +129,8 @@ export default function AdminOrdersPage() {
                         onChange={(e) => setRegionFilter(e.target.value)}
                         className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
                     >
-                        <option value="all">كل المناطق</option>
-                        {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                        <option value="all" className="text-black">كل المناطق</option>
+                        {regions.map(r => <option key={r} value={r} className="text-black">{r}</option>)}
                     </select>
                 </div>
                 <div className="relative">
@@ -140,12 +140,12 @@ export default function AdminOrdersPage() {
                         onChange={(e) => setDateRange(e.target.value as any)}
                         className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
                     >
-                        <option value="all">كل الأوقات</option>
-                        <option value="today">اليوم</option>
-                        <option value="week">هذا الأسبوع</option>
-                        <option value="month">هذا الشهر</option>
-                        <option value="year">هذا العام</option>
-                        <option value="custom">فترة مخصصة</option>
+                        <option value="all" className="text-black">كل الأوقات</option>
+                        <option value="today" className="text-black">اليوم</option>
+                        <option value="week" className="text-black">هذا الأسبوع</option>
+                        <option value="month" className="text-black">هذا الشهر</option>
+                        <option value="year" className="text-black">هذا العام</option>
+                        <option value="custom" className="text-black">فترة مخصصة</option>
                     </select>
                 </div>
                 <div className="relative">
@@ -155,8 +155,8 @@ export default function AdminOrdersPage() {
                         onChange={(e) => setSelectedCustomer(e.target.value)}
                         className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
                     >
-                        <option value="all">كل العملاء</option>
-                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        <option value="all" className="text-black">كل العملاء</option>
+                        {customers.map(c => <option key={c.id} value={c.id} className="text-black">{c.name}</option>)}
                     </select>
                 </div>
                 {dateRange === "custom" && (

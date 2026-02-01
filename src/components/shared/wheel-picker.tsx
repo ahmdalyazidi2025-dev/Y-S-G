@@ -118,12 +118,12 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </Button>
                         </div>
 
-                        <div className="flex-1 relative overflow-hidden flex gap-2">
+                        <div className="flex-1 relative overflow-hidden flex gap-2 h-full" dir="ltr">
                             {/* Selection Highlight */}
                             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-12 bg-white/5 border-y border-white/10 pointer-events-none z-10 backdrop-blur-[1px]" />
 
                             {/* Year Column */}
-                            <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)]" ref={yearRef}>
+                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={yearRef}>
                                 <div className="h-[50%] w-full" />
                                 {years.map((y) => (
                                     <div
@@ -141,7 +141,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Month Column */}
-                            <div className="flex-[1.5] overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)]" ref={monthRef}>
+                            <div className="flex-[2] min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={monthRef}>
                                 <div className="h-[50%] w-full" />
                                 {months.map((m, i) => (
                                     <div
@@ -159,7 +159,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                             </div>
 
                             {/* Day Column */}
-                            <div className="flex-1 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)]" ref={dayRef}>
+                            <div className="flex-1 min-w-0 overflow-y-auto no-scrollbar snap-y snap-mandatory py-[calc(50%-24px)] text-center" ref={dayRef}>
                                 <div className="h-[50%] w-full" />
                                 {days.map((d) => (
                                     <div

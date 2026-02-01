@@ -5,7 +5,7 @@ import { useStore } from "@/context/store-context"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
-import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar, Users } from "lucide-react"
+import { ArrowRight, TrendingUp, DollarSign, Package, ShoppingCart, Calendar, Users, Search } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,6 +29,7 @@ export default function AnalyticsPage() {
     const [timeRange, setTimeRange] = useState<"all" | "day" | "week" | "month" | "year" | "custom">("week")
     const [customStart, setCustomStart] = useState("")
     const [customEnd, setCustomEnd] = useState("")
+    const [searchQuery, setSearchQuery] = useState("")
     const [visits, setVisits] = useState<DailyVisit[]>([])
 
     useEffect(() => {
@@ -96,12 +97,20 @@ export default function AnalyticsPage() {
         // If timeRange is 'all', just return all orders (or filter by start date 2000 which effectively is all)
         return orders.filter(o => {
             const date = new Date(o.createdAt)
+            let matchesTime = true
             if (timeRange === "custom") {
-                return date >= start && date <= end
+                matchesTime = date >= start && date <= end
+            } else {
+                matchesTime = date >= start
             }
-            return date >= start
+
+            const matchesSearch = searchQuery
+                ? o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) || o.id.toString().includes(searchQuery)
+                : true
+
+            return matchesTime && matchesSearch
         })
-    }, [orders, timeRange, customStart, customEnd])
+    }, [orders, timeRange, customStart, customEnd, searchQuery])
 
     // 1. Calculate Revenue Over Time
     const revenueData = useMemo(() => {
@@ -219,6 +228,17 @@ export default function AnalyticsPage() {
                     <h1 className="text-2xl font-black text-white">تحليل البيانات</h1>
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Analytics Dashboard</p>
                 </div>
+            </div>
+
+            {/* Search Filter */}
+            <div className="relative">
+                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Input
+                    placeholder="بحث باسم العميل..."
+                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl text-white placeholder:text-slate-500 focus:border-primary/50"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
             </div>
 
             {/* Time Filter */}
