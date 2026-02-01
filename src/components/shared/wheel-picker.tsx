@@ -58,13 +58,26 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
         }
     }
 
-    const scrollToItem = (ref: React.RefObject<HTMLDivElement>, index: number) => {
+    const scrollToItem = (ref: React.RefObject<HTMLDivElement | null>, index: number) => {
         if (ref.current) {
             ref.current.scrollTo({
                 top: index * 40, // itemHeight
                 behavior: 'smooth'
             })
         }
+    }
+
+    const confirmSelection = () => {
+        setDate(tempDate)
+        setOpen(false)
+    }
+
+    const updateDate = (type: 'year' | 'month' | 'day', value: number) => {
+        const newDate = new Date(tempDate)
+        if (type === 'year') newDate.setFullYear(value)
+        if (type === 'month') newDate.setMonth(value)
+        if (type === 'day') newDate.setDate(value)
+        setTempDate(newDate)
     }
 
     return (
