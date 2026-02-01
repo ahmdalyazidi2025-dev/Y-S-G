@@ -591,16 +591,20 @@ export default function AdminSettingsPage() {
                                                     onClick={() => {
                                                         const now = new Date()
                                                         let start = new Date()
-                                                        if (range === 'today') start.setHours(0, 0, 0, 0)
-                                                        if (range === 'week') start.setDate(now.getDate() - 7)
-                                                        if (range === 'month') start.setMonth(now.getMonth() - 1)
-                                                        if (range === 'all') start = new Date('2023-01-01')
-
-                                                        // Helper for local date string
                                                         const toLocal = (d: Date) => {
                                                             const offset = d.getTimezoneOffset()
                                                             return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
                                                         }
+
+                                                        if (range === 'all') {
+                                                            setReportStartDate('')
+                                                            setReportEndDate('')
+                                                            return
+                                                        }
+
+                                                        if (range === 'today') start.setHours(0, 0, 0, 0)
+                                                        if (range === 'week') start.setDate(now.getDate() - 7)
+                                                        if (range === 'month') start.setMonth(now.getMonth() - 1)
 
                                                         setReportStartDate(toLocal(start))
                                                         setReportEndDate(toLocal(now))
