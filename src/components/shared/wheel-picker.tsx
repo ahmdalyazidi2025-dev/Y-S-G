@@ -120,7 +120,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
 
                         <div className="h-[200px] relative overflow-hidden flex gap-2" dir="ltr">
                             {/* Selection Highlight */}
-                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10 backdrop-blur-[1px]" />
+                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10" />
 
                             {/* Year Column */}
                             <div className="flex-1 min-w-0 overflow-y-auto snap-y snap-mandatory py-[80px] text-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" ref={yearRef}>
