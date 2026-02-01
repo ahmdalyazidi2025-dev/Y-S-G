@@ -836,12 +836,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const addJoinRequest = async (name: string, phone: string) => {
         try {
-            await addDoc(collection(db, "joinRequests"), {
-                name,
-                phone,
-                createdAt: Timestamp.now()
-            })
-            toast.success("تم إرسال طلب الانضمام بنجاح")
+            // Use Server Action to bypass client-side rules
+            const { submitJoinRequest } = await import("@/app/actions");
+            const result = await submitJoinRequest(name, phone);
+
+            if (result.success) {
+                toast.success("تم إرسال طلب الانضمام بنجاح")
+            } else {
+                throw new Error(result.error || "Failed")
+            }
         } catch (e) {
             console.error("Add Request Error:", e)
             toast.error("فشل إرسال الطلب")
