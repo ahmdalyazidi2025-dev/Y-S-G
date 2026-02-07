@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Users, ShoppingBag } from "lucide-react";
+import { Users, ShoppingBag, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -14,18 +14,30 @@ function LandingContent() {
   const searchParams = useSearchParams();
   const isFromLogout = searchParams.get("logout") === "true";
 
-  const [showContent, setShowContent] = useState(isFromLogout);
+  const [showContent, setShowContent] = useState(false);
   const [isAssembling, setIsAssembling] = useState(!isFromLogout);
 
   // Join Request State
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [joinName, setJoinName] = useState("")
   const [joinPhone, setJoinPhone] = useState("")
+  const [isSubmittingJoin, setIsSubmittingJoin] = useState(false)
   const { products, categories, storeSettings, currentUser, loading, addJoinRequest } = useStore()
+
   useEffect(() => {
-    if (isFromLogout) return;
-    const timer = setTimeout(() => setShowContent(true), 2500);
-    return () => clearTimeout(timer);
+    // Check if user has already seen splash in this session
+    const hasSeenSplash = sessionStorage.getItem("hasSeenSplash");
+
+    if (isFromLogout || hasSeenSplash) {
+      setShowContent(true);
+      setIsAssembling(false);
+    } else {
+      const timer = setTimeout(() => {
+        setShowContent(true);
+        sessionStorage.setItem("hasSeenSplash", "true");
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
   }, [isFromLogout]);
 
   // --- Auto-Redirect Logic ---
@@ -66,8 +78,43 @@ function LandingContent() {
     }
   }, [showContent, isFromLogout, isAssembling]);
 
+  const handleJoinSubmit = async () => {
+    if (!joinName || !joinPhone) {
+      import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"))
+      return
+    }
+
+    // SA Phone Validation
+    const phoneRegex = /^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/;
+    if (!phoneRegex.test(joinPhone)) {
+      import("sonner").then(({ toast }) => toast.error("يرجى إدخال رقم جوال سعودي صحيح (يبدأ بـ 05 ويتكون من 10 أرقام)"))
+      return;
+    }
+
+    setIsSubmittingJoin(true);
+    try {
+      await addJoinRequest(joinName, joinPhone)
+      setShowJoinModal(false)
+      setJoinName("")
+      setJoinPhone("")
+      import("sonner").then(({ toast }) => toast.success("تم إرسال طلب الانضمام بنجاح"))
+    } catch (error) {
+      console.error("Join request failed", error);
+      import("sonner").then(({ toast }) => toast.error("حدث خطأ أثناء إرسال الطلب"))
+    } finally {
+      setIsSubmittingJoin(false);
+    }
+  }
+
   return (
     <main className="min-h-[100dvh] bg-[#080b12] overflow-hidden relative">
+      {/* Enhanced Background Gradient */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#080b12] to-[#020408]" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 rounded-full blur-[100px]" />
+      </div>
+
       <AnimatePresence mode="wait">
         {!showContent ? (
           /* Cinematic Splash Screen */
@@ -250,7 +297,7 @@ function LandingContent() {
                           type="text"
                           value={joinName}
                           onChange={(e) => setJoinName(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="اسمك الكريم"
                         />
                       </div>
@@ -260,7 +307,7 @@ function LandingContent() {
                           type="tel"
                           value={joinPhone}
                           onChange={(e) => setJoinPhone(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="05xxxxxxxx"
                         />
                       </div>
@@ -270,23 +317,23 @@ function LandingContent() {
                       <button
                         onClick={() => setShowJoinModal(false)}
                         className="flex-1 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 font-bold"
+                        disabled={isSubmittingJoin}
                       >
                         إلغاء
                       </button>
                       <button
-                        onClick={() => {
-                          if (!joinName || !joinPhone) {
-                            import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"))
-                            return
-                          }
-                          addJoinRequest(joinName, joinPhone)
-                          setShowJoinModal(false)
-                          setJoinName("")
-                          setJoinPhone("")
-                        }}
-                        className="flex-1 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold"
+                        onClick={handleJoinSubmit}
+                        className="flex-1 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold flex items-center justify-center gap-2"
+                        disabled={isSubmittingJoin}
                       >
-                        إرسال الطلب
+                        {isSubmittingJoin ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            جاري الإرسال...
+                          </>
+                        ) : (
+                          "إرسال الطلب"
+                        )}
                       </button>
                     </div>
                   </motion.div>

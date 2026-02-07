@@ -109,6 +109,7 @@ export default function StoreLayout({
 
     return (
 
+
         <ProtectedRoute role="customer">
             <div className="min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden relative selection:bg-primary/30 transition-colors duration-300">
                 {/* Ambient Background Elements */}
@@ -121,140 +122,133 @@ export default function StoreLayout({
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
                     <VisitTracker />
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
-                        <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#0f111a]/80 backdrop-blur-xl py-4 -mx-4 px-4 transition-all border-b border-white/5">
-                            <div className="flex items-center gap-3">
-                                <div className="relative group cursor-default">
-                                    <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all" />
-                                    <Image
-                                        src="/logo.jpg"
-                                        alt="Logo"
-                                        width={42}
-                                        height={42}
-                                        className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg transition-transform"
-                                    />
+                        {/* New Header Navigation */}
+                        <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#0f111a]/95 backdrop-blur-xl py-3 -mx-4 px-4 transition-all border-b border-white/5 shadow-2xl shadow-black/20">
+
+                            {/* Left Side: Logo & Main Actions */}
+                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                                <div className="flex items-center gap-3 pl-2 border-l border-white/10 ml-1">
+                                    <div className="relative group cursor-default">
+                                        <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all" />
+                                        <Image
+                                            src="/logo.jpg"
+                                            alt="Logo"
+                                            width={38}
+                                            height={38}
+                                            className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg"
+                                        />
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">YSG</h1>
+                                    </div>
                                 </div>
-                                <div className="hidden sm:block">
-                                    <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">Y S G</h1>
-                                </div>
+
+                                {/* Navigation Items */}
+                                <Link
+                                    href="/customer/invoices"
+                                    className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
+                                >
+                                    <ClipboardList className="w-5 h-5" />
+                                </Link>
+
+                                <button
+                                    onClick={() => {
+                                        if (storeSettings.enableProductRequests === false) {
+                                            import("sonner").then(({ toast }) => {
+                                                toast.error("عفواً، رفع الطلبات مغلق حالياً", {
+                                                    description: "يمكنك التواصل مع الإدارة للمساعدة.",
+                                                    duration: 4000
+                                                })
+                                            })
+                                        } else {
+                                            setIsRequestOpen(true)
+                                        }
+                                    }}
+                                    className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all"
+                                >
+                                    <PlusCircle className="w-5 h-5" />
+                                </button>
+
+                                <Link
+                                    href="/customer/chat"
+                                    className="relative p-2.5 rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all"
+                                >
+                                    <MessageSquare className="w-5 h-5" />
+                                    {unreadChatCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                            {unreadChatCount}
+                                        </span>
+                                    )}
+                                </Link>
+
+                                <button
+                                    onClick={() => {
+                                        const url = window.location.origin
+                                        const text = "تسوق أفضل المنتجات من YSG Store"
+                                        if (navigator.share) {
+                                            navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
+                                        } else {
+                                            navigator.clipboard.writeText(url)
+                                            import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
+                                        }
+                                        hapticFeedback('light')
+                                    }}
+                                    className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all"
+                                >
+                                    <Share2 className="w-5 h-5" />
+                                </button>
+
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                </button>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
+                            {/* Right Side: Cart (Primary Action) */}
                             <button
-                                onClick={() => {
-                                    const url = window.location.origin
-                                    const text = "تسوق أفضل المنتجات من YSG Store"
-                                    if (navigator.share) {
-                                        navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
-                                    } else {
-                                        navigator.clipboard.writeText(url)
-                                        import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
-                                    }
-                                    hapticFeedback('light')
-                                }}
-                                className="px-3 py-2 bg-white/5 rounded-2xl text-blue-400 hover:bg-white/10 transition-all border border-white/10 flex items-center gap-2"
+                                onClick={() => setIsCartOpen(true)}
+                                className="relative p-2.5 bg-amber-500/10 rounded-xl text-amber-500 hover:bg-amber-500/20 border border-amber-500/20 active:scale-95 transition-all flex items-center gap-2 mr-2"
                             >
-                                <Share2 className="w-4 h-4" />
-                            </button>
-
-                            <Link
-                                href="/customer/chat"
-                                className="relative px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs border border-white/10 animate-pulse-slow"
-                            >
-                                <MessageSquare className="w-4 h-4 text-white" />
-                                <span className="hidden sm:inline">الدردشة</span>
-                                {unreadChatCount > 0 && (
-                                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                        {unreadChatCount}
+                                <ShoppingCart className="w-5 h-5" />
+                                <span className="font-bold text-xs">السلة</span>
+                                {cartCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36] shadow-lg shadow-amber-500/20">
+                                        {cartCount}
                                     </span>
                                 )}
-                            </Link>
-
-                            <button
-                                onClick={handleLogout}
-                                className="px-5 py-2.5 bg-red-500/10 rounded-2xl text-red-400 hover:bg-red-400/20 transition-all border border-red-500/20 flex items-center gap-2 font-bold text-xs"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="hidden sm:inline">تسجيل الخروج</span>
                             </button>
                         </div>
+
                         {children}
                     </main>
 
                     <Footer />
                 </div>
 
-                {/* Bottom Navigation (Adaptive & Wide) */}
-                <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm md:max-w-xl h-20 glass rounded-[32px] z-[50] border border-white/10 shadow-2xl flex items-center justify-around px-2 transition-all">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href
-                        const Icon = item.icon
+                {/* Floating Scanner Button (Isolated) */}
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
+                    <button
+                        // Mobile Touch Events
+                        onTouchStart={handleTouchStart}
+                        onTouchEnd={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
+                        // Desktop/Mouse Events
+                        onMouseDown={handleTouchStart}
+                        onMouseUp={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
+                        // Prevent Context Menu on Long Press
+                        onContextMenu={(e) => e.preventDefault()}
+                        // Fallback
+                        onClick={() => { }}
+                        className="group relative w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-[0_0_40px_-5px_rgba(255,255,255,0.4)] active:scale-95 transition-all border-4 border-[#0f111a]"
+                    >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-gray-100 to-white opacity-100 group-hover:opacity-90 transition-opacity" />
+                        <Scan className="w-8 h-8 text-black relative z-10 group-hover:scale-110 transition-transform" />
 
-                        if (item.isCenter) {
-                            return (
-                                <button
-                                    key={item.name}
-                                    // Mobile Touch Events
-                                    onTouchStart={(e) => item.name === "الماسح" && handleTouchStart(e)}
-                                    onTouchEnd={(e) => item.name === "الماسح" ? handleTouchEnd(e, () => item.onClick?.()) : item.onClick?.()}
-                                    // Desktop/Mouse Events
-                                    onMouseDown={(e) => item.name === "الماسح" && handleTouchStart(e)}
-                                    onMouseUp={(e) => item.name === "الماسح" ? handleTouchEnd(e, () => item.onClick?.()) : item.onClick?.()}
-                                    // Prevent Context Menu on Long Press
-                                    onContextMenu={(e) => { if (item.name === "الماسح") e.preventDefault() }}
-                                    // Fallback Click
-                                    onClick={(e) => {
-                                        if (item.name === "الماسح") return // Handled by Touch/Mouse events
-                                        item.onClick?.()
-                                    }}
-                                    className="relative -top-8 w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all border-4 border-[#101c26] group"
-                                >
-                                    <Icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
-                                    <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
-                                </button>
-                            )
-                        }
-
-                        const Content = (
-                            <div className={cn(
-                                "flex flex-col items-center gap-1 transition-all relative",
-                                isActive ? "text-primary scale-110" : "text-slate-400 hover:text-slate-300"
-                            )}>
-                                <div className="relative">
-                                    <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
-                                    {item.badge && item.badge > 0 ? (
-                                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
-                                            {item.badge}
-                                        </span>
-                                    ) : null}
-                                </div>
-                                <span className="text-[10px] font-medium">{item.name}</span>
-                            </div>
-                        )
-
-                        return item.href ? (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className="p-2"
-                                onClick={() => hapticFeedback('light')}
-                            >
-                                {Content}
-                            </Link>
-                        ) : (
-                            <button
-                                key={item.name}
-                                onClick={() => {
-                                    item.onClick?.()
-                                    hapticFeedback('light')
-                                }}
-                                className="p-2"
-                            >
-                                {Content}
-                            </button>
-                        )
-                    })}
-                </nav>
+                        {/* Pulse Effect */}
+                        <div className="absolute inset-0 rounded-full animate-ping bg-white/20 -z-10" />
+                    </button>
+                </div>
 
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                 <RequestModal isOpen={isRequestOpen} onClose={() => setIsRequestOpen(false)} />
