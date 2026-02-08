@@ -69,16 +69,16 @@ export default function CustomerHome() {
                     <div className="flex flex-col gap-6">
                         {/* Top Bar */}
                         <div className="flex items-center justify-between">
-                            <div className="text-white">
+                            <div className="text-foreground">
                                 <h1 className="text-2xl font-bold mb-1 flex items-center gap-2 drop-shadow-md">
                                     مرحباً بك <span className="animate-wave origin-bottom-right inline-block">👋</span>
                                 </h1>
-                                <p className="text-xs text-slate-200 font-medium opacity-90 drop-shadow-sm">لنبحث عن منتجاتك المفضلة</p>
+                                <p className="text-xs text-muted-foreground font-medium opacity-90 drop-shadow-sm">لنبحث عن منتجاتك المفضلة</p>
                             </div>
                             <Link href="/customer/profile">
-                                <div className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md p-[2px] cursor-pointer transition-all border border-white/10 shadow-lg">
+                                <div className="w-11 h-11 rounded-full bg-muted/50 hover:bg-muted backdrop-blur-md p-[2px] cursor-pointer transition-all border border-border shadow-lg">
                                     <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden">
-                                        <User className="w-5 h-5 text-white" />
+                                        <User className="w-5 h-5 text-foreground" />
                                     </div>
                                 </div>
                             </Link>
@@ -88,11 +88,11 @@ export default function CustomerHome() {
                         {!hiddenSections.includes('search') && (
                             <div className="fixed top-4 inset-x-4 z-[100] transition-all">
                                 <div className="relative group">
-                                    <div className="absolute inset-0 bg-white/5 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
-                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-primary transition-colors z-10" />
+                                    <div className="absolute inset-0 bg-background/80 backdrop-blur-md rounded-2xl border border-border shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
+                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                                     <Input
                                         placeholder="ابحث عن قطعة غيار، باركود..."
-                                        className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-white placeholder:text-white/40 relative z-10"
+                                        className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-foreground placeholder:text-muted-foreground relative z-10"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
