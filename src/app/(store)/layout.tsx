@@ -113,10 +113,11 @@ export default function StoreLayout({
         <ProtectedRoute role="customer">
             <div className="min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden relative selection:bg-primary/30 transition-colors duration-300">
                 {/* Ambient Background Elements */}
-                <div className="fixed inset-0 z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] animate-pulse dark:bg-primary/10" />
-                    <div className="absolute top-[20%] right-[-10%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] dark:bg-blue-500/10" />
-                    <div className="hidden dark:block bg-noise absolute inset-0 opacity-[0.03]" />
+                {/* Ambient Background Elements - Only visible in Dark Mode for Cleaner Light Mode */}
+                <div className="fixed inset-0 z-0 hidden dark:block pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] animate-pulse" />
+                    <div className="absolute top-[20%] right-[-10%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px]" />
+                    <div className="bg-noise absolute inset-0 opacity-[0.03]" />
                 </div>
 
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">

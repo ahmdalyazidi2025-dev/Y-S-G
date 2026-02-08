@@ -7,8 +7,9 @@
 }
 
 :root {
-  --background: 210 40% 98%; /* Light gray almost white */
-  --foreground: 222 47% 11%; /* Dark text */
+  /* Light Mode - Professional & Clean */
+  --background: 210 40% 98%; /* Soft White/Gray */
+  --foreground: 222 47% 11%; /* Deep Slate */
 
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
@@ -16,14 +17,14 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
 
-  --primary: 221 83% 53%; /* Blue 500 */
+  --primary: 221 83% 53%; /* Royal Blue */
   --primary-foreground: 210 40% 98%;
 
   --secondary: 210 40% 96.1%;
   --secondary-foreground: 222 47% 11.2%;
 
   --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted-foreground: 215.4 16.3% 46.9%; /* Cool Gray */
 
   --accent: 210 40% 96.1%;
   --accent-foreground: 222 47% 11.2%;
@@ -39,8 +40,9 @@
 }
 
 .dark {
-  --background: 222 47% 4%; /* Dark Blue/Black */
-  --foreground: 210 40% 98%;
+  /* Dark Mode - Sci-Fi & Deep */
+  --background: 222 47% 4%; /* Deep Void */
+  --foreground: 210 40% 98%; /* Soft White */
 
   --card: 222 47% 7%;
   --card-foreground: 210 40% 98%;
@@ -48,7 +50,7 @@
   --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 217 91% 60%;
+  --primary: 217 91% 60%; /* Neon Blue */
   --primary-foreground: 222 47% 11.2%;
 
   --secondary: 217.2 32.6% 17.5%;
@@ -115,32 +117,37 @@
 }
 
 @layer utilities {
+  /* Light Mode Glass - Clean & Crisp */
   .glass {
-    background: rgba(255, 255, 255, 0.85); /* Increased opacity for light mode */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 0, 0, 0.08); /* Darker border for better contrast */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Added subtle shadow */
-  }
-
-  .dark .glass {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: none;
-  }
-
-  .glass-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0,0,0, 0.1); /* Sharper border */
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Dark Mode Glass - Deep & Neon */
+  .dark .glass {
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Faint white border */
+    box-shadow: none; /* No shadow in dark mode for cleaner look */
+  }
+
+  /* Card Glass Variants */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0, 0.08);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
   }
 
   .dark .glass-card {
     background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
   }
 
   .glass-card:hover {
