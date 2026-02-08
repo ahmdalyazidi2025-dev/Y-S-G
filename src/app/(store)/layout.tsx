@@ -146,9 +146,10 @@ export default function StoreLayout({
                                 {/* Navigation Items */}
                                 <Link
                                     href="/customer/invoices"
-                                    className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
+                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] h-[60px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all"
                                 >
-                                    <ClipboardList className="w-5 h-5" />
+                                    <ClipboardList className="w-6 h-6" />
+                                    <span className="text-[10px] font-bold">فواتيري</span>
                                 </Link>
 
                                 <button
@@ -164,18 +165,20 @@ export default function StoreLayout({
                                             setIsRequestOpen(true)
                                         }
                                     }}
-                                    className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all"
+                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] h-[60px] rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all"
                                 >
-                                    <PlusCircle className="w-5 h-5" />
+                                    <PlusCircle className="w-6 h-6" />
+                                    <span className="text-[10px] font-bold">طلب جديد</span>
                                 </button>
 
                                 <Link
                                     href="/customer/chat"
-                                    className="relative p-2.5 rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all"
+                                    className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] h-[60px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all"
                                 >
-                                    <MessageSquare className="w-5 h-5" />
+                                    <MessageSquare className="w-6 h-6" />
+                                    <span className="text-[10px] font-bold">محادثة</span>
                                     {unreadChatCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                        <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
                                             {unreadChatCount}
                                         </span>
                                     )}
@@ -193,16 +196,18 @@ export default function StoreLayout({
                                         }
                                         hapticFeedback('light')
                                     }}
-                                    className="p-2.5 rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all"
+                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] h-[60px] rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all"
                                 >
-                                    <Share2 className="w-5 h-5" />
+                                    <Share2 className="w-6 h-6" />
+                                    <span className="text-[10px] font-bold">نشر</span>
                                 </button>
 
                                 <button
                                     onClick={handleLogout}
-                                    className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all"
+                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[60px] h-[60px] rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all"
                                 >
-                                    <LogOut className="w-5 h-5" />
+                                    <LogOut className="w-6 h-6" />
+                                    <span className="text-[10px] font-bold">خروج</span>
                                 </button>
                             </div>
 
