@@ -107,23 +107,28 @@ function LandingContent() {
   }
 
   return (
-    <main className="min-h-[100dvh] bg-[#080b12] overflow-hidden relative">
-      {/* Enhanced Background Gradient */}
+    <main className="min-h-[100dvh] bg-background overflow-hidden relative transition-colors duration-500">
+      {/* Enhanced Background Gradient - Dual Layer */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#080b12] to-[#020408]" />
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 rounded-full blur-[100px]" />
+        {/* Dark Mode: Deep Space */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#080b12] to-[#020408] hidden dark:block" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-900/10 rounded-full blur-[100px] hidden dark:block" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-900/10 rounded-full blur-[100px] hidden dark:block" />
+
+        {/* Light Mode: Clean & airy */}
+        <div className="absolute inset-0 bg-background block dark:hidden" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[100px] block dark:hidden" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 rounded-full blur-[100px] block dark:hidden" />
       </div>
 
       <AnimatePresence mode="wait">
         {!showContent ? (
           /* Cinematic Splash Screen */
-          /* Cinematic Splash Screen */
           <motion.div
             key="splash"
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#080b12]"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background"
           >
             <div className="relative">
               <motion.div
@@ -137,7 +142,7 @@ function LandingContent() {
                   alt="Logo"
                   width={192}
                   height={192}
-                  className="rounded-full object-cover border-8 border-white/5 shadow-2xl shadow-primary/20"
+                  className="rounded-full object-cover border-8 border-background shadow-2xl shadow-primary/20"
                   priority
                 />
                 <motion.div
@@ -155,7 +160,7 @@ function LandingContent() {
               transition={{ delay: 0.5, duration: 1 }}
               className="mt-12 text-center"
             >
-              <h2 className="text-2xl font-black text-white tracking-[0.5em] uppercase">Intelligence</h2>
+              <h2 className="text-2xl font-black text-foreground tracking-[0.5em] uppercase">Intelligence</h2>
               <div className="mt-4 flex gap-1 justify-center">
                 {[0, 1, 2].map((i) => (
                   <motion.div
@@ -191,19 +196,19 @@ function LandingContent() {
                     alt="Logo"
                     width={96}
                     height={96}
-                    className="rounded-full object-cover border-4 border-white/10 shadow-[0_0_40px_rgba(59,130,246,0.3)] relative z-10"
+                    className="rounded-full object-cover border-4 border-background shadow-[0_0_40px_rgba(59,130,246,0.3)] relative z-10"
                   />
                 </div>
                 <div className="text-center space-y-1">
-                  <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">YSG SALES</h1>
-                  <p className="text-[9px] md:text-[10px] text-primary/80 uppercase tracking-[0.4em] font-bold">The Future of Distribution</p>
+                  <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">YSG SALES</h1>
+                  <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-bold">The Future of Distribution</p>
                 </div>
               </motion.div>
 
               <div className="w-full flex flex-col gap-6">
                 <AnimatePresence mode="wait">
                   {isAssembling ? (
-                    <div key="skeleton" className="w-full h-56 glass-card border-white/5 relative overflow-hidden flex flex-col items-center justify-center gap-6">
+                    <div key="skeleton" className="w-full h-56 glass-card border-border/50 relative overflow-hidden flex flex-col items-center justify-center gap-6">
                       <div className="w-16 h-16 skeleton rounded-3xl" />
                       <div className="w-40 h-8 skeleton" />
                     </div>
@@ -215,7 +220,7 @@ function LandingContent() {
                       transition={{ type: "spring", damping: 20 }}
                     >
                       <Link href="/login?role=customer" className="group block relative z-20 w-full max-w-sm mx-auto">
-                        <div className="relative w-full aspect-square glass-card flex flex-col items-center justify-center gap-8 transition-all border border-white/10 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_80px_-20px_rgba(59,130,246,0.6)] rounded-[48px]">
+                        <div className="relative w-full aspect-square glass-card flex flex-col items-center justify-center gap-8 transition-all border border-border/50 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_80px_-20px_hsl(var(--primary)/0.6)] rounded-[48px]">
 
                           {/* Soft Ambient Background */}
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-blue-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
@@ -234,12 +239,12 @@ function LandingContent() {
                           </div>
 
                           <div className="text-center relative z-10 space-y-3">
-                            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <h2 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
                               دخول العملاء
                             </h2>
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/5 backdrop-blur-md group-hover:bg-primary/20 group-hover:border-primary/30 transition-all duration-500">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/50 border border-border/50 backdrop-blur-md group-hover:bg-primary/20 group-hover:border-primary/30 transition-all duration-500">
                               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                              <span className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] group-hover:text-foreground transition-colors">
                                 Portal Access
                               </span>
                             </div>
@@ -253,14 +258,14 @@ function LandingContent() {
                 <div className="flex justify-center mt-4 flex-col items-center gap-2">
                   <button
                     onClick={() => setShowJoinModal(true)}
-                    className="text-[10px] text-primary/80 hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-80 hover:opacity-100"
+                    className="text-[10px] text-primary hover:text-primary/80 transition-colors font-bold tracking-widest uppercase opacity-80 hover:opacity-100"
                   >
                     تسجيل طلب انضمام جديد
                   </button>
 
                   <Link
                     href="/login?role=admin"
-                    className="text-[10px] text-slate-500 hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-50 hover:opacity-100"
+                    className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-50 hover:opacity-100"
                   >
                     دخول الإدارة والموظفين
                   </Link>
@@ -283,31 +288,31 @@ function LandingContent() {
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0.9, y: 20 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-[#0f131a] border border-white/10 p-6 rounded-3xl w-full max-w-md shadow-2xl space-y-4"
+                    className="bg-card border border-border p-6 rounded-3xl w-full max-w-md shadow-2xl space-y-4"
                   >
                     <div className="text-center">
-                      <h3 className="text-xl font-bold text-white mb-1">طلب انضمام</h3>
-                      <p className="text-slate-400 text-sm">أدخل بياناتك وسيتم التواصل معك من قبل الإدارة</p>
+                      <h3 className="text-xl font-bold text-foreground mb-1">طلب انضمام</h3>
+                      <p className="text-muted-foreground text-sm">أدخل بياناتك وسيتم التواصل معك من قبل الإدارة</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-400">الاسم الكامل</label>
+                        <label className="text-xs text-muted-foreground">الاسم الكامل</label>
                         <input
                           type="text"
                           value={joinName}
                           onChange={(e) => setJoinName(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="اسمك الكريم"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-400">رقم الهاتف</label>
+                        <label className="text-xs text-muted-foreground">رقم الهاتف</label>
                         <input
                           type="tel"
                           value={joinPhone}
                           onChange={(e) => setJoinPhone(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="05xxxxxxxx"
                         />
                       </div>
@@ -316,14 +321,14 @@ function LandingContent() {
                     <div className="flex gap-2 pt-2">
                       <button
                         onClick={() => setShowJoinModal(false)}
-                        className="flex-1 py-3 rounded-xl bg-white/5 text-slate-300 hover:bg-white/10 font-bold"
+                        className="flex-1 py-3 rounded-xl bg-secondary text-muted-foreground hover:bg-secondary/80 font-bold"
                         disabled={isSubmittingJoin}
                       >
                         إلغاء
                       </button>
                       <button
                         onClick={handleJoinSubmit}
-                        className="flex-1 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold flex items-center justify-center gap-2"
+                        className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold flex items-center justify-center gap-2"
                         disabled={isSubmittingJoin}
                       >
                         {isSubmittingJoin ? (
@@ -352,13 +357,13 @@ function LandingContent() {
           </motion.div>
         )}
       </AnimatePresence>
-    </main >
+    </main>
   );
 }
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#080b12]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <LandingContent />
     </Suspense>
   )
