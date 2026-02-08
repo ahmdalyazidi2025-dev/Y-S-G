@@ -78,11 +78,12 @@ export default function InvoicesPage() {
                         key={s}
                         onClick={() => setFilter(s)}
                         className={cn(
-                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border border-white/5",
+                            "px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap border",
                             filter === s
-                                ? "bg-primary text-white border-primary/20 shadow-lg shadow-primary/10"
-                                : "bg-white/5 text-slate-400 hover:bg-white/10"
-                        )}
+                                ? "bg-primary text-primary-foreground shadow-[0_0_15px_-3px_hsl(var(--primary)/0.4)] border-primary"
+                                : "bg-secondary text-muted-foreground border-transparent hover:bg-secondary/80 hover:text-foreground"
+                        )
+                        }
                     >
                         {s === "all" ? "الكل" : STATUS_MAP[s as keyof typeof STATUS_MAP].label}
                     </button>
@@ -98,13 +99,13 @@ export default function InvoicesPage() {
                     filteredOrders.map((order) => {
                         const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
                         return (
-                            <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer" onClick={() => setSelectedOrder(order)}>
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+                            <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer border-gradient">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
 
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">رقم الطلب</p>
-                                        <p className="font-bold text-white flex items-center gap-2">
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">رقم الطلب</p>
+                                        <p className="font-black text-foreground flex items-center gap-2 text-lg">
                                             <FileText className="w-4 h-4 text-primary" />
                                             #{order.id}
                                         </p>
@@ -115,10 +116,10 @@ export default function InvoicesPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between py-2 border-y border-white/5">
+                                <div className="flex items-center justify-between py-3 border-y border-border/50">
                                     <div className="flex -space-x-2 rtl:space-x-reverse">
                                         {order.items.slice(0, 3).map((item, idx) => (
-                                            <div key={idx} className="w-8 h-8 rounded-full bg-white/10 border-2 border-[#1c2a36] flex items-center justify-center text-[10px] overflow-hidden relative">
+                                            <div key={idx} className="w-8 h-8 rounded-full bg-background border-2 border-border flex items-center justify-center text-[10px] overflow-hidden relative shadow-sm">
                                                 {item.image ? (
                                                     <Image
                                                         src={item.image}
@@ -137,16 +138,16 @@ export default function InvoicesPage() {
                                         )}
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] text-slate-500">التاريخ</p>
-                                        <p className="text-xs text-white">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
+                                        <p className="text-[10px] text-muted-foreground font-bold mb-0.5">التاريخ</p>
+                                        <p className="text-xs font-bold text-foreground">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-1">
-                                    <p className="text-lg font-bold text-white">
-                                        {order.total.toFixed(2)} <span className="text-[10px] font-normal text-slate-400">ر.س</span>
+                                <div className="flex items-center justify-between pt-2">
+                                    <p className="text-xl font-black text-foreground">
+                                        {order.total.toFixed(2)} <span className="text-xs font-bold text-muted-foreground">ر.س</span>
                                     </p>
-                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-[10px] font-bold">
+                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-xs font-black">
                                         فتح الفاتورة
                                     </Button>
                                 </div>

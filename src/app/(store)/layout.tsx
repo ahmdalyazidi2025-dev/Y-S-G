@@ -250,13 +250,13 @@ export default function StoreLayout({
                         onContextMenu={(e) => e.preventDefault()}
                         // Fallback
                         onClick={() => { }}
-                        className="group relative w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-[0_0_40px_-5px_rgba(255,255,255,0.4)] active:scale-95 transition-all border-4 border-[#0f111a]"
+                        className="group relative w-16 h-16 bg-background rounded-full flex items-center justify-center shadow-[0_0_40px_-5px_hsl(var(--primary)/0.4)] active:scale-95 transition-all border-4 border-background dark:border-[#0f111a]"
                     >
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-gray-100 to-white opacity-100 group-hover:opacity-90 transition-opacity" />
-                        <Scan className="w-8 h-8 text-black relative z-10 group-hover:scale-110 transition-transform" />
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Scan className="w-8 h-8 text-foreground relative z-10 group-hover:scale-110 transition-transform" />
 
                         {/* Pulse Effect */}
-                        <div className="absolute inset-0 rounded-full animate-ping bg-white/20 -z-10" />
+                        <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
                     </button>
                 </div>
 
