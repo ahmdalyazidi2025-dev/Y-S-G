@@ -100,7 +100,7 @@ export default function CustomerHome() {
                 )}
 
                 {!hiddenSections.includes('categories') && (
-                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[146px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
+                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[138px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
                         <button
                             onClick={() => setSelectedCategory("الكل")}
                             className={cn(

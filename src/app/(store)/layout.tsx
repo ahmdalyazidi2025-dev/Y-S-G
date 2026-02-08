@@ -124,7 +124,7 @@ export default function StoreLayout({
                     <VisitTracker />
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
                         {/* New Header Navigation (Stacked Sticky) */}
-                        <div className="flex flex-col mb-6 sticky top-0 z-50 bg-background/95 backdrop-blur-xl -mx-4 transition-all border-b border-border shadow-sm dark:shadow-black/20">
+                        <div className="flex flex-col mb-4 sticky top-0 z-50 bg-background/95 backdrop-blur-xl -mx-4 -mt-6 pt-6 transition-all border-b border-border shadow-sm dark:shadow-black/20">
 
                             {/* Row 1: Logo & Nav Actions */}
                             <div className="flex justify-between items-center px-4 py-2">
