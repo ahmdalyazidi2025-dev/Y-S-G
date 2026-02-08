@@ -123,142 +123,145 @@ export default function StoreLayout({
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
                     <VisitTracker />
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
-                        {/* New Header Navigation (Stacked Sticky) */}
-                        <div className="flex flex-col mb-4 sticky top-0 z-50 bg-background/95 backdrop-blur-xl -mx-4 -mt-6 pt-6 transition-all border-b border-border shadow-sm dark:shadow-black/20">
-
-                            {/* Row 1: Logo & Nav Actions */}
-                            <div className="flex justify-between items-center px-4 py-2">
-                                {/* Left Side: Logo & Main Actions */}
-                                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-                                    <div className="flex items-center gap-3 pl-2 border-l border-border/50 ml-1">
-                                        <div className="relative group cursor-default">
-                                            <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-all" />
-                                            <Image
-                                                src="/logo.jpg"
-                                                alt="Logo"
-                                                width={38}
-                                                height={38}
-                                                className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg"
-                                            />
+                        {/* New Header Navigation (Stacked Fixed) */}
+                        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm dark:shadow-black/20 transition-all duration-300">
+                            <div className="w-full max-w-7xl mx-auto px-4 pt-2 pb-3">
+                                {/* Row 1: Logo & Nav Actions */}
+                                <div className="flex justify-between items-center mb-2">
+                                    {/* Left Side: Logo & Main Actions */}
+                                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                                        <div className="flex items-center gap-3 pl-2 border-l border-border/50 ml-1">
+                                            <div className="relative group cursor-default">
+                                                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:opacity-100 transition-all" />
+                                                <Image
+                                                    src="/logo.jpg"
+                                                    alt="Logo"
+                                                    width={38}
+                                                    height={38}
+                                                    className="rounded-full object-cover border border-white/10 relative z-10 shadow-lg"
+                                                />
+                                            </div>
+                                            <div className="hidden sm:block">
+                                                <h1 className="text-sm font-black tracking-widest text-foreground uppercase mb-0.5">YSG</h1>
+                                            </div>
                                         </div>
-                                        <div className="hidden sm:block">
-                                            <h1 className="text-sm font-black tracking-widest text-foreground uppercase mb-0.5">YSG</h1>
+
+                                        {/* Navigation Items */}
+                                        <Link
+                                            href="/customer/invoices"
+                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all border border-border"
+                                        >
+                                            <ClipboardList className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">فواتيري</span>
+                                        </Link>
+
+                                        <button
+                                            onClick={() => {
+                                                if (storeSettings.enableProductRequests === false) {
+                                                    import("sonner").then(({ toast }) => {
+                                                        toast.error("عفواً، رفع الطلبات مغلق حالياً", {
+                                                            description: "يمكنك التواصل مع الإدارة للمساعدة.",
+                                                            duration: 4000
+                                                        })
+                                                    })
+                                                } else {
+                                                    setIsRequestOpen(true)
+                                                }
+                                            }}
+                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all border border-border"
+                                        >
+                                            <PlusCircle className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">طلب</span>
+                                        </button>
+
+                                        <Link
+                                            href="/customer/chat"
+                                            className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
+                                        >
+                                            <MessageSquare className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">محادثة</span>
+                                            {unreadChatCount > 0 && (
+                                                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                                    {unreadChatCount}
+                                                </span>
+                                            )}
+                                        </Link>
+
+                                        <button
+                                            onClick={() => {
+                                                const url = window.location.origin
+                                                const text = "تسوق أفضل المنتجات من YSG Store"
+                                                if (navigator.share) {
+                                                    navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
+                                                } else {
+                                                    navigator.clipboard.writeText(url)
+                                                    import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
+                                                }
+                                                hapticFeedback('light')
+                                            }}
+                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all border border-border"
+                                        >
+                                            <Share2 className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">نشر</span>
+                                        </button>
+
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all border border-border"
+                                        >
+                                            <LogOut className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">خروج</span>
+                                        </button>
+
+                                        <div className="mx-1">
+                                            <ThemeToggle />
                                         </div>
                                     </div>
 
-                                    {/* Navigation Items */}
-                                    <Link
-                                        href="/customer/invoices"
-                                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all border border-border"
-                                    >
-                                        <ClipboardList className="w-5 h-5" />
-                                        <span className="text-[9px] font-bold">فواتيري</span>
-                                    </Link>
-
+                                    {/* Right Side: Cart (Primary Action) */}
                                     <button
-                                        onClick={() => {
-                                            if (storeSettings.enableProductRequests === false) {
-                                                import("sonner").then(({ toast }) => {
-                                                    toast.error("عفواً، رفع الطلبات مغلق حالياً", {
-                                                        description: "يمكنك التواصل مع الإدارة للمساعدة.",
-                                                        duration: 4000
-                                                    })
-                                                })
-                                            } else {
-                                                setIsRequestOpen(true)
-                                            }
-                                        }}
-                                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all border border-border"
+                                        onClick={() => setIsCartOpen(true)}
+                                        className="relative p-2.5 bg-amber-500/10 rounded-xl text-amber-500 hover:bg-amber-500/20 border border-amber-500/20 active:scale-95 transition-all flex items-center gap-2 mr-2 group"
                                     >
-                                        <PlusCircle className="w-5 h-5" />
-                                        <span className="text-[9px] font-bold">طلب</span>
-                                    </button>
-
-                                    <Link
-                                        href="/customer/chat"
-                                        className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
-                                    >
-                                        <MessageSquare className="w-5 h-5" />
-                                        <span className="text-[9px] font-bold">محادثة</span>
-                                        {unreadChatCount > 0 && (
-                                            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                                {unreadChatCount}
+                                        <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        <span className="font-bold text-xs">السلة</span>
+                                        {cartCount > 0 && (
+                                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background shadow-lg shadow-amber-500/20">
+                                                {cartCount}
                                             </span>
                                         )}
-                                    </Link>
-
-                                    <button
-                                        onClick={() => {
-                                            const url = window.location.origin
-                                            const text = "تسوق أفضل المنتجات من YSG Store"
-                                            if (navigator.share) {
-                                                navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
-                                            } else {
-                                                navigator.clipboard.writeText(url)
-                                                import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
-                                            }
-                                            hapticFeedback('light')
-                                        }}
-                                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all border border-border"
-                                    >
-                                        <Share2 className="w-5 h-5" />
-                                        <span className="text-[9px] font-bold">نشر</span>
                                     </button>
-
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all border border-border"
-                                    >
-                                        <LogOut className="w-5 h-5" />
-                                        <span className="text-[9px] font-bold">خروج</span>
-                                    </button>
-
-                                    <div className="mx-1">
-                                        <ThemeToggle />
-                                    </div>
                                 </div>
 
-                                {/* Right Side: Cart (Primary Action) */}
-                                <button
-                                    onClick={() => setIsCartOpen(true)}
-                                    className="relative p-2.5 bg-amber-500/10 rounded-xl text-amber-500 hover:bg-amber-500/20 border border-amber-500/20 active:scale-95 transition-all flex items-center gap-2 mr-2 group"
-                                >
-                                    <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                    <span className="font-bold text-xs">السلة</span>
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background shadow-lg shadow-amber-500/20">
-                                            {cartCount}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Row 2: Global Search Bar */}
-                            <div className="px-4 pb-3 w-full">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 bg-secondary/30 rounded-xl pointer-events-none" />
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                {/* Row 2: Global Search Bar */}
+                                <div className="w-full">
+                                    <div className="relative group">
+                                        <div className="absolute inset-0 bg-secondary/30 rounded-xl pointer-events-none" />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="ابحث عن منتج، قطعة، أو باركود..."
+                                            className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
+                                            onChange={(e) => {
+                                                const params = new URLSearchParams(window.location.search);
+                                                if (e.target.value) {
+                                                    params.set("q", e.target.value);
+                                                } else {
+                                                    params.delete("q");
+                                                }
+                                                router.replace(`${pathname}?${params.toString()}`);
+                                            }}
+                                            defaultValue={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('q') || '' : ''}
+                                        />
                                     </div>
-                                    <input
-                                        type="text"
-                                        placeholder="ابحث عن منتج، قطعة، أو باركود..."
-                                        className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
-                                        onChange={(e) => {
-                                            const params = new URLSearchParams(window.location.search);
-                                            if (e.target.value) {
-                                                params.set("q", e.target.value);
-                                            } else {
-                                                params.delete("q");
-                                            }
-                                            router.replace(`${pathname}?${params.toString()}`);
-                                        }}
-                                        // Simple defaultValue read - Component triggers re-render on URL change so this works
-                                        defaultValue={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('q') || '' : ''}
-                                    />
                                 </div>
                             </div>
                         </div>
+
+                        {/* Spacer for Fixed Header (~140px) */}
+                        <div className="h-[140px]" />
 
                         {children}
                     </main>
