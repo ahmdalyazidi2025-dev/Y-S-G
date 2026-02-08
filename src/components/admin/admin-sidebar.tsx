@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useStore } from "@/context/store-context"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 
 const NAV_ITEMS = [
@@ -143,6 +144,9 @@ export function AdminSidebar() {
                         <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
                     </div>
                 )}
+                <div className="px-4">
+                    <ThemeToggle />
+                </div>
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors group"

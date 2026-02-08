@@ -209,6 +209,10 @@ export default function StoreLayout({
                                     <LogOut className="w-6 h-6" />
                                     <span className="text-[10px] font-bold">خروج</span>
                                 </button>
+
+                                <div className="mx-1">
+                                    <ThemeToggle />
+                                </div>
                             </div>
 
                             {/* Right Side: Cart (Primary Action) */}
