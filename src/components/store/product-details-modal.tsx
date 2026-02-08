@@ -77,7 +77,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="bg-[#1c2a36] w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]"
+                        className="bg-background w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]"
                     >
                         {/* Header/Close */}
                         <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
@@ -92,7 +92,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                         </div>
 
                         {/* Image Gallery */}
-                        <div className="relative aspect-square bg-black/20">
+                        <div className="relative aspect-square bg-muted">
                             {images.length > 0 ? (
                                 <motion.img
                                     key={currentImageIndex}
@@ -126,7 +126,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                                 key={idx}
                                                 className={cn(
                                                     "w-2 h-2 rounded-full transition-all",
-                                                    idx === currentImageIndex ? "bg-primary w-4" : "bg-white/30"
+                                                    idx === currentImageIndex ? "bg-primary w-4" : "bg-white/50"
                                                 )}
                                             />
                                         ))}
@@ -138,15 +138,15 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                         {/* Content */}
                         <div className="p-6 flex flex-col gap-6 flex-1 overflow-y-auto">
                             <div>
-                                <h2 className="text-2xl font-bold text-white mb-2">{product.name}</h2>
-                                <div className="text-sm text-slate-400">{product.category}</div>
+                                <h2 className="text-2xl font-bold text-foreground mb-2">{product.name}</h2>
+                                <div className="text-sm text-muted-foreground">{product.category}</div>
                             </div>
 
                             {/* Description */}
                             {product.description && (
                                 <div className="space-y-2">
-                                    <h3 className="text-sm font-bold text-slate-300">وصف المنتج</h3>
-                                    <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">
+                                    <h3 className="text-sm font-bold text-foreground">وصف المنتج</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                                         {product.description}
                                     </p>
                                 </div>
@@ -154,7 +154,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
 
                             {/* Unit Selection */}
                             <div className="space-y-3">
-                                <label className="text-xs font-bold text-slate-500">اختر الوحدة</label>
+                                <label className="text-xs font-bold text-muted-foreground">اختر الوحدة</label>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setSelectedUnit("حبة")}
@@ -162,7 +162,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                             "flex-1 p-4 rounded-2xl border transition-all text-right group relative overflow-hidden",
                                             selectedUnit === "حبة"
                                                 ? "bg-primary/10 border-primary text-primary"
-                                                : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                                                : "bg-muted/50 border-border text-muted-foreground hover:bg-muted"
                                         )}
                                     >
                                         <span className="text-xs block mb-1 opacity-70">حبة</span>
@@ -176,7 +176,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                                 "flex-1 p-4 rounded-2xl border transition-all text-right group relative overflow-hidden",
                                                 selectedUnit === "كرتون"
                                                     ? "bg-primary/10 border-primary text-primary"
-                                                    : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                                                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted"
                                             )}
                                         >
                                             <span className="text-xs block mb-1 opacity-70">كرتون</span>

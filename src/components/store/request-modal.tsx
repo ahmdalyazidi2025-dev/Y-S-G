@@ -87,12 +87,12 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                             />
 
                             <div className="space-y-2">
-                                <label className="text-xs text-slate-400 mr-2">وصف المنتج (اختياري)</label>
+                                <label className="text-xs text-muted-foreground mr-2">وصف المنتج (اختياري)</label>
                                 <div className="relative">
-                                    <Type className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Type className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         placeholder="اكتب اسم أو ميزة المنتج..."
-                                        className="bg-black/20 border-white/10 pr-10"
+                                        className="bg-muted/50 border-border pr-10"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
                                     />
@@ -100,7 +100,7 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                             </div>
 
                             {previewImage ? (
-                                <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10">
+                                <div className="relative aspect-video rounded-2xl overflow-hidden border border-border">
                                     <Image
                                         src={previewImage}
                                         alt="معاينة للمنتج المطلوب"
@@ -119,7 +119,7 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                                 <div className="grid grid-cols-2 gap-4">
                                     <div
                                         onClick={() => triggerFileInput('camera')}
-                                        className="aspect-square bg-white/5 rounded-2xl border border-white/10 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-white/10 cursor-pointer transition-colors group"
+                                        className="aspect-square bg-muted/50 rounded-2xl border border-border border-dashed flex flex-col items-center justify-center gap-2 hover:bg-muted cursor-pointer transition-colors group"
                                     >
                                         <div className="p-3 bg-primary/20 rounded-full text-primary group-hover:scale-110 transition-transform">
                                             <Camera className="w-6 h-6" />
@@ -128,9 +128,9 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                                     </div>
                                     <div
                                         onClick={() => triggerFileInput('gallery')}
-                                        className="aspect-square bg-white/5 rounded-2xl border border-white/10 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-white/10 cursor-pointer transition-colors group"
+                                        className="aspect-square bg-muted/50 rounded-2xl border border-border border-dashed flex flex-col items-center justify-center gap-2 hover:bg-muted cursor-pointer transition-colors group"
                                     >
-                                        <div className="p-3 bg-blue-500/20 rounded-full text-blue-400 group-hover:scale-110 transition-transform">
+                                        <div className="p-3 bg-blue-500/20 rounded-full text-blue-500 group-hover:scale-110 transition-transform">
                                             <ImageIcon className="w-6 h-6" />
                                         </div>
                                         <span className="text-xs font-medium">المعرض</span>
@@ -139,7 +139,7 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                             )}
 
                             <div className="pt-2">
-                                <Button className="w-full h-12 bg-primary text-white rounded-[18px] gap-2 shadow-lg shadow-primary/20 border border-white/10" onClick={handleSubmit}>
+                                <Button className="w-full h-12 bg-primary text-primary-foreground rounded-[18px] gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" onClick={handleSubmit}>
                                     <Send className="w-4 h-4" />
                                     <span>إرسال الطلب</span>
                                 </Button>

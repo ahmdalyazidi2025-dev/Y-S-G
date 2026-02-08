@@ -133,21 +133,21 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
                         {/* HEADER */}
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl font-bold text-white">
-                                {view === 'cart' ? 'سلة التسوق' : 'إتمام الطلب'}
+                            <h2 className="text-2xl font-bold text-foreground">
+                                سلة المشتريات
                             </h2>
-                            <button onClick={onClose} className="p-2 bg-white/5 rounded-full">
-                                <X className="w-5 h-5 text-slate-400" />
-                            </button>
+                            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-background/5 dark:hover:bg-white/5">
+                                <X className="w-5 h-5 text-muted-foreground" />
+                            </Button>
                         </div>
 
                         {/* CONTENT: CART VIEW */}
                         {view === 'cart' && (
                             <>
                                 {cart.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                                         <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                                            <Trash2 className="w-10 h-10 opacity-20" />
+                                            <Trash2 className="w-10 h-10 text-muted-foreground/20" />
                                         </div>
                                         <p>السلة فارغة حالياً</p>
                                     </div>
@@ -155,37 +155,37 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                     <div className="space-y-4 mb-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
                                         {cart.map((item) => (
                                             <div key={item.id} className="glass-card p-4 flex gap-4 items-center">
-                                                <div className="w-16 h-16 bg-white/5 rounded-xl border border-white/5 overflow-hidden flex-shrink-0">
+                                                <div className="w-16 h-16 bg-muted rounded-xl border border-border overflow-hidden flex-shrink-0">
                                                     {/* Image placeholder */}
                                                     <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600">
                                                         {item.name.charAt(0)}
                                                     </div>
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h3 className="font-bold text-white">{item.name}</h3>
+                                                    <h3 className="font-bold text-foreground">{item.name}</h3>
                                                     <p className="text-primary font-bold text-sm">
-                                                        {item.selectedPrice} ر.س <span className="text-[10px] text-slate-500 font-normal">/ {item.selectedUnit}</span>
+                                                        {item.selectedPrice} ر.س <span className="text-[10px] text-muted-foreground font-normal">/ {item.selectedUnit}</span>
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="flex items-center gap-3 bg-black/20 rounded-full p-1 border border-white/5">
+                                                    <div className="flex items-center gap-3 bg-muted/50 rounded-full p-1 border border-border">
                                                         <button
                                                             onClick={() => updateCartQuantity(item.id, item.selectedUnit, -1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-slate-400"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-background text-foreground"
                                                         >
                                                             <Minus className="w-4 h-4" />
                                                         </button>
-                                                        <span className="w-4 text-center font-bold text-sm">{item.quantity}</span>
+                                                        <span className="w-4 text-center font-bold text-sm text-foreground">{item.quantity}</span>
                                                         <button
                                                             onClick={() => updateCartQuantity(item.id, item.selectedUnit, 1)}
-                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-primary"
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-background text-primary"
                                                         >
                                                             <Plus className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                     <button
                                                         onClick={() => removeFromCart(item.id, item.selectedUnit)}
-                                                        className="p-2 text-red-400/50 hover:text-red-400 hover:bg-red-400/10 rounded-full transition-colors"
+                                                        className="p-2 text-red-500 hover:text-red-600 hover:bg-red-400/10 rounded-full transition-colors"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -201,21 +201,21 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         {view === 'checkout' && (
                             <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-300">
                                 {/* Order Summary Mini */}
-                                <div className="glass-card p-4 bg-white/5 flex justify-between items-center">
-                                    <span className="text-slate-400 text-sm">عدد المنتجات</span>
-                                    <span className="text-white font-bold">{cart.reduce((a, b) => a + b.quantity, 0)} منتج</span>
+                                <div className="glass-card p-4 bg-card/50 flex justify-between items-center">
+                                    <span className="text-muted-foreground text-sm">عدد المنتجات</span>
+                                    <span className="text-foreground font-bold">{cart.reduce((a, b) => a + b.quantity, 0)} منتج</span>
                                 </div>
 
                                 {/* Inputs - Only show if required by settings OR we need them */}
                                 {storeSettings.requireCustomerInfoOnCheckout && (
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs text-slate-400 font-bold pr-1 flex items-center gap-1">
+                                            <label className="text-xs text-muted-foreground font-bold pr-1 flex items-center gap-1">
                                                 البيانات الشخصية
                                                 <span className="text-red-500">*</span>
                                             </label>
                                             <div className="relative">
-                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 z-10 pointer-events-none" />
+                                                <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
                                                 <Input
                                                     placeholder="الاسم"
                                                     value={customerName}
