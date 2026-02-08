@@ -21,7 +21,7 @@ export function Footer() {
     }
 
     return (
-        <footer className="bg-[#0f171e] text-slate-400 pt-16 pb-32">
+        <footer className="bg-slate-50 dark:bg-[#0f171e] text-slate-600 dark:text-slate-400 pt-16 pb-32 border-t border-border transition-colors duration-300">
             <div className="container mx-auto px-6">
                 {/* Top Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
@@ -29,7 +29,7 @@ export function Footer() {
                         icon={<Truck className="w-6 h-6" />}
                         title={storeSettings.shippingTitle}
                         desc={storeSettings.shippingDesc}
-                        iconColor="text-blue-400"
+                        iconColor="text-blue-500"
                         bgColor="bg-blue-500/10"
                     />
                     <FeatureBox
@@ -43,7 +43,7 @@ export function Footer() {
                         icon={<Headphones className="w-6 h-6" />}
                         title={storeSettings.supportTitle}
                         desc={storeSettings.supportDesc}
-                        iconColor="text-green-400"
+                        iconColor="text-green-500"
                         bgColor="bg-green-500/10"
                     />
                 </div>
@@ -52,7 +52,7 @@ export function Footer() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
                     {/* About Section */}
                     <div className="lg:col-span-4 space-y-6">
-                        <h3 className="text-white font-bold text-xl border-r-4 border-primary pr-4">
+                        <h3 className="text-foreground font-bold text-xl border-r-4 border-primary pr-4">
                             {storeSettings.aboutTitle}
                         </h3>
                         <p className="text-sm leading-relaxed text-slate-500 text-right">
@@ -62,7 +62,7 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div className="lg:col-span-3 lg:pr-12 space-y-6">
-                        <h3 className="text-white font-bold text-lg border-r-4 border-blue-500 pr-4">روابط مهمة</h3>
+                        <h3 className="text-foreground font-bold text-lg border-r-4 border-blue-500 pr-4">روابط مهمة</h3>
                         <ul className="space-y-3 text-sm">
                             <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerTerms}</Link></li>
                             <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerPrivacy}</Link></li>
@@ -72,14 +72,14 @@ export function Footer() {
 
                     {/* Newsletter */}
                     <div className="lg:col-span-5 space-y-6">
-                        <h3 className="text-white font-bold text-lg border-r-4 border-yellow-500 pr-4">النشرة الإخبارية</h3>
+                        <h3 className="text-foreground font-bold text-lg border-r-4 border-yellow-500 pr-4">النشرة الإخبارية</h3>
                         <p className="text-sm text-slate-500">سجل الآن للحصول على التحديثات حول العروض الترويجية والقسائم.</p>
                         <form onSubmit={handleSubscribe} className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
                                     type="email"
                                     placeholder="بريدك الإلكتروني..."
-                                    className="bg-black/20 border-white/5 rounded-xl h-12 text-right pl-4 pr-4"
+                                    className="bg-white dark:bg-black/20 border-border dark:border-white/5 rounded-xl h-12 text-right pl-4 pr-4"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
@@ -92,7 +92,8 @@ export function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="pt-8 border-t border-border dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+
                     {/* Social Buttons - Show only if exists */}
                     <div className="flex gap-3">
                         {storeSettings.socialFacebook && (
@@ -156,7 +157,7 @@ function FeatureBox({ icon, title, desc, iconColor, bgColor }: { icon: React.Rea
                 {icon}
             </div>
             <div className="text-right">
-                <h4 className="text-white font-bold mb-1">{title}</h4>
+                <h4 className="text-foreground font-bold mb-1">{title}</h4>
                 <p className="text-xs text-slate-500">{desc}</p>
             </div>
         </div>
@@ -170,8 +171,8 @@ function SocialButton({ icon, href, isWhatsapp }: { icon: React.ReactNode, href:
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center border border-white/5 transition-all hover:scale-110",
-                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-white/5 text-slate-400 hover:bg-primary hover:text-white"
+                "w-11 h-11 rounded-xl flex items-center justify-center border border-border dark:border-white/5 transition-all hover:scale-110",
+                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-white dark:bg-white/5 text-slate-400 hover:bg-primary hover:text-white shadow-sm dark:shadow-none"
             )}
         >
             {icon}

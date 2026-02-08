@@ -123,7 +123,7 @@ export default function StoreLayout({
                     <VisitTracker />
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
                         {/* New Header Navigation */}
-                        <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-[#0f111a]/95 backdrop-blur-xl py-3 -mx-4 px-4 transition-all border-b border-white/5 shadow-2xl shadow-black/20">
+                        <div className="flex justify-between items-center mb-8 sticky top-0 z-50 bg-background/80 backdrop-blur-xl py-3 -mx-4 px-4 transition-all border-b border-border shadow-sm dark:shadow-black/20">
 
                             {/* Left Side: Logo & Main Actions */}
                             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -139,7 +139,7 @@ export default function StoreLayout({
                                         />
                                     </div>
                                     <div className="hidden sm:block">
-                                        <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">YSG</h1>
+                                        <h1 className="text-sm font-black tracking-widest text-foreground uppercase mb-0.5">YSG</h1>
                                     </div>
                                 </div>
 
