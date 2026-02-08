@@ -59,7 +59,7 @@ function LoginForm() {
             {/* Back Button */}
             <div className="absolute -top-16 right-0 z-20">
                 <Link href="/">
-                    <Button variant="ghost" className="text-white/60 hover:text-white hover:bg-white/10 gap-2 rounded-full px-4">
+                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted gap-2 rounded-full px-4">
                         <ArrowRight className="w-5 h-5" />
                         <span className="pb-1">الرئيسية</span>
                     </Button>
@@ -70,20 +70,20 @@ function LoginForm() {
             <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] animate-pulse delay-1000" />
 
-            <Card className="glass-card border-white/10 text-white shadow-2xl backdrop-blur-xl relative z-10 overflow-hidden">
+            <Card className="glass-card border-border/50 text-foreground shadow-2xl backdrop-blur-xl relative z-10 overflow-hidden">
                 {/* Top highlight line */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
 
                 <CardHeader className="space-y-4 text-center pb-2">
-                    <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-inner mb-2">
-                        <User className="w-8 h-8 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                    <div className="mx-auto w-16 h-16 rounded-2xl bg-secondary border border-border flex items-center justify-center shadow-inner mb-2">
+                        <User className="w-8 h-8 text-primary drop-shadow-sm" />
                     </div>
 
                     <div className="space-y-1">
-                        <CardTitle className="text-3xl font-black tracking-tight text-white">
+                        <CardTitle className="text-3xl font-black tracking-tight text-foreground">
                             {loginType === 'admin' ? 'مدير النظام' : loginType === 'staff' ? 'دخول الموظفين' : 'مرحباً بك'}
                         </CardTitle>
-                        <CardDescription className="text-slate-400 font-medium">
+                        <CardDescription className="text-muted-foreground font-medium">
                             {loginType === 'customer' ? 'سجل دخولك للتسوق ومتابعة طلباتك' : 'لوحة التحكم والإدارة'}
                         </CardDescription>
                     </div>
@@ -97,14 +97,14 @@ function LoginForm() {
                                 className={`
                                     relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
                                     ${loginType === 'staff'
-                                        ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(59,130,246,0.2)]'
-                                        : 'bg-white/5 border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'}
+                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.2)]'
+                                        : 'bg-secondary/50 border-transparent hover:bg-secondary opacity-60 hover:opacity-100'}
                                 `}
                             >
-                                <div className={`p-2 rounded-full ${loginType === 'staff' ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
+                                <div className={`p-2 rounded-full ${loginType === 'staff' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                                     <User className="w-5 h-5" />
                                 </div>
-                                <span className={`text-xs font-bold ${loginType === 'staff' ? 'text-white' : 'text-slate-400'}`}>موظف</span>
+                                <span className={`text-xs font-bold ${loginType === 'staff' ? 'text-primary' : 'text-muted-foreground'}`}>موظف</span>
                                 {loginType === 'staff' && (
                                     <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
                                 )}
@@ -116,14 +116,14 @@ function LoginForm() {
                                 className={`
                                     relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
                                     ${loginType === 'admin'
-                                        ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(59,130,246,0.2)]'
-                                        : 'bg-white/5 border-white/10 hover:bg-white/10 opacity-60 hover:opacity-100'}
+                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.2)]'
+                                        : 'bg-secondary/50 border-transparent hover:bg-secondary opacity-60 hover:opacity-100'}
                                 `}
                             >
-                                <div className={`p-2 rounded-full ${loginType === 'admin' ? 'bg-primary text-white' : 'bg-white/10 text-slate-400'}`}>
+                                <div className={`p-2 rounded-full ${loginType === 'admin' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                                     <Lock className="w-5 h-5" />
                                 </div>
-                                <span className={`text-xs font-bold ${loginType === 'admin' ? 'text-white' : 'text-slate-400'}`}>مدير النظام</span>
+                                <span className={`text-xs font-bold ${loginType === 'admin' ? 'text-primary' : 'text-muted-foreground'}`}>مدير النظام</span>
                                 {loginType === 'admin' && (
                                     <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
                                 )}
@@ -190,14 +190,14 @@ function LoginForm() {
                                     className="space-y-5"
                                 >
                                     <div className="space-y-2">
-                                        <Label htmlFor="username" className="text-xs text-slate-400 mr-1">اسم المستخدم</Label>
+                                        <Label htmlFor="username" className="text-xs text-muted-foreground mr-1">اسم المستخدم</Label>
                                         <div className="relative group">
                                             <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                                            <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-primary transition-colors" />
+                                            <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                             <Input
                                                 type="text"
                                                 placeholder="username"
-                                                className="bg-white/5 border-white/10 h-14 rounded-xl pr-12 text-right dir-rtl relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-500 font-bold text-lg tracking-wide text-white"
+                                                className="bg-secondary/50 border-transparent h-14 rounded-xl pr-12 text-right dir-rtl relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-muted-foreground/50 font-bold text-lg tracking-wide text-foreground shadow-inner"
                                                 value={username}
                                                 onChange={(e) => setUsername(e.target.value)}
                                                 required
@@ -205,12 +205,12 @@ function LoginForm() {
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label htmlFor="password" className="text-xs text-slate-400 mr-1">كلمة المرور</Label>
+                                        <Label htmlFor="password" className="text-xs text-muted-foreground mr-1">كلمة المرور</Label>
                                         <div className="relative group">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-primary transition-colors focus:outline-none z-20"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors focus:outline-none z-20"
                                             >
                                                 {showPassword ? (
                                                     <EyeOff className="h-5 w-5" />
@@ -222,7 +222,7 @@ function LoginForm() {
                                                 id="password"
                                                 type={showPassword ? "text" : "password"}
                                                 placeholder="••••••••"
-                                                className="bg-white/5 border-white/10 h-14 rounded-xl pr-12 text-right text-white relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-slate-500 font-bold text-lg tracking-widest"
+                                                className="bg-secondary/50 border-transparent h-14 rounded-xl pr-12 text-right text-foreground relative z-10 focus:border-primary/50 focus:ring-primary/20 placeholder:text-muted-foreground/50 font-bold text-lg tracking-widest shadow-inner"
                                                 required
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
@@ -233,7 +233,7 @@ function LoginForm() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowForgotPassword(true)}
-                                                    className="text-[11px] text-slate-400 hover:text-white transition-colors"
+                                                    className="text-[11px] text-muted-foreground hover:text-primary transition-colors font-semibold"
                                                 >
                                                     نسيت كلمة المرور؟
                                                 </button>
@@ -259,7 +259,7 @@ function LoginForm() {
                 </form>
             </Card>
 
-            <p className="text-center text-[10px] text-slate-500 mt-6 font-mono opacity-50">
+            <p className="text-center text-[10px] text-muted-foreground mt-6 font-mono opacity-50">
                 SECURE ACCESS • ENCRYPTED CONNECTION
             </p>
         </div>
