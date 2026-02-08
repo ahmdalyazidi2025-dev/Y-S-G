@@ -32,6 +32,7 @@ import { PwaInstallPrompt } from "@/components/shared/pwa-install-prompt";
 import { NotificationManager } from "@/components/shared/notification-manager";
 import { SystemNotifications } from "@/components/shared/system-notifications";
 import { PushNotificationManager } from "@/components/shared/push-notification-manager";
+import { AppBadgeManager } from "@/components/shared/app-badge-manager";
 
 export default function RootLayout({
   children,
@@ -61,6 +62,7 @@ export default function RootLayout({
             <PwaInstallPrompt />
             <SystemNotifications />
             <PushNotificationManager />
+            <AppBadgeManager />
             {children}
             <Toaster position="top-center" expand={false} richColors />
           </StoreProvider>
