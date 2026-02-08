@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { ProductCard } from "@/components/store/product-card"
-import { Input } from "@/components/ui/input"
 import { Search, Bell, User } from "lucide-react"
 import Link from "next/link"
 import { useStore, Product } from "@/context/store-context"
@@ -26,7 +25,8 @@ import { useSearchParams } from "next/navigation"
 export default function CustomerHome() {
     const { products, banners, categories, loading, storeSettings } = useStore() // Assume loading is available
     const searchParams = useSearchParams()
-    const [searchQuery, setSearchQuery] = useState("")
+    // const [searchQuery, setSearchQuery] = useState("")  <-- Removed local state
+    const searchQuery = searchParams.get('q') || "" // Use URL param
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
@@ -65,7 +65,7 @@ export default function CustomerHome() {
                 {!hiddenSections.includes('offers') && <HeroBanner />}
 
                 {/* HEADER CONTENT (Search, Profile, Bell) */}
-                <div className="relative z-10 px-4 pt-6 mb-44"> {/* Margin bottom pushes content down below the banner text area */}
+                <div className="relative z-10 px-4 pt-6 mb-6"> {/* Margin bottom pushes content down below the banner text area */}
                     <div className="flex flex-col gap-6">
                         {/* Top Bar */}
                         <div className="flex items-center justify-between">
@@ -84,26 +84,10 @@ export default function CustomerHome() {
                             </Link>
                         </div>
 
-                        {/* Search Bar - Floating & Transparent */}
-                        {!hiddenSections.includes('search') && (
-                            <div className="fixed top-4 inset-x-4 z-[100] transition-all">
-                                <div className="relative group">
-                                    <div className="absolute inset-0 bg-background/80 backdrop-blur-md rounded-2xl border border-border shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] group-focus-within:border-primary/50 transition-all" />
-                                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
-                                    <Input
-                                        placeholder="ابحث عن قطعة غيار، باركود..."
-                                        className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-14 text-sm focus:ring-0 text-foreground placeholder:text-muted-foreground relative z-10"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 z-20 flex gap-2">
-                                        <CustomerNotifications forceOpen={shouldOpenNotifications} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
+
+                {/* Removed Local Search Bar - Now in Global Layout */}
 
 
                 {/* Categories & Content Starts Here (Below Banner Area) */}
@@ -116,7 +100,7 @@ export default function CustomerHome() {
                 )}
 
                 {!hiddenSections.includes('categories') && (
-                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[135px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4">
+                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[146px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
                         <button
                             onClick={() => setSelectedCategory("الكل")}
                             className={cn(
