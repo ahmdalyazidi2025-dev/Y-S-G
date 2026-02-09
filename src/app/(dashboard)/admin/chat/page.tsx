@@ -106,27 +106,41 @@ export default function AdminChatPage() {
                 )}
             </div>
 
-            <div className="flex gap-2 text-xs">
-                {/* ... existing mode buttons ... */}
+            <div className="flex gap-2 text-xs p-1 bg-muted/30 rounded-xl border border-border/50">
                 <Button
-                    variant="glass"
-                    className={cn("flex-1 gap-2 h-10", mode === "direct" && "bg-primary text-white border-primary/20", mode !== "direct" && "opacity-50")}
+                    variant="ghost"
+                    className={cn(
+                        "flex-1 gap-2 h-10 transition-all rounded-lg",
+                        mode === "direct"
+                            ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                            : "text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-sm"
+                    )}
                     onClick={() => { setMode("direct"); setSelectedCustomer(null); }}
                 >
                     <MessageCircle className="w-4 h-4" />
                     <span>مراسلة (فردي)</span>
                 </Button>
                 <Button
-                    variant="glass"
-                    className={cn("flex-1 gap-2 h-10", mode === "global_chat" && "bg-blue-500 text-white border-blue-500/20", mode !== "global_chat" && "opacity-50")}
+                    variant="ghost"
+                    className={cn(
+                        "flex-1 gap-2 h-10 transition-all rounded-lg",
+                        mode === "global_chat"
+                            ? "bg-blue-500 text-white shadow-sm hover:bg-blue-600"
+                            : "text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-sm"
+                    )}
                     onClick={() => { setMode("global_chat"); setSelectedCustomer(null); }}
                 >
                     <MessageCircle className="w-4 h-4" />
                     <span>رسالة للكل (شات)</span>
                 </Button>
                 <Button
-                    variant="glass"
-                    className={cn("flex-1 gap-2 h-10", mode === "broadcast" && "bg-orange-500 text-white border-orange-500/20", mode !== "broadcast" && "opacity-50")}
+                    variant="ghost"
+                    className={cn(
+                        "flex-1 gap-2 h-10 transition-all rounded-lg",
+                        mode === "broadcast"
+                            ? "bg-orange-500 text-white shadow-sm hover:bg-orange-600"
+                            : "text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-sm"
+                    )}
                     onClick={() => { setMode("broadcast"); setSelectedCustomer(null); }}
                 >
                     <Megaphone className="w-4 h-4" />
