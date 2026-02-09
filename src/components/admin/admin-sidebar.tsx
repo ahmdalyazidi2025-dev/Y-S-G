@@ -11,7 +11,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 
 const NAV_ITEMS = [
-    { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
+    { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-foreground" },
     { title: "المنتجات والعروض", icon: Package, href: "/admin/products", color: "text-blue-400" },
     { title: "الأقسام", icon: Layers, href: "/admin/categories", color: "text-primary" },
     { title: "العملاء", icon: Users, href: "/admin/customers", color: "text-teal-400" },
@@ -68,7 +68,7 @@ export function AdminSidebar() {
     const filteredNavItems = NAV_ITEMS.filter(canAccess)
 
     return (
-        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-white/5 z-50 hidden lg:flex flex-col p-6 gap-8">
+        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-border z-50 hidden lg:flex flex-col p-6 gap-8">
             {/* Logo Section */}
             <div className="flex items-center gap-3 px-2">
                 <div className="relative">
@@ -82,7 +82,7 @@ export function AdminSidebar() {
                     />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-sm font-black text-white tracking-tighter">YSG GROUP</span>
+                    <span className="text-sm font-black text-foreground tracking-tighter">YSG GROUP</span>
                     <span className="text-[8px] text-primary font-bold uppercase tracking-[0.2em]">Core Control</span>
                 </div>
             </div>
@@ -99,8 +99,8 @@ export function AdminSidebar() {
                                 className={cn(
                                     "flex items-center justify-between px-4 py-3 rounded-2xl transition-all group relative overflow-hidden",
                                     isActive
-                                        ? "bg-primary/10 text-white border border-primary/20"
-                                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                                        ? "bg-primary/10 text-foreground border border-primary/20"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                 )}
                             >
                                 <div className="flex items-center gap-3 relative z-10">
@@ -136,11 +136,11 @@ export function AdminSidebar() {
             </div>
 
             {/* Bottom Section */}
-            <div className="pt-6 border-t border-white/5 space-y-2">
+            <div className="pt-6 border-t border-border space-y-2">
                 {currentUser && (
-                    <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                        <p className="text-[10px] text-slate-400">Logged in as:</p>
-                        <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+                    <div className="px-4 py-2 bg-muted/50 rounded-xl border border-border">
+                        <p className="text-[10px] text-muted-foreground">Logged in as:</p>
+                        <p className="text-xs font-bold text-foreground truncate">{currentUser.name}</p>
                         <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
                     </div>
                 )}
@@ -175,7 +175,7 @@ export function AdminMobileNav() {
     ]
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-white/5 z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-border z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
             {BOTTOM_ITEMS.filter(item => {
                 if (!currentUser) return false
                 if (currentUser.role === "admin") return true
@@ -196,7 +196,7 @@ export function AdminMobileNav() {
                     <Link key={item.href} href={item.href} className="flex-1">
                         <div className={cn(
                             "flex flex-col items-center justify-center gap-1 transition-all",
-                            isActive ? "text-primary scale-110" : "text-slate-500 hover:text-white"
+                            isActive ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
                         )}>
                             <div className={cn(
                                 "p-1.5 rounded-xl transition-all",

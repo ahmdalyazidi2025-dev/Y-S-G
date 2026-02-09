@@ -9,7 +9,7 @@ export default function AdminLayout({
 }) {
     return (
         <ProtectedRoute role="admin">
-            <div className="min-h-screen bg-[#080b12] text-white flex">
+            <div className="min-h-screen bg-background text-foreground flex transition-colors duration-300">
                 {/* Floating Branding Watermark */}
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-[0.02] z-0 overflow-hidden">
                     <Image
