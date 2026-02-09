@@ -88,10 +88,10 @@ export default function ReportsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600">
+                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-500">
                         التقارير والإحصائيات
                     </h1>
-                    <p className="text-slate-400 font-medium mt-1">نظرة شاملة على أداء المتجر والعملاء</p>
+                    <p className="text-muted-foreground font-medium mt-1">نظرة شاملة على أداء المتجر والعملاء</p>
                 </div>
             </div>
 
@@ -126,13 +126,13 @@ export default function ReportsPage() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue & Profit Chart */}
-                <div className="lg:col-span-2 bg-slate-900/50 border border-white/5 rounded-[32px] p-6 shadow-xl">
+                <div className="lg:col-span-2 glass-card p-6 rounded-[32px] border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-xl font-bold text-white mb-1">تحليل الدخل والأرباح</h3>
-                            <p className="text-sm text-slate-400">مقارنة المبيعات مع الأرباح الصافية خلال الشهر الماضي</p>
+                            <h3 className="text-xl font-bold text-foreground mb-1">تحليل الدخل والأرباح</h3>
+                            <p className="text-sm text-muted-foreground">مقارنة المبيعات مع الأرباح الصافية خلال الشهر الماضي</p>
                         </div>
-                        <Calendar className="text-slate-500 w-5 h-5" />
+                        <Calendar className="text-muted-foreground w-5 h-5" />
                     </div>
 
                     <div className="h-[300px] w-full" dir="ltr">
@@ -148,12 +148,12 @@ export default function ReportsPage() {
                                         <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} vertical={false} />
+                                <XAxis dataKey="date" stroke="currentColor" strokeOpacity={0.5} fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="currentColor" strokeOpacity={0.5} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#fff' }}
-                                    itemStyle={{ color: '#fff' }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }}
+                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 />
                                 <Area type="monotone" dataKey="revenue" name="المبيعات" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                                 <Area type="monotone" dataKey="profit" name="الأرباح" stroke="#22c55e" strokeWidth={3} fillOpacity={1} fill="url(#colorProf)" />
@@ -164,21 +164,21 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Top Products */}
-                <div className="bg-slate-900/50 border border-white/5 rounded-[32px] p-6 shadow-xl">
-                    <h3 className="text-xl font-bold text-white mb-6">المنتجات الأكثر مبيعاً</h3>
+                <div className="glass-card p-6 rounded-[32px] border border-border shadow-sm">
+                    <h3 className="text-xl font-bold text-foreground mb-6">المنتجات الأكثر مبيعاً</h3>
                     <div className="space-y-4">
                         {topProducts.map((p, i) => (
                             <div key={p.name} className="flex items-center gap-4">
                                 <span className={`
                                     w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm
-                                    ${i === 0 ? 'bg-yellow-500 text-black' : i === 1 ? 'bg-slate-300 text-black' : i === 2 ? 'bg-orange-700 text-white' : 'bg-white/5 text-slate-400'}
+                                    ${i === 0 ? 'bg-yellow-500 text-black' : i === 1 ? 'bg-slate-300 text-black' : i === 2 ? 'bg-orange-700 text-white' : 'bg-muted text-muted-foreground'}
                                 `}>
                                     {i + 1}
                                 </span>
                                 <div className="flex-1">
                                     <div className="flex justify-between mb-1">
-                                        <span className="font-bold text-slate-200 text-sm truncate max-w-[180px]">{p.name}</span>
-                                        <span className="text-xs font-mono text-slate-400">{p.count} مبيعة</span>
+                                        <span className="font-bold text-foreground text-sm truncate max-w-[180px]">{p.name}</span>
+                                        <span className="text-xs font-mono text-muted-foreground">{p.count} مبيعة</span>
                                     </div>
                                     <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                                         <div
@@ -196,25 +196,25 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Top Referrers */}
-                <div className="bg-slate-900/50 border border-white/5 rounded-[32px] p-6 shadow-xl">
-                    <h3 className="text-xl font-bold text-white mb-6">أفضل المسوقين (الإحالات)</h3>
+                <div className="glass-card p-6 rounded-[32px] border border-border shadow-sm">
+                    <h3 className="text-xl font-bold text-foreground mb-6">أفضل المسوقين (الإحالات)</h3>
                     <div className="space-y-4">
                         {topReferrers.map((c, i) => (
-                            <div key={c.id} className="flex items-center justify-between p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors">
+                            <div key={c.id} className="flex items-center justify-between p-3 bg-muted/20 rounded-2xl hover:bg-muted/40 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                                         {c.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-white text-sm">{c.name}</h4>
-                                        <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                                            <span className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">{c.referralCode || 'N/A'}</span>
+                                        <h4 className="font-bold text-foreground text-sm">{c.name}</h4>
+                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                            <span className="bg-muted px-1.5 py-0.5 rounded text-foreground font-mono">{c.referralCode || 'N/A'}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="text-center px-4">
                                     <span className="block text-xl font-black text-purple-400">{c.referralCount}</span>
-                                    <span className="text-[10px] text-slate-500">إحالة</span>
+                                    <span className="text-[10px] text-muted-foreground">إحالة</span>
                                 </div>
                             </div>
                         ))}
@@ -232,25 +232,25 @@ function MetricCard({ title, value, subtext, icon: Icon, color, trend }: any) {
     return (
         <div className={`
             relative overflow-hidden p-6 rounded-[32px] border transition-all duration-300
-            bg-slate-900/50 border-white/5 hover:border-${color}-500/30 group
+            glass-card border-border hover:border-${color}-500/30 group shadow-sm hover:shadow-md
         `}>
             {/* Background Glow */}
             <div className={`absolute -right-10 -top-10 w-32 h-32 bg-${color}-500/10 rounded-full blur-3xl group-hover:bg-${color}-500/20 transition-all`} />
 
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
-                    <div className={`p-3 rounded-2xl bg-${color}-500/10 text-${color}-400`}>
+                    <div className={`p-3 rounded-2xl bg-${color}-500/10 text-${color}-500`}>
                         <Icon className="w-6 h-6" />
                     </div>
-                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-${color}-500/10 text-${color}-400 text-xs font-bold`}>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-${color}-500/10 text-${color}-500 text-xs font-bold`}>
                         {trend}
                         <ArrowUpRight className="w-3 h-3" />
                     </div>
                 </div>
 
-                <h3 className="text-slate-400 font-bold text-sm mb-1">{title}</h3>
-                <div className="text-3xl font-black text-white tracking-tight">{value}</div>
-                <p className="text-xs text-slate-500 mt-2 font-medium">{subtext}</p>
+                <h3 className="text-muted-foreground font-bold text-sm mb-1">{title}</h3>
+                <div className="text-3xl font-black text-foreground tracking-tight">{value}</div>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">{subtext}</p>
             </div>
         </div>
     )

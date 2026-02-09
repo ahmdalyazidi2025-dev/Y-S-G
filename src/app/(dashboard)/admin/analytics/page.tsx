@@ -220,22 +220,22 @@ export default function AnalyticsPage() {
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                        <ArrowRight className="w-5 h-5 text-foreground" />
                     </Button>
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-black text-white">تحليل البيانات</h1>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Analytics Dashboard</p>
+                    <h1 className="text-2xl font-black text-foreground">تحليل البيانات</h1>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Analytics Dashboard</p>
                 </div>
             </div>
 
             {/* Search Filter */}
             <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                 <Input
                     placeholder="بحث باسم العميل..."
-                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl text-white placeholder:text-slate-500 focus:border-primary/50"
+                    className="bg-background border-border pr-10 text-right h-12 rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -279,14 +279,14 @@ export default function AnalyticsPage() {
                     </div>
                 )}
 
-                <div className="bg-white/5 p-1 rounded-xl border border-white/10 flex gap-1 self-end">
+                <div className="bg-muted p-1 rounded-xl border border-border flex gap-1 self-end">
                     {(["all", "day", "week", "month", "year", "custom"] as const).map((r) => (
                         <button
                             key={r}
                             onClick={() => setTimeRange(r)}
                             className={cn(
                                 "px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
-                                timeRange === r ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white hover:bg-white/5"
+                                timeRange === r ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                             )}
                         >
                             {r === "all" && "الكل"}
@@ -307,54 +307,54 @@ export default function AnalyticsPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <Card className="glass-card border-white/5 bg-emerald-500/5 col-span-2">
+                <Card className="glass-card border-border bg-emerald-500/10 col-span-2">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-emerald-400 font-bold">إجمالي الإيرادات</CardDescription>
-                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                        <CardDescription className="text-emerald-500 font-bold">إجمالي الإيرادات</CardDescription>
+                        <CardTitle className="text-2xl text-foreground flex items-center gap-2">
                             <DollarSign className="w-5 h-5" />
                             {totalRevenue.toLocaleString()}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-blue-500/5 col-span-2 md:col-span-1">
+                <Card className="glass-card border-border bg-blue-500/10 col-span-2 md:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-blue-400 font-bold">الطلبات النشطة</CardDescription>
-                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                        <CardDescription className="text-blue-500 font-bold">الطلبات النشطة</CardDescription>
+                        <CardTitle className="text-2xl text-foreground flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
                             {filteredOrders.filter(o => o.status === "processing" || o.status === "pending").length}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-violet-500/5 col-span-2 md:col-span-1">
+                <Card className="glass-card border-border bg-violet-500/10 col-span-2 md:col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-violet-400 font-bold">قاعدة العملاء</CardDescription>
-                        <CardTitle className="text-2xl text-white flex items-center gap-2">
+                        <CardDescription className="text-violet-500 font-bold">قاعدة العملاء</CardDescription>
+                        <CardTitle className="text-2xl text-foreground flex items-center gap-2">
                             <Package className="w-5 h-5" />
                             {uniqueCustomers}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-purple-500/5 col-span-1">
+                <Card className="glass-card border-border bg-purple-500/10 col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-purple-400 font-bold">المنتجات المباعة</CardDescription>
-                        <CardTitle className="text-lg text-white">
+                        <CardDescription className="text-purple-500 font-bold">المنتجات المباعة</CardDescription>
+                        <CardTitle className="text-lg text-foreground">
                             {filteredOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-pink-500/5 col-span-1">
+                <Card className="glass-card border-border bg-pink-500/10 col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-pink-400 font-bold">الزيارات</CardDescription>
-                        <CardTitle className="text-lg text-white flex items-center gap-2">
+                        <CardDescription className="text-pink-500 font-bold">الزيارات</CardDescription>
+                        <CardTitle className="text-lg text-foreground flex items-center gap-2">
                             <Users className="w-4 h-4" />
                             {totalVisits.toLocaleString()}
                         </CardTitle>
                     </CardHeader>
                 </Card>
-                <Card className="glass-card border-white/5 bg-orange-500/5 col-span-1">
+                <Card className="glass-card border-border bg-orange-500/10 col-span-1">
                     <CardHeader className="pb-2">
-                        <CardDescription className="text-orange-400 font-bold">متوسط السلة</CardDescription>
-                        <CardTitle className="text-lg text-white">
+                        <CardDescription className="text-orange-500 font-bold">متوسط السلة</CardDescription>
+                        <CardTitle className="text-lg text-foreground">
                             {filteredOrders.length > 0 ? (totalRevenue / filteredOrders.length).toFixed(0) : 0}
                         </CardTitle>
                     </CardHeader>
@@ -362,32 +362,32 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Visits Chart */}
-            <Card className="glass-card border-white/5">
+            <Card className="glass-card border-border">
                 <CardHeader>
-                    <CardTitle className="text-white">الزيارات</CardTitle>
+                    <CardTitle className="text-foreground">الزيارات</CardTitle>
                     <CardDescription>عدد الزوار خلال الفترة المحددة</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={visits}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                stroke="#ffffff"
+                                stroke="currentColor"
+                                strokeOpacity={0.5}
                                 fontSize={12}
                                 tickLine={false}
                                 axisLine={false}
-                                tick={{ fill: 'white' }}
                                 tickFormatter={(value) => {
                                     // Format YYYY-MM-DD to simpler display
                                     const d = new Date(value);
                                     return d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
                                 }}
                             />
-                            <YAxis stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} tick={{ fill: 'white' }} />
+                            <YAxis stroke="currentColor" strokeOpacity={0.5} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#1c2a36', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                itemStyle={{ color: '#fff' }}
+                                contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }}
+                                itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 labelFormatter={(label) => new Date(label).toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             />
                             <Bar dataKey="count" name="الزوار" fill="#ec4899" radius={[4, 4, 0, 0]} barSize={40} />
@@ -398,20 +398,20 @@ export default function AnalyticsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue Chart */}
-                <Card className="glass-card border-white/5 col-span-1 lg:col-span-2">
+                <Card className="glass-card border-border col-span-1 lg:col-span-2">
                     <CardHeader>
-                        <CardTitle className="text-white">إيرادات آخر 7 أيام</CardTitle>
+                        <CardTitle className="text-foreground">إيرادات آخر 7 أيام</CardTitle>
                         <CardDescription>نمو المبيعات اليومي</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={revenueData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                <XAxis dataKey="date" stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: 'white' }} />
-                                <YAxis stroke="#ffffff" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} tick={{ fill: 'white' }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} vertical={false} />
+                                <XAxis dataKey="date" stroke="currentColor" strokeOpacity={0.5} fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="currentColor" strokeOpacity={0.5} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: number | string) => `${value}`} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1c2a36', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                    itemStyle={{ color: '#fff' }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }}
+                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 />
                                 <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', strokeWidth: 2 }} activeDot={{ r: 8 }} />
                             </LineChart>
@@ -420,18 +420,18 @@ export default function AnalyticsPage() {
                 </Card>
 
                 {/* Top Products */}
-                <Card className="glass-card border-white/5">
+                <Card className="glass-card border-border">
                     <CardHeader>
-                        <CardTitle className="text-white">المنتجات الأكثر مبيعاً</CardTitle>
+                        <CardTitle className="text-foreground">المنتجات الأكثر مبيعاً</CardTitle>
                         <CardDescription>أفضل 5 منتجات طلباً</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topProductsData} layout="vertical" margin={{ left: 40 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" horizontal={false} />
-                                <XAxis type="number" stroke="#ffffff" hide />
-                                <YAxis dataKey="name" type="category" stroke="#ffffff" fontSize={11} width={100} tickLine={false} axisLine={false} tick={{ fill: 'white', fontWeight: 'bold' }} />
-                                <Tooltip cursor={{ fill: '#ffffff05' }} contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} horizontal={false} />
+                                <XAxis type="number" stroke="currentColor" strokeOpacity={0.5} hide />
+                                <YAxis dataKey="name" type="category" stroke="currentColor" strokeOpacity={0.5} fontSize={11} width={100} tickLine={false} axisLine={false} tick={{ fill: 'currentColor', fontWeight: 'bold' }} />
+                                <Tooltip cursor={{ fill: 'hsl(var(--muted)/0.2)' }} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: 'none', borderRadius: '8px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
                                 <Bar dataKey="sales" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -439,9 +439,9 @@ export default function AnalyticsPage() {
                 </Card>
 
                 {/* Status Distribution */}
-                <Card className="glass-card border-white/5">
+                <Card className="glass-card border-border">
                     <CardHeader>
-                        <CardTitle className="text-white">حالات الطلبات</CardTitle>
+                        <CardTitle className="text-foreground">حالات الطلبات</CardTitle>
                         <CardDescription>توزيع الطلبات حسب الحالة</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
@@ -460,12 +460,12 @@ export default function AnalyticsPage() {
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} />
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: 'none', borderRadius: '8px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} />
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="flex flex-wrap gap-4 justify-center absolute bottom-4">
                             {statusData.map((entry, index) => (
-                                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-slate-400">
+                                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                                     {entry.name} ({entry.value})
                                 </div>
