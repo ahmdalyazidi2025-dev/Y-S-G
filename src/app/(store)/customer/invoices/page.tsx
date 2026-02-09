@@ -66,7 +66,7 @@ export default function InvoicesPage() {
             <div className="flex items-center gap-4">
                 <Link href="/customer">
                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                        <ArrowRight className="w-5 h-5 text-foreground rotate-180" />
+                        <ArrowRight className="w-5 h-5 text-foreground rotate-180 rtl:rotate-0 transform" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">سجل الطلبات</h1>
