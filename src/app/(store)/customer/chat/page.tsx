@@ -36,11 +36,11 @@ export default function ChatPage() {
         <div className="flex flex-col h-[calc(100vh-160px)]">
             <div className="flex items-center gap-4 mb-6">
                 <Link href="/customer">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                        <ArrowRight className="w-5 h-5 text-foreground" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">الدردشة</h1>
+                <h1 className="text-2xl font-bold flex-1 text-foreground">الدردشة</h1>
             </div>
 
             <div className="flex-1 glass-card p-4 flex flex-col overflow-y-auto space-y-4 no-scrollbar">
@@ -57,12 +57,12 @@ export default function ChatPage() {
                 ) : (
                     chatMessages.map((m) => (
                         <div key={m.id} className={cn(
-                            "max-w-[80%] p-3 rounded-2xl text-xs space-y-1",
-                            m.isAdmin ? "bg-white/10 text-slate-200 self-start rounded-bl-none" : "bg-primary text-white self-end rounded-br-none"
+                            "max-w-[80%] p-3 rounded-2xl text-xs space-y-1 shadow-sm",
+                            m.isAdmin ? "bg-muted text-foreground self-start rounded-bl-none" : "bg-primary text-primary-foreground self-end rounded-br-none"
                         )}>
                             <div className="flex items-center gap-2 mb-1">
                                 {m.isAdmin && (
-                                    <div className="w-4 h-4 rounded-full overflow-hidden border border-white/20">
+                                    <div className="w-4 h-4 rounded-full overflow-hidden border border-border">
                                         <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
                                     </div>
                                 )}
@@ -78,7 +78,7 @@ export default function ChatPage() {
             <div className="mt-4 flex gap-2">
                 <Input
                     placeholder="اكتب رسالتك..."
-                    className="bg-black/20 border-white/10 rounded-full h-12"
+                    className="bg-background border-border rounded-full h-12 text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                     value={msg}
                     onChange={(e) => setMsg(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -88,7 +88,7 @@ export default function ChatPage() {
                     className="rounded-[18px] bg-primary h-12 w-12 flex-shrink-0 shadow-lg shadow-primary/20 border border-white/10"
                     onClick={handleSend}
                 >
-                    <Send className="w-5 h-5 text-white" />
+                    <Send className="w-5 h-5 text-primary-foreground" />
                 </Button>
             </div>
         </div>
