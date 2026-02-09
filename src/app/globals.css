@@ -40,6 +40,7 @@
 }
 
 .dark {
+  color-scheme: dark; /* Ensures native UI elements (calendar, scrollbars) are dark */
   /* Dark Mode - Deep Space */
   --background: 222 47% 4%; /* Deep Void */
   --foreground: 210 40% 98%; /* Soft White */
@@ -214,6 +215,11 @@
     /* direction: ltr; removed strictly to prioritize custom components */
     text-align: right; 
   }
+}
+
+/* Disable tap highlight on mobile */
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
