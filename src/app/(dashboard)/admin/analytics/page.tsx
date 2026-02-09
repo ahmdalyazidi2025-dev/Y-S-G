@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
                 </Link>
                 <div className="flex-1">
                     <h1 className="text-2xl font-black text-foreground">تحليل البيانات</h1>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Analytics Dashboard</p>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">لوحة التحليلات البيانية</p>
                 </div>
             </div>
 

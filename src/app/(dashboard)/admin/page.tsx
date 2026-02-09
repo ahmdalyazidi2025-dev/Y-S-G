@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                         <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">النظام الذكي</h1>
                         <div className="flex items-center gap-2">
                             <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Analytical Core Control</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">مركز التحكم الذكي</p>
                         </div>
                     </div>
                 </div>
@@ -255,7 +255,7 @@ export default function AdminDashboard() {
                                         {/* Content */}
                                         <div className="absolute bottom-6 right-6 z-10">
                                             <h3 className="text-xl font-bold text-foreground mb-1 group-hover:translate-x-1 transition-transform">{module.title}</h3>
-                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest group-hover:text-primary transition-colors">Open Module</p>
+                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest group-hover:text-primary transition-colors">فتح القسم</p>
                                         </div>
 
                                         {/* Decorative Elements */}
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-xl font-bold text-foreground">الأكثر مبيعاً</h2>
-                            <p className="text-xs text-muted-foreground">Top Performing Products</p>
+                            <p className="text-xs text-muted-foreground">أفضل المنتجات أداءً</p>
                         </div>
                         <Link href="/admin/analytics">
                             <Button variant="outline" size="sm" className="rounded-full h-8 text-xs border-border hover:bg-muted">
