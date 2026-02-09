@@ -207,23 +207,23 @@ export default function AdminSettingsPage() {
     if (!isAuthenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 border border-border">
                     <Lock className="w-8 h-8 text-primary" />
                 </div>
                 <div className="text-center space-y-2">
-                    <h1 className="text-2xl font-bold text-white">منطقة محمية</h1>
-                    <p className="text-slate-400 text-sm">أدخل رمز الحماية الخاص بالإدارة للوصول للاعدادات</p>
+                    <h1 className="text-2xl font-bold text-foreground">منطقة محمية</h1>
+                    <p className="text-muted-foreground text-sm">أدخل رمز الحماية الخاص بالإدارة للوصول للاعدادات</p>
                 </div>
                 <form onSubmit={verifyPin} className="max-w-xs w-full space-y-4">
                     <Input
                         type="password"
                         placeholder="رمز الحماية"
-                        className="bg-black/40 border-white/10 text-center text-lg tracking-widest h-12"
+                        className="bg-background border-border text-center text-lg tracking-widest h-12 text-foreground"
                         value={pin}
                         onChange={(e) => setPin(e.target.value)}
                         autoFocus
                     />
-                    <Button type="submit" className="w-full bg-primary text-black font-bold h-12">
+                    <Button type="submit" className="w-full bg-primary text-primary-foreground font-bold h-12">
                         دخول لصفحة الإعدادات
                     </Button>
                 </form>
@@ -237,16 +237,16 @@ export default function AdminSettingsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="group rounded-2xl bg-white/5 hover:bg-white/10 transition-all">
-                            <ArrowRight className="w-5 h-5 text-white group-hover:-translate-x-1" />
+                        <Button variant="ghost" size="icon" className="group rounded-2xl bg-muted/50 hover:bg-muted transition-all">
+                            <ArrowRight className="w-5 h-5 text-foreground group-hover:-translate-x-1 rotate-180 rtl:rotate-0" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
+                        <h1 className="text-3xl font-black text-foreground flex items-center gap-2">
                             إعدادات المتجر
                             <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full animate-pulse">V2.0 PREMIUM</span>
                         </h1>
-                        <p className="text-[10px] text-slate-500 font-mono mt-1">LAST_SYNC: 2026.01.28.14.50</p>
+                        <p className="text-[10px] text-muted-foreground font-mono mt-1">LAST_SYNC: 2026.01.28.14.50</p>
                     </div>
                 </div>
 
@@ -254,7 +254,7 @@ export default function AdminSettingsPage() {
 
                     <Button
                         onClick={handleSubmit}
-                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-2xl h-12 px-10 shadow-lg shadow-primary/20 transition-all active:translate-y-0.5 font-black uppercase tracking-wider"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-2xl h-12 px-10 shadow-lg shadow-primary/20 transition-all active:translate-y-0.5 font-black uppercase tracking-wider"
                     >
                         <Save className="w-5 h-5" />
                         <span>حفظ الإعدادات</span>
@@ -262,7 +262,7 @@ export default function AdminSettingsPage() {
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 p-2 bg-white/5 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+            <div className="flex flex-wrap items-center gap-3 p-2 bg-card rounded-[2.5rem] border border-border shadow-sm">
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
@@ -272,10 +272,10 @@ export default function AdminSettingsPage() {
                         }}
                         className={cn(
                             "flex items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 relative group",
-                            activeTab === tab.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-white/5"
+                            activeTab === tab.id ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:bg-muted"
                         )}
                     >
-                        <div className={cn("transition-colors duration-300", activeTab === tab.id ? "text-white" : tab.color)}>
+                        <div className={cn("transition-colors duration-300", activeTab === tab.id ? "text-primary-foreground" : tab.color)}>
                             {tab.icon}
                         </div>
                         <span className="text-sm font-bold whitespace-nowrap">{tab.label}</span>
@@ -310,13 +310,13 @@ export default function AdminSettingsPage() {
                                             <Input
                                                 value={formData.aboutTitle}
                                                 onChange={(e) => handleChange("aboutTitle", e.target.value)}
-                                                className="bg-black/20 border-white/10 h-12 rounded-xl"
+                                                className="bg-background border-border h-12 rounded-xl text-foreground"
                                             />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>النص التعريفي</Label>
                                             <textarea
-                                                className="w-full h-32 bg-black/20 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
+                                                className="w-full h-32 bg-background border border-border rounded-xl p-4 text-foreground text-sm focus:ring-1 focus:ring-primary outline-none"
                                                 value={formData.aboutText}
                                                 onChange={(e) => handleChange("aboutText", e.target.value)}
                                             />
@@ -332,7 +332,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.contactPhone}
                                                     onChange={(e) => handleChange("contactPhone", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -340,7 +340,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.contactAddress}
                                                     onChange={(e) => handleChange("contactAddress", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                         </div>
@@ -350,7 +350,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.socialWhatsapp}
                                                     onChange={(e) => handleChange("socialWhatsapp", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -358,7 +358,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.socialTwitter}
                                                     onChange={(e) => handleChange("socialTwitter", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                         </div>
@@ -368,7 +368,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.socialInstagram}
                                                     onChange={(e) => handleChange("socialInstagram", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -376,7 +376,7 @@ export default function AdminSettingsPage() {
                                                 <Input
                                                     value={formData.socialFacebook}
                                                     onChange={(e) => handleChange("socialFacebook", e.target.value)}
-                                                    className="bg-black/20 border-white/10 h-11"
+                                                    className="bg-background border-border h-11 text-foreground"
                                                 />
                                             </div>
                                         </div>
@@ -390,7 +390,7 @@ export default function AdminSettingsPage() {
                                             <Input
                                                 value={formData.footerTerms}
                                                 onChange={(e) => handleChange("footerTerms", e.target.value)}
-                                                className="bg-black/20 border-white/10 h-11"
+                                                className="bg-background border-border h-11 text-foreground"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -398,7 +398,7 @@ export default function AdminSettingsPage() {
                                             <Input
                                                 value={formData.footerPrivacy}
                                                 onChange={(e) => handleChange("footerPrivacy", e.target.value)}
-                                                className="bg-black/20 border-white/10 h-11"
+                                                className="bg-background border-border h-11 text-foreground"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -406,7 +406,7 @@ export default function AdminSettingsPage() {
                                             <Input
                                                 value={formData.footerReturns}
                                                 onChange={(e) => handleChange("footerReturns", e.target.value)}
-                                                className="bg-black/20 border-white/10 h-11"
+                                                className="bg-background border-border h-11 text-foreground"
                                             />
                                         </div>
                                     </div>
@@ -415,17 +415,17 @@ export default function AdminSettingsPage() {
                                 <div className="lg:col-span-2">
                                     <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (الخدمات)">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
+                                            <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
                                                 <div className="flex items-center gap-2 text-primary">
                                                     <Truck className="w-5 h-5" />
-                                                    <h4 className="font-bold">خدمة الشحن</h4>
+                                                    <h4 className="font-bold text-foreground">خدمة الشحن</h4>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>العنوان</Label>
                                                     <Input
                                                         value={formData.shippingTitle}
                                                         onChange={(e) => handleChange("shippingTitle", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -433,22 +433,22 @@ export default function AdminSettingsPage() {
                                                     <Input
                                                         value={formData.shippingDesc}
                                                         onChange={(e) => handleChange("shippingDesc", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-                                                <div className="flex items-center gap-2 text-emerald-400">
+                                            <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
+                                                <div className="flex items-center gap-2 text-emerald-500">
                                                     <ShoppingBag className="w-5 h-5" />
-                                                    <h4 className="font-bold">طريقة الدفع</h4>
+                                                    <h4 className="font-bold text-foreground">طريقة الدفع</h4>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>العنوان</Label>
                                                     <Input
                                                         value={formData.paymentTitle}
                                                         onChange={(e) => handleChange("paymentTitle", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -456,22 +456,22 @@ export default function AdminSettingsPage() {
                                                     <Input
                                                         value={formData.paymentDesc}
                                                         onChange={(e) => handleChange("paymentDesc", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4">
-                                                <div className="flex items-center gap-2 text-blue-400">
+                                            <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
+                                                <div className="flex items-center gap-2 text-blue-500">
                                                     <Phone className="w-5 h-5" />
-                                                    <h4 className="font-bold">والدعم الفني</h4>
+                                                    <h4 className="font-bold text-foreground">والدعم الفني</h4>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>العنوان</Label>
                                                     <Input
                                                         value={formData.supportTitle}
                                                         onChange={(e) => handleChange("supportTitle", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -479,7 +479,7 @@ export default function AdminSettingsPage() {
                                                     <Input
                                                         value={formData.supportDesc}
                                                         onChange={(e) => handleChange("supportDesc", e.target.value)}
-                                                        className="bg-black/40 border-white/10"
+                                                        className="bg-background border-border text-foreground"
                                                     />
                                                 </div>
                                             </div>
@@ -660,7 +660,7 @@ export default function AdminSettingsPage() {
                                                 <select
                                                     value={reportCategory}
                                                     onChange={(e) => setReportCategory(e.target.value)}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                    className="w-full bg-background border border-border rounded-lg h-10 text-xs text-foreground px-2 outline-none"
                                                 >
                                                     <option value="all">الكل</option>
                                                     {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
@@ -671,7 +671,7 @@ export default function AdminSettingsPage() {
                                                 <select
                                                     value={reportSort}
                                                     onChange={(e) => setReportSort(e.target.value as any)}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-lg h-10 text-xs text-white px-2 outline-none"
+                                                    className="w-full bg-background border border-border rounded-lg h-10 text-xs text-foreground px-2 outline-none"
                                                 >
                                                     <option value="newest">الأحدث إضافة</option>
                                                     <option value="oldest">الأقدم إضافة</option>
@@ -775,18 +775,18 @@ export default function AdminSettingsPage() {
                         {activeTab === 'entity' && (
                             <div className="grid grid-cols-1 gap-6">
                                 <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                                    <div className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                         <div className="flex flex-col gap-1">
-                                            <Label className="text-white font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
                                                 إلزام العميل بالاسم ورقم الجوال
                                             </Label>
-                                            <span className="text-[10px] text-slate-400">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                            <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
                                         </div>
                                         <div
                                             onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
-                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-white/10'}`}
+                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-muted'}`}
                                         >
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
+                                            <div className={`absolute top-1 w-5 h-5 bg-background rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
                                         </div>
                                     </div>
                                 </Section>
@@ -807,8 +807,8 @@ export default function AdminSettingsPage() {
                                             { id: 'categories', label: 'شريط الأقسام' },
                                             { id: 'products', label: 'قائمة المنتجات' }
                                         ].map((item) => (
-                                            <div key={item.id} className="bg-black/20 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
-                                                <Label className="text-white font-bold cursor-pointer">{item.label}</Label>
+                                            <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
                                                 <Switch
                                                     checked={storeSettings.hiddenSections?.includes(item.id as any)}
                                                     onCheckedChange={(checked) => {
@@ -843,13 +843,13 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
     onReset: () => void
 }) {
     return (
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5 gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-card rounded-2xl border border-border gap-4 shadow-sm">
             <div className="flex-1">
                 <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-white text-sm">{title}</h4>
+                    <h4 className="font-bold text-foreground text-sm">{title}</h4>
                     {currentSound && <span className="px-2 py-0.5 bg-primary/20 text-primary text-[8px] rounded-full">مخصص ✨</span>}
                 </div>
-                <p className="text-[10px] text-slate-500 mt-0.5">{description}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
             </div>
 
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -858,7 +858,7 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                     variant="ghost"
                     size="icon"
                     onClick={onPlay}
-                    className="h-10 w-10 border border-white/5 hover:bg-white/10 rounded-full"
+                    className="h-10 w-10 border border-border hover:bg-muted rounded-full"
                 >
                     <Volume2 className="w-4 h-4 text-primary" />
                 </Button>
@@ -876,10 +876,10 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                         variant="ghost"
                         size="sm"
                         onClick={() => document.getElementById(`file-${event}`)?.click()}
-                        className="h-10 px-4 border border-white/5 hover:bg-white/10 rounded-full gap-2"
+                        className="h-10 px-4 border border-border hover:bg-muted rounded-full gap-2"
                     >
-                        <Upload className="w-4 h-4 text-slate-400" />
-                        <span className="text-xs text-slate-400">تغيير</span>
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">تغيير</span>
                     </Button>
                 </div>
 
@@ -889,7 +889,7 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
                         variant="ghost"
                         size="icon"
                         onClick={onReset}
-                        className="h-10 w-10 border border-white/5 hover:bg-rose-500/10 rounded-full"
+                        className="h-10 w-10 border border-border hover:bg-rose-500/10 rounded-full"
                     >
                         <RotateCcw className="w-4 h-4 text-rose-400" />
                     </Button>
@@ -907,8 +907,8 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
 
 function Section({ children, icon, title }: { children: React.ReactNode, icon: React.ReactNode, title: string }) {
     return (
-        <div className="glass-card p-6 space-y-6">
-            <div className="flex items-center gap-3 text-primary border-b border-white/5 pb-4">
+        <div className="bg-card glass-card p-6 space-y-6 rounded-2xl border border-border/50 shadow-sm">
+            <div className="flex items-center gap-3 text-primary border-b border-border pb-4">
                 {icon}
                 <h2 className="font-bold">{title}</h2>
             </div>
@@ -930,10 +930,10 @@ function SecuritySettingsPorted() {
                             <span className="text-lg">✨</span>
                         </div>
                         <div>
-                            <Label className="text-white font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
-                            <p className="text-xs text-slate-400 mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
+                            <Label className="text-foreground font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
+                            <p className="text-xs text-muted-foreground mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
                             <div className="flex items-center gap-3">
-                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-slate-500"}`}>
+                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-muted-foreground"}`}>
                                     {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
                                 </span>
                                 <Switch
@@ -948,7 +948,7 @@ function SecuritySettingsPorted() {
 
                 {storeSettings.enableAIChat !== false && (
                     <>
-                        <p className="text-xs text-slate-400 mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
+                        <p className="text-xs text-muted-foreground mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
                         <div className="flex gap-2">
                             <GeminiKeyInput />
                         </div>
@@ -1047,13 +1047,13 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
                     value={keyData.key}
                     onChange={(e) => onChange(e.target.value)}
                     onBlur={onBlur}
-                    className={`bg-black/20 border-white/10 pr-10 font-mono text-xs ${keyData.status === "valid" ? "border-emerald-500/50" : keyData.status === "invalid" ? "border-rose-500/50" : ""}`}
+                    className={`bg-background border-border pr-10 font-mono text-xs text-foreground ${keyData.status === "valid" ? "border-emerald-500/50" : keyData.status === "invalid" ? "border-rose-500/50" : ""}`}
                     placeholder={`Key #${index + 1}`}
                 />
                 <button
                     type="button"
                     onClick={() => setShow(!show)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
                 >
                     {show ? "إخفاء" : "عرض"}
                 </button>
