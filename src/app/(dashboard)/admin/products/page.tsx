@@ -92,7 +92,7 @@ export default function ProductsPage() {
                 "flex items-center gap-2 px-4 py-2 rounded-xl transition-all border",
                 activeTab === id
                     ? `bg-${color}-500/10 text-${color}-400 border-${color}-500/50`
-                    : "bg-white/5 border-transparent text-slate-400 hover:bg-white/10"
+                    : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
             )}
         >
             <Icon className="w-4 h-4" />
@@ -109,13 +109,13 @@ export default function ProductsPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                            <ArrowRight className="w-5 h-5 text-white" />
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                            <ArrowRight className="w-5 h-5 text-foreground" />
                         </Button>
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold">إدارة الأصناف</h1>
-                        <p className="text-slate-400 text-xs">مركز التحكم الموحد بالمنتجات والعروض</p>
+                        <p className="text-muted-foreground text-xs">مركز التحكم الموحد بالمنتجات والعروض</p>
                     </div>
                 </div>
 
@@ -132,8 +132,8 @@ export default function ProductsPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-blue-500">
                     <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">إجمالي المنتجات</p>
-                        <p className="text-2xl font-black text-white">{allProducts.filter(p => !p.isDraft).length}</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">إجمالي المنتجات</p>
+                        <p className="text-2xl font-black text-foreground">{allProducts.filter(p => !p.isDraft).length}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
                         <Package className="w-5 h-5" />
@@ -141,7 +141,7 @@ export default function ProductsPage() {
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-green-500">
                     <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">العروض النشطة</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">العروض النشطة</p>
                         <p className="text-2xl font-black text-green-400">{activeOffers.length}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
@@ -150,7 +150,7 @@ export default function ProductsPage() {
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-orange-500">
                     <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">عروض منتهية</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">عروض منتهية</p>
                         <p className="text-2xl font-black text-orange-400">{expiredOffers.length}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
@@ -159,7 +159,7 @@ export default function ProductsPage() {
                 </div>
                 <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-purple-500">
                     <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">المسودة</p>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase">المسودة</p>
                         <p className="text-2xl font-black text-purple-400">{draftProducts.length}</p>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
@@ -169,7 +169,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Smart Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-white/5">
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-border">
                 <TabButton id="all" label="الكل" icon={Package} count={allProducts.filter(p => !p.isDraft).length} color="blue" />
                 <TabButton id="offers" label="العروض النشطة" icon={Zap} count={activeOffers.length} color="green" />
                 <TabButton id="frozen" label="عروض منتهية" icon={History} count={expiredOffers.length} color="orange" />
@@ -178,10 +178,10 @@ export default function ProductsPage() {
 
             {/* Search & Filter */}
             <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                 <Input
                     placeholder="بحث بالاسم أو الباركود..."
-                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl"
+                    className="bg-background border-border pr-10 text-right h-12 rounded-xl"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -194,7 +194,7 @@ export default function ProductsPage() {
                         onClick={() => setSelectedCategory("الكل")}
                         className={cn(
                             "aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border relative overflow-hidden group",
-                            selectedCategory === "الكل" ? "bg-primary text-white border-primary" : "bg-white/5 border-white/10 text-slate-400"
+                            selectedCategory === "الكل" ? "bg-primary text-white border-primary" : "bg-muted/50 border-border text-muted-foreground"
                         )}
                     >
                         <Package className="w-5 h-5" />
@@ -207,7 +207,7 @@ export default function ProductsPage() {
                             onClick={() => setSelectedCategory(category.nameAr)}
                             className={cn(
                                 "aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border relative overflow-hidden group p-2",
-                                selectedCategory === category.nameAr ? "bg-primary text-white border-primary" : "bg-white/5 border-white/10 text-slate-400"
+                                selectedCategory === category.nameAr ? "bg-primary text-white border-primary" : "bg-muted/50 border-border text-muted-foreground"
                             )}
                         >
                             <span className="text-xs font-bold relative z-10 truncate w-full px-1">{category.nameAr}</span>
@@ -219,13 +219,13 @@ export default function ProductsPage() {
             {/* Products List */}
             <div className="space-y-3">
                 {filteredProducts.length === 0 ? (
-                    <div className="p-10 text-center text-slate-400 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                    <div className="p-10 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/20">
                         <Package className="w-10 h-10 mx-auto mb-4 opacity-20" />
                         {activeTab === 'drafts' ? "لا توجد مسودات محفوظة" : "لا توجد منتجات تطابق بحثك"}
                     </div>
                 ) : (
                     filteredProducts.map((product: Product) => (
-                        <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-white/[0.03] transition-colors relative overflow-hidden">
+                        <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-muted/50 transition-colors relative overflow-hidden text-foreground">
                             {/* Badges */}
                             {product.isDraft && <div className="absolute top-2 left-2 bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full font-bold">مسودة</div>}
                             {product.discountEndDate && new Date(product.discountEndDate) > new Date() && !product.isDraft && (
@@ -234,7 +234,7 @@ export default function ProductsPage() {
                                 </div>
                             )}
 
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-white/10 shrink-0">
+                            <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-border shrink-0">
                                 {product.image ? (
                                     <div className="relative w-full h-full">
                                         <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
@@ -245,17 +245,17 @@ export default function ProductsPage() {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-white mb-1 truncate">{product.name}</h3>
+                                <h3 className="font-bold text-foreground mb-1 truncate">{product.name}</h3>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-mono">{product.barcode || "---"}</span>
-                                    <span className="text-[10px] text-slate-500 bg-primary/10 px-2 py-0.5 rounded-full text-primary font-bold">{product.unit}</span>
+                                    <span className="text-[10px] bg-muted/50 px-2 py-0.5 rounded-full text-muted-foreground font-mono">{product.barcode || "---"}</span>
+                                    <span className="text-[10px] text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full text-primary font-bold">{product.unit}</span>
                                 </div>
                             </div>
 
                             <div className="flex gap-6 items-center px-4">
                                 {/* 1. Cost Price (Internal) - Hidden on mobile */}
-                                <div className="hidden md:block text-right space-y-0.5 border-r border-white/5 pr-6 pl-2 relative">
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">التكلفة</p>
+                                <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 pl-2 relative">
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">التكلفة</p>
                                     <div className="flex flex-col items-end">
                                         <span className="text-lg font-bold text-amber-500 leading-none">
                                             {product.costPrice || 0} <small className="text-[10px] mr-0.5">ر.س</small>
@@ -266,8 +266,8 @@ export default function ProductsPage() {
                                 </div>
 
                                 {/* 2. Previous Price (Was) - Hidden on mobile */}
-                                <div className="hidden md:block text-right space-y-0.5 border-r border-white/5 pr-6 min-w-[60px]">
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">سابقاً</p>
+                                <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 min-w-[60px]">
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">سابقاً</p>
                                     <div className="flex flex-col items-end justify-center h-7">
                                         {product.oldPricePiece ? (
                                             <span className="text-sm text-red-500 line-through opacity-60 font-medium">
@@ -280,10 +280,10 @@ export default function ProductsPage() {
                                 </div>
 
                                 {/* 3. Current Price (Now) - Always Visible */}
-                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6">
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">حالياً</p>
+                                <div className="text-right space-y-0.5 border-r border-border pr-6">
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">حالياً</p>
                                     <div className="flex flex-col items-end">
-                                        <span className={cn("text-lg font-bold leading-none", product.oldPricePiece ? "text-green-500" : "text-white")}>
+                                        <span className={cn("text-lg font-bold leading-none", product.oldPricePiece ? "text-green-500" : "text-foreground")}>
                                             {product.pricePiece} <small className="text-[10px] mr-0.5">ر.س</small>
                                         </span>
                                     </div>
@@ -291,14 +291,14 @@ export default function ProductsPage() {
 
                                 {/* 4. Dozen Price - Hidden on mobile */}
                                 <div className="hidden md:block text-right space-y-0.5 min-w-[80px]">
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">الدرزن</p>
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">الدرزن</p>
                                     <div className="flex flex-col items-end">
                                         {product.priceDozen ? (
-                                            <span className="text-lg font-bold text-slate-400 leading-none">
+                                            <span className="text-lg font-bold text-muted-foreground leading-none">
                                                 {product.priceDozen} <small className="text-[10px] mr-0.5">ر.س</small>
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-slate-600 italic">غير محدد</span>
+                                            <span className="text-xs text-muted-foreground italic">غير محدد</span>
                                         )}
                                     </div>
                                 </div>
