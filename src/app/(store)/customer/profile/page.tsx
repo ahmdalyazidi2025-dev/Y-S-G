@@ -51,8 +51,8 @@ export default function ProfilePage() {
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
                 <Link href="/customer">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                        <ArrowRight className="w-5 h-5 text-foreground transform rtl:rotate-180" />
                     </Button>
                 </Link>
                 <div className="flex-1">

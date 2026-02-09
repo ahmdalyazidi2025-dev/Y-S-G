@@ -138,8 +138,8 @@ export default function CustomersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white">
-                            <ArrowRight className="w-5 h-5" />
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted text-foreground">
+                            <ArrowRight className="w-5 h-5 transform rtl:rotate-180" />
                         </Button>
                     </Link>
                     <h1 className="text-2xl font-bold">إدارة العملاء</h1>
