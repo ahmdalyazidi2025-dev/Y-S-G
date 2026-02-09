@@ -92,11 +92,11 @@ export default function AdminChatPage() {
             <div className="flex items-center gap-4">
                 {/* ... existing header ... */}
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted text-foreground">
+                        <ArrowRight className="w-5 h-5 rotate-180 rtl:rotate-0 transform" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">
+                <h1 className="text-2xl font-bold flex-1 text-foreground">
                     {selectedCustomer ? `دردشة: ${currentCustomerName}` : "الدردشة والإشعارات"}
                 </h1>
                 {selectedCustomer && (
@@ -171,11 +171,13 @@ export default function AdminChatPage() {
                         ) : (
                             activeChatMessages.map((m) => (
                                 <div key={m.id} className={cn(
-                                    "max-w-[80%] p-3 rounded-2xl text-xs space-y-1",
-                                    m.isAdmin ? "bg-primary text-white self-end rounded-br-none" : "bg-white/10 text-slate-200 self-start rounded-bl-none"
+                                    "max-w-[80%] p-3 rounded-2xl text-xs space-y-1 shadow-sm",
+                                    m.isAdmin
+                                        ? "bg-primary text-primary-foreground self-end rounded-br-none shadow-primary/10"
+                                        : "bg-secondary text-foreground self-start rounded-bl-none"
                                 )}>
                                     <p>{m.isAdmin ? m.text.replace(`(@${selectedCustomer})`, "").trim() : m.text}</p>
-                                    <p className="text-[8px] opacity-50 text-left">{format(m.createdAt, "hh:mm a", { locale: ar })}</p>
+                                    <p className="text-[8px] opacity-70 text-left">{format(m.createdAt, "hh:mm a", { locale: ar })}</p>
                                 </div>
                             ))
                         )}
@@ -183,11 +185,11 @@ export default function AdminChatPage() {
                 ) : (
                     <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
                         {/* Search Input */}
-                        <div className="p-4 pb-2 sticky top-0 bg-[#0f172a]/95 backdrop-blur z-10">
+                        <div className="p-4 pb-2 sticky top-0 bg-background/95 backdrop-blur z-10 supports-[backdrop-filter]:bg-background/60">
                             <div className="relative">
-                                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    className="bg-white/5 border-white/10 rounded-xl pr-10 text-right h-10 w-full focus:bg-white/10 transition-colors"
+                                    className="bg-secondary/50 border-transparent focus:bg-background focus:border-primary/50 rounded-xl pr-10 text-right h-10 w-full transition-all"
                                     placeholder="بحث عن عميل..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -196,7 +198,7 @@ export default function AdminChatPage() {
                         </div>
 
                         {conversations.length === 0 ? (
-                            <div className="flex-1 flex items-center justify-center text-slate-500 text-xs py-10">
+                            <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs py-10">
                                 {searchQuery ? "لا يوجد عملاء بهذا الاسم" : "لا توجد محادثات"}
                             </div>
                         ) : (
@@ -205,28 +207,28 @@ export default function AdminChatPage() {
                                     key={conv.customerId}
                                     onClick={() => setSelectedCustomer(conv.customerId)}
                                     // ... existing conversation card
-                                    className="p-4 border-b border-white/5 flex items-center gap-4 hover:bg-white/5 cursor-pointer transition-colors active:bg-white/10 w-full"
+                                    className="p-4 border-b border-border/50 flex items-center gap-4 hover:bg-accent/50 cursor-pointer transition-colors active:bg-accent w-full group"
                                 >
-                                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-slate-400 relative">
+                                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-muted-foreground relative group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                         <User className="w-6 h-6" />
                                         {conv.unreadCount > 0 && (
-                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
+                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background shadow-sm">
                                                 {conv.unreadCount}
                                             </span>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0 space-y-1">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="font-bold text-sm text-white truncate">{conv.customerName}</h4>
+                                            <h4 className="font-bold text-sm text-foreground truncate">{conv.customerName}</h4>
                                             {conv.lastMessageDate && (
-                                                <span className="text-[10px] text-slate-500">{format(conv.lastMessageDate, "hh:mm a", { locale: ar })}</span>
+                                                <span className="text-[10px] text-muted-foreground">{format(conv.lastMessageDate, "hh:mm a", { locale: ar })}</span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-400 truncate">
+                                        <p className="text-xs text-muted-foreground truncate group-hover:text-foreground/80 transition-colors">
                                             {conv.lastMessage || "ابدأ الدردشة الآن..."}
                                         </p>
                                     </div>
-                                    <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                    <ChevronLeft className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors rtl:rotate-180" />
                                 </div>
                             ))
                         )}
@@ -234,11 +236,11 @@ export default function AdminChatPage() {
                 )}
 
                 {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
-                    <div className="flex flex-col gap-2 bg-[#1c2a36] p-3 rounded-2xl border border-white/10">
+                    <div className="flex flex-col gap-2 bg-background p-3 rounded-2xl border border-border shadow-sm m-2">
                         {mode === "broadcast" && (
                             <Input
                                 placeholder="عنوان الإشعار..."
-                                className="bg-black/20 border-white/5 rounded-xl h-10 mb-1"
+                                className="bg-secondary/50 border-transparent rounded-xl h-10 mb-1 focus:bg-background focus:border-primary/50"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                             />
@@ -246,7 +248,7 @@ export default function AdminChatPage() {
                         <div className="flex gap-2">
                             <Input
                                 placeholder={mode === "broadcast" ? "نص الإشعار..." : "اكتب رسالتك..."}
-                                className="bg-black/20 border-white/5 rounded-xl h-12"
+                                className="bg-secondary/50 border-transparent rounded-xl h-12 focus:bg-background focus:border-primary/50"
                                 value={msg}
                                 onChange={(e) => setMsg(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -254,14 +256,14 @@ export default function AdminChatPage() {
                             <Button
                                 size="icon"
                                 className={cn(
-                                    "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all border border-white/10 shadow-lg",
-                                    mode === "broadcast" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" :
-                                        mode === "global_chat" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20" :
-                                            "bg-primary hover:bg-primary/90 shadow-primary/20"
+                                    "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all shadow-md",
+                                    mode === "broadcast" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20 text-white" :
+                                        mode === "global_chat" ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20 text-white" :
+                                            "bg-primary hover:bg-primary/90 shadow-primary/20 text-primary-foreground"
                                 )}
                                 onClick={handleSend}
                             >
-                                <Send className="w-5 h-5 text-white" />
+                                <Send className="w-5 h-5" />
                             </Button>
                         </div>
                     </div>
