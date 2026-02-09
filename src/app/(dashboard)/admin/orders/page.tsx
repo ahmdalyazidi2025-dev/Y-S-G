@@ -16,15 +16,13 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { WheelPicker } from "@/components/shared/wheel-picker"
 
 
-const STATUS_CONFIG = {
-    pending: { label: "تم رفع طلبك", color: "text-slate-400", bg: "bg-slate-500/10", icon: Clock },
-    processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
-    shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
-    delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
-    canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
-    accepted: { label: "تم القبول", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: CheckCircle2 },
-    rejected: { label: "مرفوض", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
-}
+pending: { label: "تم رفع طلبك", color: "text-muted-foreground", bg: "bg-muted", icon: Clock },
+processing: { label: "جاري العمل", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", icon: Package },
+shipped: { label: "تم الشحن", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10", icon: Truck },
+delivered: { label: "تم التسليم", color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", icon: CheckCircle2 },
+canceled: { label: "ملغاة", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
+accepted: { label: "تم القبول", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: CheckCircle2 },
+rejected: { label: "مرفوض", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
 
 export default function AdminOrdersPage() {
     const { orders, updateOrderStatus, customers, storeSettings } = useStore()
@@ -104,18 +102,21 @@ export default function AdminOrdersPage() {
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                        <ArrowRight className="w-5 h-5 text-foreground" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">متابعة الطلبات</h1>
+                <div className="flex-1">
+                    <h1 className="text-2xl font-black text-foreground">متابعة الطلبات</h1>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Order Management</p>
+                </div>
             </div>
 
             <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                 <Input
                     placeholder="ابحث باسم العميل..."
-                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl"
+                    className="bg-background border-border pr-10 text-right h-12 rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary/50"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -123,40 +124,40 @@ export default function AdminOrdersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div className="relative">
-                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
                     <select
                         value={regionFilter}
                         onChange={(e) => setRegionFilter(e.target.value)}
-                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
+                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
                     >
-                        <option value="all" className="text-black">كل المناطق</option>
-                        {regions.map(r => <option key={r} value={r} className="text-black">{r}</option>)}
+                        <option value="all" className="bg-background text-foreground">كل المناطق</option>
+                        {regions.map(r => <option key={r} value={r} className="bg-background text-foreground">{r}</option>)}
                     </select>
                 </div>
                 <div className="relative">
-                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
                     <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value as any)}
-                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
+                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
                     >
-                        <option value="all" className="text-black">كل الأوقات</option>
-                        <option value="today" className="text-black">اليوم</option>
-                        <option value="week" className="text-black">هذا الأسبوع</option>
-                        <option value="month" className="text-black">هذا الشهر</option>
-                        <option value="year" className="text-black">هذا العام</option>
-                        <option value="custom" className="text-black">فترة مخصصة</option>
+                        <option value="all" className="bg-background text-foreground">كل الأوقات</option>
+                        <option value="today" className="bg-background text-foreground">اليوم</option>
+                        <option value="week" className="bg-background text-foreground">هذا الأسبوع</option>
+                        <option value="month" className="bg-background text-foreground">هذا الشهر</option>
+                        <option value="year" className="bg-background text-foreground">هذا العام</option>
+                        <option value="custom" className="bg-background text-foreground">فترة مخصصة</option>
                     </select>
                 </div>
                 <div className="relative">
-                    <User className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                    <User className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
                     <select
                         value={selectedCustomer}
                         onChange={(e) => setSelectedCustomer(e.target.value)}
-                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-white"
+                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
                     >
-                        <option value="all" className="text-black">كل العملاء</option>
-                        {customers.map(c => <option key={c.id} value={c.id} className="text-black">{c.name}</option>)}
+                        <option value="all" className="bg-background text-foreground">كل العملاء</option>
+                        {customers.map(c => <option key={c.id} value={c.id} className="bg-background text-foreground">{c.name}</option>)}
                     </select>
                 </div>
                 {dateRange === "custom" && (
@@ -197,14 +198,14 @@ export default function AdminOrdersPage() {
                 )}
             </div>
 
-            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+            <div className="flex bg-muted p-1 rounded-2xl border border-border">
                 {(Object.entries(categories) as [keyof typeof categories, string][]).map(([id, label]) => (
                     <button
                         key={id}
                         onClick={() => setActiveCategory(id)}
                         className={cn(
                             "flex-1 py-2 text-[10px] font-bold rounded-xl transition-all",
-                            activeCategory === id ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+                            activeCategory === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         {label}
@@ -221,10 +222,10 @@ export default function AdminOrdersPage() {
                             hapticFeedback('light')
                         }}
                         className={cn(
-                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap",
+                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border border-transparent",
                             filter === s
-                                ? "bg-primary text-white"
-                                : "bg-white/5 text-slate-400 hover:bg-white/10"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80 border-border"
                         )}
                     >
                         {s === "all" ? "الكل" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG].label}
@@ -234,7 +235,7 @@ export default function AdminOrdersPage() {
 
             <div className="space-y-3">
                 {filteredOrders.length === 0 ? (
-                    <div className="p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                    <div className="p-20 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/10">
                         لا توجد طلبات في هذا التصنيف
                     </div>
                 ) : (
@@ -243,7 +244,7 @@ export default function AdminOrdersPage() {
                         return (
                             <div
                                 key={order.id}
-                                className="glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                                className="glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group"
                                 onClick={() => setSelectedOrder(order)}
                             >
                                 <div className="flex items-center gap-4">
@@ -251,16 +252,16 @@ export default function AdminOrdersPage() {
                                         <status.icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <h3 className="font-bold text-white text-sm">#{order.id} - {order.customerName}</h3>
-                                        <p className="text-[10px] text-slate-500">{order.createdAt.toLocaleString('ar-SA')}</p>
+                                        <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">#{order.id} - {order.customerName}</h3>
+                                        <p className="text-[10px] text-muted-foreground">{order.createdAt.toLocaleString('ar-SA')}</p>
                                     </div>
                                 </div>
                                 <div className="text-left flex items-center gap-4">
                                     <div className="space-y-0.5">
-                                        <p className="text-xs font-bold text-white">{order.total.toFixed(2)} ر.س</p>
-                                        <p className="text-[10px] text-slate-500">{order.items.length} منتجات</p>
+                                        <p className="text-xs font-bold text-foreground">{order.total.toFixed(2)} ر.س</p>
+                                        <p className="text-[10px] text-muted-foreground">{order.items.length} منتجات</p>
                                     </div>
-                                    <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                    <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:-translate-x-1 transition-transform" />
                                 </div>
                             </div>
                         )
@@ -283,9 +284,9 @@ export default function AdminOrdersPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto"
+                            className="glass-card w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto border border-border"
                         >
-                            <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                            <div className="flex items-center justify-between mb-8 border-b border-border pb-4">
                                 <div className="flex items-center gap-3 flex-1">
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
@@ -340,37 +341,37 @@ export default function AdminOrdersPage() {
 
                             <div className="grid grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-slate-400 text-xs">
+                                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <p className="font-bold text-white text-sm">{selectedOrder.customerName}</p>
+                                    <p className="font-bold text-foreground text-sm">{selectedOrder.customerName}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-slate-400 text-xs">
+                                    <div className="flex items-center gap-2 text-muted-foreground text-xs">
                                         <Calendar className="w-3 h-3" />
                                         التاريخ
                                     </div>
-                                    <p className="font-bold text-white text-sm">{selectedOrder.createdAt.toLocaleString('ar-SA')}</p>
+                                    <p className="font-bold text-foreground text-sm">{selectedOrder.createdAt.toLocaleString('ar-SA')}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-3 mb-8">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase">قائمة المنتجات</h4>
+                                <h4 className="text-xs font-bold text-muted-foreground uppercase">قائمة المنتجات</h4>
                                 {selectedOrder.items.map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-muted/20 rounded-xl border border-border">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-black/40 rounded flex items-center justify-center text-xs">📦</div>
+                                            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs">📦</div>
                                             <div>
-                                                <p className="text-sm font-bold text-white">{item.name}</p>
-                                                <p className="text-[10px] text-slate-500">{item.quantity} x {item.price} ر.س</p>
+                                                <p className="text-sm font-bold text-foreground">{item.name}</p>
+                                                <p className="text-[10px] text-muted-foreground">{item.quantity} x {item.price} ر.س</p>
                                             </div>
                                         </div>
                                         <p className="text-sm font-bold text-primary">{(item.quantity * item.price).toFixed(2)} ر.س</p>
                                     </div>
                                 ))}
                                 <div className="flex justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
-                                    <div className="flex items-center gap-2 font-bold text-white">
+                                    <div className="flex items-center gap-2 font-bold text-foreground">
                                         <CreditCard className="w-4 h-4 text-primary" />
                                         الإجمالي
                                     </div>
