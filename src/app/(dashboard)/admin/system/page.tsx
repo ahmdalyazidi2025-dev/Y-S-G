@@ -39,16 +39,16 @@ export default function SystemMonitorPage() {
         <div className="space-y-6 pb-20 max-w-6xl mx-auto">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted text-foreground">
+                        <ArrowRight className="w-5 h-5 rotate-180 rtl:rotate-0 transform" />
                     </Button>
                 </Link>
                 <div className="flex-1">
-                    <h1 className="text-2xl font-black text-white">حالة النظام والموارد</h1>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">System Health & Billing</p>
+                    <h1 className="text-2xl font-black text-foreground">حالة النظام والموارد</h1>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">System Health & Billing</p>
                 </div>
                 <Link href="https://console.firebase.google.com/u/0/project/y-s-g-7c463/usage/details" target="_blank">
-                    <Button className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-xl">
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl">
                         <ExternalLink className="w-4 h-4" />
                         <span>إدارة الاشتراك (Google)</span>
                     </Button>
@@ -57,27 +57,27 @@ export default function SystemMonitorPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Database Usage */}
-                <Card className="glass-card border-white/5 relative overflow-hidden">
+                <Card className="glass-card border-border/50 shadow-sm relative overflow-hidden bg-card">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <Database className="w-32 h-32" />
+                        <Database className="w-32 h-32 text-foreground" />
                     </div>
                     <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
-                            <Database className="w-5 h-5 text-blue-400" />
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                            <Database className="w-5 h-5 text-blue-500" />
                             <span>قاعدة البيانات (Firestore)</span>
                         </CardTitle>
-                        <CardDescription>مساحة النصوص والبيانات المجانية: 1 جيجا (1000 ميجا)</CardDescription>
+                        <CardDescription className="text-muted-foreground">مساحة النصوص والبيانات المجانية: 1 جيجا (1000 ميجا)</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-end gap-2">
-                            <span className="text-4xl font-black text-white">
+                            <span className="text-4xl font-black text-foreground">
                                 {stats.db.usedMB.toFixed(3)}
                             </span>
-                            <span className="text-sm text-slate-400 mb-1">/ 1000 ميجا</span>
+                            <span className="text-sm text-muted-foreground mb-1">/ 1000 ميجا</span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="h-4 bg-black/20 rounded-full overflow-hidden border border-white/5">
+                        <div className="h-4 bg-secondary rounded-full overflow-hidden border border-border/50">
                             <div
                                 className={`h-full transition-all duration-1000 ${stats.db.percentage > 80 ? 'bg-red-500' : 'bg-blue-500'}`}
                                 style={{ width: `${Math.max(stats.db.percentage, 1)}%` }}
@@ -86,12 +86,12 @@ export default function SystemMonitorPage() {
 
                         <div className="flex items-center gap-2 text-xs">
                             {stats.db.percentage > 80 ? (
-                                <span className="text-red-400 flex items-center gap-1 font-bold">
+                                <span className="text-red-500 flex items-center gap-1 font-bold">
                                     <AlertTriangle className="w-3 h-3" />
                                     اقتربت من الحد المسموح!
                                 </span>
                             ) : (
-                                <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                                <span className="text-emerald-500 flex items-center gap-1 font-bold">
                                     <CheckCircle2 className="w-3 h-3" />
                                     أنت في المنطقة الآمنة
                                 </span>
@@ -101,34 +101,34 @@ export default function SystemMonitorPage() {
                 </Card>
 
                 {/* Storage Usage */}
-                <Card className="glass-card border-white/5 relative overflow-hidden">
+                <Card className="glass-card border-border/50 shadow-sm relative overflow-hidden bg-card">
                     <div className="absolute top-0 right-0 p-4 opacity-5">
-                        <HardDrive className="w-32 h-32" />
+                        <HardDrive className="w-32 h-32 text-foreground" />
                     </div>
                     <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
-                            <HardDrive className="w-5 h-5 text-orange-400" />
+                        <CardTitle className="text-foreground flex items-center gap-2">
+                            <HardDrive className="w-5 h-5 text-orange-500" />
                             <span>مساحة التخزين (Storage)</span>
                         </CardTitle>
-                        <CardDescription>مساحة الصور والملفات المجانية: 5 جيجا (5000 ميجا)</CardDescription>
+                        <CardDescription className="text-muted-foreground">مساحة الصور والملفات المجانية: 5 جيجا (5000 ميجا)</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-end gap-2">
-                            <span className="text-4xl font-black text-white">
+                            <span className="text-4xl font-black text-foreground">
                                 {stats.storage.usedMB.toFixed(2)}
                             </span>
-                            <span className="text-sm text-slate-400 mb-1">/ 5000 ميجا</span>
+                            <span className="text-sm text-muted-foreground mb-1">/ 5000 ميجا</span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="h-4 bg-black/20 rounded-full overflow-hidden border border-white/5">
+                        <div className="h-4 bg-secondary rounded-full overflow-hidden border border-border/50">
                             <div
                                 className={`h-full transition-all duration-1000 ${stats.storage.percentage > 80 ? 'bg-red-500' : 'bg-orange-500'}`}
                                 style={{ width: `${Math.max(stats.storage.percentage, 1)}%` }}
                             />
                         </div>
 
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-muted-foreground">
                             تم تقدير المساحة بناءً على {stats.storage.imageCount} صورة (متوسط 250kb للصورة)
                         </div>
                     </CardContent>
@@ -137,10 +137,10 @@ export default function SystemMonitorPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Breakdown Chart */}
-                <Card className="glass-card border-white/5 lg:col-span-2">
+                <Card className="glass-card border-border/50 shadow-sm lg:col-span-2 bg-card">
                     <CardHeader>
-                        <CardTitle className="text-white">توزيع البيانات</CardTitle>
-                        <CardDescription>أكثر العناصر استهلاكاً لقاعدة البيانات</CardDescription>
+                        <CardTitle className="text-foreground">توزيع البيانات</CardTitle>
+                        <CardDescription className="text-muted-foreground">أكثر العناصر استهلاكاً لقاعدة البيانات</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -159,9 +159,9 @@ export default function SystemMonitorPage() {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1c2a36', border: 'none', borderRadius: '8px' }}
+                                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--foreground))' }}
                                     formatter={(value: any) => formatBytes(value)}
-                                    itemStyle={{ color: '#fff' }}
+                                    itemStyle={{ color: 'hsl(var(--foreground))' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
@@ -169,16 +169,16 @@ export default function SystemMonitorPage() {
                 </Card>
 
                 {/* Legend / Details */}
-                <Card className="glass-card border-white/5">
+                <Card className="glass-card border-border/50 shadow-sm bg-card">
                     <CardHeader>
-                        <CardTitle className="text-white">تفاصيل</CardTitle>
+                        <CardTitle className="text-foreground">تفاصيل</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {dbData.slice(0, 6).map((entry, index) => (
                             <div key={entry.name} className="flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                    <span className="text-slate-300 capitalize">
+                                    <span className="text-foreground capitalize">
                                         {entry.name === 'products' ? 'المنتجات' :
                                             entry.name === 'orders' ? 'الطلبات' :
                                                 entry.name === 'customers' ? 'العملاء' :
@@ -189,7 +189,7 @@ export default function SystemMonitorPage() {
                                                                     entry.name}
                                     </span>
                                 </div>
-                                <span className="font-mono text-slate-500">{formatBytes(entry.value)}</span>
+                                <span className="font-mono text-muted-foreground">{formatBytes(entry.value)}</span>
                             </div>
                         ))}
                     </CardContent>
@@ -197,21 +197,21 @@ export default function SystemMonitorPage() {
             </div>
 
             {/* Notification Debug */}
-            <Card className="glass-card border-white/5 relative overflow-hidden">
+            <Card className="glass-card border-border/50 shadow-sm relative overflow-hidden bg-card">
                 <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                        <RefreshCw className="w-5 h-5 text-emerald-400" />
+                    <CardTitle className="text-foreground flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5 text-emerald-500" />
                         <span>تحديث النظام</span>
                     </CardTitle>
-                    <CardDescription>تحديث ملفات الموقع للحصول على آخر النسخ</CardDescription>
+                    <CardDescription className="text-muted-foreground">تحديث ملفات الموقع للحصول على آخر النسخ</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button
                         onClick={forceUpdateSW}
-                        className="bg-white/5 hover:bg-white/10 text-white border-white/10 gap-2 h-16 rounded-2xl w-full"
+                        className="bg-secondary/50 hover:bg-secondary text-foreground border-border/50 gap-2 h-16 rounded-2xl w-full"
                     >
                         <div className="flex flex-col items-center">
-                            <RefreshCw className="w-4 h-4 text-emerald-400" />
+                            <RefreshCw className="w-4 h-4 text-emerald-500" />
                             <span className="text-xs mt-1">تحديث ملفات الموقع (V11)</span>
                         </div>
                     </Button>
@@ -220,10 +220,10 @@ export default function SystemMonitorPage() {
 
             {/* Disclaimer */}
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-4 items-start">
-                <InfoIcon className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+                <InfoIcon className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
                 <div className="space-y-1">
-                    <h4 className="font-bold text-blue-400">ملاحظة هامة</h4>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <h4 className="font-bold text-blue-500">ملاحظة هامة</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                         هذه الأرقام هي تقديرات تقريبية بناءً على البيانات المحملة في المتصفح. لمعرفة الاستهلاك الفعلي بدقة 100% وإدارة الفواتير، يرجى زيارة لوحة تحكم Google Firebase الرسمية عبر الزر في الأعلى.
                     </p>
                 </div>
