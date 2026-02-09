@@ -236,6 +236,12 @@ body {
     width: 100%;
 }
 
+/* Global Selection Color */
+::selection {
+  background: hsl(var(--primary) / 0.3);
+  color: hsl(var(--foreground)); /* Or keeping text color natural if preferred */
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
