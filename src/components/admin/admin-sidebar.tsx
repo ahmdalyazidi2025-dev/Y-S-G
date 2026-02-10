@@ -87,6 +87,11 @@ export function AdminSidebar() {
                 </div>
             </div>
 
+            {/* Theme Toggle - High Visibility */}
+            <div className="px-4 flex justify-center pb-4 border-b border-border/50">
+                <ThemeToggle />
+            </div>
+
             {/* Navigation */}
             <nav className="flex-1 space-y-2">
                 <p className="px-4 text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-4">Management</p>
@@ -144,9 +149,6 @@ export function AdminSidebar() {
                         <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
                     </div>
                 )}
-                <div className="px-4 flex justify-center">
-                    <ThemeToggle />
-                </div>
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors group"
@@ -175,40 +177,47 @@ export function AdminMobileNav() {
     ]
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-border z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
-            {BOTTOM_ITEMS.filter(item => {
-                if (!currentUser) return false
-                if (currentUser.role === "admin") return true
-                if (item.href === "/admin") return true
-                const perms: Record<string, string> = {
-                    "/admin/products": "products",
-                    "/admin/offers": "products",
-                    "/admin/customers": "customers",
-                    "/admin/orders": "orders",
-                    "/admin/chat": "chat",
+        <>
+            {/* Mobile Theme Toggle (Floating above nav) */}
+            <div className="fixed bottom-20 left-4 z-[60] lg:hidden">
+                <ThemeToggle className="shadow-lg border-primary/20" />
+            </div>
 
-                    "/admin/settings": "settings",
-                }
-                return currentUser.permissions?.includes(perms[item.href])
-            }).map((item) => {
-                const isActive = pathname === item.href
-                return (
-                    <Link key={item.href} href={item.href} className="flex-1">
-                        <div className={cn(
-                            "flex flex-col items-center justify-center gap-1 transition-all",
-                            isActive ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
-                        )}>
+            <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-border z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
+                {BOTTOM_ITEMS.filter(item => {
+                    if (!currentUser) return false
+                    if (currentUser.role === "admin") return true
+                    if (item.href === "/admin") return true
+                    const perms: Record<string, string> = {
+                        "/admin/products": "products",
+                        "/admin/offers": "products",
+                        "/admin/customers": "customers",
+                        "/admin/orders": "orders",
+                        "/admin/chat": "chat",
+
+                        "/admin/settings": "settings",
+                    }
+                    return currentUser.permissions?.includes(perms[item.href])
+                }).map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                        <Link key={item.href} href={item.href} className="flex-1">
                             <div className={cn(
-                                "p-1.5 rounded-xl transition-all",
-                                isActive ? "bg-primary/10 shadow-[0_0_15px_rgba(59,130,246,0.3)]" : "bg-transparent"
+                                "flex flex-col items-center justify-center gap-1 transition-all",
+                                isActive ? "text-primary scale-110" : "text-muted-foreground hover:text-foreground"
                             )}>
-                                <item.icon className="w-5 h-5" />
+                                <div className={cn(
+                                    "p-1.5 rounded-xl transition-all",
+                                    isActive ? "bg-primary/10 shadow-[0_0_15px_rgba(59,130,246,0.3)]" : "bg-transparent"
+                                )}>
+                                    <item.icon className="w-5 h-5" />
+                                </div>
+                                <span className="text-[10px] font-bold">{item.title}</span>
                             </div>
-                            <span className="text-[10px] font-bold">{item.title}</span>
-                        </div>
-                    </Link>
-                )
-            })}
-        </nav>
+                        </Link>
+                    )
+                })}
+            </nav>
+        </>
     )
 }
