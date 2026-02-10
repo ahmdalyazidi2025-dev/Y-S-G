@@ -79,7 +79,7 @@ export function CouponManager() {
                         <h3 className="font-black text-lg text-foreground">الكوبونات والخصومات</h3>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Discount Engine</p>
                     </div>
-                    <div className="mr-auto flex items-center gap-2 bg-muted px-3 py-2 rounded-full border border-border">
+                    <div className="mr-auto flex items-center gap-2 bg-secondary px-4 py-2 rounded-full border border-border/50 shadow-sm">
                         <Label htmlFor="coupon-toggle" className="text-xs text-muted-foreground cursor-pointer">تفعيل النظام</Label>
                         <Switch
                             id="coupon-toggle"

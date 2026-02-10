@@ -782,12 +782,10 @@ export default function AdminSettingsPage() {
                                             </Label>
                                             <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
                                         </div>
-                                        <div
-                                            onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}
-                                            className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.requireCustomerInfoOnCheckout ? 'bg-primary' : 'bg-muted'}`}
-                                        >
-                                            <div className={`absolute top-1 w-5 h-5 bg-background rounded-full transition-all shadow-sm ${formData.requireCustomerInfoOnCheckout ? 'left-1' : 'left-6'}`} />
-                                        </div>
+                                        <Switch
+                                            checked={formData.requireCustomerInfoOnCheckout}
+                                            onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
+                                        />
                                     </div>
                                 </Section>
 
@@ -933,7 +931,7 @@ function SecuritySettingsPorted() {
                             <Label className="text-foreground font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
                             <p className="text-xs text-muted-foreground mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
                             <div className="flex items-center gap-3">
-                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-400" : "text-muted-foreground"}`}>
+                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
                                     {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
                                 </span>
                                 <Switch
