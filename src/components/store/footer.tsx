@@ -21,7 +21,7 @@ export function Footer() {
     }
 
     return (
-        <footer className="bg-slate-50 dark:bg-[#0f171e] text-slate-600 dark:text-slate-400 pt-16 pb-32 border-t border-border transition-colors duration-300">
+        <footer className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 pt-16 pb-32 border-t border-border transition-colors duration-300">
             <div className="container mx-auto px-6">
                 {/* Top Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
@@ -55,7 +55,7 @@ export function Footer() {
                         <h3 className="text-foreground font-bold text-xl border-r-4 border-primary pr-4">
                             {storeSettings.aboutTitle}
                         </h3>
-                        <p className="text-sm leading-relaxed text-slate-500 text-right">
+                        <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 text-right">
                             {storeSettings.aboutText}
                         </p>
                     </div>
@@ -79,12 +79,14 @@ export function Footer() {
                                 <Input
                                     type="email"
                                     placeholder="بريدك الإلكتروني..."
-                                    className="bg-white dark:bg-black/20 border-border dark:border-white/5 rounded-xl h-12 text-right pl-4 pr-4"
+                                    className="bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 rounded-xl h-12 text-right pl-4 pr-4 focus:ring-primary/20"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                // FORCE DARK TEXT IN LIGHT MODE IF NEEDED, BUT DEFAULT SHOULD BE OK
+                                // text-foreground handles it
                                 />
                             </div>
-                            <Button type="submit" className="bg-primary hover:bg-primary/90 text-white h-12 px-8 rounded-xl font-bold">
+                            <Button type="submit" className="bg-primary hover:bg-primary/90 text-white h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20">
                                 يشترك
                             </Button>
                         </form>
@@ -92,7 +94,7 @@ export function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-8 border-t border-border dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-8">
 
                     {/* Social Buttons - Show only if exists */}
                     <div className="flex gap-3">
@@ -122,12 +124,12 @@ export function Footer() {
                         )}
                     </div>
 
-                    {/* Contact Info */}
+                    {/* Contact Info - Improved Contrast */}
                     <div className="flex flex-col md:flex-row gap-6 md:gap-12 items-center">
-                        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
                             <div className="text-right">
                                 <p className="text-[10px] text-slate-500">الخط الساخن 24/7</p>
-                                <p className="text-sm font-bold text-white tracking-widest">{storeSettings.contactPhone}</p>
+                                <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest">{storeSettings.contactPhone}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Phone className="w-5 h-5" />
@@ -141,7 +143,7 @@ export function Footer() {
                     </div>
 
                     {/* Copyright */}
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-slate-600 dark:text-slate-500">
                         © {new Date().getFullYear()} {storeSettings.aboutTitle}. جميع الحقوق محفوظة.
                     </div>
                 </div>

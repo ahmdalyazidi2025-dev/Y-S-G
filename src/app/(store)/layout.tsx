@@ -282,13 +282,20 @@ export default function StoreLayout({
                         onContextMenu={(e) => e.preventDefault()}
                         // Fallback
                         onClick={() => { }}
-                        className="group relative w-16 h-16 bg-background rounded-full flex items-center justify-center shadow-[0_0_40px_-5px_hsl(var(--primary)/0.4)] active:scale-95 transition-all border-4 border-background dark:border-[#0f111a]"
+                        className="group relative w-18 h-18 sm:w-20 sm:h-20 bg-background rounded-full flex items-center justify-center shadow-[0_4px_30px_-5px_hsl(var(--primary)/0.5)] active:scale-95 transition-all duration-300 border-4 border-background dark:border-[#0f111a] hover:-translate-y-1"
                     >
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <Scan className="w-8 h-8 text-foreground relative z-10 group-hover:scale-110 transition-transform" />
+                        {/* Premium Gradient Background */}
+                        <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-primary to-primary/80 opacity-100 dark:opacity-90 transition-opacity" />
 
-                        {/* Pulse Effect */}
-                        <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
+                        {/* Glow Effect */}
+                        <div className="absolute inset-0 rounded-full bg-primary/50 blur-xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
+
+                        <Scan className="w-8 h-8 sm:w-9 sm:h-9 text-white relative z-10 group-hover:scale-110 transition-transform drop-shadow-md" />
+
+                        {/* Scan Line Animation */}
+                        <div className="absolute inset-3 rounded-full overflow-hidden z-10 opacity-30 pointer-events-none">
+                            <div className="w-full h-[2px] bg-white/80 absolute top-0 animate-scan-line shadow-[0_0_10px_white]" />
+                        </div>
                     </button>
                 </div>
 
