@@ -8,7 +8,7 @@ export default function AuthLayout({
     return (
         <div className="flex min-h-screen items-center justify-center p-4 relative overflow-hidden">
             {/* Theme Toggle - Top Left (LTR) / Top Right (RTL) */}
-            <div className="absolute top-4 left-4 z-50">
+            <div className="absolute top-6 left-6 z-50">
                 <ThemeToggle />
             </div>
 

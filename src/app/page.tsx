@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Users, ShoppingBag, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useStore } from "@/context/store-context";
 
