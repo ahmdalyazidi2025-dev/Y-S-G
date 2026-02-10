@@ -149,8 +149,8 @@ export function StaffManager() {
                             {currentUser.name.charAt(0)}
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-white">حسابك الحالي ({currentUser.name})</p>
-                            <p className="text-[10px] text-emerald-400">لست في قائمة الموظفين بعد</p>
+                            <p className="text-sm font-bold text-foreground">حسابك الحالي ({currentUser.name})</p>
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400">لست في قائمة الموظفين بعد</p>
                         </div>
                     </div>
                     <Button size="sm" onClick={addCurrentUser} className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs h-8">
@@ -161,14 +161,14 @@ export function StaffManager() {
 
             <div className="space-y-2">
                 {staff.map(member => (
-                    <div key={member.id} className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between group">
+                    <div key={member.id} className="bg-card border border-border rounded-xl p-3 flex items-center justify-between group shadow-sm">
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="text-sm font-bold text-white">{member.name}</p>
+                                <p className="text-sm font-bold text-foreground">{member.name}</p>
                                 {member.role === "admin" && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">مسؤول</span>}
-                                {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
+                                {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
                             </div>
-                            <p className="text-[10px] text-slate-500">{member.email.split('@')[0]} • {member.permissions.length} صلاحيات</p>
+                            <p className="text-[10px] text-muted-foreground">{member.email.split('@')[0]} • {member.permissions.length} صلاحيات</p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -223,7 +223,7 @@ export function StaffManager() {
                                 placeholder="اسم الموظف"
                                 value={newStaff.name}
                                 onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
-                                className="bg-black/40 h-10 text-xs text-right"
+                                className="bg-background h-10 text-xs text-right border-border"
                             />
                         </div>
                         <div className="space-y-1">
@@ -232,7 +232,7 @@ export function StaffManager() {
                                 placeholder="username"
                                 value={newStaff.username}
                                 onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
-                                className="bg-black/40 h-10 text-xs text-right dir-rtl"
+                                className="bg-background h-10 text-xs text-right dir-rtl border-border"
                                 disabled={!!editingId} // Disable username edit to prevent email mismatches
                             />
                         </div>
@@ -244,9 +244,9 @@ export function StaffManager() {
                             placeholder="email@example.com (اختياري)"
                             value={newStaff.email}
                             onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
-                            className="bg-black/40 h-10 text-xs text-right"
+                            className="bg-background h-10 text-xs text-right border-border"
                         />
-                        <p className="text-[9px] text-slate-500">يفضل استخدام بريد حقيقي لاستعادة كلمة المرور</p>
+                        <p className="text-[9px] text-muted-foreground">يفضل استخدام بريد حقيقي لاستعادة كلمة المرور</p>
                     </div>
                     {!editingId && (
                         <div className="space-y-1">
@@ -255,21 +255,21 @@ export function StaffManager() {
                                 placeholder="••••••••"
                                 value={newStaff.password}
                                 onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                                className="bg-black/40 h-10 text-xs text-right"
+                                className="bg-background h-10 text-xs text-right border-border"
                             />
                         </div>
                     )}
 
                     <div className="space-y-2">
                         <Label className="text-[10px]">نوع الحساب</Label>
-                        <div className="flex gap-2 bg-black/40 p-1 rounded-lg">
+                        <div className="flex gap-2 bg-muted p-1 rounded-lg">
                             <button
                                 onClick={() => setNewStaff({ ...newStaff, role: "staff" })}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "staff" ? "bg-white/10 text-white" : "text-slate-500"}`}
+                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "staff" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
                             >موظف</button>
                             <button
                                 onClick={() => setNewStaff({ ...newStaff, role: "admin", permissions: ALL_PERMS.map(p => p.id) })}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "admin" ? "bg-primary text-black font-bold" : "text-slate-500"}`}
+                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "admin" ? "bg-primary text-primary-foreground font-bold shadow-sm" : "text-muted-foreground"}`}
                             >مسؤول (Admin)</button>
                         </div>
                     </div>
@@ -284,7 +284,7 @@ export function StaffManager() {
                                     onClick={() => togglePermission(perm.id)}
                                     className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${newStaff.permissions.includes(perm.id)
                                         ? "bg-primary/20 border-primary text-primary"
-                                        : "bg-black/40 border-white/5 text-slate-500 hover:border-white/10"
+                                        : "bg-muted border-border text-muted-foreground hover:border-foreground/20"
                                         }`}
                                 >
                                     {newStaff.permissions.includes(perm.id) ? (
@@ -307,7 +307,7 @@ export function StaffManager() {
                 <Button
                     type="button"
                     variant="outline"
-                    className="w-full border-dashed border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 h-12 rounded-xl text-xs gap-2"
+                    className="w-full border-dashed border-border bg-card hover:bg-muted text-muted-foreground h-12 rounded-xl text-xs gap-2"
                     onClick={() => setIsAdding(true)}
                 >
                     <PlusSquare className="w-4 h-4" />

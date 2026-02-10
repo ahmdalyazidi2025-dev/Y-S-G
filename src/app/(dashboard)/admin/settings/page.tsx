@@ -992,7 +992,7 @@ function GeminiKeyInput() {
 
     return (
         <div className="w-full">
-            <Label className="mb-2 block text-xs text-slate-400">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
+            <Label className="mb-2 block text-xs text-muted-foreground">مفاتيح الربط (3 مفاتيح احتياطية)</Label>
             {keys.map((k, i) => (
                 <SingleAIKeyInput
                     key={i}
