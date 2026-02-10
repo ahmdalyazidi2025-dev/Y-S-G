@@ -144,7 +144,7 @@ export function AdminSidebar() {
                         <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
                     </div>
                 )}
-                <div className="px-4">
+                <div className="px-4 flex justify-center">
                     <ThemeToggle />
                 </div>
                 <button

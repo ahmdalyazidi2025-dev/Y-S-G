@@ -213,7 +213,7 @@ export default function StoreLayout({
                                             <span className="text-[9px] font-bold">خروج</span>
                                         </button>
 
-                                        <div className="mx-1">
+                                        <div className="mx-1 scale-75 sm:scale-90 origin-center">
                                             <ThemeToggle />
                                         </div>
                                     </div>
