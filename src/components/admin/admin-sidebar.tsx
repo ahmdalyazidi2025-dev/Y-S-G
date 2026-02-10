@@ -68,9 +68,9 @@ export function AdminSidebar() {
     const filteredNavItems = NAV_ITEMS.filter(canAccess)
 
     return (
-        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-border z-50 hidden lg:flex flex-col p-6 gap-8">
+        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-border z-50 hidden lg:flex flex-col p-6 gap-6 overflow-y-auto no-scrollbar">
             {/* Logo Section */}
-            <div className="flex items-center gap-3 px-2">
+            <div className="flex items-center gap-3 px-2 shrink-0">
                 <div className="relative">
                     <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
                     <Image
@@ -87,9 +87,11 @@ export function AdminSidebar() {
                 </div>
             </div>
 
-            {/* Theme Toggle - High Visibility */}
-            <div className="px-4 flex justify-center pb-4 border-b border-border/50">
-                <ThemeToggle />
+            {/* Theme Toggle - High Visibility & Compact */}
+            <div className="px-4 flex justify-center pb-4 border-b border-border/50 shrink-0">
+                <div className="scale-75 origin-center">
+                    <ThemeToggle />
+                </div>
             </div>
 
             {/* Navigation */}
@@ -179,7 +181,7 @@ export function AdminMobileNav() {
     return (
         <>
             {/* Mobile Theme Toggle (Floating above nav) */}
-            <div className="fixed bottom-20 left-4 z-[60] lg:hidden">
+            <div className="fixed bottom-20 left-4 z-[60] lg:hidden scale-75 origin-bottom-left">
                 <ThemeToggle className="shadow-lg border-primary/20" />
             </div>
 
