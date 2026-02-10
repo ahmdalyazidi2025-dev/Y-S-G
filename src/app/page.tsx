@@ -193,20 +193,21 @@ function LandingContent() {
                 initial={{ y: -30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
+                className="flex flex-col items-center justify-center gap-4 w-full max-w-md mx-auto text-center"
               >
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-700" />
+                <div className="relative group mx-auto">
+                  <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-700 mx-auto" />
                   <Image
                     src="/logo.jpg"
                     alt="Logo"
                     width={96}
                     height={96}
-                    className="rounded-full object-cover border-4 border-background shadow-[0_0_40px_rgba(59,130,246,0.3)] relative z-10"
+                    className="rounded-full object-cover border-4 border-background shadow-[0_0_40px_rgba(59,130,246,0.3)] relative z-10 mx-auto"
                   />
                 </div>
-                <div className="text-center space-y-1">
-                  <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">YSG SALES</h1>
-                  <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-bold">The Future of Distribution</p>
+                <div className="text-center space-y-1 w-full flex flex-col items-center">
+                  <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter text-center">YSG SALES</h1>
+                  <p className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-[0.4em] font-bold text-center">The Future of Distribution</p>
                 </div>
               </motion.div>
 
