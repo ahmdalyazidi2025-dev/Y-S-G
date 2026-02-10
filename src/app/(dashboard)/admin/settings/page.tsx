@@ -573,11 +573,11 @@ export default function AdminSettingsPage() {
                             <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
                                 <div className="space-y-6">
                                     <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-emerald-400">
+                                        <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
                                             <FileText className="w-6 h-6" />
                                             <div>
                                                 <h4 className="font-bold">طباعة تقارير المنتجات</h4>
-                                                <p className="text-xs text-slate-500">طباعة قائمة المنتجات مع تصفيتها حسب التاريخ أو القسم.</p>
+                                                <p className="text-xs text-muted-foreground">طباعة قائمة المنتجات مع تصفيتها حسب التاريخ أو القسم.</p>
                                             </div>
                                         </div>
 
@@ -609,7 +609,7 @@ export default function AdminSettingsPage() {
                                                         setReportStartDate(toLocal(start))
                                                         setReportEndDate(toLocal(now))
                                                     }}
-                                                    className="h-7 text-[10px] px-2 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white"
+                                                    className="h-7 text-[10px] px-2 border-border hover:bg-muted text-muted-foreground hover:text-foreground"
                                                 >
                                                     {range === 'all' && 'الكل'}
                                                     {range === 'today' && 'اليوم'}
@@ -621,7 +621,7 @@ export default function AdminSettingsPage() {
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] text-slate-400">من تاريخ</Label>
+                                                <Label className="text-[10px] text-muted-foreground">من تاريخ</Label>
                                                 <WheelPicker
                                                     date={reportStartDate ? new Date(reportStartDate) : undefined}
                                                     setDate={(d: Date | undefined) => {
@@ -637,7 +637,7 @@ export default function AdminSettingsPage() {
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] text-slate-400">إلى تاريخ</Label>
+                                                <Label className="text-[10px] text-muted-foreground">إلى تاريخ</Label>
                                                 <WheelPicker
                                                     date={reportEndDate ? new Date(reportEndDate) : undefined}
                                                     setDate={(d: Date | undefined) => {
@@ -693,11 +693,11 @@ export default function AdminSettingsPage() {
                                     </div>
 
                                     <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-emerald-400">
+                                        <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
                                             <FileText className="w-6 h-6" />
                                             <div>
                                                 <h4 className="font-bold">التقرير الشامل للمتجر</h4>
-                                                <p className="text-xs text-slate-500">تحميل ملف CSV يحتوي على كافة العملاء وطلباتهم وتفاصيلها مرتبة زمنياً.</p>
+                                                <p className="text-xs text-muted-foreground">تحميل ملف CSV يحتوي على كافة العملاء وطلباتهم وتفاصيلها مرتبة زمنياً.</p>
                                             </div>
                                         </div>
                                         <Button
@@ -711,11 +711,11 @@ export default function AdminSettingsPage() {
                                     </div>
 
                                     <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-blue-400">
+                                        <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
                                             <UserPlus className="w-6 h-6" />
                                             <div>
                                                 <h4 className="font-bold">سجل بيانات العملاء (Word)</h4>
-                                                <p className="text-xs text-slate-500">جدول منظم يحتوي على بيانات التسجيل لكل عميل (للطباعة أو الحفظ).</p>
+                                                <p className="text-xs text-muted-foreground">جدول منظم يحتوي على بيانات التسجيل لكل عميل (للطباعة أو الحفظ).</p>
                                             </div>
                                         </div>
                                         <Button
@@ -729,11 +729,11 @@ export default function AdminSettingsPage() {
                                     </div>
 
                                     <div className="p-6 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-purple-400">
+                                        <div className="flex items-center gap-3 text-purple-600 dark:text-purple-400">
                                             <Shield className="w-6 h-6" />
                                             <div>
                                                 <h4 className="font-bold">سجل بيانات الموظفين (Word)</h4>
-                                                <p className="text-xs text-slate-500">جدول يحتوي على بيانات الموظفين والمسؤولين وصلاحياتهم.</p>
+                                                <p className="text-xs text-muted-foreground">جدول يحتوي على بيانات الموظفين والمسؤولين وصلاحياتهم.</p>
                                             </div>
                                         </div>
                                         <Button
@@ -763,7 +763,7 @@ export default function AdminSettingsPage() {
                                             messages,
                                             notifications
                                         })}
-                                        className="w-full h-14 bg-slate-800 hover:bg-slate-700 border-white/5 text-slate-200 rounded-2xl font-bold gap-2"
+                                        className="w-full h-14 bg-secondary hover:bg-secondary/80 border-border text-secondary-foreground rounded-2xl font-bold gap-2"
                                     >
                                         <Save className="w-5 h-5" />
                                         تحميل نسخة احتياطية Offline
