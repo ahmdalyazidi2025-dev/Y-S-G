@@ -569,205 +569,248 @@ export default function AdminSettingsPage() {
                             </div>
                         )}
 
+
                         {activeTab === 'data' && (
                             <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
                                 <div className="space-y-6">
-                                    <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
-                                            <FileText className="w-6 h-6" />
+
+                                    {/* Product Reports Card */}
+                                    <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                        <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-colors" />
+
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                                <FileText className="w-6 h-6" />
+                                            </div>
                                             <div>
-                                                <h4 className="font-bold">طباعة تقارير المنتجات</h4>
-                                                <p className="text-xs text-muted-foreground">طباعة قائمة المنتجات مع تصفيتها حسب التاريخ أو القسم.</p>
+                                                <h4 className="font-bold text-foreground">تقارير المنتجات المخصصة</h4>
+                                                <p className="text-xs text-muted-foreground">تصفية وطباعة قوائم المنتجات حسب الطلب</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2 justify-end mb-2">
-                                            {(['all', 'today', 'week', 'month'] as const).map(range => (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Filters Column */}
+                                            <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border/50">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">الفترة الزمنية</Label>
+                                                    <div className="flex gap-1.5 flex-wrap">
+                                                        {(['all', 'today', 'week', 'month'] as const).map(range => (
+                                                            <button
+                                                                key={range}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const now = new Date()
+                                                                    let start = new Date()
+                                                                    const toLocal = (d: Date) => {
+                                                                        const offset = d.getTimezoneOffset()
+                                                                        return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
+                                                                    }
+
+                                                                    if (range === 'all') {
+                                                                        setReportStartDate('')
+                                                                        setReportEndDate('')
+                                                                        return
+                                                                    }
+
+                                                                    if (range === 'today') start.setHours(0, 0, 0, 0)
+                                                                    if (range === 'week') start.setDate(now.getDate() - 7)
+                                                                    if (range === 'month') start.setMonth(now.getMonth() - 1)
+
+                                                                    setReportStartDate(toLocal(start))
+                                                                    setReportEndDate(toLocal(now))
+                                                                }}
+                                                                className="text-[10px] px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                                            >
+                                                                {range === 'all' && 'الكل'}
+                                                                {range === 'today' && 'اليوم'}
+                                                                {range === 'week' && 'أسبوع'}
+                                                                {range === 'month' && 'شهر'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground">من</Label>
+                                                        <div className="bg-background border border-border rounded-lg overflow-hidden">
+                                                            <WheelPicker
+                                                                date={reportStartDate ? new Date(reportStartDate) : undefined}
+                                                                setDate={(d: Date | undefined) => {
+                                                                    if (d) {
+                                                                        const offset = d.getTimezoneOffset()
+                                                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                                        setReportStartDate(localDate.toISOString().split('T')[0])
+                                                                    } else {
+                                                                        setReportStartDate('')
+                                                                    }
+                                                                }}
+                                                                placeholder="البدء"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground">إلى</Label>
+                                                        <div className="bg-background border border-border rounded-lg overflow-hidden">
+                                                            <WheelPicker
+                                                                date={reportEndDate ? new Date(reportEndDate) : undefined}
+                                                                setDate={(d: Date | undefined) => {
+                                                                    if (d) {
+                                                                        const offset = d.getTimezoneOffset()
+                                                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                                        setReportEndDate(localDate.toISOString().split('T')[0])
+                                                                    } else {
+                                                                        setReportEndDate('')
+                                                                    }
+                                                                }}
+                                                                placeholder="الانتهاء"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Sort & Action Column */}
+                                            <div className="space-y-3 flex flex-col justify-between h-full">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground">القسم</Label>
+                                                        <select
+                                                            value={reportCategory}
+                                                            onChange={(e) => setReportCategory(e.target.value)}
+                                                            className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
+                                                        >
+                                                            <option value="all">الكل</option>
+                                                            {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground">الترتيب</Label>
+                                                        <select
+                                                            value={reportSort}
+                                                            onChange={(e) => setReportSort(e.target.value as any)}
+                                                            className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
+                                                        >
+                                                            <option value="newest">الأحدث</option>
+                                                            <option value="oldest">الأقدم</option>
+                                                            <option value="price_high">الأغلى</option>
+                                                            <option value="price_low">الأرخص</option>
+                                                            <option value="name">أبجدي</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
                                                 <Button
-                                                    key={range}
                                                     type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        const now = new Date()
-                                                        let start = new Date()
-                                                        const toLocal = (d: Date) => {
-                                                            const offset = d.getTimezoneOffset()
-                                                            return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
-                                                        }
-
-                                                        if (range === 'all') {
-                                                            setReportStartDate('')
-                                                            setReportEndDate('')
-                                                            return
-                                                        }
-
-                                                        if (range === 'today') start.setHours(0, 0, 0, 0)
-                                                        if (range === 'week') start.setDate(now.getDate() - 7)
-                                                        if (range === 'month') start.setMonth(now.getMonth() - 1)
-
-                                                        setReportStartDate(toLocal(start))
-                                                        setReportEndDate(toLocal(now))
-                                                    }}
-                                                    className="h-7 text-[10px] px-2 border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+                                                    onClick={handlePrintReport}
+                                                    className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-sm"
                                                 >
-                                                    {range === 'all' && 'الكل'}
-                                                    {range === 'today' && 'اليوم'}
-                                                    {range === 'week' && 'أسبوع'}
-                                                    {range === 'month' && 'شهر'}
+                                                    <Printer className="w-4 h-4" />
+                                                    طباعة التقرير
                                                 </Button>
-                                            ))}
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">من تاريخ</Label>
-                                                <WheelPicker
-                                                    date={reportStartDate ? new Date(reportStartDate) : undefined}
-                                                    setDate={(d: Date | undefined) => {
-                                                        if (d) {
-                                                            const offset = d.getTimezoneOffset()
-                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
-                                                            setReportStartDate(localDate.toISOString().split('T')[0])
-                                                        } else {
-                                                            setReportStartDate('')
-                                                        }
-                                                    }}
-                                                    placeholder="اختر تاريخ البدء"
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">إلى تاريخ</Label>
-                                                <WheelPicker
-                                                    date={reportEndDate ? new Date(reportEndDate) : undefined}
-                                                    setDate={(d: Date | undefined) => {
-                                                        if (d) {
-                                                            const offset = d.getTimezoneOffset()
-                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
-                                                            setReportEndDate(localDate.toISOString().split('T')[0])
-                                                        } else {
-                                                            setReportEndDate('')
-                                                        }
-                                                    }}
-                                                    placeholder="اختر تاريخ الانتهاء"
-                                                />
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px]">القسم</Label>
-                                                <select
-                                                    value={reportCategory}
-                                                    onChange={(e) => setReportCategory(e.target.value)}
-                                                    className="w-full bg-background border border-border rounded-lg h-10 text-xs text-foreground px-2 outline-none"
-                                                >
-                                                    <option value="all">الكل</option>
-                                                    {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px]">الترتيب</Label>
-                                                <select
-                                                    value={reportSort}
-                                                    onChange={(e) => setReportSort(e.target.value as any)}
-                                                    className="w-full bg-background border border-border rounded-lg h-10 text-xs text-foreground px-2 outline-none"
-                                                >
-                                                    <option value="newest">الأحدث إضافة</option>
-                                                    <option value="oldest">الأقدم إضافة</option>
-                                                    <option value="price_high">الأغلى سعراً</option>
-                                                    <option value="price_low">الأرخص سعراً</option>
-                                                    <option value="name">أبجدي (الاسم)</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <Button
-                                            type="button"
-                                            onClick={handlePrintReport}
-                                            className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-lg shadow-emerald-500/20"
-                                        >
-                                            <Printer className="w-5 h-5" />
-                                            معاينة وطباعة التقرير
-                                        </Button>
                                     </div>
 
-                                    <div className="p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400">
-                                            <FileText className="w-6 h-6" />
-                                            <div>
-                                                <h4 className="font-bold">التقرير الشامل للمتجر</h4>
-                                                <p className="text-xs text-muted-foreground">تحميل ملف CSV يحتوي على كافة العملاء وطلباتهم وتفاصيلها مرتبة زمنياً.</p>
+                                    {/* Quick Actions Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Comprehensive Report */}
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-emerald-500/30 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                    <Download className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-foreground">Excel شامل</h4>
+                                                    <p className="text-[10px] text-muted-foreground">العملاء والطلبات والتفاصيل</p>
+                                                </div>
                                             </div>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => exportComprehensiveReport(customers, orders)}
+                                                className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
+                                            >
+                                                تحميل
+                                            </Button>
                                         </div>
-                                        <Button
-                                            type="button"
-                                            onClick={() => exportComprehensiveReport(customers, orders)}
-                                            className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold text-lg gap-2"
-                                        >
-                                            <Download className="w-5 h-5" />
-                                            استخراج ملف Excel (CSV)
-                                        </Button>
-                                    </div>
 
-                                    <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400">
-                                            <UserPlus className="w-6 h-6" />
-                                            <div>
-                                                <h4 className="font-bold">سجل بيانات العملاء (Word)</h4>
-                                                <p className="text-xs text-muted-foreground">جدول منظم يحتوي على بيانات التسجيل لكل عميل (للطباعة أو الحفظ).</p>
+                                        {/* Customers Word */}
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-blue-500/30 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                    <UserPlus className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-foreground">بيانات العملاء</h4>
+                                                    <p className="text-[10px] text-muted-foreground">سجل Word للطباعة</p>
+                                                </div>
                                             </div>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => exportCustomersToWord(customers)}
+                                                className="h-8 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                                            >
+                                                تحميل
+                                            </Button>
                                         </div>
-                                        <Button
-                                            type="button"
-                                            onClick={() => exportCustomersToWord(customers)}
-                                            className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold text-lg gap-2"
-                                        >
-                                            <FileText className="w-5 h-5" />
-                                            استخراج جدول Word
-                                        </Button>
-                                    </div>
 
-                                    <div className="p-6 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-4">
-                                        <div className="flex items-center gap-3 text-purple-600 dark:text-purple-400">
-                                            <Shield className="w-6 h-6" />
-                                            <div>
-                                                <h4 className="font-bold">سجل بيانات الموظفين (Word)</h4>
-                                                <p className="text-xs text-muted-foreground">جدول يحتوي على بيانات الموظفين والمسؤولين وصلاحياتهم.</p>
+                                        {/* Staff Word */}
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-purple-500/30 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                    <Shield className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-foreground">سجل الموظفين</h4>
+                                                    <p className="text-[10px] text-muted-foreground">الصلاحيات والبيانات</p>
+                                                </div>
                                             </div>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => exportStaffToWord(staff)}
+                                                className="h-8 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900/20"
+                                            >
+                                                تحميل
+                                            </Button>
                                         </div>
-                                        <Button
-                                            type="button"
-                                            onClick={() => exportStaffToWord(staff)}
-                                            className="w-full h-14 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-bold text-lg gap-2"
-                                        >
-                                            <FileText className="w-5 h-5" />
-                                            استخراج سجل الموظفين
-                                        </Button>
-                                    </div>
 
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => exportFullSystemBackup({
-                                            backupDate: new Date(),
-                                            settings: storeSettings,
-                                            products,
-                                            categories,
-                                            staff,
-                                            customers,
-                                            orders,
-                                            coupons,
-                                            banners,
-                                            productRequests,
-                                            messages,
-                                            notifications
-                                        })}
-                                        className="w-full h-14 bg-secondary hover:bg-secondary/80 border-border text-secondary-foreground rounded-2xl font-bold gap-2"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        تحميل نسخة احتياطية Offline
-                                    </Button>
+                                        {/* Full Backup */}
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-slate-500/30 transition-all">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2.5 bg-secondary text-secondary-foreground rounded-xl group-hover:scale-110 transition-transform">
+                                                    <Save className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-foreground">نسخة احتياطية</h4>
+                                                    <p className="text-[10px] text-muted-foreground">Offline Backup كامل</p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => exportFullSystemBackup({
+                                                    backupDate: new Date(),
+                                                    settings: storeSettings,
+                                                    products,
+                                                    categories,
+                                                    staff,
+                                                    customers,
+                                                    orders,
+                                                    coupons,
+                                                    banners,
+                                                    productRequests,
+                                                    messages,
+                                                    notifications
+                                                })}
+                                                className="h-8 bg-foreground text-background hover:bg-foreground/90 border-transparent"
+                                            >
+                                                تنزيل
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </Section>
                         )}
