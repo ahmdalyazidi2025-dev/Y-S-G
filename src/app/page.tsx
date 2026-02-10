@@ -182,12 +182,16 @@ function LandingContent() {
             transition={{ duration: 1 }}
             className="flex flex-col items-center justify-center min-h-[100dvh] p-4 relative"
           >
+            {/* Theme Toggle */}
+            <div className="absolute top-6 left-6 z-50">
+              <ThemeToggle />
+            </div>
+
             <div className="z-10 flex flex-col items-center gap-8 md:gap-12 w-full max-w-sm">
               <motion.div
                 initial={{ y: -30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="flex flex-col items-center gap-4"
               >
                 <div className="relative group">
                   <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full scale-125 group-hover:scale-150 transition-transform duration-700" />
