@@ -68,19 +68,19 @@ export function CouponManager() {
 
     return (
         <div className="space-y-6">
-            <div className="glass-card p-6 border-white/5 relative overflow-hidden">
+            <div className="bg-card glass-card p-6 border-border relative overflow-hidden rounded-2xl shadow-sm">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-purple-500" />
 
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400">
+                    <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
                         <Ticket className="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 className="font-black text-lg text-white">الكوبونات والخصومات</h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Discount Engine</p>
+                        <h3 className="font-black text-lg text-foreground">الكوبونات والخصومات</h3>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Discount Engine</p>
                     </div>
-                    <div className="mr-auto flex items-center gap-2 bg-white/5 px-3 py-2 rounded-full border border-white/5">
-                        <Label htmlFor="coupon-toggle" className="text-xs text-slate-300 cursor-pointer">تفعيل النظام</Label>
+                    <div className="mr-auto flex items-center gap-2 bg-muted px-3 py-2 rounded-full border border-border">
+                        <Label htmlFor="coupon-toggle" className="text-xs text-muted-foreground cursor-pointer">تفعيل النظام</Label>
                         <Switch
                             id="coupon-toggle"
                             checked={storeSettings.enableCoupons}
@@ -91,78 +91,78 @@ export function CouponManager() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                     <div className="space-y-2">
-                        <Label className="text-white">كود الخصم</Label>
+                        <Label className="text-foreground">كود الخصم</Label>
                         <div className="flex gap-2">
                             <Input
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                                 placeholder="مثال: OFFER20"
-                                className="bg-white/5 border-white/10 text-white font-mono placeholder:text-slate-600"
+                                className="bg-background border-border text-foreground font-mono placeholder:text-muted-foreground"
                             />
-                            <Button onClick={generateCode} variant="outline" className="border-white/10 hover:bg-white/5 text-purple-400 relative overflow-hidden group">
+                            <Button onClick={generateCode} variant="outline" className="border-border hover:bg-muted text-purple-500 relative overflow-hidden group">
                                 <Sparkles className="w-4 h-4 group-hover:animate-spin" />
-                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                             </Button>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white">نسبة الخصم (%)</Label>
+                        <Label className="text-foreground">نسبة الخصم (%)</Label>
                         <div className="relative">
                             <Input
                                 type="number"
                                 value={discount}
                                 onChange={(e) => setDiscount(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white pl-10 placeholder:text-slate-600"
+                                className="bg-background border-border text-foreground pl-10 placeholder:text-muted-foreground"
                             />
-                            <Percent className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <Percent className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white">الحد الأقصى للاستخدام</Label>
+                        <Label className="text-foreground">الحد الأقصى للاستخدام</Label>
                         <Input
                             type="number"
                             value={usageLimit}
                             onChange={(e) => setUsageLimit(e.target.value)}
-                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white">مدة الصلاحية (بالأيام)</Label>
+                        <Label className="text-foreground">مدة الصلاحية (بالأيام)</Label>
                         <div className="relative">
                             <Input
                                 type="number"
                                 value={expiryDays}
                                 onChange={(e) => setExpiryDays(e.target.value)}
-                                className="bg-white/5 border-white/10 text-white pl-10 placeholder:text-slate-600"
+                                className="bg-background border-border text-foreground pl-10 placeholder:text-muted-foreground"
                             />
-                            <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white">الحد الأدنى للطلب (اختياري)</Label>
+                        <Label className="text-foreground">الحد الأدنى للطلب (اختياري)</Label>
                         <Input
                             type="number"
                             value={minOrderValue}
                             onChange={(e) => setMinOrderValue(e.target.value)}
                             placeholder="0.00"
-                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-600"
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-white">تخصيص لقسم معين (اختياري)</Label>
+                        <Label className="text-foreground">تخصيص لقسم معين (اختياري)</Label>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 h-10 rounded-md text-white px-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                            className="w-full bg-background border border-border h-10 rounded-md text-foreground px-3 focus:ring-2 focus:ring-purple-500 outline-none"
                         >
-                            <option value="" className="bg-[#1c2a36]">الكل</option>
+                            <option value="" className="bg-background text-foreground">الكل</option>
                             {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id} className="bg-[#1c2a36]">{cat.nameAr}</option>
+                                <option key={cat.id} value={cat.id} className="bg-background text-foreground">{cat.nameAr}</option>
                             ))}
                         </select>
                     </div>
@@ -181,20 +181,20 @@ export function CouponManager() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="glass-card p-4 border-white/5 relative group overflow-hidden"
+                            className="bg-card glass-card p-4 border-border relative group overflow-hidden rounded-xl shadow-sm"
                         >
                             <div className="absolute right-0 top-0 w-2 h-full bg-purple-500/20" />
 
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <h4 className="font-black text-xl text-white font-mono tracking-wider">{coupon.code}</h4>
-                                        <button onClick={() => copyCode(coupon.code)} className="text-slate-500 hover:text-white transition-colors">
+                                        <h4 className="font-black text-xl text-foreground font-mono tracking-wider">{coupon.code}</h4>
+                                        <button onClick={() => copyCode(coupon.code)} className="text-muted-foreground hover:text-foreground transition-colors">
                                             <Copy className="w-4 h-4" />
                                         </button>
                                     </div>
-                                    <p className="text-xs text-purple-400 font-bold">{coupon.discount}% خصم</p>
-                                    <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-2">
+                                    <p className="text-xs text-purple-500 font-bold">{coupon.discount}% خصم</p>
+                                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-2">
                                         <span>استخدام: {coupon.usedCount}/{coupon.usageLimit}</span>
                                         <span>•</span>
                                         <span>ينتهي: {coupon.expiryDate ? (coupon.expiryDate as unknown as Timestamp).toDate().toLocaleDateString('ar-SA') : 'غير محدد'}</span>
