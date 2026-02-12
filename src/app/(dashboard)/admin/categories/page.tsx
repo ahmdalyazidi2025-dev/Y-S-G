@@ -45,12 +45,12 @@ export default function CategoriesPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-foreground/70 hover:text-foreground transition-colors">
                             <ArrowRight className="w-6 h-6" />
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-l from-white to-white/60">
+                        <h1 className="text-3xl font-bold text-foreground bg-clip-text">
                             إدارة الأقسام
                         </h1>
                         <p className="text-muted-foreground text-sm mt-1">
@@ -69,15 +69,15 @@ export default function CategoriesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {categories.length === 0 ? (
-                    <div className="col-span-full flex flex-col items-center justify-center p-20 text-center border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/50">
-                        <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
-                            <Layers className="w-10 h-10 text-slate-600" />
+                    <div className="col-span-full flex flex-col items-center justify-center p-20 text-center border-2 border-dashed border-border rounded-3xl bg-muted/20">
+                        <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
+                            <Layers className="w-10 h-10 text-muted-foreground" />
                         </div>
-                        <h3 className="text-xl font-semibold text-white mb-2">لا توجد أقسام بعد</h3>
-                        <p className="text-slate-400 max-w-sm mx-auto mb-6">
+                        <h3 className="text-xl font-semibold text-foreground mb-2">لا توجد أقسام بعد</h3>
+                        <p className="text-muted-foreground max-w-sm mx-auto mb-6">
                             ابدأ بإضافة الأقسام لتنظيم منتجاتك بشكل أفضل ومساعدة العملاء في الوصول إليها.
                         </p>
-                        <Button variant="outline" onClick={handleAddNew} className="border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800">
+                        <Button variant="outline" onClick={handleAddNew} className="border-border text-foreground hover:bg-muted">
                             إضافة أول قسم
                         </Button>
                     </div>
@@ -86,8 +86,8 @@ export default function CategoriesPage() {
                         <div
                             key={category.id}
                             className={cn(
-                                "group relative bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-primary/50 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10",
-                                category.isHidden && "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 border-dashed border-slate-700"
+                                "glass-card group relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10",
+                                category.isHidden && "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100 border-dashed border-border"
                             )}
                         >
                             {/* Category Card Content - Clickable to View Products */}
@@ -111,9 +111,9 @@ export default function CategoriesPage() {
                                             className="object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-slate-700 transition-colors duration-500">
-                                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center backdrop-blur-sm border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                                                <Layers className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors duration-500" />
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50 group-hover:from-muted group-hover:to-muted/80 transition-colors duration-500">
+                                            <div className="w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center backdrop-blur-sm border border-border/50 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                                                <Layers className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors duration-500" />
                                             </div>
                                         </div>
                                     )}
@@ -123,17 +123,17 @@ export default function CategoriesPage() {
                                 <div className="p-5 relative">
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
-                                            <h3 className="font-bold text-white text-xl group-hover:text-primary transition-colors duration-300">
+                                            <h3 className="font-bold text-foreground text-xl group-hover:text-primary transition-colors duration-300">
                                                 {category.nameAr}
                                             </h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <Globe className="w-3.5 h-3.5 text-slate-400" />
-                                                <span className="text-sm text-slate-300 font-medium">{category.nameEn}</span>
+                                                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                                                <span className="text-sm text-muted-foreground font-medium">{category.nameEn}</span>
                                             </div>
                                         </div>
 
                                         {/* Subtle ID Badge */}
-                                        <span className="text-[10px] font-mono bg-white/5 border border-white/5 px-2 py-1 rounded-lg text-slate-400 group-hover:text-slate-300 transition-colors">
+                                        <span className="text-[10px] font-mono bg-muted/50 border border-border px-2 py-1 rounded-lg text-muted-foreground group-hover:text-foreground transition-colors">
                                             #{category.id.slice(0, 4)}
                                         </span>
                                     </div>
