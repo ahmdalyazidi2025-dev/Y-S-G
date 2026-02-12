@@ -53,7 +53,7 @@ export default function CategoriesPage() {
                         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-l from-white to-white/60">
                             إدارة الأقسام
                         </h1>
-                        <p className="text-slate-400 text-sm mt-1">
+                        <p className="text-muted-foreground text-sm mt-1">
                             {categories.length} قسم نشط حالياً
                         </p>
                     </div>
@@ -74,7 +74,7 @@ export default function CategoriesPage() {
                             <Layers className="w-10 h-10 text-slate-600" />
                         </div>
                         <h3 className="text-xl font-semibold text-white mb-2">لا توجد أقسام بعد</h3>
-                        <p className="text-slate-500 max-w-sm mx-auto mb-6">
+                        <p className="text-slate-400 max-w-sm mx-auto mb-6">
                             ابدأ بإضافة الأقسام لتنظيم منتجاتك بشكل أفضل ومساعدة العملاء في الوصول إليها.
                         </p>
                         <Button variant="outline" onClick={handleAddNew} className="border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800">
@@ -98,7 +98,7 @@ export default function CategoriesPage() {
 
                                     {category.isHidden && (
                                         <div className="absolute top-3 right-3 z-30 bg-black/60 backdrop-blur-md text-white px-2 py-1 rounded-lg text-xs font-bold border border-white/10 flex items-center gap-1.5">
-                                            <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                                            <EyeOff className="w-3.5 h-3.5 text-slate-300" />
                                             <span>مخفي</span>
                                         </div>
                                     )}
@@ -113,7 +113,7 @@ export default function CategoriesPage() {
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-slate-700 transition-colors duration-500">
                                             <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center backdrop-blur-sm border border-white/5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                                                <Layers className="w-6 h-6 text-slate-500 group-hover:text-primary transition-colors duration-500" />
+                                                <Layers className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors duration-500" />
                                             </div>
                                         </div>
                                     )}
@@ -127,13 +127,13 @@ export default function CategoriesPage() {
                                                 {category.nameAr}
                                             </h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <Globe className="w-3.5 h-3.5 text-slate-500" />
-                                                <span className="text-sm text-slate-400 font-medium">{category.nameEn}</span>
+                                                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                                <span className="text-sm text-slate-300 font-medium">{category.nameEn}</span>
                                             </div>
                                         </div>
 
                                         {/* Subtle ID Badge */}
-                                        <span className="text-[10px] font-mono bg-white/5 border border-white/5 px-2 py-1 rounded-lg text-slate-500 group-hover:text-slate-300 transition-colors">
+                                        <span className="text-[10px] font-mono bg-white/5 border border-white/5 px-2 py-1 rounded-lg text-slate-400 group-hover:text-slate-300 transition-colors">
                                             #{category.id.slice(0, 4)}
                                         </span>
                                     </div>

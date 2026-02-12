@@ -122,11 +122,11 @@ export default function OffersPage() {
 
                 {/* Search Bar */}
                 <div className="relative w-full md:w-96">
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                     </div>
                     <input
-                        className="w-full h-12 bg-black/20 border border-white/10 rounded-2xl pr-10 pl-4 text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                        className="w-full h-12 bg-black/20 border border-white/10 rounded-2xl pr-10 pl-4 text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
                         placeholder="ابحث عن عرض بالاسم أو الباركود..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -160,7 +160,7 @@ export default function OffersPage() {
             </div>
 
             {/* Content Area */}
-            <div className="bg-slate-900/50 border border-white/5 rounded-[40px] p-6 min-h-[500px]">
+            <div className="bg-slate-900/50 border border-white/5 rounded-[40px] p-6 min-h-[500px] text-white">
                 <AnimatePresence mode="wait">
                     {/* ACTIVE OFFERS TAB */}
                     {activeTab === "active" && (
@@ -391,10 +391,10 @@ function EmptyState({ icon: Icon, title, desc }: any) {
     return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                <Icon className="w-8 h-8 text-slate-500 opacity-50" />
+                <Icon className="w-8 h-8 text-slate-400 opacity-50" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-slate-500 max-w-sm mx-auto">{desc}</p>
+            <p className="text-slate-400 max-w-sm mx-auto">{desc}</p>
         </div>
     )
 }

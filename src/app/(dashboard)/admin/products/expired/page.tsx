@@ -95,7 +95,7 @@ export default function ExpiredProductsPage() {
                             </div>
 
                             <div className="space-y-1 mb-4">
-                                <h3 className="font-bold text-white text-xs line-clamp-1">{product.name}</h3>
+                                <h3 className="font-bold text-foreground text-xs line-clamp-1">{product.name}</h3>
                                 <p className="text-[10px] text-slate-500">{product.category}</p>
                             </div>
 
