@@ -148,16 +148,16 @@ function LoginForm() {
                                             <Lock className="w-5 h-5" />
                                         </div>
                                         <h3 className="text-sm font-bold text-white">استعادة كلمة المرور</h3>
-                                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                                        <p className="text-[10px] text-white/80 leading-relaxed">
                                             لا تقلق، أدخل بريدك الإلكتروني وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.
                                         </p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-xs text-slate-400 mr-1">البريد الإلكتروني</Label>
+                                        <Label className="text-xs text-white/80 mr-1">البريد الإلكتروني</Label>
                                         <Input
                                             type="email"
                                             placeholder="example@domain.com"
-                                            className="bg-white/5 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-slate-500 font-medium text-white"
+                                            className="bg-white/5 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-white/50 font-medium text-white"
                                             value={recoveryEmail}
                                             onChange={(e) => setRecoveryEmail(e.target.value)}
                                             required
@@ -174,7 +174,7 @@ function LoginForm() {
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            className="w-full text-xs text-slate-400 hover:text-white hover:bg-white/5 rounded-xl h-10"
+                                            className="w-full text-xs text-white/80 hover:text-white hover:bg-white/5 rounded-xl h-10"
                                             onClick={() => setShowForgotPassword(false)}
                                         >
                                             العودة لتسجيل الدخول

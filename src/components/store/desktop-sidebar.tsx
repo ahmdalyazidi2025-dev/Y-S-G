@@ -39,7 +39,7 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
                                 "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all",
                                 isActive
                                     ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    : "text-white hover:bg-white/5 hover:text-white"
                             )}
                         >
                             <item.icon className="w-5 h-5" />
@@ -69,7 +69,7 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
                         // But I should probably better just rely on native behavior or simple fallback
                     }
                 }}
-                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-slate-400 hover:bg-white/5 hover:text-white transition-all text-right border-t border-white/5"
+                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-white hover:bg-white/5 hover:text-white transition-all text-right border-t border-white/5"
             >
                 <Share2 className="w-5 h-5" />
                 <span className="font-bold text-sm">مشاركة التطبيق</span>

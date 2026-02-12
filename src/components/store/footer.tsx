@@ -21,7 +21,7 @@ export function Footer() {
     }
 
     return (
-        <footer className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 pt-16 pb-32 border-t border-border transition-colors duration-300">
+        <footer className="bg-slate-50 dark:bg-slate-950 text-foreground dark:text-slate-400 pt-16 pb-32 border-t border-border transition-colors duration-300">
             <div className="container mx-auto px-6">
                 {/* Top Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
@@ -55,7 +55,7 @@ export function Footer() {
                         <h3 className="text-foreground font-bold text-xl border-r-4 border-primary pr-4">
                             {storeSettings.aboutTitle}
                         </h3>
-                        <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 text-right">
+                        <p className="text-sm leading-relaxed text-foreground dark:text-slate-400 text-right">
                             {storeSettings.aboutText}
                         </p>
                     </div>
@@ -73,7 +73,7 @@ export function Footer() {
                     {/* Newsletter */}
                     <div className="lg:col-span-5 space-y-6">
                         <h3 className="text-foreground font-bold text-lg border-r-4 border-yellow-500 pr-4">النشرة الإخبارية</h3>
-                        <p className="text-sm text-slate-500">سجل الآن للحصول على التحديثات حول العروض الترويجية والقسائم.</p>
+                        <p className="text-sm text-foreground">سجل الآن للحصول على التحديثات حول العروض الترويجية والقسائم.</p>
                         <form onSubmit={handleSubscribe} className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
@@ -128,8 +128,8 @@ export function Footer() {
                     <div className="flex flex-col md:flex-row gap-6 md:gap-12 items-center">
                         <div className="flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
                             <div className="text-right">
-                                <p className="text-[10px] text-slate-500">الخط الساخن 24/7</p>
-                                <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest">{storeSettings.contactPhone}</p>
+                                <p className="text-[10px] text-foreground">الخط الساخن 24/7</p>
+                                <p className="text-sm font-bold text-foreground dark:text-white tracking-widest">{storeSettings.contactPhone}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Phone className="w-5 h-5" />
@@ -137,13 +137,13 @@ export function Footer() {
                         </div>
 
                         <div className="flex items-center gap-3 text-sm">
-                            <span className="text-slate-500">{storeSettings.contactAddress}</span>
+                            <span className="text-foreground">{storeSettings.contactAddress}</span>
                             <MapPin className="w-5 h-5 text-red-500" />
                         </div>
                     </div>
 
                     {/* Copyright */}
-                    <div className="text-xs text-slate-600 dark:text-slate-500">
+                    <div className="text-xs text-foreground dark:text-slate-500">
                         © {new Date().getFullYear()} {storeSettings.aboutTitle}. جميع الحقوق محفوظة.
                     </div>
                 </div>
@@ -160,7 +160,7 @@ function FeatureBox({ icon, title, desc, iconColor, bgColor }: { icon: React.Rea
             </div>
             <div className="text-right">
                 <h4 className="text-foreground font-bold mb-1">{title}</h4>
-                <p className="text-xs text-slate-500">{desc}</p>
+                <p className="text-xs text-foreground">{desc}</p>
             </div>
         </div>
     )
@@ -174,7 +174,7 @@ function SocialButton({ icon, href, isWhatsapp }: { icon: React.ReactNode, href:
             rel="noopener noreferrer"
             className={cn(
                 "w-11 h-11 rounded-xl flex items-center justify-center border border-border dark:border-white/5 transition-all hover:scale-110",
-                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-white dark:bg-white/5 text-slate-400 hover:bg-primary hover:text-white shadow-sm dark:shadow-none"
+                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-white dark:bg-white/5 text-foreground hover:bg-primary hover:text-white shadow-sm dark:shadow-none"
             )}
         >
             {icon}

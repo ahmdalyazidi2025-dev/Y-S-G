@@ -26,7 +26,7 @@
   --secondary-foreground: 222 47% 11.2%;
 
   --muted: 210 40% 96.1%;
-  --muted-foreground: 215 25% 27%; /* Darker Gray for Readability (Slate 700) */
+  --muted-foreground: 222 47% 11%; /* Deep Slate (Almost Black) - Matched to Foreground */
 
   --accent: 210 40% 96.1%;
   --accent-foreground: 222 47% 11.2%;
@@ -60,7 +60,7 @@
   --secondary-foreground: 210 40% 98%;
 
   --muted: 217 32% 17%;
-  --muted-foreground: 215 20% 65%;
+  --muted-foreground: 210 40% 98%;
 
   --accent: 217 32% 17%;
   --accent-foreground: 210 40% 98%;

@@ -96,7 +96,7 @@ export function AdminSidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 space-y-2">
-                <p className="px-4 text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-4">Management</p>
+                <p className="px-4 text-[10px] text-foreground font-bold uppercase tracking-[0.2em] mb-4">Management</p>
                 {filteredNavItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
@@ -137,7 +137,7 @@ export function AdminSidebar() {
                 <p className="text-[10px] text-yellow-500 font-mono">
                     Debug: {currentUser ? `${currentUser.role} (${currentUser.id.slice(0, 4)})` : "No User"}
                 </p>
-                <p className="text-[10px] text-gray-500 font-mono">
+                <p className="text-[10px] text-foreground font-mono">
                     Items: {filteredNavItems.length}
                 </p>
             </div>
