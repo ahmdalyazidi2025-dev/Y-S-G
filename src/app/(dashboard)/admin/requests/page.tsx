@@ -177,23 +177,40 @@ export default function AdminRequestsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-300">
                     {Object.entries(groupedRequests).map(([name, requests]) => {
                         const pendingCount = requests.filter(r => r.status === 'pending').length
+                        const isUnknown = name === "غير معروف" || name === "عميل تجريبي"
+
                         return (
                             <button
                                 key={name}
                                 onClick={() => setSelectedCustomer(name)}
-                                className="group relative glass-card p-6 flex flex-col items-center gap-4 hover:bg-white/10 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border-t border-white/5"
+                                className="group relative glass-card p-6 flex flex-col items-center gap-4 hover:bg-primary/5 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border-t border-white/10 overflow-hidden"
                             >
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
                                 {pendingCount > 0 && (
-                                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold animate-pulse">
+                                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full font-bold animate-pulse shadow-lg shadow-orange-500/20 z-10">
                                         {pendingCount}
                                     </span>
                                 )}
-                                <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-inner group-hover:from-primary/20 group-hover:to-primary/10 transition-colors">
-                                    <Folder className="w-8 h-8 text-slate-500 group-hover:text-primary transition-colors" />
+
+                                <div className={cn(
+                                    "w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner transition-colors z-10",
+                                    isUnknown ? "bg-slate-100 dark:bg-slate-800" : "bg-primary/10"
+                                )}>
+                                    <Folder className={cn(
+                                        "w-8 h-8 transition-colors",
+                                        isUnknown ? "text-slate-400" : "text-primary group-hover:scale-110 duration-300"
+                                    )} />
                                 </div>
-                                <div className="text-center space-y-1">
-                                    <h3 className="font-bold text-white text-sm truncate max-w-[120px]">{name}</h3>
-                                    <p className="text-[10px] text-slate-500">{requests.length} طلبات</p>
+
+                                <div className="text-center space-y-1 z-10">
+                                    <h3 className={cn(
+                                        "font-bold text-sm truncate max-w-[120px]",
+                                        "text-foreground"
+                                    )}>{name}</h3>
+                                    <p className="text-[10px] text-muted-foreground font-medium bg-secondary/50 px-2 py-0.5 rounded-full inline-block">
+                                        {requests.length} طلبات
+                                    </p>
                                 </div>
                             </button>
                         )
