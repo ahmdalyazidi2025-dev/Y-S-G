@@ -11,7 +11,7 @@ import { compressImage } from "@/lib/image-utils"
 import Image from "next/image"
 
 export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { addProductRequest } = useStore()
+    const { addProductRequest, currentUser } = useStore()
     const [description, setDescription] = useState("")
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -43,11 +43,12 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         addProductRequest({
-            customerName: "عميل تجريبي",
+            customerName: currentUser?.name || "عميل تجريبي",
             description,
             image: previewImage || "https://placehold.co/400x400/1c2a36/white?text=No+Photo"
         })
         setDescription("")
+        // name state removed
         setPreviewImage(null)
         toast.success("تم إرسال طلبك بنجاح! سنقوم بالتواصل معك قريباً.")
         onClose()
