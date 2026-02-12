@@ -177,37 +177,54 @@ export default function AdminRequestsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-300">
                     {Object.entries(groupedRequests).map(([name, requests]) => {
                         const pendingCount = requests.filter(r => r.status === 'pending').length
-                        const isUnknown = name === "غير معروف" || name === "عميل تجريبي"
+                        const thumbnails = requests
+                            .filter(r => r.image)
+                            .map(r => r.image!)
+                            .slice(0, 4)
 
                         return (
                             <button
                                 key={name}
                                 onClick={() => setSelectedCustomer(name)}
-                                className="group relative glass-card p-6 flex flex-col items-center gap-4 hover:bg-primary/5 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border-t border-white/10 overflow-hidden"
+                                className="group relative glass-card p-4 flex flex-col items-center gap-4 hover:bg-primary/5 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border-t border-white/10 overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                 {pendingCount > 0 && (
-                                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full font-bold animate-pulse shadow-lg shadow-orange-500/20 z-10">
+                                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full font-bold animate-pulse shadow-lg shadow-orange-500/20 z-10 text-shadow">
                                         {pendingCount}
                                     </span>
                                 )}
 
-                                <div className={cn(
-                                    "w-16 h-16 rounded-2xl flex items-center justify-center shadow-inner transition-colors z-10",
-                                    isUnknown ? "bg-slate-100 dark:bg-slate-800" : "bg-primary/10"
-                                )}>
-                                    <Folder className={cn(
-                                        "w-8 h-8 transition-colors",
-                                        isUnknown ? "text-slate-400" : "text-primary group-hover:scale-110 duration-300"
-                                    )} />
+                                <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative shadow-inner group-hover:shadow-primary/20 transition-all">
+                                    {thumbnails.length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-0.5 w-full h-full bg-slate-900/50">
+                                            {thumbnails.map((src, idx) => (
+                                                <div key={idx} className="relative w-full h-full">
+                                                    <Image
+                                                        src={src}
+                                                        alt="preview"
+                                                        fill
+                                                        className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ))}
+                                            {thumbnails.length < 4 && Array.from({ length: 4 - thumbnails.length }).map((_, idx) => (
+                                                <div key={`empty-${idx}`} className="bg-white/5 flex items-center justify-center">
+                                                    <div className="w-2 h-2 rounded-full bg-white/10" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                            <Folder className="w-8 h-8 text-slate-400" />
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="text-center space-y-1 z-10">
-                                    <h3 className={cn(
-                                        "font-bold text-sm truncate max-w-[120px]",
-                                        "text-foreground"
-                                    )}>{name}</h3>
+                                <div className="text-center space-y-1 z-10 w-full">
+                                    <h3 className="font-bold text-sm truncate w-full text-foreground px-2">{name}</h3>
                                     <p className="text-[10px] text-muted-foreground font-medium bg-secondary/50 px-2 py-0.5 rounded-full inline-block">
                                         {requests.length} طلبات
                                     </p>
