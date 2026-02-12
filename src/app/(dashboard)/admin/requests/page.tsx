@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2 } from "lucide-react"
+import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, ProductRequest } from "@/context/store-context"
@@ -21,8 +21,18 @@ export default function AdminRequestsPage() {
     const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
+    const [viewMode, setViewMode] = useState<'all' | 'folders'>('all')
+    const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
 
     const filteredRequests = productRequests.filter(r => r.status === statusFilter)
+
+    // Group requests by customer name
+    const groupedRequests = productRequests.reduce((acc, request) => {
+        const name = request.customerName || "غير معروف"
+        if (!acc[name]) acc[name] = []
+        acc[name].push(request)
+        return acc
+    }, {} as Record<string, ProductRequest[]>)
 
     return (
         <div className="space-y-6">
@@ -70,54 +80,175 @@ export default function AdminRequestsPage() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredRequests.length === 0 ? (
-                    <div className="col-span-full p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
-                        <Camera className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                        {statusFilter === 'pending' ? "لا توجد طلبات جديدة حالياً" : "لا توجد طلبات في هذا القسم"}
-                    </div>
-                ) : (
-                    filteredRequests.map((request) => {
-                        const status = REQUEST_STATUS[request.status]
-                        return (
-                            <div
-                                key={request.id}
-                                className="glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
-                                onClick={() => setSelectedRequest(request)}
-                            >
-                                <div className="w-20 h-20 bg-black/40 rounded-xl overflow-hidden flex-shrink-0 relative">
-                                    {request.image ? (
-                                        <Image
-                                            src={request.image}
-                                            alt="product"
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                            <Camera className="w-8 h-8 text-slate-700" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1 space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-bold text-white text-sm">{request.customerName}</h3>
-                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
-                                            {status.label}
-                                        </span>
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 line-clamp-2">{request.description || "بدون وصف"}</p>
-                                    <div className="flex items-center justify-between text-[9px] text-slate-500">
-                                        <span>{request.createdAt.toLocaleDateString('ar-SA')}</span>
-                                        <span className="font-mono">#{request.id}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                    })
-                )}
+            {/* View Toggle & Content */}
+            <div className="flex items-center gap-2 mb-4">
+                <button
+                    onClick={() => { setViewMode('all'); setSelectedCustomer(null); }}
+                    className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                        viewMode === 'all' && !selectedCustomer
+                            ? "bg-primary text-white shadow-lg"
+                            : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    )}
+                >
+                    <Clock className="w-4 h-4" />
+                    الكل
+                </button>
+                <button
+                    onClick={() => { setViewMode('folders'); setSelectedCustomer(null); }}
+                    className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                        viewMode === 'folders' || selectedCustomer
+                            ? "bg-primary text-white shadow-lg"
+                            : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    )}
+                >
+                    <Folder className="w-4 h-4" />
+                    المجلدات
+                </button>
             </div>
+
+            {selectedCustomer ? (
+                <div className="space-y-4">
+                    <button
+                        onClick={() => setSelectedCustomer(null)}
+                        className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4"
+                    >
+                        <ArrowRight className="w-4 h-4 rotate-180" />
+                        <span className="text-sm font-bold">العودة للمجلدات</span>
+                    </button>
+
+                    <div className="flex items-center gap-4 mb-6 bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">{selectedCustomer}</h2>
+                            <p className="text-slate-400 text-xs text-right">
+                                {groupedRequests[selectedCustomer]?.length || 0} طلبات
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {productRequests
+                            .filter(r => r.customerName === selectedCustomer)
+                            .map((request) => {
+                                const status = REQUEST_STATUS[request.status]
+                                return (
+                                    <div
+                                        key={request.id}
+                                        className="glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
+                                        onClick={() => setSelectedRequest(request)}
+                                    >
+                                        <div className="w-20 h-20 bg-black/40 rounded-xl overflow-hidden flex-shrink-0 relative">
+                                            {request.image ? (
+                                                <Image
+                                                    src={request.image}
+                                                    alt="product"
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                    <Camera className="w-8 h-8 text-slate-700" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
+                                                    {status.label}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 line-clamp-2">{request.description || "بدون وصف"}</p>
+                                            <div className="flex items-center justify-between text-[9px] text-slate-500">
+                                                <span>{request.createdAt.toLocaleDateString('ar-SA')}</span>
+                                                <span className="font-mono">#{request.id}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                    </div>
+                </div>
+            ) : viewMode === 'folders' ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in zoom-in duration-300">
+                    {Object.entries(groupedRequests).map(([name, requests]) => {
+                        const pendingCount = requests.filter(r => r.status === 'pending').length
+                        return (
+                            <button
+                                key={name}
+                                onClick={() => setSelectedCustomer(name)}
+                                className="group relative glass-card p-6 flex flex-col items-center gap-4 hover:bg-white/10 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/10 border-t border-white/5"
+                            >
+                                {pendingCount > 0 && (
+                                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold animate-pulse">
+                                        {pendingCount}
+                                    </span>
+                                )}
+                                <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-inner group-hover:from-primary/20 group-hover:to-primary/10 transition-colors">
+                                    <Folder className="w-8 h-8 text-slate-500 group-hover:text-primary transition-colors" />
+                                </div>
+                                <div className="text-center space-y-1">
+                                    <h3 className="font-bold text-white text-sm truncate max-w-[120px]">{name}</h3>
+                                    <p className="text-[10px] text-slate-500">{requests.length} طلبات</p>
+                                </div>
+                            </button>
+                        )
+                    })}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {filteredRequests.length === 0 ? (
+                        <div className="col-span-full p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                            <Camera className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                            {statusFilter === 'pending' ? "لا توجد طلبات جديدة حالياً" : "لا توجد طلبات في هذا القسم"}
+                        </div>
+                    ) : (
+                        filteredRequests.map((request) => {
+                            const status = REQUEST_STATUS[request.status]
+                            return (
+                                <div
+                                    key={request.id}
+                                    className="glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
+                                    onClick={() => setSelectedRequest(request)}
+                                >
+                                    <div className="w-20 h-20 bg-black/40 rounded-xl overflow-hidden flex-shrink-0 relative">
+                                        {request.image ? (
+                                            <Image
+                                                src={request.image}
+                                                alt="product"
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                <Camera className="w-8 h-8 text-slate-700" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="font-bold text-white text-sm">{request.customerName}</h3>
+                                            <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
+                                                {status.label}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 line-clamp-2">{request.description || "بدون وصف"}</p>
+                                        <div className="flex items-center justify-between text-[9px] text-slate-500">
+                                            <span>{request.createdAt.toLocaleDateString('ar-SA')}</span>
+                                            <span className="font-mono">#{request.id}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+            )}
 
             {/* Request Details Modal */}
             <AnimatePresence>
