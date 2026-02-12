@@ -148,9 +148,9 @@ export default function CustomersPage() {
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     {/* Search Input */}
                     <div className="relative flex-1 sm:w-64">
-                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                            className="bg-white/5 border-white/10 rounded-full pr-10 text-right h-10 w-full focus:bg-white/10 transition-colors"
+                            className="bg-white/5 border-white/10 rounded-full pr-10 text-right h-10 w-full focus:bg-white/10 transition-colors text-foreground placeholder:text-muted-foreground"
                             placeholder="بحث باسم، جوال، أو بريد العميل..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -160,7 +160,7 @@ export default function CustomersPage() {
                     <div className="flex gap-2">
                         <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
                             <DialogTrigger>
-                                <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4 w-full sm:w-auto justify-center">
+                                <Button variant="outline" className="border-white/10 hover:bg-muted/10 text-muted-foreground gap-2 rounded-full h-10 px-4 w-full sm:w-auto justify-center">
                                     <ShieldCheck className="w-4 h-4" />
                                     <span>بث</span>
                                 </Button>
@@ -237,7 +237,7 @@ export default function CustomersPage() {
                             "group flex items-center justify-between px-3 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex-1 cursor-pointer min-w-fit gap-2",
                             activeTab === tab.id
                                 ? "bg-primary text-white shadow-lg"
-                                : "text-slate-500 hover:bg-white/5 hover:text-white"
+                                : "text-muted-foreground hover:bg-muted/10 hover:text-foreground"
                         )}
                     >
                         <span>{tab.label}</span>
@@ -250,7 +250,7 @@ export default function CustomersPage() {
                             }}
                             className={cn(
                                 "p-1.5 rounded-full hover:bg-white/20 transition-colors",
-                                activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-white"
+                                activeTab === tab.id ? "text-white" : "text-muted-foreground group-hover:text-foreground"
                             )}
                             title={`إرسال إشعار لـ ${tab.label}`}
                         >
@@ -262,7 +262,7 @@ export default function CustomersPage() {
 
             <div className="space-y-3">
                 {filteredCustomers.length === 0 ? (
-                    <div className="p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                    <div className="p-20 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/5">
                         لا يوجد عملاء في هذه الفئة
                     </div>
                 ) : (
@@ -276,16 +276,16 @@ export default function CustomersPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-3">
-                                            <h3 className="font-bold text-white text-lg">{customer.name}</h3>
+                                            <h3 className="font-bold text-foreground text-lg">{customer.name}</h3>
                                             {stats.totalSpent > 5000 && (
                                                 <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
                                                     VIP
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                             <div className="flex items-center gap-1">
-                                                <ShieldCheck className="w-3 h-3 text-teal-500" />
+                                                <ShieldCheck className="w-3 h-3 text-teal-600 dark:text-teal-500" />
                                                 <span className="truncate max-w-[100px] sm:max-w-auto">{customer.email}</span>
                                             </div>
 
