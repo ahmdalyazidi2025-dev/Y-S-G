@@ -154,35 +154,35 @@ export default function AdminRequestsPage() {
                                             unoptimized
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                            <Camera className="w-16 h-16 text-slate-700" />
+                                        <div className="w-full h-full flex items-center justify-center bg-muted/20">
+                                            <Camera className="w-16 h-16 text-muted-foreground/50" />
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-2 text-slate-400 text-[10px]">
+                                        <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
                                             <User className="w-3 h-3" />
                                             العميل
                                         </div>
-                                        <p className="font-bold text-white text-xs">{selectedRequest.customerName}</p>
+                                        <p className="font-bold text-foreground text-xs">{selectedRequest.customerName}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-2 text-slate-400 text-[10px]">
+                                        <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
                                             <Calendar className="w-3 h-3" />
                                             التاريخ
                                         </div>
-                                        <p className="font-bold text-white text-xs">{selectedRequest.createdAt.toLocaleString('ar-SA')}</p>
+                                        <p className="font-bold text-foreground text-xs">{selectedRequest.createdAt.toLocaleString('ar-SA')}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-slate-400 text-[10px]">
+                                    <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
                                         <MessageSquare className="w-3 h-3" />
                                         الوصف
                                     </div>
-                                    <p className="text-xs text-slate-300 bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <p className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-xl border border-border/50">
                                         {selectedRequest.description || "لا يوجد وصف متوفر لهذا المنتج"}
                                     </p>
                                 </div>
