@@ -8,8 +8,10 @@ import {
 } from "recharts"
 import {
     TrendingUp, DollarSign, Users, Award,
-    ArrowUpRight, ArrowDownRight, Calendar, UserPlus
+    ArrowUpRight, ArrowDownRight, Calendar, UserPlus, ArrowRight
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { format, subDays, isSameDay, startOfMonth, eachDayOfInterval } from "date-fns"
 import { ar } from "date-fns/locale"
@@ -86,7 +88,12 @@ export default function ReportsPage() {
     return (
         <div className="space-y-8 p-1">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <Link href="/admin">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-foreground" />
+                    </Button>
+                </Link>
                 <div>
                     <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-500">
                         التقارير والإحصائيات
