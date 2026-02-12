@@ -1,9 +1,11 @@
 "use client"
 
 import { useStore } from "@/context/store-context"
-import { Trash2, Copy, Search, UserPlus } from "lucide-react"
+import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
@@ -25,9 +27,16 @@ export default function JoinRequestsPage() {
     return (
         <div className="space-y-6 p-6">
             <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-black text-foreground mb-2">طلبات الانضمام</h1>
-                    <p className="text-muted-foreground text-sm">إدارة طلبات تسجيل العملاء الجدد</p>
+                <div className="flex items-center gap-4">
+                    <Link href="/admin">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+                            <ArrowRight className="w-5 h-5 text-foreground" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-black text-foreground mb-1">طلبات الانضمام</h1>
+                        <p className="text-muted-foreground text-sm">إدارة طلبات تسجيل العملاء الجدد</p>
+                    </div>
                 </div>
                 <div className="bg-card border border-border rounded-2xl px-4 py-2 flex items-center gap-2 text-foreground shadow-sm">
                     <UserPlus className="w-5 h-5 text-primary" />

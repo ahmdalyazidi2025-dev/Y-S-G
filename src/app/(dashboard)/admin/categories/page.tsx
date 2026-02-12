@@ -45,7 +45,7 @@ export default function CategoriesPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 text-foreground/70 hover:text-foreground transition-colors">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-foreground transition-colors">
                             <ArrowRight className="w-6 h-6" />
                         </Button>
                     </Link>

@@ -108,8 +108,8 @@ export default function OffersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                            <ArrowRight className="w-6 h-6 text-white" />
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+                            <ArrowRight className="w-6 h-6 text-foreground" />
                         </Button>
                     </Link>
                     <div>

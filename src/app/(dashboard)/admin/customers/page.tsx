@@ -138,7 +138,7 @@ export default function CustomersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted text-foreground">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-foreground">
                             <ArrowRight className="w-5 h-5 rotate-180 rtl:rotate-0 transform" />
                         </Button>
                     </Link>

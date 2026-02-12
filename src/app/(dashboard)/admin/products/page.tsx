@@ -109,7 +109,7 @@ export default function ProductsPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
                             <ArrowRight className="w-5 h-5 text-foreground" />
                         </Button>
                     </Link>
