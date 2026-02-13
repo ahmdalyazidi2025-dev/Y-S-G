@@ -44,15 +44,15 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
             className="h-full"
         >
             <Card className={cn(
-                "h-full border border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 rounded-[24px] overflow-hidden group relative bg-card",
-                hasActiveOffer ? "ring-1 ring-yellow-500/50" : "hover:border-primary/50"
+                "h-full border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden group relative bg-white dark:bg-card",
+                hasActiveOffer ? "ring-1 ring-yellow-400" : "hover:border-primary/50"
             )}>
                 {/* Offer Shine Effect */}
                 {hasActiveOffer && (
                     <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-transparent pointer-events-none z-0" />
                 )}
 
-                <CardContent className="p-0 relative aspect-square bg-secondary/20 flex items-center justify-center overflow-hidden">
+                <CardContent className="p-0 relative aspect-square bg-gray-50 dark:bg-secondary/10 flex items-center justify-center overflow-hidden">
                     {/* Product Image/Icon */}
                     <div
                         className="w-full h-full flex items-center justify-center cursor-pointer relative z-10"
@@ -96,7 +96,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-900/80 to-transparent z-10" />
                 </CardContent>
 
-                <CardFooter className="p-3 flex flex-col items-start gap-2 relative z-20 bg-card pt-3">
+                <CardFooter className="p-3 flex flex-col items-start gap-1.5 relative z-20 bg-white dark:bg-card pt-3 border-t border-gray-100 dark:border-border/50">
                     <div className="w-full space-y-1 text-right">
                         <h3 className="font-bold text-sm text-foreground leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-primary transition-colors">
                             {item.name}
