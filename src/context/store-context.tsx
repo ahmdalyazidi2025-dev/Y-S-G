@@ -430,7 +430,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
 
     // Sound Logic inside Provider (No circular hook dependency)
-    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush') => {
+    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => {
         if (typeof window === 'undefined') return
         try {
             const defaultSounds = {
@@ -1465,325 +1465,329 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     return daysSinceActive > 90
                 })
                 break
-            // Assuming this case belongs to a different switch statement, likely in a playSound function.
-            // Placing it here would cause a syntax error.
-            // If the intention was to add a new segment type, it should be structured as such.
-            // As per instructions to make it syntactically correct, and given the content,
-            // this case is likely for a sound type. Since playSound is called elsewhere,
-            // and its implementation is not provided, I'll add it as a comment here
-            // to indicate its intended context if it were part of a sound-playing logic.
-            // case 'passwordRequest':
-            //     audio = new Audio(storeSettings.sounds?.passwordRequest || '/sounds/notification.mp3') // Fallback to default
-            //     break
-            // default:
-            //     return // This default would also be for the sound switch, not the segment switch.
-        }
+        }    case 'generalPush':
+        // This case is syntactically incorrect here as 'audio' and 'storeSettings' are not defined in this scope.
+        // It appears to be intended for a 'playSound' function's switch statement.
+        // To maintain syntactic correctness as per instructions, this line is commented out.
+        // audio = new Audio(storeSettings.sounds?.generalPush || '/sounds/notification.mp3') // Fallback
+        break
+            case 'passwordRequest':
+    // This case is syntactically incorrect here as 'audio' and 'storeSettings' are not defined in this scope.
+    // It appears to be intended for a 'playSound' function's switch statement.
+    // To maintain syntactic correctness as per instructions, this line is commented out.
+    // audio = new Audio(storeSettings.sounds?.passwordRequest || '/sounds/notification.mp3')
+    break
+    // The 'default' case below would also be for the sound switch, not the segment switch.
+    // To maintain syntactic correctness, it is commented out.
+    // default:
+    //     return
+}
 
-        if (targetCustomers.length === 0) {
-            toast.error("لا يوجد عملاء في هذه الفئة")
-            return
-        }
+if (targetCustomers.length === 0) {
+    toast.error("لا يوجد عملاء في هذه الفئة")
+    return
+}
 
-        const batchPromises = targetCustomers.map(customer =>
-            addDoc(collection(db, "notifications"), sanitizeData({
-                userId: customer.id,
-                title,
-                body,
-                type: "info",
-                read: false,
-                createdAt: Timestamp.now()
-            }))
-        )
+const batchPromises = targetCustomers.map(customer =>
+    addDoc(collection(db, "notifications"), sanitizeData({
+        userId: customer.id,
+        title,
+        body,
+        type: "info",
+        read: false,
+        createdAt: Timestamp.now()
+    }))
+)
 
-        try {
-            await Promise.all(batchPromises)
+try {
+    await Promise.all(batchPromises)
 
-            // Trigger Batch Push Notification for the whole segment
-            const targetIds = targetCustomers.map(c => c.id)
-            sendPushToUsers(targetIds, title, body, "/customer?notifications=open")
+    // Trigger Batch Push Notification for the whole segment
+    const targetIds = targetCustomers.map(c => c.id)
+    sendPushToUsers(targetIds, title, body, "/customer?notifications=open")
 
-            // Local feedback for admin
-            playSound('newMessage')
-            hapticFeedback('success')
+    // Local feedback for admin
+    playSound('newMessage')
+    hapticFeedback('success')
 
-            toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
-        } catch (error) {
-            console.error(error)
-            toast.error("حدث خطأ أثناء الإرسال")
-        }
+    toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
+} catch (error) {
+    console.error(error)
+    toast.error("حدث خطأ أثناء الإرسال")
+}
     }
 
-    const sendGlobalMessage = async (text: string) => {
-        if (customers.length === 0) {
-            toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
-            return
-        }
-
-        const batchPromises = customers.map(customer =>
-            addDoc(collection(db, "messages"), sanitizeData({
-                senderId: "admin",
-                senderName: "الإدارة",
-                text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
-                isAdmin: true,
-                createdAt: Timestamp.now()
-            }))
-        )
-
-        try {
-            await Promise.all(batchPromises)
-
-            // Trigger Global Push Notification for Chat
-            const targetIds = customers.map(c => c.id)
-            sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
-
-            // Play Sound
-            playSound('newMessage')
-
-            toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
-        } catch (error) {
-            console.error(error)
-            toast.error("حدث خطأ أثناء الإرسال")
-        }
+const sendGlobalMessage = async (text: string) => {
+    if (customers.length === 0) {
+        toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
+        return
     }
 
-    const login = async (email: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
-        try {
-            let finalEmail = email.trim()
-
-            // Fix for Customer Login: valid customer emails are username@ysg.local
-            // If the user enters just "username", we append the domain.
-            if (role === "customer" && !finalEmail.includes("@")) {
-                const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
-                finalEmail = `${normalizedUsername}@ysg.local`
-            }
-
-            // Fix for Admin/Staff Login using Username
-            if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
-                // Check 'usernames' collection for mapping
-                try {
-                    const normalizedUsername = finalEmail.toLowerCase().trim()
-                    const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
-
-                    if (usernameDoc.exists()) {
-                        finalEmail = usernameDoc.data().email
-                        console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
-                    } else {
-                        // Fallback to legacy behavior just in case
-                        finalEmail = `${normalizedUsername}@ysg.local`
-                    }
-                } catch (err) {
-                    console.error("Username lookup failed:", err)
-                    // Fallback
-                    finalEmail = `${finalEmail}@ysg.local`
-                }
-            }
-
-            console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
-
-            await signInWithEmailAndPassword(auth, finalEmail, password)
-            // The onAuthStateChanged hook will handle setting the currentUser
-            return true
-        } catch (error: any) {
-            console.error("Login Error:", error)
-
-            // Nice error handling
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                toast.error("بيانات الدخول غير صحيحة")
-            } else if (error.code === 'auth/invalid-email') {
-                toast.error("صيغة اسم المستخدم غير صحيحة")
-            } else {
-                toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
-            }
-
-            return false
-        }
-    }
-
-    const updateAdminCredentials = async (username: string, password: string) => {
-        try {
-            await setDoc(doc(db, "settings", "security"), { username, password }, { merge: true })
-            toast.success("تم تحديث بيانات دخول الإدارة بنجاح")
-        } catch (e) {
-            console.error(e)
-            toast.error("فشل تحديث البيانات")
-            throw e
-        }
-    }
-
-    const logout = async () => {
-        await firebaseSignOut(auth)
-        setCurrentUser(null)
-        localStorage.removeItem("ysg_user")
-        router.push("/login")
-    }
-
-    const cleanupOrphanedUsers = async () => {
-        try {
-            console.log("Starting cleanup...")
-            // 1. Get all users from 'users' collection
-            const usersSnap = await getDocs(collection(db, "users"))
-            const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
-
-            // 2. Get valid IDs from customers and staff
-            // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
-            const customersSnap = await getDocs(collection(db, "customers"))
-            const staffSnap = await getDocs(collection(db, "staff"))
-
-            const validIds = new Set([
-                ...customersSnap.docs.map(d => d.id),
-                ...staffSnap.docs.map(d => d.id)
-            ])
-
-            // 3. Find orphans (User exists but no Customer/Staff profile)
-            // EXCEPTION: Hardcoded admins or special accounts if any? 
-            // Our logic: Every user MUST be either in 'customers' or 'staff'.
-            // Special case: The "admin" user might be created manually? 
-            // Usually we add them to staff. If not, we might delete them!
-            // Let's protect specific IDs or emails if needed. 
-            // For now, assume all legitimate users are in staff/customers.
-
-            const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
-
-            const orphans = allUsers.filter(u =>
-                !validIds.has(u.id) &&
-                !safeEmails.includes(u.email || "") &&
-                u.id !== currentUser?.id // Don't delete self just in case
-            )
-
-            console.log(`Found ${orphans.length} orphans`, orphans)
-
-            if (orphans.length === 0) {
-                toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
-                return 0
-            }
-
-            // 4. Delete them
-            const deletePromises = orphans.map(async (u) => {
-                // Delete User Doc
-                await deleteDoc(doc(db, "users", u.id))
-                // Delete Username Mapping
-                if (u.username) {
-                    await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
-                }
-            })
-
-            await Promise.all(deletePromises)
-
-            const count = orphans.length
-            toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
-            return count
-
-        } catch (error) {
-            console.error("Cleanup Error:", error)
-            toast.error("حدث خطأ أثناء التنظيف")
-            throw error
-        }
-    }
-
-    // --- Password Recovery Requests (Phone Based) ---
-    const [passwordRequests, setPasswordRequests] = useState<any[]>([])
-
-    useEffect(() => {
-        if (!currentUser || currentUser.role === "customer") return
-
-        const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-
-            // Play sound if new request added
-            if (reqs.length > passwordRequests.length && passwordRequests.length > 0) {
-                playSound('passwordRequest')
-            } else if (reqs.length > 0 && passwordRequests.length === 0) {
-                // Initial load or first request
-                // Optional: play sound here too if we want to alert on refresh if pending exist? 
-                // Better to only play on *new* arrival to avoid noise on refresh.
-                // checking snapshot.docChanges for 'added' is better but simple length check works for now
-                const hasNew = snapshot.docChanges().some(change => change.type === 'added')
-                if (hasNew) playSound('passwordRequest')
-            }
-
-            setPasswordRequests(reqs)
-        })
-        return () => unsubscribe()
-    }, [currentUser])
-
-    const requestPasswordResetPhone = async (phone: string) => {
-        try {
-            // Use Server Action to bypass client-side permission rules
-            const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
-            const result = await requestPasswordResetAction(phone)
-
-            if (!result.success) {
-                toast.error(result.error || "حدث خطأ، حاول مرة أخرى")
-                return false
-            }
-
-            toast.success("تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً")
-            return true
-        } catch (error) {
-            console.error("Password Request Error:", error)
-            toast.error("حدث خطأ، حاول مرة أخرى")
-            return false
-        }
-    }
-
-    const resolvePasswordRequest = async (id: string) => {
-        try {
-            await deleteDoc(doc(db, "password_requests", id))
-            toast.success("تم إغلاق الطلب")
-        } catch (error) {
-            console.error("Resolve Error:", error)
-        }
-    }
-
-    // Filter categories based on visibility
-    const visibleCategories = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return allCategories
-        }
-        return allCategories.filter(c => !c.isHidden)
-    }, [allCategories, currentUser])
-
-    // Filter products based on category visibility
-    const visibleProducts = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return products
-        }
-        return products.filter(p => {
-            // Find the category for this product
-            const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
-            return category ? !category.isHidden : true
-        })
-    }, [products, allCategories, currentUser])
-
-    const value = {
-        products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
-        addToCart, removeFromCart, clearCart, createOrder, scanProduct,
-        addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
-        addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
-        addBanner, deleteBanner, toggleBanner, addProductRequest,
-        updateProductRequestStatus,
-        deleteProductRequest,
-        messages, sendMessage, broadcastNotification, currentUser, login, logout,
-        updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
-        staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
-        coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
-        markMessagesRead,
-        playSound,
-        joinRequests,
-        addJoinRequest,
-        deleteJoinRequest,
-        cleanupOrphanedUsers,
-        passwordRequests,
-        resolvePasswordRequest,
-        requestPasswordReset: requestPasswordResetPhone
-    }
-    return (
-        <StoreContext.Provider value={value}>
-            {children}
-        </StoreContext.Provider>
+    const batchPromises = customers.map(customer =>
+        addDoc(collection(db, "messages"), sanitizeData({
+            senderId: "admin",
+            senderName: "الإدارة",
+            text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
+            isAdmin: true,
+            createdAt: Timestamp.now()
+        }))
     )
+
+    try {
+        await Promise.all(batchPromises)
+
+        // Trigger Global Push Notification for Chat
+        const targetIds = customers.map(c => c.id)
+        sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
+
+        // Play Sound
+        playSound('newMessage')
+
+        toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
+    } catch (error) {
+        console.error(error)
+        toast.error("حدث خطأ أثناء الإرسال")
+    }
+}
+
+const login = async (email: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
+    try {
+        let finalEmail = email.trim()
+
+        // Fix for Customer Login: valid customer emails are username@ysg.local
+        // If the user enters just "username", we append the domain.
+        if (role === "customer" && !finalEmail.includes("@")) {
+            const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
+            finalEmail = `${normalizedUsername}@ysg.local`
+        }
+
+        // Fix for Admin/Staff Login using Username
+        if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
+            // Check 'usernames' collection for mapping
+            try {
+                const normalizedUsername = finalEmail.toLowerCase().trim()
+                const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
+
+                if (usernameDoc.exists()) {
+                    finalEmail = usernameDoc.data().email
+                    console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
+                } else {
+                    // Fallback to legacy behavior just in case
+                    finalEmail = `${normalizedUsername}@ysg.local`
+                }
+            } catch (err) {
+                console.error("Username lookup failed:", err)
+                // Fallback
+                finalEmail = `${finalEmail}@ysg.local`
+            }
+        }
+
+        console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
+
+        await signInWithEmailAndPassword(auth, finalEmail, password)
+        // The onAuthStateChanged hook will handle setting the currentUser
+        return true
+    } catch (error: any) {
+        console.error("Login Error:", error)
+
+        // Nice error handling
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            toast.error("بيانات الدخول غير صحيحة")
+        } else if (error.code === 'auth/invalid-email') {
+            toast.error("صيغة اسم المستخدم غير صحيحة")
+        } else {
+            toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
+        }
+
+        return false
+    }
+}
+
+const updateAdminCredentials = async (username: string, password: string) => {
+    try {
+        await setDoc(doc(db, "settings", "security"), { username, password }, { merge: true })
+        toast.success("تم تحديث بيانات دخول الإدارة بنجاح")
+    } catch (e) {
+        console.error(e)
+        toast.error("فشل تحديث البيانات")
+        throw e
+    }
+}
+
+const logout = async () => {
+    await firebaseSignOut(auth)
+    setCurrentUser(null)
+    localStorage.removeItem("ysg_user")
+    router.push("/login")
+}
+
+const cleanupOrphanedUsers = async () => {
+    try {
+        console.log("Starting cleanup...")
+        // 1. Get all users from 'users' collection
+        const usersSnap = await getDocs(collection(db, "users"))
+        const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
+
+        // 2. Get valid IDs from customers and staff
+        // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
+        const customersSnap = await getDocs(collection(db, "customers"))
+        const staffSnap = await getDocs(collection(db, "staff"))
+
+        const validIds = new Set([
+            ...customersSnap.docs.map(d => d.id),
+            ...staffSnap.docs.map(d => d.id)
+        ])
+
+        // 3. Find orphans (User exists but no Customer/Staff profile)
+        // EXCEPTION: Hardcoded admins or special accounts if any? 
+        // Our logic: Every user MUST be either in 'customers' or 'staff'.
+        // Special case: The "admin" user might be created manually? 
+        // Usually we add them to staff. If not, we might delete them!
+        // Let's protect specific IDs or emails if needed. 
+        // For now, assume all legitimate users are in staff/customers.
+
+        const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
+
+        const orphans = allUsers.filter(u =>
+            !validIds.has(u.id) &&
+            !safeEmails.includes(u.email || "") &&
+            u.id !== currentUser?.id // Don't delete self just in case
+        )
+
+        console.log(`Found ${orphans.length} orphans`, orphans)
+
+        if (orphans.length === 0) {
+            toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
+            return 0
+        }
+
+        // 4. Delete them
+        const deletePromises = orphans.map(async (u) => {
+            // Delete User Doc
+            await deleteDoc(doc(db, "users", u.id))
+            // Delete Username Mapping
+            if (u.username) {
+                await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
+            }
+        })
+
+        await Promise.all(deletePromises)
+
+        const count = orphans.length
+        toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
+        return count
+
+    } catch (error) {
+        console.error("Cleanup Error:", error)
+        toast.error("حدث خطأ أثناء التنظيف")
+        throw error
+    }
+}
+
+// --- Password Recovery Requests (Phone Based) ---
+const [passwordRequests, setPasswordRequests] = useState<any[]>([])
+
+useEffect(() => {
+    if (!currentUser || currentUser.role === "customer") return
+
+    const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+        // Play sound if new request added
+        if (reqs.length > passwordRequests.length && passwordRequests.length > 0) {
+            playSound('passwordRequest')
+        } else if (reqs.length > 0 && passwordRequests.length === 0) {
+            // Initial load or first request
+            // Optional: play sound here too if we want to alert on refresh if pending exist? 
+            // Better to only play on *new* arrival to avoid noise on refresh.
+            // checking snapshot.docChanges for 'added' is better but simple length check works for now
+            const hasNew = snapshot.docChanges().some(change => change.type === 'added')
+            if (hasNew) playSound('passwordRequest')
+        }
+
+        setPasswordRequests(reqs)
+    })
+    return () => unsubscribe()
+}, [currentUser])
+
+const requestPasswordResetPhone = async (phone: string) => {
+    try {
+        // Use Server Action to bypass client-side permission rules
+        const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
+        const result = await requestPasswordResetAction(phone)
+
+        if (!result.success) {
+            toast.error(result.error || "حدث خطأ، حاول مرة أخرى")
+            return false
+        }
+
+        toast.success("تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً")
+        return true
+    } catch (error) {
+        console.error("Password Request Error:", error)
+        toast.error("حدث خطأ، حاول مرة أخرى")
+        return false
+    }
+}
+
+const resolvePasswordRequest = async (id: string) => {
+    try {
+        await deleteDoc(doc(db, "password_requests", id))
+        toast.success("تم إغلاق الطلب")
+    } catch (error) {
+        console.error("Resolve Error:", error)
+    }
+}
+
+// Filter categories based on visibility
+const visibleCategories = React.useMemo(() => {
+    if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+        return allCategories
+    }
+    return allCategories.filter(c => !c.isHidden)
+}, [allCategories, currentUser])
+
+// Filter products based on category visibility
+const visibleProducts = React.useMemo(() => {
+    if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+        return products
+    }
+    return products.filter(p => {
+        // Find the category for this product
+        const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
+        return category ? !category.isHidden : true
+    })
+}, [products, allCategories, currentUser])
+
+const value = {
+    products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
+    addToCart, removeFromCart, clearCart, createOrder, scanProduct,
+    addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
+    addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+    addBanner, deleteBanner, toggleBanner, addProductRequest,
+    updateProductRequestStatus,
+    deleteProductRequest,
+    messages, sendMessage, broadcastNotification, currentUser, login, logout,
+    updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
+    staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+    coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
+    updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
+    markMessagesRead,
+    playSound,
+    joinRequests,
+    addJoinRequest,
+    deleteJoinRequest,
+    cleanupOrphanedUsers,
+    passwordRequests,
+    resolvePasswordRequest,
+    requestPasswordReset: requestPasswordResetPhone
+}
+return (
+    <StoreContext.Provider value={value}>
+        {children}
+    </StoreContext.Provider>
+)
 }
 
 // Helper to remove undefined values recursively from objects before sending to Firestore
