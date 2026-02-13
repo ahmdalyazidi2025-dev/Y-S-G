@@ -17,9 +17,13 @@ export function CouponManager() {
     const [code, setCode] = useState("")
     const [discount, setDiscount] = useState("10")
     const [usageLimit, setUsageLimit] = useState("100")
-    const [expiryDays, setExpiryDays] = useState("30")
+    // Replaced expiryDays with explicit dates
+    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
+    const [endDate, setEndDate] = useState(new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0])
+    const [customerLimit, setCustomerLimit] = useState("1") // New: Limit per customer
     const [minOrderValue, setMinOrderValue] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<string>("")
+    const [selectedCustomerType, setSelectedCustomerType] = useState<string>("all") // New: Customer Type
 
     const generateCode = () => {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -40,8 +44,21 @@ export function CouponManager() {
             return
         }
 
-        const expiryDate = new Date()
-        expiryDate.setDate(expiryDate.getDate() + parseInt(expiryDays))
+        if (!startDate || !endDate) {
+            toast.error("يجب تحديد تاريخ البداية والنهاية")
+            return
+        }
+
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+
+        if (end <= start) {
+            toast.error("تاريخ النهاية يجب أن يكون بعد تاريخ البداية")
+            return
+        }
+
+        // Set End Date to end of day
+        end.setHours(23, 59, 59, 999)
 
         addCoupon({
             code: code.toUpperCase(),
@@ -51,12 +68,14 @@ export function CouponManager() {
             active: true,
             minOrderValue: minOrderValue ? parseFloat(minOrderValue) : undefined,
             categoryId: selectedCategory || undefined,
-            expiryDate: Timestamp.fromDate(expiryDate)
+            expiryDate: Timestamp.fromDate(end),
+            startDate: Timestamp.fromDate(start),
+            customerUsageLimit: parseInt(customerLimit) || 1,
+            allowedCustomerTypes: selectedCustomerType === "all" ? "all" : [selectedCustomerType]
         })
 
         setCode("")
-        setMinOrderValue("")
-        setSelectedCategory("")
+        generateCode() // Generate new code for convenience
         hapticFeedback('success')
     }
 
@@ -130,16 +149,33 @@ export function CouponManager() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-foreground">مدة الصلاحية (بالأيام)</Label>
-                        <div className="relative">
-                            <Input
-                                type="number"
-                                value={expiryDays}
-                                onChange={(e) => setExpiryDays(e.target.value)}
-                                className="bg-background border-border text-foreground pl-10 placeholder:text-muted-foreground"
-                            />
-                            <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        </div>
+                        <Label className="text-foreground">مرات الاستخدام للعميل الواحد</Label>
+                        <Input
+                            type="number"
+                            value={customerLimit}
+                            onChange={(e) => setCustomerLimit(e.target.value)}
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-foreground">تاريخ البداية</Label>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-foreground">تاريخ النهاية</Label>
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -164,6 +200,19 @@ export function CouponManager() {
                             {categories.map((cat) => (
                                 <option key={cat.id} value={cat.id} className="bg-background text-foreground">{cat.nameAr}</option>
                             ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-foreground">فئة العملاء</Label>
+                        <select
+                            value={selectedCustomerType}
+                            onChange={(e) => setSelectedCustomerType(e.target.value)}
+                            className="w-full bg-background border border-border h-10 rounded-md text-foreground px-3 focus:ring-2 focus:ring-purple-500 outline-none"
+                        >
+                            <option value="all" className="bg-background text-foreground">جميع العملاء</option>
+                            <option value="vip" className="bg-background text-foreground">كبار الشخصيات (VIP)</option>
+                            <option value="wholesale" className="bg-background text-foreground">الجملة</option>
                         </select>
                     </div>
 

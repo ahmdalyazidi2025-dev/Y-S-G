@@ -9,7 +9,7 @@ import { Trash2, Plus, Minus, FileText, Send, X, User, Phone, ChevronDown } from
 import { toast } from "sonner"
 
 export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { cart, removeFromCart, createOrder, updateCartQuantity, currentUser, storeSettings, categories, coupons } = useStore()
+    const { cart, removeFromCart, createOrder, updateCartQuantity, currentUser, storeSettings, categories, coupons, applyCoupon } = useStore()
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
     const [couponCode, setCouponCode] = useState("")
@@ -34,55 +34,16 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
     const total = rawTotal - discountAmount
 
-    const navToCheckout = () => {
+    const navToCheckout = async () => {
         // Implement coupon validation logic
         if (!couponCode) return
-        const coupon = coupons.find(c => c.code === couponCode.toUpperCase() && c.active)
+
+        const coupon = await applyCoupon(couponCode.toUpperCase())
 
         if (!coupon) {
-            setCouponError("الكوبون غير صحيح")
+            setCouponError("الكوبون غير صحيح أو غير مستوفٍ للشروط")
             setAppliedCoupon(null)
             return;
-        }
-
-        // Check Expiry
-        if (coupon.expiryDate) {
-            const now = new Date()
-            const expiry = coupon.expiryDate instanceof Date
-                ? coupon.expiryDate
-                : (coupon.expiryDate as { toDate: () => Date }).toDate()
-            if (expiry < now) {
-                setCouponError("الكوبون منتهي الصلاحية")
-                setAppliedCoupon(null)
-                return
-            }
-        }
-
-        // Check Usage Limit
-        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-            setCouponError("تم استنفاذ مرات استخدام الكوبون")
-            setAppliedCoupon(null)
-            return
-        }
-
-        // Check Minimum Order
-        if (coupon.minOrderValue && rawTotal < coupon.minOrderValue) {
-            setCouponError(`الحد الأدنى للطلب هو ${coupon.minOrderValue} ر.س`)
-            setAppliedCoupon(null)
-            return
-        }
-
-        // Check Category Restriction
-        if (coupon.categoryId) {
-            const category = categories.find(c => c.id === coupon.categoryId)
-            if (category) {
-                const hasCategoryItem = cart.some(item => item.category === category.nameAr)
-                if (!hasCategoryItem) {
-                    setCouponError(`هذا الكوبون خاص بقسم ${category.nameAr} فقط`)
-                    setAppliedCoupon(null)
-                    return
-                }
-            }
         }
 
         setAppliedCoupon({ code: coupon.code, discount: coupon.discount, type: coupon.type })

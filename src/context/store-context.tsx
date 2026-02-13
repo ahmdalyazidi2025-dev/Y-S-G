@@ -135,9 +135,12 @@ export type Coupon = {
     discount: number // Percentage (0-100)
     type: "percentage"
     expiryDate?: Timestamp
+    startDate?: Timestamp // New: Start Date
     usageLimit?: number
-    minOrderValue?: number // New: Minimum order value
+    customerUsageLimit?: number // New: Usage limit per customer
+    minOrderValue?: number
     categoryId?: string // New: Specific category ID (if any)
+    allowedCustomerTypes?: string[] | "all" // New: Customer Category Restriction
     usedCount: number
     active: boolean
     createdAt: Date
@@ -263,6 +266,7 @@ type StoreContextType = {
     updateStoreSettings: (settings: StoreSettings) => void
     coupons: Coupon[]
     addCoupon: (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => void
+    applyCoupon: (code: string) => Promise<Coupon | null> // New Export
     deleteCoupon: (id: string) => void
     notifications: Notification[]
     sendNotification: (notification: Omit<Notification, "id" | "createdAt" | "read">) => void
@@ -1371,6 +1375,61 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف الكوبون")
     }
 
+    const applyCoupon = async (code: string) => {
+        const coupon = coupons.find(c => c.code === code && c.active)
+
+        if (!coupon) {
+            toast.error("كود الخصم غير صحيح")
+            return null
+        }
+
+        // 1. Expiry Check
+        if (coupon.expiryDate && coupon.expiryDate.toDate() < new Date()) {
+            toast.error("الخصم منتهي الصلاحية")
+            return null
+        }
+
+        // 2. Start Date Check
+        if (coupon.startDate && coupon.startDate.toDate() > new Date()) {
+            toast.error("الخصم لم يبدأ بعد")
+            return null
+        }
+
+        // 3. Global Usage Limit Check
+        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+            toast.error("تم تجاوز الحد الأقصى لاستخدام هذا الكوبون")
+            return null
+        }
+
+        // 4. Minimum Order Value Check
+        const currentTotal = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
+        if (coupon.minOrderValue && currentTotal < coupon.minOrderValue) {
+            toast.error(`يجب أن تكون قيمة الطلب أعلى من ${coupon.minOrderValue} ريال لاستخدام هذا الكوبون`)
+            return null
+        }
+
+        // 5. Customer Category Check
+        // Placeholder for category logic if we implement strict customer types
+        if (currentUser && coupon.allowedCustomerTypes !== "all" && coupon.allowedCustomerTypes) {
+            // Logic to be refined when Customer Types are strictly defined
+        }
+
+        // 6. Per Customer Usage Limit Check
+        if (currentUser && coupon.customerUsageLimit) {
+            const userUsageCount = orders.filter(o =>
+                o.customerId === currentUser.id &&
+                (o as any).couponCode === code
+            ).length
+
+            if (userUsageCount >= coupon.customerUsageLimit) {
+                toast.error(`لقد استخدمت هذا الكوبون الحد الأقصى المسموح به (${coupon.customerUsageLimit} مرات)`)
+                return null
+            }
+        }
+
+        return coupon
+    }
+
     const sendNotification = async (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
         await addDoc(collection(db, "notifications"), sanitizeData({
             ...notification,
@@ -1756,7 +1815,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         messages, sendMessage, broadcastNotification, currentUser, login, logout,
         updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
         staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
-        coupons, addCoupon, deleteCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
+        coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
         updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
         markMessagesRead,
         playSound,
