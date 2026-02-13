@@ -33,6 +33,11 @@ export default function CustomerHome() {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
 
+    // Optimization: Stable handler for viewing product details
+    const handleViewDetails = React.useCallback((product: Product) => {
+        setSelectedProduct(product)
+    }, [])
+
     // Deep linking: Detect if notifications should be open
     const shouldOpenNotifications = searchParams.get("notifications") === "open"
     const productIdFromUrl = searchParams.get("product")
@@ -165,7 +170,7 @@ export default function CustomerHome() {
                                         key={product.id}
                                         item={product}
                                         index={index}
-                                        onViewDetails={() => setSelectedProduct(product)}
+                                        onViewDetails={handleViewDetails}
                                     />
                                 ))
                             ) : loading ? (

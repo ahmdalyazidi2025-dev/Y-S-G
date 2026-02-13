@@ -1,4 +1,5 @@
 "use client"
+import { memo } from "react"
 
 import { Plus } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -9,7 +10,7 @@ import { CountdownTimer } from "./countdown-timer"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: () => void, index?: number }) {
+export const ProductCard = memo(function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: (item: Product) => void, index?: number }) {
     const { addToCart } = useStore()
 
     // --- Smart Price Logic ---
@@ -55,7 +56,7 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                     {/* Product Image/Icon */}
                     <div
                         className="w-full h-full flex items-center justify-center cursor-pointer relative z-10"
-                        onClick={onViewDetails}
+                        onClick={() => onViewDetails?.(item)}
                     >
                         {item.image ? (
                             <Image
@@ -65,7 +66,6 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
                                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                 loading="lazy"
                                 className="object-cover opacity-100 group-hover:scale-110 transition-transform duration-700"
-                                unoptimized
                             />
                         ) : (
                             <div className="text-6xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu">
@@ -156,4 +156,12 @@ export function ProductCard({ item, onViewDetails, index = 0 }: { item: Product,
             </Card>
         </motion.div>
     )
-}
+}, (prev, next) => {
+    // Custom comparison for better performance
+    return prev.item.id === next.item.id &&
+        prev.item.pricePiece === next.item.pricePiece &&
+        prev.item.priceDozen === next.item.priceDozen &&
+        prev.item.discountEndDate === next.item.discountEndDate &&
+        prev.item.oldPricePiece === next.item.oldPricePiece &&
+        prev.item.name === next.item.name // In case name changes
+})
