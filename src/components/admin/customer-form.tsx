@@ -204,6 +204,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                     placeholder="username"
                                     value={formData.username}
                                     onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
+                                    autoComplete="off"
                                 />
                                 <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول (إجباري)</p>
                             </div>
@@ -218,6 +219,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                     className="bg-black/20 border-white/10 pr-10 text-right"
                                     value={formData.password}
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    autoComplete="new-password"
                                 />
                             </div>
 
@@ -231,6 +233,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         className="bg-black/20 border-white/10 pr-10 text-right"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -247,6 +250,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         placeholder="05xxxxxxxx"
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>
@@ -260,6 +264,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         className="bg-black/20 border-white/10 pr-10 text-right"
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                        autoComplete="off"
                                     />
                                 </div>
                             </div>

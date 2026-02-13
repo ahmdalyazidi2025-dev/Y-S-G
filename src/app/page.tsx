@@ -310,6 +310,7 @@ function LandingContent() {
                           onChange={(e) => setJoinName(e.target.value)}
                           className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="اسمك الكريم"
+                          autoComplete="off"
                         />
                       </div>
                       <div className="space-y-1">
@@ -320,6 +321,7 @@ function LandingContent() {
                           onChange={(e) => setJoinPhone(e.target.value)}
                           className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-foreground text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="05xxxxxxxx"
+                          autoComplete="off"
                         />
                       </div>
                     </div>

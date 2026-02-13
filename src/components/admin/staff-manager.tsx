@@ -224,6 +224,7 @@ export function StaffManager() {
                                 value={newStaff.name}
                                 onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
                                 className="bg-background h-10 text-xs text-right border-border"
+                                autoComplete="off"
                             />
                         </div>
                         <div className="space-y-1">
@@ -234,6 +235,7 @@ export function StaffManager() {
                                 onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
                                 className="bg-background h-10 text-xs text-right dir-rtl border-border"
                                 disabled={!!editingId} // Disable username edit to prevent email mismatches
+                                autoComplete="off"
                             />
                         </div>
                     </div>
@@ -245,6 +247,7 @@ export function StaffManager() {
                             value={newStaff.email}
                             onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
                             className="bg-background h-10 text-xs text-right border-border"
+                            autoComplete="off"
                         />
                         <p className="text-[9px] text-muted-foreground">يفضل استخدام بريد حقيقي لاستعادة كلمة المرور</p>
                     </div>
@@ -256,6 +259,7 @@ export function StaffManager() {
                                 value={newStaff.password}
                                 onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
                                 className="bg-background h-10 text-xs text-right border-border"
+                                autoComplete="new-password"
                             />
                         </div>
                     )}
