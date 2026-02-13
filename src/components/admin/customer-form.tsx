@@ -73,7 +73,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         e.preventDefault()
 
         // Check for missing optional fields
-        if (!formData.phone || !formData.location) {
+        if (!formData.location) {
             setShowConfirm(true)
         } else {
             console.log("All fields present, saving directly")
@@ -208,18 +208,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                 <p className="text-[10px] text-slate-500 text-right">سيتم استخدامه لتسجيل الدخول (إجباري)</p>
                             </div>
 
-                            {/* Email (Optional for Recovery) */}
-                            <div className="space-y-2">
-                                <Label className="text-right block">البريد الإلكتروني (للاستعادة)</Label>
-                                <Input
-                                    type="email"
-                                    className="bg-black/20 border-white/10 text-right"
-                                    placeholder="example@gmail.com"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                                <p className="text-[10px] text-yellow-500/80 text-right">هام: أدخل بريد حقيقي لتمكين استعادة كلمة المرور للعميل</p>
-                            </div>
+                            {/* Email Hidden - Auto Generated */}
 
                             {/* 2. Password */}
                             <div className="space-y-2">
@@ -246,16 +235,18 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                 </div>
                             </div>
 
-                            {/* 4. Phone (Optional) */}
+                            {/* 4. Phone (Required) */}
                             <div className="space-y-2">
-                                <Label className="text-slate-400">رقم الهاتف (اختياري)</Label>
+                                <Label>رقم الهاتف</Label>
                                 <div className="relative">
                                     <Phone className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
                                     <Input
                                         type="tel"
+                                        required
                                         className="bg-black/20 border-white/10 pr-10 text-right"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        placeholder="05xxxxxxxx"
                                     />
                                 </div>
                             </div>

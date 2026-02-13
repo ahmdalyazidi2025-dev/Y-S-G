@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react"
+import { Lock, User, ArrowRight, Eye, EyeOff, Phone } from "lucide-react"
 import { useStore } from "@/context/store-context"
 
 function LoginForm() {
@@ -21,8 +21,8 @@ function LoginForm() {
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [showForgotPassword, setShowForgotPassword] = useState(false)
-    const [recoveryEmail, setRecoveryEmail] = useState("")
-    const { login, resetPassword } = useStore() // Use resetPassword from store
+    const [recoveryPhone, setRecoveryPhone] = useState("")
+    const { login, requestPasswordReset } = useStore()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -43,14 +43,16 @@ function LoginForm() {
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
-        if (!recoveryEmail.includes('@')) {
-            alert("بريد غير صالح") // Simple validation
+        if (recoveryPhone.length < 8) {
+            alert("رقم الهاتف غير صحيح")
             setIsLoading(false)
             return
         }
 
-        await resetPassword(recoveryEmail)
-        setShowForgotPassword(false)
+        const success = await requestPasswordReset(recoveryPhone)
+        if (success) {
+            setShowForgotPassword(false)
+        }
         setIsLoading(false)
     }
 
@@ -145,21 +147,21 @@ function LoginForm() {
                                 >
                                     <div className="text-center space-y-2 p-4 bg-yellow-500/5 rounded-2xl border border-yellow-500/10">
                                         <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto text-yellow-500 mb-2">
-                                            <Lock className="w-5 h-5" />
+                                            <Phone className="w-5 h-5" />
                                         </div>
                                         <h3 className="text-sm font-bold text-white">استعادة كلمة المرور</h3>
                                         <p className="text-[10px] text-white/80 leading-relaxed">
-                                            لا تقلق، أدخل بريدك الإلكتروني وسنرسل لك رابطاً لتعيين كلمة مرور جديدة.
+                                            أدخل رقم هاتفك المسجل، وسنقوم بإرسال طلب للإدارة للتواصل معك وتعيين كلمة مرور جديدة.
                                         </p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-xs text-white/80 mr-1">البريد الإلكتروني</Label>
+                                        <Label className="text-xs text-white/80 mr-1">رقم الهاتف</Label>
                                         <Input
-                                            type="email"
-                                            placeholder="example@domain.com"
+                                            type="tel"
+                                            placeholder="05xxxxxxxx"
                                             className="bg-white/5 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-white/50 font-medium text-white"
-                                            value={recoveryEmail}
-                                            onChange={(e) => setRecoveryEmail(e.target.value)}
+                                            value={recoveryPhone}
+                                            onChange={(e) => setRecoveryPhone(e.target.value)}
                                             required
                                         />
                                     </div>
@@ -169,7 +171,7 @@ function LoginForm() {
                                             className="w-full h-12 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl shadow-[0_4px_20px_rgba(234,179,8,0.2)] transition-all active:scale-[0.98]"
                                             disabled={isLoading}
                                         >
-                                            {isLoading ? "جاري الإرسال..." : "إرسال رابط الاستعادة"}
+                                            {isLoading ? "جاري الإرسال..." : "إرسال طلب استعادة"}
                                         </Button>
                                         <Button
                                             type="button"

@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag, UserPlus } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag, UserPlus, KeyRound } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { title: "الإحصائيات", icon: BarChart3, href: "/admin/reports", color: "text-indigo-400" },
     { title: "الطلبات", icon: ClipboardList, href: "/admin/orders", color: "text-orange-400" },
     { title: "طلبات التوفير", icon: Camera, href: "/admin/requests", color: "text-purple-400" },
+    { title: "استعادة كلمة المرور", icon: KeyRound, href: "/admin/password-requests", color: "text-yellow-400" },
     { title: "صور العرض", icon: LugideImage, href: "/admin/banners", color: "text-pink-400" },
     { title: "الدردشة", icon: MessageCircle, href: "/admin/chat", color: "text-indigo-400" },
     { title: "طلبات الانضمام", icon: UserPlus, href: "/admin/join-requests", color: "text-emerald-400" },
@@ -56,6 +57,7 @@ export function AdminSidebar() {
             "/admin/requests": "orders",
             "/admin/banners": "settings",
             "/admin/chat": "chat",
+            "/admin/password-requests": "customers",
             "/admin/join-requests": "customers", // Map to customers permission
             "/admin/system": "settings",
             "/admin/settings": "settings",

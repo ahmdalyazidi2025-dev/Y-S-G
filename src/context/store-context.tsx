@@ -280,6 +280,9 @@ type StoreContextType = {
     joinRequests: JoinRequest[]
     addJoinRequest: (name: string, phone: string) => Promise<void>
     deleteJoinRequest: (id: string) => Promise<void>
+    passwordRequests: any[] // Defining as any for simplicity, or define strict type
+    resolvePasswordRequest: (id: string) => Promise<void>
+    requestPasswordReset: (phone: string) => Promise<boolean>
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -1664,6 +1667,60 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    // --- Password Recovery Requests (Phone Based) ---
+    const [passwordRequests, setPasswordRequests] = useState<any[]>([])
+
+    useEffect(() => {
+        if (!currentUser || currentUser.role === "customer") return
+
+        const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            setPasswordRequests(reqs)
+        })
+        return () => unsubscribe()
+    }, [currentUser])
+
+    const requestPasswordResetPhone = async (phone: string) => {
+        try {
+            // 1. Find customer by phone
+            const q = query(collection(db, "customers"), where("phone", "==", phone))
+            const snap = await getDocs(q)
+
+            if (snap.empty) {
+                toast.error("رقم الهاتف غير مسجل لدينا")
+                return false
+            }
+
+            const customer = snap.docs[0].data()
+
+            // 2. Create Request
+            await addDoc(collection(db, "password_requests"), {
+                customerId: snap.docs[0].id,
+                customerName: customer.name,
+                phone: phone,
+                status: "pending",
+                createdAt: new Date()
+            })
+
+            toast.success("تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً")
+            return true
+        } catch (error) {
+            console.error("Password Request Error:", error)
+            toast.error("حدث خطأ، حاول مرة أخرى")
+            return false
+        }
+    }
+
+    const resolvePasswordRequest = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "password_requests", id))
+            toast.success("تم إغلاق الطلب")
+        } catch (error) {
+            console.error("Resolve Error:", error)
+        }
+    }
+
     // Filter categories based on visibility
     const visibleCategories = React.useMemo(() => {
         if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
@@ -1702,7 +1759,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         joinRequests,
         addJoinRequest,
         deleteJoinRequest,
-        cleanupOrphanedUsers
+        cleanupOrphanedUsers,
+        passwordRequests,
+        resolvePasswordRequest,
+        requestPasswordReset: requestPasswordResetPhone
     }
     return (
         <StoreContext.Provider value={value}>
