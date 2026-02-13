@@ -85,35 +85,35 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
             <Drawer.Trigger asChild>
                 <div className="relative cursor-pointer group w-full">
                     <div className={cn(
-                        "flex items-center justify-between h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:bg-white/5",
+                        "flex items-center justify-between h-9 w-full rounded-lg border border-border bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all hover:bg-muted/50",
                         !date && "text-muted-foreground"
                     )}>
                         <span className="flex items-center gap-2">
-                            <CalendarIcon className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
+                            <CalendarIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                             {date ? (
-                                <span className="text-white font-medium font-mono" dir="rtl">
+                                <span className="text-foreground font-medium font-mono" dir="rtl">
                                     {date.toLocaleDateString('ar-SA')}
                                 </span>
                             ) : (
-                                <span className="text-slate-500">{placeholder}</span>
+                                <span className="text-muted-foreground">{placeholder}</span>
                             )}
                         </span>
                     </div>
-                    {label && <label className="absolute -top-2 right-3 text-[10px] bg-[#1a1f2e] px-1 text-slate-400">{label}</label>}
+                    {label && <label className="absolute -top-2 right-3 text-[10px] bg-background px-1 text-muted-foreground">{label}</label>}
                 </div>
             </Drawer.Trigger>
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
-                <Drawer.Content className="bg-[#0f141f] border border-white/10 flex flex-col rounded-[20px] h-[50vh] mt-24 fixed bottom-4 left-0 right-0 z-50 outline-none max-w-md mx-auto shadow-2xl">
-                    <div className="p-4 bg-white/5 rounded-[20px] flex-1 flex flex-col">
-                        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/10 mb-6" />
+                <Drawer.Content className="bg-background border border-border flex flex-col rounded-[20px] h-[50vh] mt-24 fixed bottom-4 left-0 right-0 z-50 outline-none max-w-md mx-auto shadow-2xl">
+                    <div className="p-4 bg-muted/30 rounded-[20px] flex-1 flex flex-col">
+                        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6" />
 
                         <div className="flex justify-between items-center mb-6 px-2">
-                            <Button variant="ghost" className="text-slate-400 hover:text-white hover:bg-white/5" onClick={() => setOpen(false)}>
+                            <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => setOpen(false)}>
                                 إلغاء
                             </Button>
-                            <h3 className="font-bold text-lg text-white">اختر التاريخ</h3>
-                            <Button variant="default" className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-xl" onClick={confirmSelection}>
+                            <h3 className="font-bold text-lg text-foreground">اختر التاريخ</h3>
+                            <Button variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-xl" onClick={confirmSelection}>
                                 <Check className="w-4 h-4" />
                                 تم
                             </Button>
@@ -121,7 +121,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
 
                         <div className="h-[200px] relative overflow-hidden flex gap-2" dir="ltr">
                             {/* Selection Highlight */}
-                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-white/5 border-y border-white/10 pointer-events-none z-10" />
+                            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-10 bg-muted/50 border-y border-border pointer-events-none z-10" />
 
                             {/* Year Column */}
                             <div
@@ -134,7 +134,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                                         key={y}
                                         className={cn(
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
-                                            currentYear === y ? "text-primary font-bold text-xl scale-110" : "text-slate-500 text-sm"
+                                            currentYear === y ? "text-primary font-bold text-xl scale-110" : "text-muted-foreground text-sm"
                                         )}
                                         onClick={() => scrollToItem(yearRef, i)}
                                     >
@@ -154,7 +154,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                                         key={m}
                                         className={cn(
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
-                                            currentMonth === i ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
+                                            currentMonth === i ? "text-foreground font-bold text-lg scale-110" : "text-muted-foreground text-sm"
                                         )}
                                         onClick={() => scrollToItem(monthRef, i)}
                                     >
@@ -174,7 +174,7 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
                                         key={d}
                                         className={cn(
                                             "h-10 flex items-center justify-center snap-center cursor-pointer transition-all",
-                                            currentDay === d ? "text-white font-bold text-lg scale-110" : "text-slate-500 text-sm"
+                                            currentDay === d ? "text-foreground font-bold text-lg scale-110" : "text-muted-foreground text-sm"
                                         )}
                                         onClick={() => scrollToItem(dayRef, i)}
                                     >

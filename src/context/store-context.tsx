@@ -86,6 +86,7 @@ export type StaffMember = {
     name: string
     email: string
     username?: string
+    phone: string // Added phone
     role: "staff" | "admin"
     permissions: string[]
     createdAt?: Date | Timestamp | null
@@ -250,8 +251,8 @@ type StoreContextType = {
     updateProductRequestStatus: (requestId: string, status: ProductRequest["status"]) => void
     deleteProductRequest: (requestId: string) => void
     staff: StaffMember[]
-    addStaff: (member: Omit<StaffMember, "id" | "createdAt">) => void
-    updateStaff: (member: StaffMember) => void
+    addStaff: (member: Omit<StaffMember, "id" | "createdAt">) => Promise<void>
+    updateStaff: (member: StaffMember) => Promise<void>
     deleteStaff: (memberId: string) => void
     broadcastToCategory: (category: string, text: string) => void
     messages: Message[]
@@ -1261,75 +1262,111 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const addStaff = async (member: Omit<StaffMember, "id" | "createdAt" | "role"> & { password?: string, role: "admin" | "staff" }) => {
         try {
-            // 1. Create Auth User
+            // 1. Validate Phone Uniqueness
+            if (!member.phone) throw new Error("رقم الهاتف مطلوب");
+
+            const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
+            const phoneQueryCustomers = query(collection(db, "customers"), where("phone", "==", member.phone));
+
+            const [staffSnap, customerSnap] = await Promise.all([getDocs(phoneQueryStaff), getDocs(phoneQueryCustomers)]);
+
+            if (!staffSnap.empty || !customerSnap.empty) {
+                throw new Error("رقم الهاتف مستخدم بالفعل (كموظف أو عميل)");
+            }
+
+            // 2. Determine Email from Username (or generate one)
+            // The member.email passed here might be empty now from UI.
+            const username = (member as any).username || member.name.replace(/\s/g, '').toLowerCase();
+            const normalizedUsername = username.toLowerCase().trim();
+            const generatedEmail = `${normalizedUsername}@staff.ysg.local`;
+
+            // 3. Create Auth User
             const secondaryAuth = getSecondaryAuth();
-            // Use the real email provided in member.email
-            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, member.email, member.password || "123456");
+            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, generatedEmail, member.password || "123456");
             const uid = userCredential.user.uid;
 
-            // 2. Create User Profile in 'users' collection
+            // 4. Create User Profile
             await setDoc(doc(db, "users", uid), {
                 id: uid,
                 name: member.name,
-                role: member.role, // Use the passed role
-                email: member.email,
-                username: member.name, // Store username for reference if needed, but key is the mapping
+                role: member.role,
+                email: generatedEmail,
+                username: normalizedUsername,
+                phone: member.phone,
                 permissions: member.role === "admin"
-                    ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"] // Full perms for admin
+                    ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
                     : member.permissions
             });
 
-            // 3. Create Username Mapping (Username -> Real Email)
-            // Extract username from existing logic or we should ask for it explicitly?
-            // For now, let's assume the UI passes a "username" field in member or we derive it.
-            // But member type in arg doesn't have username explicit property in StaffMember type usually?
-            // Let's modify the generic arg to include username if possible, or just rely on the UI passing it in `member` object as extra prop.
-            // Casting member to any to extract username if it exists
-            const username = (member as any).username;
-            if (username) {
-                const normalizedUsername = username.toLowerCase().trim();
-                await setDoc(doc(db, "usernames", normalizedUsername), {
-                    email: member.email,
-                    uid: uid
-                });
-            }
+            // 5. Create Username Mapping
+            await setDoc(doc(db, "usernames", normalizedUsername), {
+                email: generatedEmail,
+                uid: uid
+            });
 
-            // 4. Create Staff Document
+            // 6. Create Staff Document
             await setDoc(doc(db, "staff", uid), sanitizeData({
                 ...member,
                 id: uid,
-                password: null,
+                email: generatedEmail, // Store generated email
+                username: normalizedUsername,
+                password: null, // Don't store password in plain text
                 createdAt: Timestamp.now()
             }))
 
             await firebaseSignOut(secondaryAuth);
-            toast.success("تم إضافة الموظف وإعداد الدخول 👤", {
-                description: "يمكن للموظف الجديد تسجيل الدخول فوراً باستخدام البريد وكلمة المرور. الصلاحيات تم تطبيقها."
+            toast.success("تم إضافة الموظف بنجاح ✅", {
+                description: `اسم المستخدم للدخول: ${normalizedUsername}`
             })
         } catch (error: any) {
             console.error("Add Staff Error:", error);
-            toast.error("فشل إضافة الموظف: " + (error as Error).message)
+            if (error.code === 'auth/email-already-in-use') {
+                toast.error("اسم المستخدم مستخدم بالفعل")
+            } else {
+                toast.error("فشل إضافة الموظف: " + (error as Error).message)
+            }
         }
     }
 
     const updateStaff = async (member: StaffMember) => {
-        const { id, ...data } = member
+        try {
+            // 1. Check Phone Uniqueness (if changed)
+            const oldMember = staff.find(s => s.id === member.id);
+            if (oldMember && oldMember.phone !== member.phone) {
+                const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
+                const phoneQueryCustomers = query(collection(db, "customers"), where("phone", "==", member.phone));
+                const [staffSnap, customerSnap] = await Promise.all([getDocs(phoneQueryStaff), getDocs(phoneQueryCustomers)]);
 
-        // 1. Update Staff Document
-        await updateDoc(doc(db, "staff", id), sanitizeData(data))
+                // Exclude self from staff check (though ID check handles it usually, query returns docs)
+                const duplicateStaff = staffSnap.docs.some(d => d.id !== member.id);
+                if (duplicateStaff || !customerSnap.empty) {
+                    toast.error("رقم الهاتف مستخدم بالفعل");
+                    return;
+                }
+            }
 
-        // 2. Update User Document (Critical for Permissions/Auth)
-        await setDoc(doc(db, "users", id), {
-            id,
-            name: member.name,
-            role: member.role,
-            email: member.email, // Keep email synced
-            permissions: member.role === "admin"
-                ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
-                : member.permissions
-        }, { merge: true })
+            const { id, ...data } = member
 
-        toast.success("تم تحديث بيانات الموظف والصلاحيات")
+            // 2. Update Staff Document
+            await updateDoc(doc(db, "staff", id), sanitizeData(data))
+
+            // 3. Update User Document
+            await setDoc(doc(db, "users", id), {
+                id,
+                name: member.name,
+                role: member.role,
+                email: member.email,
+                phone: member.phone, // Sync phone
+                permissions: member.role === "admin"
+                    ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
+                    : member.permissions
+            }, { merge: true })
+
+            toast.success("تم تحديث بيانات الموظف والصلاحيات")
+        } catch (e) {
+            console.error("Update Staff Error:", e);
+            toast.error("فشل تحديث البيانات");
+        }
     }
 
     const deleteStaff = async (memberId: string) => {

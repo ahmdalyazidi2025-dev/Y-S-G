@@ -17,14 +17,14 @@ export function StaffManager() {
     const [newStaff, setNewStaff] = useState({
         name: "",
         username: "",
-        email: "", // Added
+        phone: "", // Replaced email with phone
         password: "",
         role: "staff" as "admin" | "staff",
         permissions: ["orders"] as string[]
     })
 
     const resetForm = () => {
-        setNewStaff({ name: "", username: "", email: "", password: "", role: "staff", permissions: ["orders"] })
+        setNewStaff({ name: "", username: "", phone: "", password: "", role: "staff", permissions: ["orders"] })
         setIsAdding(false)
         setEditingId(null)
     }
@@ -43,8 +43,9 @@ export function StaffManager() {
                     ...staffMember,
                     name: newStaff.name,
                     role: newStaff.role,
-                    permissions: newStaff.role === "admin" ? [] : newStaff.permissions, // Admin gets full perms implicitly in backend or UI logic
-                    email: staffMember.email // Keep original email/username
+                    permissions: newStaff.role === "admin" ? [] : newStaff.permissions,
+                    phone: newStaff.phone, // Update phone
+                    email: staffMember.email // Keep original email
                 })
             }
             resetForm()
@@ -54,21 +55,15 @@ export function StaffManager() {
                 toast.error("كلمة المرور مطلوبة للحساب الجديد")
                 return
             }
-
-            // Should we force a real email? 
-            // If user puts an email, use it. If not, auto-generate (legacy) but warn regarding reset?
-            // The prompt implies we WANT to support recovery. So let's default to auto-gen if empty, BUT allow input.
-            // Better: use username logic to generate email only if email is empty.
-
-            let finalEmail = newStaff.email
-            if (!finalEmail) {
-                finalEmail = `${newStaff.username}@ysg.local`
+            if (!newStaff.phone) {
+                toast.error("رقم الهاتف مطلوب");
+                return;
             }
 
             addStaff({
                 ...newStaff,
-                email: finalEmail
-                // username is passed spread from newStaff 
+                // Email will be generated in context
+                email: ""
             })
             resetForm()
         }
@@ -76,24 +71,23 @@ export function StaffManager() {
     }
 
     const startEdit = (member: StaffMember) => {
-        // Extract username from email (user@ysg.local -> user) or lookup?
-        // Ideally we should have saved username in the staff doc, but if not we guess it.
-        // If it's a real email, username is not obvious unless we saved it.
-        // Let's assume for editing we just show the email.
+        // Extract username from email or use stored username
         const isLegacy = member.email.includes("@ysg.local")
-        const username = (member as any).username || (isLegacy ? member.email.split("@")[0] : "")
+        const username = member.username || (isLegacy ? member.email.split("@")[0] : member.name)
 
         setNewStaff({
             name: member.name,
             username: username,
-            email: member.email,
-            password: "", // Password not editable directly here for security/complexity, or maybe optional?
+            phone: member.phone || "", // Load phone
+            password: "",
             role: member.role,
             permissions: member.permissions || []
         })
         setEditingId(member.id)
         setIsAdding(true)
     }
+
+
 
     const addCurrentUser = () => {
         if (!currentUser) return
@@ -104,10 +98,16 @@ export function StaffManager() {
             return
         }
 
+        if (!currentUser.phone) {
+            toast.error("يجب توفر رقم هاتف في حسابك لإضافتك كموظف");
+            return;
+        }
+
         const staffData = {
             id: currentUser.id, // Important to reuse ID
             name: currentUser.name,
             email: currentUser.username.includes('@') ? currentUser.username : `${currentUser.username}@ysg.local`,
+            phone: currentUser.phone,
             role: "admin" as const,
             permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
             password: "existing_user" // Dummy password as auth is already handled
@@ -168,7 +168,7 @@ export function StaffManager() {
                                 {member.role === "admin" && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">مسؤول</span>}
                                 {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
                             </div>
-                            <p className="text-[10px] text-muted-foreground">{member.email.split('@')[0]} • {member.permissions.length} صلاحيات</p>
+                            <p className="text-[10px] text-muted-foreground">{member.username || member.email.split('@')[0]} • {member.phone || "لا يوجد هاتف"} • {member.permissions.length} صلاحيات</p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
@@ -241,15 +241,19 @@ export function StaffManager() {
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-[10px]">البريد الإلكتروني (للاستعادة)</Label>
+                        <Label className="text-[10px]">رقم الهاتف</Label>
                         <Input
-                            placeholder="email@example.com (اختياري)"
-                            value={newStaff.email}
-                            onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                            placeholder="05xxxxxxxx"
+                            value={newStaff.phone}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                if (val.length <= 10) setNewStaff({ ...newStaff, phone: val })
+                            }}
                             className="bg-background h-10 text-xs text-right border-border"
                             autoComplete="off"
+                            type="tel"
                         />
-                        <p className="text-[9px] text-muted-foreground">يفضل استخدام بريد حقيقي لاستعادة كلمة المرور</p>
+                        <p className="text-[9px] text-muted-foreground">يستخدم لاستعادة كلمة المرور</p>
                     </div>
                     {!editingId && (
                         <div className="space-y-1">
