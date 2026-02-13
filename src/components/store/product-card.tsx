@@ -52,7 +52,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                     <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-transparent pointer-events-none z-0" />
                 )}
 
-                <CardContent className="p-0 relative aspect-square bg-gray-50 dark:bg-secondary/10 flex items-center justify-center overflow-hidden">
+                <CardContent className="p-0 relative aspect-square bg-white dark:bg-secondary/10 flex items-center justify-center overflow-hidden">
                     {/* Product Image/Icon */}
                     <div
                         className="w-full h-full flex items-center justify-center cursor-pointer relative z-10"
@@ -65,7 +65,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 fill
                                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                 loading="lazy"
-                                className="object-cover opacity-100 group-hover:scale-110 transition-transform duration-700"
+                                className="object-cover w-full h-full opacity-100 group-hover:scale-105 transition-transform duration-700"
                             />
                         ) : (
                             <div className="text-8xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu drop-shadow-2xl filter">
@@ -98,9 +98,14 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
 
                 <CardFooter className="p-3 flex flex-col items-start gap-1.5 relative z-20 bg-white dark:bg-card pt-3 border-t border-gray-100 dark:border-border/50">
                     <div className="w-full space-y-1 text-right">
-                        <h3 className="font-bold text-sm text-foreground leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-primary transition-colors">
+                        <h3 className="font-bold text-base sm:text-lg text-foreground leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-primary transition-colors">
                             {item.name}
                         </h3>
+                        {item.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 h-[2.5em] leading-relaxed">
+                                {item.description}
+                            </p>
+                        )}
                     </div>
 
                     {/* Pricing & Add Buttons */}
@@ -163,5 +168,6 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
         prev.item.priceDozen === next.item.priceDozen &&
         prev.item.discountEndDate === next.item.discountEndDate &&
         prev.item.oldPricePiece === next.item.oldPricePiece &&
+        prev.item.description === next.item.description && // Include description in comparison
         prev.item.name === next.item.name // In case name changes
 })
