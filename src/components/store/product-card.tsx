@@ -41,21 +41,32 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
             whileHover={{ y: -5 }}
-            className="h-full"
+            className="h-full group select-none"
         >
-            <Card className={cn(
-                "h-full border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden group relative bg-white dark:bg-card",
-                hasActiveOffer ? "ring-1 ring-yellow-400" : "hover:border-primary/50"
-            )}>
-                {/* Offer Shine Effect */}
-                {hasActiveOffer && (
-                    <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-transparent pointer-events-none z-0" />
-                )}
+            <div className="flex flex-col gap-3 h-full">
+                {/* 1. Premium Image Container */}
+                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10">
 
-                <CardContent className="p-0 relative aspect-square bg-white dark:bg-secondary/10 flex items-center justify-center overflow-hidden">
-                    {/* Product Image/Icon */}
+                    {/* Offer/New Badges */}
+                    <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+                        {hasActiveOffer ? (
+                            <div className="flex items-center gap-1 bg-yellow-400 text-black text-[10px] px-2.5 py-1 rounded-full font-black shadow-sm">
+                                <span>🔥</span>
+                                <span>عرض</span>
+                            </div>
+                        ) : (
+                            <div className="bg-white/90 backdrop-blur-md text-foreground text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm">
+                                جديد
+                            </div>
+                        )}
+                        {hasActiveOffer && (
+                            <CountdownTimer endDate={new Date(item.discountEndDate!)} />
+                        )}
+                    </div>
+
+                    {/* Image Click Area */}
                     <div
-                        className="w-full h-full flex items-center justify-center cursor-pointer relative z-10"
+                        className="w-full h-full flex items-center justify-center cursor-pointer relative z-10 transition-transform duration-500 group-hover:scale-105"
                         onClick={() => onViewDetails?.(item)}
                     >
                         {item.image ? (
@@ -65,100 +76,60 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 fill
                                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                 loading="lazy"
-                                className="object-cover w-full h-full opacity-100 group-hover:scale-105 transition-transform duration-700"
+                                className="object-cover"
                             />
                         ) : (
-                            <div className="text-8xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu drop-shadow-2xl filter">
+                            <div className="text-7xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">
                                 {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}
                             </div>
                         )}
                     </div>
 
-                    {/* Badge & Timer */}
-                    <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-20">
-                        {hasActiveOffer ? (
-                            <div className="flex items-center gap-1 bg-yellow-500 text-black text-[10px] px-2.5 py-1 rounded-full font-black shadow-[0_0_15px_-3px_rgba(234,179,8,0.6)] animate-pulse">
-                                <span>🔥</span>
-                                <span>عرض خاص</span>
-                            </div>
-                        ) : (
-                            <div className="bg-background/80 backdrop-blur-md text-foreground text-[10px] px-2 py-1 rounded-lg font-bold border border-border/50 shadow-sm">
-                                جديد
-                            </div>
-                        )}
+                    {/* Floating Add Button (Primary - Piece) */}
+                    <Button
+                        size="icon"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            addToCart(item, "حبة", effectivePricePiece)
+                        }}
+                        className="absolute bottom-3 right-3 h-11 w-11 rounded-full bg-black text-white hover:bg-black/80 shadow-xl shadow-black/20 hover:scale-110 active:scale-95 transition-all z-30"
+                    >
+                        <Plus className="h-6 w-6" />
+                    </Button>
+                </div>
 
-                        {hasActiveOffer && (
-                            <CountdownTimer endDate={new Date(item.discountEndDate!)} />
-                        )}
-                    </div>
-
-                    {/* Gradient Overlay for Text Readability */}
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-900/80 to-transparent z-10" />
-                </CardContent>
-
-                <CardFooter className="p-3 flex flex-col items-start gap-1.5 relative z-20 bg-white dark:bg-card pt-3 border-t border-gray-100 dark:border-border/50">
-                    <div className="w-full space-y-1 text-right">
-                        <h3 className="font-bold text-base sm:text-lg text-foreground leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-primary transition-colors">
+                {/* 2. Clean Typography & Secondary Actions */}
+                <div className="flex flex-col gap-1 px-1">
+                    <div className="flex justify-between items-start gap-2">
+                        <h3
+                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => onViewDetails?.(item)}
+                        >
                             {item.name}
                         </h3>
-                        {item.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 h-[2.5em] leading-relaxed">
-                                {item.description}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Pricing & Add Buttons */}
-                    <div className="w-full grid gap-2 mt-auto">
-                        {/* Piece Option */}
-                        <div className="flex items-center justify-between bg-accent/50 hover:bg-accent rounded-xl p-1.5 pl-2 border border-border transition-colors group/btn">
-                            <div className="flex flex-col items-start px-2">
-                                <span className="text-[10px] text-muted-foreground group-hover/btn:text-foreground transition-colors">بالحبة</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-black text-foreground">{effectivePricePiece} <span className="text-[10px] text-primary font-normal">ر.س</span></span>
-                                    {displayOldPricePiece && (
-                                        <span className="text-[10px] text-red-400 line-through decoration-red-400/50">{displayOldPricePiece}</span>
-                                    )}
-                                </div>
-                            </div>
-                            <Button
-                                size="sm"
-                                onClick={(e) => {
-                                    addToCart(item, "حبة", effectivePricePiece)
-                                }}
-                                className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn:animate-pulse"
-                            >
-                                <Plus className="h-6 w-6" />
-                            </Button>
+                        <div className="flex flex-col items-end shrink-0">
+                            <span className="font-black text-lg text-foreground">{effectivePricePiece} <span className="text-xs font-normal text-muted-foreground">ر.س</span></span>
+                            {displayOldPricePiece && (
+                                <span className="text-[10px] text-red-400 line-through">{displayOldPricePiece}</span>
+                            )}
                         </div>
-
-                        {/* Dozen Option (if available) */}
-                        {hasDozen && (
-                            <div className="flex items-center justify-between bg-accent/50 hover:bg-accent rounded-xl p-1.5 pl-2 border border-border transition-colors group/btn-dozen">
-                                <div className="flex flex-col items-start px-2">
-                                    <span className="text-[10px] text-muted-foreground group-hover/btn-dozen:text-foreground transition-colors">بالكرتون</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-black text-foreground">{effectivePriceDozen} <span className="text-[10px] text-purple-500 font-normal">ر.س</span></span>
-                                        {displayOldPriceDozen && (
-                                            <span className="text-[10px] text-red-400 line-through decoration-red-400/50">{displayOldPriceDozen}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <Button
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        addToCart(item, "كرتون", effectivePriceDozen)
-                                    }}
-                                    className="h-10 w-10 rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all p-0 group-hover/btn-dozen:animate-pulse"
-                                >
-                                    <Plus className="h-6 w-6" />
-                                </Button>
-                            </div>
-                        )}
                     </div>
-                </CardFooter>
-            </Card>
+
+                    {/* Secondary Action: Box/Dozen (if exists) */}
+                    {hasDozen && (
+                        <div
+                            className="flex items-center justify-between mt-1 bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-lg border border-purple-100 dark:border-purple-800/50 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                addToCart(item, "كرتون", effectivePriceDozen)
+                            }}
+                        >
+                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">كرتون ({effectivePriceDozen} ر.س)</span>
+                            <Plus className="h-4 w-4 text-purple-700 dark:text-purple-300" />
+                        </div>
+                    )}
+                </div>
+            </div>
         </motion.div>
     )
 }, (prev, next) => {
