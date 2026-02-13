@@ -498,6 +498,21 @@ export default function AdminSettingsPage() {
                                         <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <SoundRow
+                                                title="طلب استعادة كلمة مرور 🔑"
+                                                description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
+                                                event="passwordRequest"
+                                                currentSound={formData.sounds?.passwordRequest}
+                                                onUpload={(file) => handleSoundUpload('passwordRequest', file)}
+                                                onPlay={() => {
+                                                    if (formData.sounds?.passwordRequest) {
+                                                        new Audio(formData.sounds.passwordRequest).play()
+                                                    } else {
+                                                        playSound('passwordRequest')
+                                                    }
+                                                }}
+                                                onReset={() => resetSound('passwordRequest')}
+                                            />
+                                            <SoundRow
                                                 title="طلب جديد 💰"
                                                 description="أصوات لوحة التحكم للإداريين"
                                                 event="newOrder"
