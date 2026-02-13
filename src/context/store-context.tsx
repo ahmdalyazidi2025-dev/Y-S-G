@@ -1683,25 +1683,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const requestPasswordResetPhone = async (phone: string) => {
         try {
-            // 1. Find customer by phone
-            const q = query(collection(db, "customers"), where("phone", "==", phone))
-            const snap = await getDocs(q)
+            // Use Server Action to bypass client-side permission rules
+            const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
+            const result = await requestPasswordResetAction(phone)
 
-            if (snap.empty) {
-                toast.error("رقم الهاتف غير مسجل لدينا")
+            if (!result.success) {
+                toast.error(result.error || "حدث خطأ، حاول مرة أخرى")
                 return false
             }
-
-            const customer = snap.docs[0].data()
-
-            // 2. Create Request
-            await addDoc(collection(db, "password_requests"), {
-                customerId: snap.docs[0].id,
-                customerName: customer.name,
-                phone: phone,
-                status: "pending",
-                createdAt: new Date()
-            })
 
             toast.success("تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً")
             return true

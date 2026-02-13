@@ -149,17 +149,17 @@ function LoginForm() {
                                         <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto text-yellow-500 mb-2">
                                             <Phone className="w-5 h-5" />
                                         </div>
-                                        <h3 className="text-sm font-bold text-white">استعادة كلمة المرور</h3>
-                                        <p className="text-[10px] text-white/80 leading-relaxed">
+                                        <h3 className="text-sm font-bold text-foreground">استعادة كلمة المرور</h3>
+                                        <p className="text-[10px] text-muted-foreground leading-relaxed">
                                             أدخل رقم هاتفك المسجل، وسنقوم بإرسال طلب للإدارة للتواصل معك وتعيين كلمة مرور جديدة.
                                         </p>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-xs text-white/80 mr-1">رقم الهاتف</Label>
+                                        <Label className="text-xs text-muted-foreground mr-1">رقم الهاتف</Label>
                                         <Input
                                             type="tel"
                                             placeholder="05xxxxxxxx"
-                                            className="bg-white/5 border-white/10 text-right h-12 rounded-xl focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-white/50 font-medium text-white"
+                                            className="bg-secondary/50 border-transparent h-12 rounded-xl text-right pr-4 text-foreground focus:border-yellow-500/50 focus:ring-yellow-500/20 placeholder:text-muted-foreground/50 font-medium"
                                             value={recoveryPhone}
                                             onChange={(e) => setRecoveryPhone(e.target.value)}
                                             required
