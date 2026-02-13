@@ -283,22 +283,41 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     {cart.length > 0 && (
                         <div className="w-full p-6 bg-[#1c2a36] border-t border-white/10 pb-10 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-50">
                             {/* Totals */}
-                            <div className="space-y-1">
-                                {view === 'checkout' && (
-                                    <div className="flex justify-between items-center text-sm text-slate-400">
-                                        <span>المجموع الفرعي</span>
-                                        <span>{rawTotal.toFixed(2)} ر.س</span>
-                                    </div>
-                                )}
+                            {/* Totals */}
+                            <div className="space-y-2">
+                                {/* 1. Subtotal - Always Show */}
+                                <div className="flex justify-between items-center text-sm text-slate-400">
+                                    <span>إجمالي المنتجات</span>
+                                    <span>{rawTotal.toFixed(2)} ر.س</span>
+                                </div>
+
+                                {/* 2. Discount - Show if applied */}
                                 {discountAmount > 0 && (
-                                    <div className="flex justify-between items-center text-sm text-green-400 font-bold">
-                                        <span>الخصم</span>
-                                        <span>-{discountAmount.toFixed(2)} ر.س</span>
-                                    </div>
+                                    <>
+                                        <div className="flex justify-between items-center text-sm text-green-400">
+                                            <span>الخصم ({appliedCoupon?.code})</span>
+                                            <span>-{discountAmount.toFixed(2)} ر.س</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm text-slate-400/80 pb-2 border-b border-white/5">
+                                            <span>الإجمالي بعد الخصم</span>
+                                            <span>{(rawTotal - discountAmount).toFixed(2)} ر.س</span>
+                                        </div>
+                                    </>
                                 )}
+
+                                {/* 3. Tax - Always Show (Calculated on Net Total) */}
+                                <div className="flex justify-between items-center text-sm text-slate-400">
+                                    <span>ضريبة القيمة المضافة (15%)</span>
+                                    <span>{((rawTotal - discountAmount) * 0.15).toFixed(2)} ر.س</span>
+                                </div>
+
+                                {/* 4. Grand Total */}
                                 <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
                                     <span className="text-white font-bold">الإجمالي النهائي</span>
-                                    <span className="text-3xl font-black text-primary">{total.toFixed(2)} <span className="text-sm font-medium text-slate-500">ر.س</span></span>
+                                    <span className="text-3xl font-black text-primary">
+                                        {((rawTotal - discountAmount) * 1.15).toFixed(2)}
+                                        <span className="text-sm font-medium text-slate-500 mr-1">ر.س</span>
+                                    </span>
                                 </div>
                             </div>
 
