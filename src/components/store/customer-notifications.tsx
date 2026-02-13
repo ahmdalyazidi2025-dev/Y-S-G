@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Bell } from "lucide-react"
+import { Bell, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { formatDistanceToNow } from "date-fns"
@@ -71,12 +71,19 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                     "relative p-4 rounded-xl border transition-all duration-300",
                                     notification.read ? "bg-white/5 border-white/5 opacity-70" : "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5"
                                 )}
-                                onClick={() => !notification.read && markNotificationRead(notification.id)}
+                                onClick={() => {
+                                    if (!notification.read) markNotificationRead(notification.id)
+                                    if (notification.link) {
+                                        setIsOpen(false)
+                                        window.location.href = notification.link
+                                    }
+                                }}
                             >
                                 <div className="flex justify-between items-start gap-3">
                                     <div className="flex-1 space-y-1">
-                                        <h4 className={cn("text-sm font-bold", !notification.read && "text-primary")}>
+                                        <h4 className={cn("text-sm font-bold flex items-center gap-2", !notification.read && "text-primary")}>
                                             {notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")}
+                                            {notification.link && <ExternalLink className="w-3 h-3 opacity-50" />}
                                         </h4>
                                         <p className="text-xs text-slate-300 leading-relaxed">
                                             {/* Mask Chat Body if sensitive */}

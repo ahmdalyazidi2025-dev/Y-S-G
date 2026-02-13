@@ -127,6 +127,19 @@ export default function ChatPage() {
                                     {m.isAdmin ? m.text.replace(`(@${currentCustomerId})`, "").trim() : m.text}
                                 </p>
 
+                                {m.actionLink && (
+                                    <Link href={m.actionLink} className="block mt-3">
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="w-full bg-background/50 hover:bg-background text-foreground text-xs h-8 gap-2 group/btn border border-border/50"
+                                        >
+                                            <span>{m.actionTitle || "عرض التفاصيل"}</span>
+                                            <ArrowRight className="w-3 h-3 group-hover/btn:-translate-x-1 transition-transform rtl:rotate-180" />
+                                        </Button>
+                                    </Link>
+                                )}
+
                                 <div className={cn(
                                     "flex items-center justify-end mt-2 gap-1 text-[9px] font-medium",
                                     m.isAdmin ? "text-muted-foreground" : "text-primary-foreground/60"

@@ -82,9 +82,16 @@ export function NotificationManager() {
                         }
                     }
 
+                    const link = payload.data?.link
+                    const action = link ? {
+                        label: "عرض",
+                        onClick: () => window.location.href = link
+                    } : undefined
+
                     toast.message(title, {
                         description: body,
-                        icon: <BellRing className="w-5 h-5 text-primary" />
+                        icon: <BellRing className="w-5 h-5 text-primary" />,
+                        action
                     })
                     // Play sound
                     const audio = new Audio('/notification.mp3') // Assume file exists or fail silently

@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw } from "lucide-react"
+import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 import Image from "next/image"
 import { useStore, Product } from "@/context/store-context"
 import { Input } from "@/components/ui/input"
@@ -305,6 +306,18 @@ export default function ProductsPage() {
                             </div>
 
                             <div className="flex gap-1 ml-2">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`${window.location.origin}/product/${product.id}`)
+                                        toast.success("تم نسخ رابط المنتج")
+                                    }}
+                                    title="نسخ رابط المنتج"
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </Button>
                                 {/* Special Actions based on Tab */}
                                 {activeTab === 'offers' && (
                                     <Button

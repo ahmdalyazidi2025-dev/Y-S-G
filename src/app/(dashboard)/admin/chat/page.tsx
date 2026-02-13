@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ShoppingBag, Link as LinkIcon, X, Copy, Plus } from "lucide-react"
 export default function AdminChatPage() {
     const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, customers } = useStore()
     const [msg, setMsg] = useState("")
@@ -15,6 +17,15 @@ export default function AdminChatPage() {
     const [mode, setMode] = useState<"direct" | "broadcast" | "global_chat">("direct")
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+
+    // Link & Product Picker State
+    const [link, setLink] = useState("")
+    const [linkTitle, setLinkTitle] = useState("")
+    const [showLinkInput, setShowLinkInput] = useState(false)
+    const [isProductPickerOpen, setIsProductPickerOpen] = useState(false)
+    const [productSearch, setProductSearch] = useState("")
+
+    const { products } = useStore() // Get products for picker
 
     // Group messages into conversations
     const conversations = useMemo(() => {
@@ -67,21 +78,30 @@ export default function AdminChatPage() {
     }, [messages, selectedCustomer])
 
     const handleSend = async () => {
-        if (!msg.trim()) return
+        if (!msg.trim() && !link.trim()) return
 
         if (mode === "broadcast") {
             if (!title.trim()) return
-            // Send as notification to ALL
-            sendNotificationToGroup("all", title, msg)
+            // Send as notification to ALL (Broadcasts use 'link' as the push target mainly)
+            // But my update to sendNotificationToGroup allows passing a link.
+            // Let's assume broadcast link is the action link.
+            sendNotificationToGroup("all", title, msg, link || undefined)
             setMsg("")
             setTitle("")
+            setLink("")
         } else if (mode === "global_chat") {
             // Send as chat message to ALL
-            await sendGlobalMessage(msg)
+            await sendGlobalMessage(msg, link, linkTitle)
             setMsg("")
+            setLink("")
+            setLinkTitle("")
+            setShowLinkInput(false)
         } else if (selectedCustomer) {
-            sendMessage(`${msg} (@${selectedCustomer})`, true, selectedCustomer)
+            sendMessage(`${msg} (@${selectedCustomer})`, true, selectedCustomer, currentCustomerName, link, linkTitle)
             setMsg("")
+            setLink("")
+            setLinkTitle("")
+            setShowLinkInput(false)
         }
     }
 
@@ -251,6 +271,31 @@ export default function AdminChatPage() {
 
                 {(mode === "broadcast" || mode === "global_chat" || selectedCustomer) && (
                     <div className="flex flex-col gap-2 bg-background p-3 rounded-2xl border border-border shadow-sm m-2">
+                        {/* Link Input Section */}
+                        {showLinkInput && (
+                            <div className="flex gap-2 animate-in slide-in-from-bottom-2 mb-2">
+                                <Input
+                                    placeholder="رابط (مثال: /product/123)"
+                                    className="flex-1 bg-secondary/50 text-xs h-9"
+                                    value={link}
+                                    onChange={(e) => setLink(e.target.value)}
+                                />
+                                <Input
+                                    placeholder="عنوان الزر (اختياري)"
+                                    className="w-1/3 bg-secondary/50 text-xs h-9"
+                                    value={linkTitle}
+                                    onChange={(e) => setLinkTitle(e.target.value)}
+                                />
+                                <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-red-500" onClick={() => {
+                                    setLink("")
+                                    setLinkTitle("")
+                                    setShowLinkInput(false)
+                                }}>
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
+
                         {mode === "broadcast" && (
                             <Input
                                 placeholder="عنوان الإشعار..."
@@ -259,10 +304,70 @@ export default function AdminChatPage() {
                                 onChange={(e) => setTitle(e.target.value)}
                             />
                         )}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-end">
+                            {/* Tools Buttons */}
+                            <div className="flex gap-1">
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className={cn("h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10", showLinkInput && "text-primary bg-primary/10")}
+                                    onClick={() => setShowLinkInput(!showLinkInput)}
+                                    title="إضافة رابط"
+                                >
+                                    <LinkIcon className="w-5 h-5" />
+                                </Button>
+
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                    title="إرفاق منتج"
+                                    onClick={() => setIsProductPickerOpen(true)}
+                                >
+                                    <ShoppingBag className="w-5 h-5" />
+                                </Button>
+
+                                <Dialog open={isProductPickerOpen} onOpenChange={setIsProductPickerOpen}>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>اختر منتجاً للإرفاق</DialogTitle>
+                                        </DialogHeader>
+                                        <Input
+                                            placeholder="بحث عن منتج..."
+                                            value={productSearch}
+                                            onChange={(e) => setProductSearch(e.target.value)}
+                                            className="mb-4"
+                                        />
+                                        <div className="max-h-[300px] overflow-y-auto space-y-2">
+                                            {products
+                                                .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+                                                .map(p => (
+                                                    <div
+                                                        key={p.id}
+                                                        className="flex items-center gap-3 p-2 hover:bg-accent rounded-lg cursor-pointer border border-transparent hover:border-border"
+                                                        onClick={() => {
+                                                            setLink(`/product/${p.id}`)
+                                                            setLinkTitle(`عرض ${p.name.split(" ").slice(0, 3).join(" ")}`) // Shorten title
+                                                            setShowLinkInput(true)
+                                                            setIsProductPickerOpen(false)
+                                                        }}
+                                                    >
+                                                        {p.image && <img src={p.image} alt={p.name} className="w-10 h-10 rounded-md object-cover" />}
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-bold">{p.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{p.price} ر.س</p>
+                                                        </div>
+                                                        <Plus className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+
                             <Input
                                 placeholder={mode === "broadcast" ? "نص الإشعار..." : "اكتب رسالتك..."}
-                                className="bg-secondary/50 border-transparent rounded-xl h-12 focus:bg-background focus:border-primary/50"
+                                className="bg-secondary/50 border-transparent rounded-xl h-12 focus:bg-background focus:border-primary/50 flex-1"
                                 value={msg}
                                 onChange={(e) => setMsg(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSend()}

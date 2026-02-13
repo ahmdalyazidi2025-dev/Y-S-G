@@ -155,6 +155,7 @@ export type Notification = {
     read: boolean
     createdAt: Date
     type: "info" | "success" | "warning" | "error"
+    link?: string // Added for deep linking
 }
 
 export type Message = {
@@ -166,6 +167,8 @@ export type Message = {
     isAdmin: boolean
     read: boolean // Added
     userId?: string // To track which user this message belongs to
+    actionLink?: string // Optional link
+    actionTitle?: string // Optional button text
 }
 
 export type Conversation = {
@@ -256,7 +259,7 @@ type StoreContextType = {
     deleteStaff: (memberId: string) => void
     broadcastToCategory: (category: string, text: string) => void
     messages: Message[]
-    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string) => void
+    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string, actionLink?: string, actionTitle?: string) => void
     broadcastNotification: (text: string) => void
     currentUser: User | null
     login: (username: string, password: string, role: "admin" | "customer" | "staff") => Promise<boolean>
@@ -272,8 +275,8 @@ type StoreContextType = {
     notifications: Notification[]
     sendNotification: (notification: Omit<Notification, "id" | "createdAt" | "read">) => void
     markNotificationRead: (id: string) => void
-    sendNotificationToGroup: (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string) => void
-    sendGlobalMessage: (text: string) => void
+    sendNotificationToGroup: (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link?: string) => void
+    sendGlobalMessage: (text: string, actionLink?: string, actionTitle?: string) => void
     updateAdminCredentials: (username: string, password: string) => Promise<void>
     authInitialized: boolean
     resetPassword: (email: string) => Promise<boolean>
@@ -1169,7 +1172,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل") => {
+    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string) => {
         // Determine the target user. If admin sends, they must target a user (logic handled in UI usually via tagging or implicit context)
         // For general chat, if customer sends, userId is their ID.
         // If admin sends, we should probably store the target userId. logic here assumes broadcast or context aware? 
@@ -1184,7 +1187,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 isAdmin,
                 read: false, // Default unread
                 userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
-                createdAt: Timestamp.now()
+                createdAt: Timestamp.now(),
+                actionLink, // Save link
+                actionTitle
             }))
 
             // Send Push if Admin replying to a Customer
@@ -1479,7 +1484,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             notification.userId,
             notification.title,
             notification.body,
-            "/customer?notifications=open"
+            notification.link || "/customer?notifications=open"
         )
 
         // Local feedback for admin
@@ -1512,7 +1517,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string) => {
+    const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link: string = "/customer?notifications=open") => {
         let targetCustomers: Customer[] = []
 
         const getStats = (customerId: string) => {
@@ -1576,6 +1581,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 body,
                 type: "info",
                 read: false,
+                link, // Add link
                 createdAt: Timestamp.now()
             }))
         )
@@ -1585,7 +1591,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             // Trigger Batch Push Notification for the whole segment
             const targetIds = targetCustomers.map(c => c.id)
-            sendPushToUsers(targetIds, title, body, "/customer?notifications=open")
+            sendPushToUsers(targetIds, title, body, link)
 
             // Local feedback for admin
             playSound('newMessage')
@@ -1598,7 +1604,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const sendGlobalMessage = async (text: string) => {
+    const sendGlobalMessage = async (text: string, actionLink?: string, actionTitle?: string) => {
         if (customers.length === 0) {
             toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
             return
@@ -1610,6 +1616,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 senderName: "الإدارة",
                 text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
                 isAdmin: true,
+                actionLink, // Save link
+                actionTitle,
                 createdAt: Timestamp.now()
             }))
         )

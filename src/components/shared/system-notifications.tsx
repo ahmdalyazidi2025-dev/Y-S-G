@@ -138,8 +138,8 @@ export function SystemNotifications() {
                         description: latestMsg.text,
                         icon: <MessageSquare className="w-5 h-5 text-indigo-500" />,
                         action: {
-                            label: "رد",
-                            onClick: () => window.location.href = isAdminUser ? `/admin/chat` : `/customer/chat`
+                            label: latestMsg.actionTitle || (latestMsg.actionLink ? "عرض" : "رد"),
+                            onClick: () => window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
                         }
                     })
                 }
