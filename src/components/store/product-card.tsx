@@ -52,7 +52,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                     <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 via-transparent to-transparent pointer-events-none z-0" />
                 )}
 
-                <CardContent className="p-0 relative aspect-[4/3] bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center overflow-hidden">
+                <CardContent className="p-0 relative aspect-square bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center overflow-hidden">
                     {/* Product Image/Icon */}
                     <div
                         className="w-full h-full flex items-center justify-center cursor-pointer relative z-10"
@@ -68,7 +68,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 className="object-cover opacity-100 group-hover:scale-110 transition-transform duration-700"
                             />
                         ) : (
-                            <div className="text-6xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu">
+                            <div className="text-8xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu drop-shadow-2xl filter">
                                 {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}
                             </div>
                         )}
@@ -96,7 +96,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-900/80 to-transparent z-10" />
                 </CardContent>
 
-                <CardFooter className="p-4 flex flex-col items-start gap-3 relative z-20 -mt-2 bg-card/50 backdrop-blur-sm">
+                <CardFooter className="p-3 flex flex-col items-start gap-2 relative z-20 -mt-4 bg-card/60 backdrop-blur-md pt-4">
                     <div className="w-full space-y-1 text-right">
                         <h3 className="font-bold text-sm text-foreground leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-primary transition-colors">
                             {item.name}
