@@ -557,21 +557,7 @@ export default function AdminSettingsPage() {
                                                 }}
                                                 onReset={() => resetSound('generalPush')}
                                             />
-                                            <SoundRow
-                                                title="طلب استعادة كلمة مرور 🔑"
-                                                description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
-                                                event="passwordRequest"
-                                                currentSound={formData.sounds?.passwordRequest}
-                                                onUpload={(file) => handleSoundUpload('passwordRequest', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.passwordRequest) {
-                                                        new Audio(formData.sounds.passwordRequest).play()
-                                                    } else {
-                                                        playSound('passwordRequest')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('passwordRequest')}
-                                            />
+
                                         </div>
                                     </div>
                                 </Section>
