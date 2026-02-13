@@ -155,11 +155,18 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                     <div className="space-y-4 mb-40 animate-in fade-in slide-in-from-bottom-4 duration-300">
                                         {cart.map((item) => (
                                             <div key={item.id} className="glass-card p-4 flex gap-4 items-center">
-                                                <div className="w-16 h-16 bg-muted rounded-xl border border-border overflow-hidden flex-shrink-0">
-                                                    {/* Image placeholder */}
-                                                    <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600">
-                                                        {item.name.charAt(0)}
-                                                    </div>
+                                                <div className="w-16 h-16 bg-muted rounded-xl border border-border overflow-hidden flex-shrink-0 relative">
+                                                    {(item.image || (item.images && item.images.length > 0)) ? (
+                                                        <img
+                                                            src={item.image || item.images![0]}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600 font-bold bg-white/5">
+                                                            {item.name.charAt(0)}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="flex-1">
                                                     <h3 className="font-bold text-foreground">{item.name}</h3>
