@@ -363,11 +363,13 @@ function CategorySelector({ selected, onChange }: { selected: string[] | "all", 
                 onClick={toggleAll}
                 className={`
                     flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all
-                    ${selected === "all" ? 'bg-primary/20 border-primary text-white' : 'bg-black/20 border-white/10 text-slate-400 hover:bg-white/5'}
+                    ${selected === "all"
+                        ? 'bg-primary/10 border-primary text-primary dark:text-white dark:bg-primary/20'
+                        : 'bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/5'}
                 `}
             >
-                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selected === "all" ? 'bg-primary border-primary' : 'border-slate-600'}`}>
-                    {selected === "all" && <Check className="w-3 h-3 text-black" />}
+                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selected === "all" ? 'bg-primary border-primary' : 'border-slate-400 dark:border-slate-600'}`}>
+                    {selected === "all" && <Check className="w-3 h-3 text-white dark:text-black" />}
                 </div>
                 <span className="text-sm font-bold">كل الأقسام</span>
             </div>
@@ -382,11 +384,13 @@ function CategorySelector({ selected, onChange }: { selected: string[] | "all", 
                             onClick={() => toggleCategory(cat.id)}
                             className={`
                                 flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all
-                                ${active ? 'bg-primary/10 border-primary/50 text-white' : 'bg-black/10 border-white/5 text-slate-500 hover:bg-white/5'}
+                                ${active
+                                    ? 'bg-primary/10 border-primary/50 text-primary dark:text-white'
+                                    : 'bg-slate-100 dark:bg-black/10 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-white/5'}
                             `}
                         >
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${active ? 'bg-primary border-primary' : 'border-slate-700'}`}>
-                                {active && <Check className="w-3 h-3 text-black" />}
+                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${active ? 'bg-primary border-primary' : 'border-slate-400 dark:border-slate-700'}`}>
+                                {active && <Check className="w-3 h-3 text-white dark:text-black" />}
                             </div>
                             <span className="text-xs truncate">{cat.nameAr}</span>
                         </div>
