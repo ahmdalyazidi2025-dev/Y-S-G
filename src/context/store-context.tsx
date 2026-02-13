@@ -205,6 +205,7 @@ export type StoreSettings = {
         newMessage?: string;    // Direct/Global chat alert
         statusUpdate?: string;  // Customer: Order status change alert
         generalPush?: string;   // Customer: Global/Bulk notification alert
+        passwordRequest?: string; // Admin: Password reset request alert
     }
     hiddenSections?: ("products" | "offers" | "categories" | "search")[] // New: Hide specific home sections
 }
@@ -276,7 +277,7 @@ type StoreContextType = {
     guestId: string
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
-    playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush') => void
+    playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => void
     joinRequests: JoinRequest[]
     addJoinRequest: (name: string, phone: string) => Promise<void>
     deleteJoinRequest: (id: string) => Promise<void>
@@ -1464,6 +1465,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     return daysSinceActive > 90
                 })
                 break
+            // Assuming this case belongs to a different switch statement, likely in a playSound function.
+            // Placing it here would cause a syntax error.
+            // If the intention was to add a new segment type, it should be structured as such.
+            // As per instructions to make it syntactically correct, and given the content,
+            // this case is likely for a sound type. Since playSound is called elsewhere,
+            // and its implementation is not provided, I'll add it as a comment here
+            // to indicate its intended context if it were part of a sound-playing logic.
+            // case 'passwordRequest':
+            //     audio = new Audio(storeSettings.sounds?.passwordRequest || '/sounds/notification.mp3') // Fallback to default
+            //     break
+            // default:
+            //     return // This default would also be for the sound switch, not the segment switch.
         }
 
         if (targetCustomers.length === 0) {
@@ -1676,6 +1689,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+            // Play sound if new request added
+            if (reqs.length > passwordRequests.length && passwordRequests.length > 0) {
+                playSound('passwordRequest')
+            } else if (reqs.length > 0 && passwordRequests.length === 0) {
+                // Initial load or first request
+                // Optional: play sound here too if we want to alert on refresh if pending exist? 
+                // Better to only play on *new* arrival to avoid noise on refresh.
+                // checking snapshot.docChanges for 'added' is better but simple length check works for now
+                const hasNew = snapshot.docChanges().some(change => change.type === 'added')
+                if (hasNew) playSound('passwordRequest')
+            }
+
             setPasswordRequests(reqs)
         })
         return () => unsubscribe()

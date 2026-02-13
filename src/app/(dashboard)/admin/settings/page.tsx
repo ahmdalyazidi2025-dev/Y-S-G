@@ -29,7 +29,7 @@ import { printProductList } from "@/lib/print-product-list"
 
 const PROTECTED_PIN = "4422707";
 
-type SoundEvent = 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush';
+type SoundEvent = 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest';
 
 export default function AdminSettingsPage() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications } = useStore()
