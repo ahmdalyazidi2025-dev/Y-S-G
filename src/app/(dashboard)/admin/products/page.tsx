@@ -311,7 +311,7 @@ export default function ProductsPage() {
                                     size="icon"
                                     className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}/product/${product.id}`)
+                                        navigator.clipboard.writeText(`${window.location.origin}/customer?product=${product.id}`)
                                         toast.success("تم نسخ رابط المنتج")
                                     }}
                                     title="نسخ رابط المنتج"

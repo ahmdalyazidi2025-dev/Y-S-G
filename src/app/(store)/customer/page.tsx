@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { ProductCard } from "@/components/store/product-card"
 import { Search, Bell, User } from "lucide-react"
 import Link from "next/link"
@@ -35,6 +35,17 @@ export default function CustomerHome() {
 
     // Deep linking: Detect if notifications should be open
     const shouldOpenNotifications = searchParams.get("notifications") === "open"
+    const productIdFromUrl = searchParams.get("product")
+
+    // Handle Deep Linking for Products
+    useEffect(() => {
+        if (productIdFromUrl && products.length > 0) {
+            const product = products.find(p => p.id === productIdFromUrl)
+            if (product) {
+                setSelectedProduct(product)
+            }
+        }
+    }, [productIdFromUrl, products])
 
     const handleRefresh = async () => {
         // In a real app, refresh data here

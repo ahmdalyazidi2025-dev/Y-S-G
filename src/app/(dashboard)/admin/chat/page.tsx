@@ -346,7 +346,7 @@ export default function AdminChatPage() {
                                                         key={p.id}
                                                         className="flex items-center gap-3 p-2 hover:bg-accent rounded-lg cursor-pointer border border-transparent hover:border-border"
                                                         onClick={() => {
-                                                            setLink(`/product/${p.id}`)
+                                                            setLink(`/customer?product=${p.id}`)
                                                             setLinkTitle(`عرض ${p.name.split(" ").slice(0, 3).join(" ")}`) // Shorten title
                                                             setShowLinkInput(true)
                                                             setIsProductPickerOpen(false)
