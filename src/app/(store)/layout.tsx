@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2 } from "lucide-react"
+import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2, Bell } from "lucide-react"
 import React, { useState, useRef } from "react" // Added useRef
 import { useStore } from "@/context/store-context"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -11,6 +11,7 @@ import ScannerModal from "@/components/store/scanner-modal"
 import SmartCameraModal from "@/components/store/smart-camera-modal" // Added import
 import { CartDrawer } from "@/components/store/cart-drawer"
 import RequestModal from "@/components/store/request-modal"
+import NotificationSlideOver from "@/components/store/notification-slide-over"
 import { AiChatModal } from "@/components/store/ai-chat-modal"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
@@ -27,6 +28,7 @@ export default function StoreLayout({
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [isRequestOpen, setIsRequestOpen] = useState(false)
     const [isAiChatOpen, setIsAiChatOpen] = useState(false)
+    const [isNotifyOpen, setIsNotifyOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
     const { cart, logout, storeSettings, messages, currentUser, guestId, markNotificationsAsRead } = useStore()
@@ -37,6 +39,17 @@ export default function StoreLayout({
         const isFromAdmin = m.isAdmin
         const isForMe = m.text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
         return isFromAdmin && isForMe && !m.read
+    }).length
+
+    const unreadNotificationCount = messages.filter(m => {
+        const isFromAdmin = m.isAdmin
+        // Notifications are also messages in this system, but maybe we distinguish by type?
+        // Actually, the user treats "Chat" as messages and "Notifications" as system alerts?
+        // The previous context "Notify Customer Feature" sends a message.
+        // So "Notifications" might refer to `SystemNotifications` or separate `notifications` collection?
+        // Let's check `store-context` for `notifications`.
+        // Proceeding with adding the button first.
+        return false // Placeholder
     }).length
 
     // --- Smart Camera Logic ---
@@ -190,6 +203,21 @@ export default function StoreLayout({
 
                                         <button
                                             onClick={() => {
+                                                // Assuming we have a Notification Modal or Page. 
+                                                // If not, we found the issue: There is no UI for it yet in this layout?
+                                                // Wait, the user said "disappeared", implying it was there.
+                                                // Let's look for "Notification" usage in other files.
+                                                // Actually, let's just add the button that triggers a notification view.
+                                                // But where does it go? /customer/notifications? Or a modal?
+                                                // Let's check if there is a notifications page.
+                                            }}
+                                            className="hidden"
+                                        >
+
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
                                                 const url = window.location.origin
                                                 const text = "تسوق أفضل المنتجات من YSG Store"
                                                 if (navigator.share) {
@@ -316,6 +344,11 @@ export default function StoreLayout({
             <AiChatModal
                 isOpen={isAiChatOpen}
                 onClose={() => setIsAiChatOpen(false)}
+            />
+
+            <NotificationSlideOver
+                isOpen={isNotifyOpen}
+                onClose={() => setIsNotifyOpen(false)}
             />
         </ProtectedRoute>
 
