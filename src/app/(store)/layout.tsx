@@ -202,18 +202,16 @@ export default function StoreLayout({
                                         </Link>
 
                                         <button
-                                            onClick={() => {
-                                                // Assuming we have a Notification Modal or Page. 
-                                                // If not, we found the issue: There is no UI for it yet in this layout?
-                                                // Wait, the user said "disappeared", implying it was there.
-                                                // Let's look for "Notification" usage in other files.
-                                                // Actually, let's just add the button that triggers a notification view.
-                                                // But where does it go? /customer/notifications? Or a modal?
-                                                // Let's check if there is a notifications page.
-                                            }}
-                                            className="hidden"
+                                            onClick={() => setIsNotifyOpen(true)}
+                                            className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 active:scale-95 transition-all border border-border"
                                         >
-
+                                            <Bell className="w-5 h-5" />
+                                            <span className="text-[9px] font-bold">تنبيهات</span>
+                                            {unreadNotificationCount > 0 && (
+                                                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                                    {unreadNotificationCount}
+                                                </span>
+                                            )}
                                         </button>
 
                                         <button
