@@ -138,26 +138,26 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
 
                 {/* 2. Clean Typography & Secondary Actions */}
                 <div className="flex flex-col gap-1 px-1">
-                    <div className="flex justify-between items-start gap-2">
-                        <div className="flex flex-col gap-1 w-full">
-                            {/* Star Rating */}
-                            <div className="flex items-center gap-1">
-                                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                                <span className="text-[10px] font-medium text-muted-foreground">4.8 (120)</span>
-                            </div>
-
-                            <h3
-                                className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => onViewDetails?.(item)}
-                            >
-                                {item.name}
-                            </h3>
+                    <div className="flex flex-col items-start gap-1 w-full">
+                        {/* Star Rating */}
+                        <div className="flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                            <span className="text-[10px] font-medium text-muted-foreground">4.8 (120)</span>
                         </div>
 
-                        <div className="flex flex-col items-end shrink-0 pt-4">
-                            <span className="font-black text-lg text-foreground">{effectivePricePiece} <span className="text-xs font-normal text-muted-foreground">ر.س</span></span>
+                        <h3
+                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors w-full"
+                            onClick={() => onViewDetails?.(item)}
+                        >
+                            {item.name}
+                        </h3>
+
+                        {/* Price Section (Moved Below Name) */}
+                        <div className="flex items-baseline gap-1 mt-1">
+                            <span className="font-black text-xl text-foreground">{effectivePricePiece}</span>
+                            <span className="text-sm font-bold text-primary">ر.س</span>
                             {displayOldPricePiece && (
-                                <span className="text-[10px] text-red-400 line-through">{displayOldPricePiece}</span>
+                                <span className="text-[10px] text-red-400 line-through mr-1">{displayOldPricePiece}</span>
                             )}
                         </div>
                     </div>
