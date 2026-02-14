@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy } from "lucide-react"
+import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy, Folder } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import Image from "next/image"
@@ -217,157 +217,206 @@ export default function ProductsPage() {
                 </div>
             )}
 
-            {/* Products List */}
-            <div className="space-y-3">
-                {filteredProducts.length === 0 ? (
-                    <div className="p-10 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/20">
-                        <Package className="w-10 h-10 mx-auto mb-4 opacity-20" />
-                        {activeTab === 'drafts' ? "لا توجد مسودات محفوظة" : "لا توجد منتجات تطابق بحثك"}
-                    </div>
-                ) : (
-                    filteredProducts.map((product: Product) => (
-                        <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-muted/50 transition-colors relative overflow-hidden text-foreground">
-                            {/* Badges */}
-                            {product.isDraft && <div className="absolute top-2 left-2 bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full font-bold">مسودة</div>}
-                            {product.discountEndDate && new Date(product.discountEndDate) > new Date() && !product.isDraft && (
-                                <div className="absolute top-2 left-2 bg-green-500/20 text-green-400 text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                                    <Zap className="w-3 h-3" /> عرض ساري
+            {/* Products List or Draft Folders */}
+            {(activeTab === 'drafts' && selectedCategory === 'الكل' && !searchQuery) ? (
+                // --- DRAFT FOLDERS VIEW ---
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {/* Calculate Groups */}
+                    {(() => {
+                        const groups = filteredProducts.reduce((acc, product) => {
+                            const cat = product.category || "غير مصنف"
+                            acc[cat] = (acc[cat] || 0) + 1
+                            return acc
+                        }, {} as Record<string, number>)
+
+                        if (Object.keys(groups).length === 0) {
+                            return (
+                                <div className="col-span-full p-10 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/20">
+                                    <FileEdit className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                                    لا توجد مسودات حالياً
                                 </div>
-                            )}
+                            )
+                        }
 
-                            <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-border shrink-0">
-                                {product.image ? (
-                                    <div className="relative w-full h-full">
-                                        <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
-                                    </div>
-                                ) : (
-                                    <span>📦</span>
-                                )}
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-foreground mb-1 truncate">{product.name}</h3>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] bg-muted/50 px-2 py-0.5 rounded-full text-muted-foreground font-mono">{product.barcode || "---"}</span>
-                                    <span className="text-[10px] text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full text-primary font-bold">{product.unit}</span>
+                        return Object.entries(groups).map(([categoryName, count]) => (
+                            <div
+                                key={categoryName}
+                                onClick={() => setSelectedCategory(categoryName)}
+                                className="glass-card p-6 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-muted/50 transition-all group border border-border"
+                            >
+                                <div className="w-16 h-16 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                                    <Folder className="w-8 h-8 fill-current" />
                                 </div>
-                            </div>
-
-                            <div className="flex gap-6 items-center px-4">
-                                {/* 1. Cost Price (Internal) - Hidden on mobile */}
-                                <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 pl-2 relative">
-                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">التكلفة</p>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-lg font-bold text-amber-500 leading-none">
-                                            {product.costPrice || 0} <small className="text-[10px] mr-0.5">ر.س</small>
-                                        </span>
-                                    </div>
-                                    {/* Visual Divider */}
-                                    <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
-                                </div>
-
-                                {/* 2. Previous Price (Was) - Hidden on mobile */}
-                                <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 min-w-[60px]">
-                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">سابقاً</p>
-                                    <div className="flex flex-col items-end justify-center h-7">
-                                        {product.oldPricePiece ? (
-                                            <span className="text-sm text-red-500 line-through opacity-60 font-medium">
-                                                {product.oldPricePiece}
-                                            </span>
-                                        ) : (
-                                            <span className="text-slate-700 text-xs">-</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* 3. Current Price (Now) - Always Visible */}
-                                <div className="text-right space-y-0.5 border-r border-border pr-6">
-                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">حالياً</p>
-                                    <div className="flex flex-col items-end">
-                                        <span className={cn("text-lg font-bold leading-none", product.oldPricePiece ? "text-green-500" : "text-foreground")}>
-                                            {product.pricePiece} <small className="text-[10px] mr-0.5">ر.س</small>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* 4. Dozen Price - Hidden on mobile */}
-                                <div className="hidden md:block text-right space-y-0.5 min-w-[80px]">
-                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">الدرزن</p>
-                                    <div className="flex flex-col items-end">
-                                        {product.priceDozen ? (
-                                            <span className="text-lg font-bold text-muted-foreground leading-none">
-                                                {product.priceDozen} <small className="text-[10px] mr-0.5">ر.س</small>
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground italic">غير محدد</span>
-                                        )}
-                                    </div>
+                                <div className="text-center">
+                                    <h3 className="font-bold text-foreground text-sm">{categoryName}</h3>
+                                    <p className="text-xs text-muted-foreground mt-1">{count} مسودة</p>
                                 </div>
                             </div>
-
-                            <div className="flex gap-1 ml-2">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}/customer?product=${product.id}`)
-                                        toast.success("تم نسخ رابط المنتج")
-                                    }}
-                                    title="نسخ رابط المنتج"
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                                {/* Special Actions based on Tab */}
-                                {activeTab === 'offers' && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-10 w-10 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl"
-                                        onClick={() => handleStopOffer(product)}
-                                        title="إيقاف العرض واستعادة السعر"
-                                    >
-                                        <Ban className="w-4 h-4" />
-                                    </Button>
-                                )}
-
-                                {activeTab === 'frozen' && (
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-10 w-10 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-xl"
-                                        onClick={() => handleEdit(product)}
-                                        title="تجديد العرض"
-                                    >
-                                        <RefreshCw className="w-4 h-4" />
-                                    </Button>
-                                )}
-
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-xl"
-                                    onClick={() => handleEdit(product)}
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-xl"
-                                    onClick={() => {
-                                        if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
-                                            deleteProduct(product.id)
-                                        }
-                                    }}
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
+                        ))
+                    })()}
+                </div>
+            ) : (
+                // --- REGULAR LIST VIEW ---
+                <div className="space-y-3">
+                    {activeTab === 'drafts' && selectedCategory !== 'الكل' && (
+                        <div className="flex items-center gap-2 mb-4">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedCategory("الكل")} className="text-muted-foreground hover:text-foreground">
+                                <ArrowRight className="w-4 h-4 ml-1" />
+                                عودة للمجلدات
+                            </Button>
+                            <span className="text-sm font-bold text-foreground">/ {selectedCategory}</span>
                         </div>
-                    ))
-                )}
-            </div>
+                    )}
+                    {filteredProducts.length === 0 ? (
+                        <div className="p-10 text-center text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/20">
+                            <Package className="w-10 h-10 mx-auto mb-4 opacity-20" />
+                            {activeTab === 'drafts' ? "لا توجد مسودات محفوظة" : "لا توجد منتجات تطابق بحثك"}
+                        </div>
+                    ) : (
+                        filteredProducts.map((product: Product) => (
+                            <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-muted/50 transition-colors relative overflow-hidden text-foreground">
+                                {/* Badges */}
+                                {product.isDraft && <div className="absolute top-2 left-2 bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full font-bold">مسودة</div>}
+                                {product.discountEndDate && new Date(product.discountEndDate) > new Date() && !product.isDraft && (
+                                    <div className="absolute top-2 left-2 bg-green-500/20 text-green-400 text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                        <Zap className="w-3 h-3" /> عرض ساري
+                                    </div>
+                                )}
+
+                                <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-border shrink-0">
+                                    {product.image ? (
+                                        <div className="relative w-full h-full">
+                                            <Image src={product.image} alt={product.name} fill className="object-cover" unoptimized />
+                                        </div>
+                                    ) : (
+                                        <span>📦</span>
+                                    )}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-foreground mb-1 truncate">{product.name}</h3>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[10px] bg-muted/50 px-2 py-0.5 rounded-full text-muted-foreground font-mono">{product.barcode || "---"}</span>
+                                        <span className="text-[10px] text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full text-primary font-bold">{product.unit}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-6 items-center px-4">
+                                    {/* 1. Cost Price (Internal) - Hidden on mobile */}
+                                    <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 pl-2 relative">
+                                        <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">التكلفة</p>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-lg font-bold text-amber-500 leading-none">
+                                                {product.costPrice || 0} <small className="text-[10px] mr-0.5">ر.س</small>
+                                            </span>
+                                        </div>
+                                        {/* Visual Divider */}
+                                        <div className="absolute left-0 top-2 bottom-2 w-px bg-white/10" />
+                                    </div>
+
+                                    {/* 2. Previous Price (Was) - Hidden on mobile */}
+                                    <div className="hidden md:block text-right space-y-0.5 border-r border-border pr-6 min-w-[60px]">
+                                        <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">سابقاً</p>
+                                        <div className="flex flex-col items-end justify-center h-7">
+                                            {product.oldPricePiece ? (
+                                                <span className="text-sm text-red-500 line-through opacity-60 font-medium">
+                                                    {product.oldPricePiece}
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-700 text-xs">-</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Current Price (Now) - Always Visible */}
+                                    <div className="text-right space-y-0.5 border-r border-border pr-6">
+                                        <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">حالياً</p>
+                                        <div className="flex flex-col items-end">
+                                            <span className={cn("text-lg font-bold leading-none", product.oldPricePiece ? "text-green-500" : "text-foreground")}>
+                                                {product.pricePiece} <small className="text-[10px] mr-0.5">ر.س</small>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* 4. Dozen Price - Hidden on mobile */}
+                                    <div className="hidden md:block text-right space-y-0.5 min-w-[80px]">
+                                        <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">الدرزن</p>
+                                        <div className="flex flex-col items-end">
+                                            {product.priceDozen ? (
+                                                <span className="text-lg font-bold text-muted-foreground leading-none">
+                                                    {product.priceDozen} <small className="text-[10px] mr-0.5">ر.س</small>
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground italic">غير محدد</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-1 ml-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${window.location.origin}/customer?product=${product.id}`)
+                                            toast.success("تم نسخ رابط المنتج")
+                                        }}
+                                        title="نسخ رابط المنتج"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                    </Button>
+                                    {/* Special Actions based on Tab */}
+                                    {activeTab === 'offers' && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-10 w-10 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl"
+                                            onClick={() => handleStopOffer(product)}
+                                            title="إيقاف العرض واستعادة السعر"
+                                        >
+                                            <Ban className="w-4 h-4" />
+                                        </Button>
+                                    )}
+
+                                    {activeTab === 'frozen' && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-10 w-10 text-green-500 hover:text-green-400 hover:bg-green-500/10 rounded-xl"
+                                            onClick={() => handleEdit(product)}
+                                            title="تجديد العرض"
+                                        >
+                                            <RefreshCw className="w-4 h-4" />
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-xl"
+                                        onClick={() => handleEdit(product)}
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-xl"
+                                        onClick={() => {
+                                            if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+                                                deleteProduct(product.id)
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
 
             <AdminProductForm
                 isOpen={isFormOpen}

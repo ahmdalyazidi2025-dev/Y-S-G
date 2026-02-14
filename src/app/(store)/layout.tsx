@@ -29,7 +29,7 @@ export default function StoreLayout({
     const [isAiChatOpen, setIsAiChatOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout, storeSettings, messages, currentUser, guestId } = useStore()
+    const { cart, logout, storeSettings, messages, currentUser, guestId, markNotificationsAsRead } = useStore()
 
     // Chat Logic
     const currentCustomerId = currentUser?.id || guestId
@@ -176,6 +176,7 @@ export default function StoreLayout({
 
                                         <Link
                                             href="/customer/chat"
+                                            onClick={() => markNotificationsAsRead('chat')}
                                             className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
                                         >
                                             <MessageSquare className="w-5 h-5" />

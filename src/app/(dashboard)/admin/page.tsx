@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import {
     Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers,
     Camera, LogOut, TrendingUp, ShoppingBag, UserCheck, Clock, BarChart3,
-    type LucideIcon, ArrowRight
+
+    type LucideIcon, ArrowRight, KeyRound, UserPlus, Activity
 } from "lucide-react"
 import NextImage from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
@@ -17,19 +18,22 @@ import { AdminStatsSkeleton, AdminModuleSkeleton } from "@/components/store/skel
 import { getVisits, DailyVisit } from "@/lib/analytics"
 
 const ADMIN_MODULES = [
-    { title: "المنتجات", icon: Package, link: "/admin/products", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
+    { title: "المنتجات والعروض", icon: Package, link: "/admin/products", gradient: "from-blue-500 to-cyan-400", shadow: "shadow-blue-500/20" },
     { title: "الأقسام", icon: Layers, link: "/admin/categories", gradient: "from-violet-500 to-purple-400", shadow: "shadow-violet-500/20" },
-    { title: "كل العملاء", icon: Users, link: "/admin/customers", gradient: "from-emerald-500 to-teal-400", shadow: "shadow-emerald-500/20" },
-    { title: "الإحصائيات", icon: BarChart3, link: "/admin/analytics", gradient: "from-amber-500 to-orange-400", shadow: "shadow-amber-500/20" },
-    { title: "متابعة الطلبات", icon: ClipboardList, link: "/admin/orders", gradient: "from-pink-500 to-rose-400", shadow: "shadow-pink-500/20" },
-    { title: "طلبات التوفير", icon: Camera, link: "/admin/requests", gradient: "from-indigo-500 to-blue-400", shadow: "shadow-indigo-500/20" },
+    { title: "العملاء", icon: Users, link: "/admin/customers", gradient: "from-emerald-500 to-teal-400", shadow: "shadow-emerald-500/20" },
+    { title: "الإحصائيات", icon: BarChart3, link: "/admin/reports", gradient: "from-amber-500 to-orange-400", shadow: "shadow-amber-500/20" },
+    { title: "الطلبات", icon: ClipboardList, link: "/admin/orders", gradient: "from-pink-500 to-rose-400", shadow: "shadow-pink-500/20", badge: "orders" },
+    { title: "طلبات التوفير", icon: Camera, link: "/admin/requests", gradient: "from-indigo-500 to-blue-400", shadow: "shadow-indigo-500/20", badge: "requests" },
+    { title: "استعادة كلمة المرور", icon: KeyRound, link: "/admin/password-requests", gradient: "from-yellow-500 to-orange-400", shadow: "shadow-yellow-500/20", badge: "passwords" },
     { title: "صور العرض", icon: LugideImage, link: "/admin/banners", gradient: "from-fuchsia-500 to-pink-400", shadow: "shadow-fuchsia-500/20" },
-    { title: "الدردشة", icon: MessageCircle, link: "/admin/chat", gradient: "from-sky-500 to-cyan-400", shadow: "shadow-sky-500/20" },
+    { title: "الدردشة", icon: MessageCircle, link: "/admin/chat", gradient: "from-sky-500 to-cyan-400", shadow: "shadow-sky-500/20", badge: "chat" },
+    { title: "طلبات الانضمام", icon: UserPlus, link: "/admin/join-requests", gradient: "from-emerald-500 to-green-400", shadow: "shadow-emerald-500/20", badge: "joins" },
+    { title: "حالة النظام", icon: Activity, link: "/admin/system", gradient: "from-rose-500 to-red-400", shadow: "shadow-rose-500/20" },
     { title: "الإعدادات", icon: Settings, link: "/admin/settings", gradient: "from-slate-500 to-gray-400", shadow: "shadow-slate-500/20" },
 ]
 
 export default function AdminDashboard() {
-    const { orders, customers, products, logout, currentUser } = useStore()
+    const { orders, customers, products, logout, currentUser, productRequests, joinRequests, passwordRequests, messages, markNotificationsAsRead } = useStore()
     const [isLoading, setIsLoading] = useState(true)
     const [statsTimeRange, setStatsTimeRange] = useState<"today" | "week" | "month" | "year" | "all">("all")
     const [filteredVisits, setFilteredVisits] = useState(0)
@@ -45,10 +49,13 @@ export default function AdminDashboard() {
             "/admin/customers": "customers",
             "/admin/orders": "orders",
             "/admin/requests": "orders",
+            "/admin/password-requests": "customers",
+            "/admin/join-requests": "customers",
             "/admin/banners": "settings",
             "/admin/chat": "chat",
             "/admin/settings": "settings",
-            "/admin/analytics": "sales",
+            "/admin/reports": "sales",
+            "/admin/system": "settings",
         }
         return currentUser.permissions?.includes(perms[module.link])
     })
@@ -223,10 +230,18 @@ export default function AdminDashboard() {
                         filteredModules.map((module, idx) => {
                             const isLarge = idx === 0 || idx === 1; // First two are large
                             return (
-                                <Link key={idx} href={module.link} className={cn(
-                                    "group relative",
-                                    isLarge ? "col-span-2 lg:col-span-2 row-span-1" : "col-span-1"
-                                )}>
+                                <Link
+                                    key={idx}
+                                    href={module.link}
+                                    className={cn(
+                                        "group relative",
+                                        isLarge ? "col-span-2 lg:col-span-2 row-span-1" : "col-span-1"
+                                    )}
+                                    onClick={() => {
+                                        if ((module as any).badge === 'chat') markNotificationsAsRead('chat')
+                                        // Add other badge types here if implemented in markNotificationsAsRead
+                                    }}
+                                >
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -254,15 +269,38 @@ export default function AdminDashboard() {
 
                                         {/* Content */}
                                         <div className="absolute bottom-6 right-6 z-10">
-                                            <h3 className="text-xl font-bold text-foreground mb-1 group-hover:translate-x-1 transition-transform">{module.title}</h3>
+                                            <h3 className="text-xl font-bold text-foreground mb-1 group-hover:translate-x-1 transition-transform truncate">{module.title}</h3>
                                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest group-hover:text-primary transition-colors">فتح القسم</p>
                                         </div>
+
+                                        {/* Notification Badge */}
+                                        {(module as any).badge && (
+                                            (() => {
+                                                let count = 0
+                                                if ((module as any).badge === 'orders') count = orders.filter(o => o.status === 'pending').length
+                                                if ((module as any).badge === 'requests') count = productRequests.filter(r => r.status === 'pending').length
+                                                if ((module as any).badge === 'joins') count = joinRequests.length
+                                                if ((module as any).badge === 'chat') count = messages.filter(m => !m.read && !m.isAdmin).length
+                                                // Assuming passwordRequests has a status or simple length
+                                                if ((module as any).badge === 'passwords') count = passwordRequests?.length || 0
+
+                                                if (count > 0) {
+                                                    return (
+                                                        <div className="absolute top-4 left-4 bg-red-500 text-white text-[10px] font-bold h-6 min-w-[24px] px-1.5 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30 animate-pulse z-20">
+                                                            {count}
+                                                        </div>
+                                                    )
+                                                }
+                                                return null
+                                            })()
+                                        )}
 
                                         {/* Decorative Elements */}
                                         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
                                     </motion.div>
                                 </Link>
                             );
+
                         })
                     )}
                 </AnimatePresence>

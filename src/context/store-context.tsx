@@ -48,6 +48,7 @@ export type Product = {
     notes?: string // New: Internal admin notes
     costPrice?: number // New: Admin only cost price
     createdAt?: Date // New: For date-based filtering
+    isFeatured?: boolean // New: Pin to top
 }
 
 export type CartItem = Product & {
@@ -124,6 +125,7 @@ export type Order = {
 export type ProductRequest = {
     id: string
     customerName: string
+    customerId?: string // Added
     image?: string
     description?: string
     status: "pending" | "fulfilled" | "rejected"
@@ -169,6 +171,7 @@ export type Message = {
     userId?: string // To track which user this message belongs to
     actionLink?: string // Optional link
     actionTitle?: string // Optional button text
+    image?: string // Added support for images
 }
 
 export type Conversation = {
@@ -260,8 +263,9 @@ type StoreContextType = {
     deleteStaff: (memberId: string) => void
     broadcastToCategory: (category: string, text: string) => void
     messages: Message[]
-    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string, actionLink?: string, actionTitle?: string) => void
+    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string, actionLink?: string, actionTitle?: string, image?: string) => void
     broadcastNotification: (text: string) => void
+    markNotificationsAsRead: (type: "chat" | "system" | "orders", id?: string) => Promise<void>
     currentUser: User | null
     login: (username: string, password: string, role: "admin" | "customer" | "staff") => Promise<boolean>
     logout: () => void
@@ -1174,7 +1178,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string) => {
+    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string, image?: string) => {
         // Determine the target user. If admin sends, they must target a user (logic handled in UI usually via tagging or implicit context)
         // For general chat, if customer sends, userId is their ID.
         // If admin sends, we should probably store the target userId. logic here assumes broadcast or context aware? 
@@ -1191,7 +1195,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
                 createdAt: Timestamp.now(),
                 actionLink, // Save link
-                actionTitle
+                actionTitle,
+                image // Save image
             }))
 
             // Send Push if Admin replying to a Customer
@@ -1641,9 +1646,70 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const login = async (email: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
+    const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
+        if (!currentUser) return;
+
         try {
-            let finalEmail = email.trim()
+            if (type === "chat") {
+                // If ID is provided, it's a specific conversation (Customer ID)
+                // If no ID, maybe mark all? But usually we mark by conversation.
+                // For Admin: Mark all messages from this customer as read
+                // For Customer: Mark all messages from Admin as read
+
+                // Logic: Query messages where read=false AND (if admin: sender!=admin / if customer: sender=admin)
+                // This might be heavy to do "all".
+                // Let's assume we pass the CustomerID (id) when admin opens a chat.
+                // If customer is logged in, they mark their own received messages as read.
+
+                const q = query(
+                    collection(db, "messages"),
+                    where("read", "==", false),
+                    // Optimization: We should filter by conversation ID or User ID if possible
+                    // But our message structure is flat. 
+                    // Let's just find messages that are targeted to us or sent by the other party.
+                )
+
+                // This is a bit complex for a quick fix without a proper conversation sub-collection.
+                // A better approach for the badge:
+                // The badge counts `!m.read && !m.isAdmin` (for admin).
+                // So we need to update those messages to `read: true`.
+
+                // Let's implement a simple batch update for visual feedback
+                const querySnapshot = await getDocs(q);
+                // Filter in memory for safety if query is too broad
+                const updates: Promise<void>[] = []
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data() as Message
+
+                    // Admin clearing a specific customer's chat
+                    if (currentUser.role === 'admin' && id && data.senderId === id && !data.isAdmin) {
+                        updates.push(updateDoc(doc.ref, { read: true }))
+                    }
+
+                    // Customer clearing their own chat (messages from admin)
+                    if (currentUser.role === 'customer' && data.userId === currentUser.id && data.isAdmin) {
+                        updates.push(updateDoc(doc.ref, { read: true }))
+                    }
+                })
+                await Promise.all(updates)
+            }
+
+            if (type === "system") {
+                // Mark all notifications for this user as read
+                // Implementation depends on where 'notifications' are stored. 
+                // We have a `Notification` type but no `notifications` collection usage shown clearly in snippet.
+                // Assuming we have a `notifications` collection or field.
+                // For now, let's leave this placeholder or implement if we find the collection.
+            }
+
+        } catch (error) {
+            console.error("Error marking as read:", error)
+        }
+    }
+
+    const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
+        try {
+            let finalEmail = username.trim()
 
             // Fix for Customer Login: valid customer emails are username@ysg.local
             // If the user enters just "username", we append the domain.
@@ -1859,7 +1925,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         addBanner, deleteBanner, toggleBanner, addProductRequest,
         updateProductRequestStatus,
         deleteProductRequest,
-        messages, sendMessage, broadcastNotification, currentUser, login, logout,
+        messages, sendMessage,
+        broadcastNotification,
+        markNotificationsAsRead,
+        currentUser,
+        login, logout,
         updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
         staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
         coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,

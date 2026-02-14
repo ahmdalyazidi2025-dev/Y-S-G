@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Product, useStore } from "@/context/store-context"
-import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit, Tag } from "lucide-react"
+import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit, Tag, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,6 +44,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         discountEndDate: "",
         costPrice: "",
         notes: "",
+        isFeatured: false,
     })
 
     const [showCountdown, setShowCountdown] = useState(false)
@@ -68,6 +69,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     discountEndDate: initialProduct.discountEndDate ? new Date(initialProduct.discountEndDate).toISOString().slice(0, 16) : "",
                     costPrice: initialProduct.costPrice?.toString() || "",
                     notes: initialProduct.notes || "",
+                    isFeatured: initialProduct.isFeatured || false,
                 })
                 setShowCountdown(!!initialProduct.discountEndDate)
             } else {
@@ -86,6 +88,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     discountEndDate: "",
                     costPrice: "",
                     notes: "",
+                    isFeatured: false,
                 })
                 setShowCountdown(false)
             }
@@ -189,7 +192,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             discountEndDate: showCountdown && formData.discountEndDate ? new Date(formData.discountEndDate) : null,
             costPrice: formData.costPrice ? Number(formData.costPrice) : 0,
             notes: formData.notes,
-            isDraft: isDraft
+            isDraft: isDraft,
+            isFeatured: formData.isFeatured,
         }
 
         if (initialProduct) {
@@ -263,6 +267,25 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${useBranding ? 'bg-primary' : 'bg-white/10'}`}
                                 >
                                     <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${useBranding ? 'left-1' : 'left-6'}`} />
+                                </div>
+                            </div>
+
+                            {/* Featured Toggle */}
+                            <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-xl transition-colors ${formData.isFeatured ? 'bg-amber-500/20 text-amber-500' : 'bg-white/5 text-slate-400'}`}>
+                                        <Star className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex flex-col items-start gap-1">
+                                        <span className="text-sm font-bold text-white">تثبيت في المقدمة (Featured)</span>
+                                        <span className="text-[10px] text-slate-400">يظهر المنتج في أعلى القائمة دائماً</span>
+                                    </div>
+                                </div>
+                                <div
+                                    onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.isFeatured ? 'bg-amber-500' : 'bg-white/10'}`}
+                                >
+                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${formData.isFeatured ? 'left-1' : 'left-6'}`} />
                                 </div>
                             </div>
 

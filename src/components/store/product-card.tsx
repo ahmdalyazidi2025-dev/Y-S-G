@@ -51,16 +51,12 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                 {/* 1. Premium Image Container */}
                 <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10 border border-black/5 dark:border-white/5 shadow-sm">
 
-                    {/* Offer/New Badges */}
+                    {/* Offer Badges */}
                     <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
-                        {hasActiveOffer ? (
+                        {hasActiveOffer && (
                             <div className="flex items-center gap-1 bg-yellow-400 text-black text-[10px] px-2.5 py-1 rounded-full font-black shadow-sm">
                                 <span>🔥</span>
                                 <span>عرض</span>
-                            </div>
-                        ) : (
-                            <div className="bg-white/90 backdrop-blur-md text-foreground text-[10px] px-2.5 py-1 rounded-full font-bold shadow-sm">
-                                جديد
                             </div>
                         )}
                     </div>

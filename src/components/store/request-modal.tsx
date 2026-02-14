@@ -44,6 +44,7 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
         e.preventDefault()
         addProductRequest({
             customerName: currentUser?.name || "عميل تجريبي",
+            customerId: currentUser?.id || "guest",
             description,
             image: previewImage || "https://placehold.co/400x400/1c2a36/white?text=No+Photo"
         })

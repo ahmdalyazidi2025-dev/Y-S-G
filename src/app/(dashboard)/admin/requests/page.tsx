@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder } from "lucide-react"
+import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder, Bell, Send } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, ProductRequest } from "@/context/store-context"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Switch } from "@/components/ui/switch"
@@ -18,11 +20,43 @@ const REQUEST_STATUS = {
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings } = useStore()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings, sendMessage } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
     const [viewMode, setViewMode] = useState<'all' | 'folders'>('all')
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
+
+    // Notify State
+    const [isNotifyMode, setIsNotifyMode] = useState(false)
+    const [notifyMessage, setNotifyMessage] = useState("")
+    const [notifyLink, setNotifyLink] = useState("")
+
+    const handleNotify = async () => {
+        if (!selectedRequest || !selectedRequest.customerId) {
+            toast.error("لا يمكن إرسال إشعار: هوية العميل غير معروفة")
+            return
+        }
+
+        if (!notifyMessage) {
+            toast.error("الرجاء كتابة رسالة")
+            return
+        }
+
+        await sendMessage(
+            notifyMessage,
+            true, // isAdmin
+            selectedRequest.customerId,
+            selectedRequest.customerName,
+            notifyLink,
+            notifyLink ? "عرض المنتج" : undefined,
+            selectedRequest.image // Send request image
+        )
+
+        toast.success("تم إرسال الإشعار للعميل")
+        setIsNotifyMode(false)
+        setNotifyMessage("")
+        setNotifyLink("")
+    }
 
     const filteredRequests = productRequests.filter(r => r.status === statusFilter)
 
@@ -292,7 +326,10 @@ export default function AdminRequestsPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedRequest(null)}
+                            onClick={() => {
+                                setSelectedRequest(null)
+                                setIsNotifyMode(false)
+                            }}
                             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                         />
                         <motion.div
@@ -303,7 +340,10 @@ export default function AdminRequestsPage() {
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold">تفاصيل طلب التوفير</h2>
-                                <button onClick={() => setSelectedRequest(null)} className="p-2 hover:bg-white/5 rounded-full">
+                                <button onClick={() => {
+                                    setSelectedRequest(null)
+                                    setIsNotifyMode(false)
+                                }} className="p-2 hover:bg-white/5 rounded-full">
                                     <XCircle className="w-5 h-5 text-slate-400" />
                                 </button>
                             </div>
@@ -352,42 +392,97 @@ export default function AdminRequestsPage() {
                                     </p>
                                 </div>
 
-                                <div className="pt-4 flex gap-2">
-                                    <Button
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-12 gap-2"
-                                        onClick={() => {
-                                            updateProductRequestStatus(selectedRequest.id, "fulfilled")
-                                            setSelectedRequest(null)
-                                        }}
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        <span>تم التوفير</span>
-                                    </Button>
-                                    <Button
-                                        variant="glass"
-                                        className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl h-12 gap-2"
-                                        onClick={() => {
-                                            updateProductRequestStatus(selectedRequest.id, "rejected")
-                                            setSelectedRequest(null)
-                                        }}
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        <span>رفض</span>
-                                    </Button>
-
-                                    {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
-                                        <Button
-                                            variant="glass"
-                                            className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl h-12 w-12 p-0 flex items-center justify-center transition-colors"
-                                            onClick={() => {
-                                                if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
-                                                    deleteProductRequest(selectedRequest.id)
+                                <div className="pt-4 flex flex-col gap-3">
+                                    {isNotifyMode ? (
+                                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-3 animate-in fade-in slide-in-from-top-2">
+                                            <h4 className="font-bold text-sm flex items-center gap-2">
+                                                <Bell className="w-4 h-4 text-primary" />
+                                                إرسال إشعار توفر المنتج
+                                            </h4>
+                                            <Textarea
+                                                placeholder="اكتب رسالة للعميل (مثلاً: المنتج الذي طلبته توفر الآن!)"
+                                                className="bg-black/20 border-white/10 text-right min-h-[80px]"
+                                                value={notifyMessage}
+                                                onChange={(e) => setNotifyMessage(e.target.value)}
+                                            />
+                                            <Input
+                                                placeholder="رابط المنتج (اختياري)"
+                                                className="bg-black/20 border-white/10 text-right h-10 text-xs"
+                                                value={notifyLink}
+                                                onChange={(e) => setNotifyLink(e.target.value)}
+                                            />
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    onClick={handleNotify}
+                                                    className="flex-1 bg-primary text-primary-foreground h-10 rounded-xl gap-2"
+                                                >
+                                                    <Send className="w-4 h-4" />
+                                                    إرسال
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() => setIsNotifyMode(false)}
+                                                    className="h-10 rounded-xl text-slate-400"
+                                                >
+                                                    إلغاء
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <Button
+                                                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-12 gap-2"
+                                                onClick={() => {
+                                                    updateProductRequestStatus(selectedRequest.id, "fulfilled")
                                                     setSelectedRequest(null)
-                                                }
-                                            }}
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </Button>
+                                                }}
+                                            >
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <span>تم التوفير</span>
+                                            </Button>
+
+                                            {/* Notify Button - Only if customerId exists */}
+                                            {selectedRequest.customerId && selectedRequest.customerId !== "guest" && (
+                                                <Button
+                                                    variant="glass"
+                                                    className="bg-primary/20 text-primary hover:bg-primary/30 rounded-xl h-12 w-12 px-0 flex items-center justify-center transition-colors"
+                                                    onClick={() => {
+                                                        setNotifyMessage(`مرحباً ${selectedRequest.customerName}، يسعدنا إخبارك بأن المنتج الذي طلبته قد توفر! 🥳`)
+                                                        setIsNotifyMode(true)
+                                                    }}
+                                                    title="إشعار العميل"
+                                                >
+                                                    <Bell className="w-5 h-5" />
+                                                </Button>
+                                            )}
+
+                                            <Button
+                                                variant="glass"
+                                                className="flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl h-12 gap-2"
+                                                onClick={() => {
+                                                    updateProductRequestStatus(selectedRequest.id, "rejected")
+                                                    setSelectedRequest(null)
+                                                }}
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                                <span>رفض</span>
+                                            </Button>
+
+                                            {(selectedRequest.status === 'fulfilled' || selectedRequest.status === 'rejected') && (
+                                                <Button
+                                                    variant="glass"
+                                                    className="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-xl h-12 w-12 p-0 flex items-center justify-center transition-colors"
+                                                    onClick={() => {
+                                                        if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                                                            deleteProductRequest(selectedRequest.id)
+                                                            setSelectedRequest(null)
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

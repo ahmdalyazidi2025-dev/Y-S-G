@@ -69,6 +69,15 @@ export default function CustomerHome() {
         // Store Context usually saves category ID in product.category
         const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory
         return matchesSearch && matchesCategory
+    }).sort((a, b) => {
+        // 1. Featured first
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+
+        // 2. Newest first (fallback)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
     })
 
     const hiddenSections = storeSettings?.hiddenSections || []

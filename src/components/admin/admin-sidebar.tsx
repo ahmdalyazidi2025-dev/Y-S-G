@@ -29,7 +29,7 @@ const NAV_ITEMS = [
 export function AdminSidebar() {
     const pathname = usePathname()
     const router = useRouter()
-    const { logout, currentUser, authInitialized } = useStore()
+    const { logout, currentUser, authInitialized, markNotificationsAsRead } = useStore()
 
     // If we have a user, show the sidebar immediately (optimistic). 
     // If no user AND not initialized, then hide (loading state).
@@ -102,7 +102,15 @@ export function AdminSidebar() {
                 {filteredNavItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
-                        <Link key={item.href} href={item.href}>
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => {
+                                if (item.href === '/admin/chat') {
+                                    markNotificationsAsRead('chat')
+                                }
+                            }}
+                        >
                             <motion.div
                                 whileHover={{ x: -4 }}
                                 className={cn(

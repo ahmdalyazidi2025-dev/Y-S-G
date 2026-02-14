@@ -391,8 +391,10 @@ export default function AdminOrdersPage() {
                                                 key={statusKey}
                                                 variant="glass"
                                                 className={cn(
-                                                    "h-10 text-[10px] font-bold rounded-lg",
-                                                    selectedOrder.status === statusKey ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color : "hover:bg-white/5"
+                                                    "h-12 text-xs font-bold rounded-xl border border-white/5 transition-all",
+                                                    selectedOrder.status === statusKey
+                                                        ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color + " border-" + STATUS_CONFIG[statusKey].color.split(' ')[0].replace('text-', '') + "/20 shadow-lg"
+                                                        : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
                                                 )}
                                                 onClick={() => {
                                                     updateOrderStatus(selectedOrder.id, statusKey)
