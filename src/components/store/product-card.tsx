@@ -1,7 +1,7 @@
 "use client"
 import { memo } from "react"
 
-import { Plus, Minus, Heart, Star } from "lucide-react"
+import { Plus, Minus, Star, Clock } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -63,15 +63,15 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 جديد
                             </div>
                         )}
-                        {hasActiveOffer && (
-                            <CountdownTimer endDate={new Date(item.discountEndDate!)} />
-                        )}
                     </div>
 
-                    {/* Wishlist Button */}
-                    <button className="absolute top-3 right-3 z-20 p-2 rounded-full bg-white/60 backdrop-blur-md hover:bg-white text-gray-500 hover:text-red-500 transition-colors shadow-sm active:scale-90 duration-200">
-                        <Heart className="w-5 h-5" />
-                    </button>
+                    {/* Timer (Moved to Bottom Left) */}
+                    {hasActiveOffer && (
+                        <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-red-100">
+                            <Clock className="w-3 h-3 text-red-600 animate-pulse" />
+                            <CountdownTimer endDate={new Date(item.discountEndDate!)} className="text-[10px] font-bold text-red-600" />
+                        </div>
+                    )}
 
                     {/* Image Click Area */}
                     <div

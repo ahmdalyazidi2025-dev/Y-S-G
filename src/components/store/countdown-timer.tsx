@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react"
 import { Clock } from "lucide-react"
 
-export function CountdownTimer({ endDate }: { endDate: Date }) {
+import { cn } from "@/lib/utils"
+
+export function CountdownTimer({ endDate, className }: { endDate: Date, className?: string }) {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null)
 
     useEffect(() => {
@@ -31,7 +33,7 @@ export function CountdownTimer({ endDate }: { endDate: Date }) {
     if (!timeLeft) return null
 
     return (
-        <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-1.5 backdrop-blur-md animate-pulse">
+        <div className={cn("flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-1.5 backdrop-blur-md animate-pulse", className)}>
             <Clock className="w-3.5 h-3.5 text-orange-400" />
             <div className="flex items-center gap-1 font-mono text-[10px] font-bold text-orange-400">
                 {timeLeft.days > 0 && <span>{timeLeft.days}ي :</span>}
