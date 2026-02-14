@@ -5,7 +5,7 @@ import { Clock } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-export function CountdownTimer({ endDate, className }: { endDate: Date, className?: string }) {
+export function CountdownTimer({ endDate, className, minimal = false }: { endDate: Date, className?: string, minimal?: boolean }) {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null)
 
     useEffect(() => {
@@ -31,6 +31,17 @@ export function CountdownTimer({ endDate, className }: { endDate: Date, classNam
     }, [endDate])
 
     if (!timeLeft) return null
+
+    if (minimal) {
+        return (
+            <div className={cn("flex items-center gap-1 font-mono leading-none", className)}>
+                {timeLeft.days > 0 && <span>{timeLeft.days}ي :</span>}
+                <span>{timeLeft.hours.toString().padStart(2, '0')}:</span>
+                <span>{timeLeft.minutes.toString().padStart(2, '0')}:</span>
+                <span>{timeLeft.seconds.toString().padStart(2, '0')}</span>
+            </div>
+        )
+    }
 
     return (
         <div className={cn("flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-1.5 backdrop-blur-md animate-pulse", className)}>

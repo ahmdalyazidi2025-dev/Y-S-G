@@ -65,11 +65,11 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                         )}
                     </div>
 
-                    {/* Timer (Moved to Bottom Left) */}
+                    {/* Timer (Moved to Bottom Left - Simplified) */}
                     {hasActiveOffer && (
-                        <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-white/90 backdrop-blur-md px-2 py-1 rounded-full shadow-sm border border-red-100">
-                            <Clock className="w-3 h-3 text-red-600 animate-pulse" />
-                            <CountdownTimer endDate={new Date(item.discountEndDate!)} className="text-[10px] font-bold text-red-600" />
+                        <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-black/5 dark:bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-black/5">
+                            <Clock className="w-3 h-3 text-muted-foreground" />
+                            <CountdownTimer endDate={new Date(item.discountEndDate!)} className="text-[10px] font-medium text-muted-foreground" minimal />
                         </div>
                     )}
 
@@ -129,9 +129,9 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 e.stopPropagation()
                                 addToCart(item, "حبة", effectivePricePiece)
                             }}
-                            className="absolute bottom-3 right-3 h-12 w-12 rounded-full bg-black text-white hover:bg-black/90 shadow-xl shadow-black/20 hover:scale-110 active:scale-95 transition-all z-30"
+                            className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-black text-white hover:bg-black/90 shadow-lg shadow-black/10 hover:scale-110 active:scale-95 transition-all z-30"
                         >
-                            <Plus className="h-7 w-7" />
+                            <Plus className="h-5 w-5" />
                         </Button>
                     )}
                 </div>
@@ -139,12 +139,6 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                 {/* 2. Clean Typography & Secondary Actions */}
                 <div className="flex flex-col gap-1 px-1">
                     <div className="flex flex-col items-start gap-1 w-full">
-                        {/* Star Rating */}
-                        <div className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                            <span className="text-[10px] font-medium text-muted-foreground">4.8 (120)</span>
-                        </div>
-
                         <h3
                             className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors w-full"
                             onClick={() => onViewDetails?.(item)}
