@@ -336,7 +336,7 @@ export default function AdminRequestsPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card w-full max-w-md p-6 relative"
+                            className="glass-card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto"
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold">تفاصيل طلب التوفير</h2>

@@ -13,6 +13,7 @@ import Image from "next/image"
 export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const { addProductRequest, currentUser } = useStore()
     const [description, setDescription] = useState("")
+    const [guestName, setGuestName] = useState("")
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -43,13 +44,13 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         addProductRequest({
-            customerName: currentUser?.name || "عميل تجريبي",
+            customerName: currentUser?.name || guestName || "زائر",
             customerId: currentUser?.id || "guest",
             description,
             image: previewImage || "https://placehold.co/400x400/1c2a36/white?text=No+Photo"
         })
         setDescription("")
-        // name state removed
+        setGuestName("")
         setPreviewImage(null)
         toast.success("تم إرسال طلبك بنجاح! سنقوم بالتواصل معك قريباً.")
         onClose()
@@ -89,6 +90,17 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                             />
 
                             <div className="space-y-2">
+                                {!currentUser && (
+                                    <div className="relative mb-2">
+                                        <Type className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="الاسم (اختياري)"
+                                            className="bg-muted/50 border-border pr-10"
+                                            value={guestName}
+                                            onChange={(e) => setGuestName(e.target.value)}
+                                        />
+                                    </div>
+                                )}
                                 <label className="text-xs text-muted-foreground mr-2">وصف المنتج (اختياري)</label>
                                 <div className="relative">
                                     <Type className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
