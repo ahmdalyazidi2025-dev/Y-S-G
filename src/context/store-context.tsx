@@ -207,6 +207,7 @@ export type StoreSettings = {
     enableCoupons?: boolean
     enableAIChat?: boolean // New Toggle
     enableProductRequests?: boolean // New Toggle for Product Requests
+    enableBarcodeScanner?: boolean // New Toggle for Barcode Scanner
     sounds?: {
         newOrder?: string;      // Admin: New order alert
         newMessage?: string;    // Direct/Global chat alert
@@ -323,6 +324,7 @@ const MOCK_SETTINGS: StoreSettings = {
     enableCoupons: true,
     enableAIChat: true,
     enableProductRequests: true,
+    enableBarcodeScanner: true,
     sounds: {} // Defaults will be handled in the hook fallbacks
 }
 

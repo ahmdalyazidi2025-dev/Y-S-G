@@ -269,35 +269,37 @@ export default function StoreLayout({
                     <Footer />
                 </div>
 
-                {/* Floating Scanner Button (Isolated) */}
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
-                    <button
-                        // Mobile Touch Events
-                        onTouchStart={handleTouchStart}
-                        onTouchEnd={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
-                        // Desktop/Mouse Events
-                        onMouseDown={handleTouchStart}
-                        onMouseUp={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
-                        // Prevent Context Menu on Long Press
-                        onContextMenu={(e) => e.preventDefault()}
-                        // Fallback
-                        onClick={() => { }}
-                        className="group relative w-18 h-18 sm:w-20 sm:h-20 bg-background rounded-full flex items-center justify-center shadow-[0_4px_30px_-5px_hsl(var(--primary)/0.5)] active:scale-95 transition-all duration-300 border-4 border-background dark:border-[#0f111a] hover:-translate-y-1"
-                    >
-                        {/* Premium Gradient Background */}
-                        <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-primary to-primary/80 opacity-100 dark:opacity-90 transition-opacity" />
+                {/* Floating Scanner Button (Isolated) - Only on Customer Home Page & Enabled */}
+                {pathname === "/customer" && storeSettings.enableBarcodeScanner !== false && (
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
+                        <button
+                            // Mobile Touch Events
+                            onTouchStart={handleTouchStart}
+                            onTouchEnd={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
+                            // Desktop/Mouse Events
+                            onMouseDown={handleTouchStart}
+                            onMouseUp={(e) => handleTouchEnd(e, () => setIsScannerOpen(true))}
+                            // Prevent Context Menu on Long Press
+                            onContextMenu={(e) => e.preventDefault()}
+                            // Fallback
+                            onClick={() => { }}
+                            className="group relative w-18 h-18 sm:w-20 sm:h-20 bg-background rounded-full flex items-center justify-center shadow-[0_4px_30px_-5px_hsl(var(--primary)/0.5)] active:scale-95 transition-all duration-300 border-4 border-background dark:border-[#0f111a] hover:-translate-y-1"
+                        >
+                            {/* Premium Gradient Background */}
+                            <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-primary to-primary/80 opacity-100 dark:opacity-90 transition-opacity" />
 
-                        {/* Glow Effect */}
-                        <div className="absolute inset-0 rounded-full bg-primary/50 blur-xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
+                            {/* Glow Effect */}
+                            <div className="absolute inset-0 rounded-full bg-primary/50 blur-xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse" />
 
-                        <Scan className="w-8 h-8 sm:w-9 sm:h-9 text-white relative z-10 group-hover:scale-110 transition-transform drop-shadow-md" />
+                            <Scan className="w-8 h-8 sm:w-9 sm:h-9 text-white relative z-10 group-hover:scale-110 transition-transform drop-shadow-md" />
 
-                        {/* Scan Line Animation */}
-                        <div className="absolute inset-3 rounded-full overflow-hidden z-10 opacity-30 pointer-events-none">
-                            <div className="w-full h-[2px] bg-white/80 absolute top-0 animate-scan-line shadow-[0_0_10px_white]" />
-                        </div>
-                    </button>
-                </div>
+                            {/* Scan Line Animation */}
+                            <div className="absolute inset-3 rounded-full overflow-hidden z-10 opacity-30 pointer-events-none">
+                                <div className="w-full h-[2px] bg-white/80 absolute top-0 animate-scan-line shadow-[0_0_10px_white]" />
+                            </div>
+                        </button>
+                    </div>
+                )}
 
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                 <RequestModal isOpen={isRequestOpen} onClose={() => setIsRequestOpen(false)} />

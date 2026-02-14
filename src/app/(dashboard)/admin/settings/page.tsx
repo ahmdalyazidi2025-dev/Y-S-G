@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
@@ -415,6 +415,7 @@ export default function AdminSettingsPage() {
                                 <div className="lg:col-span-2">
                                     <Section icon={<Truck className="w-5 h-5" />} title="مميزات المتجر (الخدمات)">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            {/* Shipping */}
                                             <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
                                                 <div className="flex items-center gap-2 text-primary">
                                                     <Truck className="w-5 h-5" />
@@ -438,6 +439,7 @@ export default function AdminSettingsPage() {
                                                 </div>
                                             </div>
 
+                                            {/* Payment */}
                                             <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
                                                 <div className="flex items-center gap-2 text-emerald-500">
                                                     <ShoppingBag className="w-5 h-5" />
@@ -461,6 +463,7 @@ export default function AdminSettingsPage() {
                                                 </div>
                                             </div>
 
+                                            {/* Support */}
                                             <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
                                                 <div className="flex items-center gap-2 text-blue-500">
                                                     <Phone className="w-5 h-5" />
@@ -484,407 +487,430 @@ export default function AdminSettingsPage() {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Barcode Scanner Toggle */}
+                                        <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-primary">
+                                                    <Scan className="w-5 h-5" />
+                                                    <h4 className="font-bold text-foreground">الماسح الضوئي (Barcode)</h4>
+                                                </div>
+                                                <Switch
+                                                    checked={formData.enableBarcodeScanner !== false}
+                                                    onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
+                                                />
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">تفعيل زر ماسح الباركود العائم في صفحة المنتجات.</p>
+                                        </div>
                                     </Section>
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === 'alerts' && (
-                            <div className="space-y-6">
-
-
-                                <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
-                                    <div className="space-y-4">
-                                        <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <SoundRow
-                                                title="طلب استعادة كلمة مرور 🔑"
-                                                description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
-                                                event="passwordRequest"
-                                                currentSound={formData.sounds?.passwordRequest}
-                                                onUpload={(file) => handleSoundUpload('passwordRequest', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.passwordRequest) {
-                                                        new Audio(formData.sounds.passwordRequest).play()
-                                                    } else {
-                                                        playSound('passwordRequest')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('passwordRequest')}
-                                            />
-                                            <SoundRow
-                                                title="طلب جديد 💰"
-                                                description="أصوات لوحة التحكم للإداريين"
-                                                event="newOrder"
-                                                currentSound={formData.sounds?.newOrder}
-                                                onUpload={(file) => handleSoundUpload('newOrder', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.newOrder) {
-                                                        new Audio(formData.sounds.newOrder).play()
-                                                    } else {
-                                                        playSound('newOrder')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('newOrder')}
-                                            />
-                                            <SoundRow
-                                                title="رسالة شات 💬"
-                                                description="تنبيه الدردشة الجماعية والخاصة"
-                                                event="newMessage"
-                                                currentSound={formData.sounds?.newMessage}
-                                                onUpload={(file) => handleSoundUpload('newMessage', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.newMessage) {
-                                                        new Audio(formData.sounds.newMessage).play()
-                                                    } else {
-                                                        playSound('newMessage')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('newMessage')}
-                                            />
-                                            <SoundRow
-                                                title="تحديث الحالة 📦"
-                                                description="صوت يصل للعميل عند تغير حالة طلبه"
-                                                event="statusUpdate"
-                                                currentSound={formData.sounds?.statusUpdate}
-                                                onUpload={(file) => handleSoundUpload('statusUpdate', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.statusUpdate) {
-                                                        new Audio(formData.sounds.statusUpdate).play()
-                                                    } else {
-                                                        playSound('statusUpdate')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('statusUpdate')}
-                                            />
-                                            <SoundRow
-                                                title="إشعار عام للعميل 🔔"
-                                                description="الصوت الذي يسمعه العميل عند وصول تنبيه أو عرض"
-                                                event="generalPush"
-                                                currentSound={formData.sounds?.generalPush}
-                                                onUpload={(file) => handleSoundUpload('generalPush', file)}
-                                                onPlay={() => {
-                                                    if (formData.sounds?.generalPush) {
-                                                        new Audio(formData.sounds.generalPush).play()
-                                                    } else {
-                                                        playSound('generalPush')
-                                                    }
-                                                }}
-                                                onReset={() => resetSound('generalPush')}
-                                            />
-
-                                        </div>
-                                    </div>
-                                </Section>
-                            </div>
-                        )}
-
-                        {activeTab === 'coupons' && (
-                            <div className="glass-card p-2 rounded-3xl overflow-hidden">
-                                <CouponManager />
-                            </div>
-                        )}
-
-
-                        {activeTab === 'data' && (
-                            <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
+                        {
+                            activeTab === 'alerts' && (
                                 <div className="space-y-6">
 
-                                    {/* Product Reports Card */}
-                                    <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-                                        <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-colors" />
 
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
-                                                <FileText className="w-6 h-6" />
+                                    <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
+                                        <div className="space-y-4">
+                                            <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <SoundRow
+                                                    title="طلب استعادة كلمة مرور 🔑"
+                                                    description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
+                                                    event="passwordRequest"
+                                                    currentSound={formData.sounds?.passwordRequest}
+                                                    onUpload={(file) => handleSoundUpload('passwordRequest', file)}
+                                                    onPlay={() => {
+                                                        if (formData.sounds?.passwordRequest) {
+                                                            new Audio(formData.sounds.passwordRequest).play()
+                                                        } else {
+                                                            playSound('passwordRequest')
+                                                        }
+                                                    }}
+                                                    onReset={() => resetSound('passwordRequest')}
+                                                />
+                                                <SoundRow
+                                                    title="طلب جديد 💰"
+                                                    description="أصوات لوحة التحكم للإداريين"
+                                                    event="newOrder"
+                                                    currentSound={formData.sounds?.newOrder}
+                                                    onUpload={(file) => handleSoundUpload('newOrder', file)}
+                                                    onPlay={() => {
+                                                        if (formData.sounds?.newOrder) {
+                                                            new Audio(formData.sounds.newOrder).play()
+                                                        } else {
+                                                            playSound('newOrder')
+                                                        }
+                                                    }}
+                                                    onReset={() => resetSound('newOrder')}
+                                                />
+                                                <SoundRow
+                                                    title="رسالة شات 💬"
+                                                    description="تنبيه الدردشة الجماعية والخاصة"
+                                                    event="newMessage"
+                                                    currentSound={formData.sounds?.newMessage}
+                                                    onUpload={(file) => handleSoundUpload('newMessage', file)}
+                                                    onPlay={() => {
+                                                        if (formData.sounds?.newMessage) {
+                                                            new Audio(formData.sounds.newMessage).play()
+                                                        } else {
+                                                            playSound('newMessage')
+                                                        }
+                                                    }}
+                                                    onReset={() => resetSound('newMessage')}
+                                                />
+                                                <SoundRow
+                                                    title="تحديث الحالة 📦"
+                                                    description="صوت يصل للعميل عند تغير حالة طلبه"
+                                                    event="statusUpdate"
+                                                    currentSound={formData.sounds?.statusUpdate}
+                                                    onUpload={(file) => handleSoundUpload('statusUpdate', file)}
+                                                    onPlay={() => {
+                                                        if (formData.sounds?.statusUpdate) {
+                                                            new Audio(formData.sounds.statusUpdate).play()
+                                                        } else {
+                                                            playSound('statusUpdate')
+                                                        }
+                                                    }}
+                                                    onReset={() => resetSound('statusUpdate')}
+                                                />
+                                                <SoundRow
+                                                    title="إشعار عام للعميل 🔔"
+                                                    description="الصوت الذي يسمعه العميل عند وصول تنبيه أو عرض"
+                                                    event="generalPush"
+                                                    currentSound={formData.sounds?.generalPush}
+                                                    onUpload={(file) => handleSoundUpload('generalPush', file)}
+                                                    onPlay={() => {
+                                                        if (formData.sounds?.generalPush) {
+                                                            new Audio(formData.sounds.generalPush).play()
+                                                        } else {
+                                                            playSound('generalPush')
+                                                        }
+                                                    }}
+                                                    onReset={() => resetSound('generalPush')}
+                                                />
+
                                             </div>
-                                            <div>
-                                                <h4 className="font-bold text-foreground">تقارير المنتجات المخصصة</h4>
-                                                <p className="text-xs text-muted-foreground">تصفية وطباعة قوائم المنتجات حسب الطلب</p>
+                                        </div>
+                                    </Section>
+                                </div>
+                            )
+                        }
+
+                        {
+                            activeTab === 'coupons' && (
+                                <div className="glass-card p-2 rounded-3xl overflow-hidden">
+                                    <CouponManager />
+                                </div>
+                            )
+                        }
+
+
+                        {
+                            activeTab === 'data' && (
+                                <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
+                                    <div className="space-y-6">
+
+                                        {/* Product Reports Card */}
+                                        <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                            <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-colors" />
+
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                                    <FileText className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-foreground">تقارير المنتجات المخصصة</h4>
+                                                    <p className="text-xs text-muted-foreground">تصفية وطباعة قوائم المنتجات حسب الطلب</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {/* Filters Column */}
+                                                <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border/50">
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">الفترة الزمنية</Label>
+                                                        <div className="flex gap-1.5 flex-wrap">
+                                                            {(['all', 'today', 'week', 'month'] as const).map(range => (
+                                                                <button
+                                                                    key={range}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const now = new Date()
+                                                                        let start = new Date()
+                                                                        const toLocal = (d: Date) => {
+                                                                            const offset = d.getTimezoneOffset()
+                                                                            return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
+                                                                        }
+
+                                                                        if (range === 'all') {
+                                                                            setReportStartDate('')
+                                                                            setReportEndDate('')
+                                                                            return
+                                                                        }
+
+                                                                        if (range === 'today') start.setHours(0, 0, 0, 0)
+                                                                        if (range === 'week') start.setDate(now.getDate() - 7)
+                                                                        if (range === 'month') start.setMonth(now.getMonth() - 1)
+
+                                                                        setReportStartDate(toLocal(start))
+                                                                        setReportEndDate(toLocal(now))
+                                                                    }}
+                                                                    className="text-[10px] px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                                                >
+                                                                    {range === 'all' && 'الكل'}
+                                                                    {range === 'today' && 'اليوم'}
+                                                                    {range === 'week' && 'أسبوع'}
+                                                                    {range === 'month' && 'شهر'}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">من</Label>
+                                                            <div className="bg-background border border-border rounded-lg overflow-hidden">
+                                                                <WheelPicker
+                                                                    date={reportStartDate ? new Date(reportStartDate) : undefined}
+                                                                    setDate={(d: Date | undefined) => {
+                                                                        if (d) {
+                                                                            const offset = d.getTimezoneOffset()
+                                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                                            setReportStartDate(localDate.toISOString().split('T')[0])
+                                                                        } else {
+                                                                            setReportStartDate('')
+                                                                        }
+                                                                    }}
+                                                                    placeholder="البدء"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">إلى</Label>
+                                                            <div className="bg-background border border-border rounded-lg overflow-hidden">
+                                                                <WheelPicker
+                                                                    date={reportEndDate ? new Date(reportEndDate) : undefined}
+                                                                    setDate={(d: Date | undefined) => {
+                                                                        if (d) {
+                                                                            const offset = d.getTimezoneOffset()
+                                                                            const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+                                                                            setReportEndDate(localDate.toISOString().split('T')[0])
+                                                                        } else {
+                                                                            setReportEndDate('')
+                                                                        }
+                                                                    }}
+                                                                    placeholder="الانتهاء"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Sort & Action Column */}
+                                                <div className="space-y-3 flex flex-col justify-between h-full">
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">القسم</Label>
+                                                            <select
+                                                                value={reportCategory}
+                                                                onChange={(e) => setReportCategory(e.target.value)}
+                                                                className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            >
+                                                                <option value="all">الكل</option>
+                                                                {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px] text-muted-foreground">الترتيب</Label>
+                                                            <select
+                                                                value={reportSort}
+                                                                onChange={(e) => setReportSort(e.target.value as any)}
+                                                                className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
+                                                            >
+                                                                <option value="newest">الأحدث</option>
+                                                                <option value="oldest">الأقدم</option>
+                                                                <option value="price_high">الأغلى</option>
+                                                                <option value="price_low">الأرخص</option>
+                                                                <option value="name">أبجدي</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handlePrintReport}
+                                                        className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-sm"
+                                                    >
+                                                        <Printer className="w-4 h-4" />
+                                                        طباعة التقرير
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
 
+                                        {/* Quick Actions Grid */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* Filters Column */}
-                                            <div className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border/50">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">الفترة الزمنية</Label>
-                                                    <div className="flex gap-1.5 flex-wrap">
-                                                        {(['all', 'today', 'week', 'month'] as const).map(range => (
-                                                            <button
-                                                                key={range}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const now = new Date()
-                                                                    let start = new Date()
-                                                                    const toLocal = (d: Date) => {
-                                                                        const offset = d.getTimezoneOffset()
-                                                                        return new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0]
-                                                                    }
-
-                                                                    if (range === 'all') {
-                                                                        setReportStartDate('')
-                                                                        setReportEndDate('')
-                                                                        return
-                                                                    }
-
-                                                                    if (range === 'today') start.setHours(0, 0, 0, 0)
-                                                                    if (range === 'week') start.setDate(now.getDate() - 7)
-                                                                    if (range === 'month') start.setMonth(now.getMonth() - 1)
-
-                                                                    setReportStartDate(toLocal(start))
-                                                                    setReportEndDate(toLocal(now))
-                                                                }}
-                                                                className="text-[10px] px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                                            >
-                                                                {range === 'all' && 'الكل'}
-                                                                {range === 'today' && 'اليوم'}
-                                                                {range === 'week' && 'أسبوع'}
-                                                                {range === 'month' && 'شهر'}
-                                                            </button>
-                                                        ))}
+                                            {/* Comprehensive Report */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-emerald-500/30 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                        <Download className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-foreground">Excel شامل</h4>
+                                                        <p className="text-[10px] text-muted-foreground">العملاء والطلبات والتفاصيل</p>
                                                     </div>
                                                 </div>
-
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] text-muted-foreground">من</Label>
-                                                        <div className="bg-background border border-border rounded-lg overflow-hidden">
-                                                            <WheelPicker
-                                                                date={reportStartDate ? new Date(reportStartDate) : undefined}
-                                                                setDate={(d: Date | undefined) => {
-                                                                    if (d) {
-                                                                        const offset = d.getTimezoneOffset()
-                                                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
-                                                                        setReportStartDate(localDate.toISOString().split('T')[0])
-                                                                    } else {
-                                                                        setReportStartDate('')
-                                                                    }
-                                                                }}
-                                                                placeholder="البدء"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] text-muted-foreground">إلى</Label>
-                                                        <div className="bg-background border border-border rounded-lg overflow-hidden">
-                                                            <WheelPicker
-                                                                date={reportEndDate ? new Date(reportEndDate) : undefined}
-                                                                setDate={(d: Date | undefined) => {
-                                                                    if (d) {
-                                                                        const offset = d.getTimezoneOffset()
-                                                                        const localDate = new Date(d.getTime() - (offset * 60 * 1000))
-                                                                        setReportEndDate(localDate.toISOString().split('T')[0])
-                                                                    } else {
-                                                                        setReportEndDate('')
-                                                                    }
-                                                                }}
-                                                                placeholder="الانتهاء"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => exportComprehensiveReport(customers, orders)}
+                                                    className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
+                                                >
+                                                    تحميل
+                                                </Button>
                                             </div>
 
-                                            {/* Sort & Action Column */}
-                                            <div className="space-y-3 flex flex-col justify-between h-full">
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] text-muted-foreground">القسم</Label>
-                                                        <select
-                                                            value={reportCategory}
-                                                            onChange={(e) => setReportCategory(e.target.value)}
-                                                            className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
-                                                        >
-                                                            <option value="all">الكل</option>
-                                                            {categories.map(c => <option key={c.nameAr} value={c.nameAr}>{c.nameAr}</option>)}
-                                                        </select>
+                                            {/* Customers Word */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-blue-500/30 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                        <UserPlus className="w-5 h-5" />
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] text-muted-foreground">الترتيب</Label>
-                                                        <select
-                                                            value={reportSort}
-                                                            onChange={(e) => setReportSort(e.target.value as any)}
-                                                            className="w-full bg-background border border-border rounded-lg h-9 text-xs text-foreground px-2 outline-none focus:ring-1 focus:ring-emerald-500"
-                                                        >
-                                                            <option value="newest">الأحدث</option>
-                                                            <option value="oldest">الأقدم</option>
-                                                            <option value="price_high">الأغلى</option>
-                                                            <option value="price_low">الأرخص</option>
-                                                            <option value="name">أبجدي</option>
-                                                        </select>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-foreground">بيانات العملاء</h4>
+                                                        <p className="text-[10px] text-muted-foreground">سجل Word للطباعة</p>
                                                     </div>
                                                 </div>
-
                                                 <Button
-                                                    type="button"
-                                                    onClick={handlePrintReport}
-                                                    className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-sm"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => exportCustomersToWord(customers)}
+                                                    className="h-8 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20"
                                                 >
-                                                    <Printer className="w-4 h-4" />
-                                                    طباعة التقرير
+                                                    تحميل
+                                                </Button>
+                                            </div>
+
+                                            {/* Staff Word */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-purple-500/30 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl group-hover:scale-110 transition-transform">
+                                                        <Shield className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-foreground">سجل الموظفين</h4>
+                                                        <p className="text-[10px] text-muted-foreground">الصلاحيات والبيانات</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => exportStaffToWord(staff)}
+                                                    className="h-8 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900/20"
+                                                >
+                                                    تحميل
+                                                </Button>
+                                            </div>
+
+                                            {/* Full Backup */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-slate-500/30 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-secondary text-secondary-foreground rounded-xl group-hover:scale-110 transition-transform">
+                                                        <Save className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-foreground">نسخة احتياطية</h4>
+                                                        <p className="text-[10px] text-muted-foreground">Offline Backup كامل</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => exportFullSystemBackup({
+                                                        backupDate: new Date(),
+                                                        settings: storeSettings,
+                                                        products,
+                                                        categories,
+                                                        staff,
+                                                        customers,
+                                                        orders,
+                                                        coupons,
+                                                        banners,
+                                                        productRequests,
+                                                        messages,
+                                                        notifications
+                                                    })}
+                                                    className="h-8 bg-foreground text-background hover:bg-foreground/90 border-transparent"
+                                                >
+                                                    تنزيل
                                                 </Button>
                                             </div>
                                         </div>
                                     </div>
+                                </Section>
+                            )
+                        }
 
-                                    {/* Quick Actions Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Comprehensive Report */}
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-emerald-500/30 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
-                                                    <Download className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-foreground">Excel شامل</h4>
-                                                    <p className="text-[10px] text-muted-foreground">العملاء والطلبات والتفاصيل</p>
-                                                </div>
+                        {
+                            activeTab === 'entity' && (
+                                <div className="grid grid-cols-1 gap-6">
+                                    <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                            <div className="flex flex-col gap-1">
+                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                    إلزام العميل بالاسم ورقم الجوال
+                                                </Label>
+                                                <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => exportComprehensiveReport(customers, orders)}
-                                                className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
-                                            >
-                                                تحميل
-                                            </Button>
+                                            <Switch
+                                                checked={formData.requireCustomerInfoOnCheckout}
+                                                onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
+                                            />
                                         </div>
+                                    </Section>
 
-                                        {/* Customers Word */}
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-blue-500/30 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
-                                                    <UserPlus className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-foreground">بيانات العملاء</h4>
-                                                    <p className="text-[10px] text-muted-foreground">سجل Word للطباعة</p>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => exportCustomersToWord(customers)}
-                                                className="h-8 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20"
-                                            >
-                                                تحميل
-                                            </Button>
-                                        </div>
+                                    <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                                        <StaffManager />
+                                    </Section>
 
-                                        {/* Staff Word */}
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-purple-500/30 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl group-hover:scale-110 transition-transform">
-                                                    <Shield className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-foreground">سجل الموظفين</h4>
-                                                    <p className="text-[10px] text-muted-foreground">الصلاحيات والبيانات</p>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => exportStaffToWord(staff)}
-                                                className="h-8 border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-900/20"
-                                            >
-                                                تحميل
-                                            </Button>
-                                        </div>
+                                    <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                                        <SecuritySettingsPorted />
+                                    </Section>
 
-                                        {/* Full Backup */}
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-slate-500/30 transition-all">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2.5 bg-secondary text-secondary-foreground rounded-xl group-hover:scale-110 transition-transform">
-                                                    <Save className="w-5 h-5" />
+                                    <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {[
+                                                { id: 'search', label: 'شريط البحث' },
+                                                { id: 'offers', label: 'بانر العروض (الأعلى)' },
+                                                { id: 'categories', label: 'شريط الأقسام' },
+                                                { id: 'products', label: 'قائمة المنتجات' }
+                                            ].map((item) => (
+                                                <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                    <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
+                                                    <Switch
+                                                        checked={storeSettings.hiddenSections?.includes(item.id as any)}
+                                                        onCheckedChange={(checked) => {
+                                                            const current = storeSettings.hiddenSections || []
+                                                            const updated = checked
+                                                                ? [...current, item.id]
+                                                                : current.filter(id => id !== item.id)
+                                                            updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
+                                                        }}
+                                                        className="data-[state=checked]:bg-red-500"
+                                                    />
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-foreground">نسخة احتياطية</h4>
-                                                    <p className="text-[10px] text-muted-foreground">Offline Backup كامل</p>
-                                                </div>
-                                            </div>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => exportFullSystemBackup({
-                                                    backupDate: new Date(),
-                                                    settings: storeSettings,
-                                                    products,
-                                                    categories,
-                                                    staff,
-                                                    customers,
-                                                    orders,
-                                                    coupons,
-                                                    banners,
-                                                    productRequests,
-                                                    messages,
-                                                    notifications
-                                                })}
-                                                className="h-8 bg-foreground text-background hover:bg-foreground/90 border-transparent"
-                                            >
-                                                تنزيل
-                                            </Button>
+                                            ))}
                                         </div>
-                                    </div>
+                                    </Section>
                                 </div>
-                            </Section>
-                        )}
-
-                        {activeTab === 'entity' && (
-                            <div className="grid grid-cols-1 gap-6">
-                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                        <div className="flex flex-col gap-1">
-                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
-                                                إلزام العميل بالاسم ورقم الجوال
-                                            </Label>
-                                            <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
-                                        </div>
-                                        <Switch
-                                            checked={formData.requireCustomerInfoOnCheckout}
-                                            onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
-                                        />
-                                    </div>
-                                </Section>
-
-                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
-                                    <StaffManager />
-                                </Section>
-
-                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                                    <SecuritySettingsPorted />
-                                </Section>
-
-                                <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {[
-                                            { id: 'search', label: 'شريط البحث' },
-                                            { id: 'offers', label: 'بانر العروض (الأعلى)' },
-                                            { id: 'categories', label: 'شريط الأقسام' },
-                                            { id: 'products', label: 'قائمة المنتجات' }
-                                        ].map((item) => (
-                                            <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                                <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
-                                                <Switch
-                                                    checked={storeSettings.hiddenSections?.includes(item.id as any)}
-                                                    onCheckedChange={(checked) => {
-                                                        const current = storeSettings.hiddenSections || []
-                                                        const updated = checked
-                                                            ? [...current, item.id]
-                                                            : current.filter(id => id !== item.id)
-                                                        updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
-                                                    }}
-                                                    className="data-[state=checked]:bg-red-500"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </Section>
-                            </div>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
+                            )
+                        }
+                    </motion.div >
+                </AnimatePresence >
             </form >
         </div >
     )
