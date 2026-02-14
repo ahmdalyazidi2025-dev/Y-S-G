@@ -1,7 +1,7 @@
 "use client"
 import { memo } from "react"
 
-import { Plus } from "lucide-react"
+import { Plus, Minus, Heart, Star } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 export const ProductCard = memo(function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: (item: Product) => void, index?: number }) {
-    const { addToCart } = useStore()
+    const { addToCart, cart, updateCartQuantity, removeFromCart } = useStore()
 
     // --- Smart Price Logic ---
     const isExpired = item.discountEndDate && new Date(item.discountEndDate).getTime() < new Date().getTime()
@@ -35,6 +35,10 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
     // Offer Active Logic
     const hasActiveOffer = item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && !isExpired
 
+    // Smart Cart Logic (Piece)
+    const cartItemPiece = cart.find(i => i.id === item.id && i.selectedUnit === "حبة")
+    const quantityPiece = cartItemPiece ? cartItemPiece.quantity : 0
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -45,7 +49,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
         >
             <div className="flex flex-col gap-3 h-full">
                 {/* 1. Premium Image Container */}
-                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10">
+                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10 border border-black/5 dark:border-white/5 shadow-sm">
 
                     {/* Offer/New Badges */}
                     <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
@@ -63,6 +67,11 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                             <CountdownTimer endDate={new Date(item.discountEndDate!)} />
                         )}
                     </div>
+
+                    {/* Wishlist Button */}
+                    <button className="absolute top-3 right-3 z-20 p-2 rounded-full bg-white/60 backdrop-blur-md hover:bg-white text-gray-500 hover:text-red-500 transition-colors shadow-sm active:scale-90 duration-200">
+                        <Heart className="w-5 h-5" />
+                    </button>
 
                     {/* Image Click Area */}
                     <div
@@ -85,29 +94,67 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                         )}
                     </div>
 
-                    {/* Floating Add Button (Primary - Piece) */}
-                    <Button
-                        size="icon"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            addToCart(item, "حبة", effectivePricePiece)
-                        }}
-                        className="absolute bottom-3 right-3 h-11 w-11 rounded-full bg-black text-white hover:bg-black/80 shadow-xl shadow-black/20 hover:scale-110 active:scale-95 transition-all z-30"
-                    >
-                        <Plus className="h-6 w-6" />
-                    </Button>
+                    {/* Smart Action Button (Floating) */}
+                    {quantityPiece > 0 ? (
+                        <div className="absolute bottom-3 right-3 flex items-center bg-black text-white rounded-full shadow-xl shadow-black/20 z-30 h-10 min-w-[100px] justify-between px-1 animate-in fade-in zoom-in duration-200">
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (quantityPiece === 1) removeFromCart(item.id, "حبة");
+                                    else updateCartQuantity(item.id, "حبة", -1);
+                                }}
+                            >
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="font-bold text-sm mx-1 min-w-[1.5rem] text-center">{quantityPiece}</span>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateCartQuantity(item.id, "حبة", 1);
+                                }}
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            size="icon"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                addToCart(item, "حبة", effectivePricePiece)
+                            }}
+                            className="absolute bottom-3 right-3 h-12 w-12 rounded-full bg-black text-white hover:bg-black/90 shadow-xl shadow-black/20 hover:scale-110 active:scale-95 transition-all z-30"
+                        >
+                            <Plus className="h-7 w-7" />
+                        </Button>
+                    )}
                 </div>
 
                 {/* 2. Clean Typography & Secondary Actions */}
                 <div className="flex flex-col gap-1 px-1">
                     <div className="flex justify-between items-start gap-2">
-                        <h3
-                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => onViewDetails?.(item)}
-                        >
-                            {item.name}
-                        </h3>
-                        <div className="flex flex-col items-end shrink-0">
+                        <div className="flex flex-col gap-1 w-full">
+                            {/* Star Rating */}
+                            <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                <span className="text-[10px] font-medium text-muted-foreground">4.8 (120)</span>
+                            </div>
+
+                            <h3
+                                className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => onViewDetails?.(item)}
+                            >
+                                {item.name}
+                            </h3>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0 pt-4">
                             <span className="font-black text-lg text-foreground">{effectivePricePiece} <span className="text-xs font-normal text-muted-foreground">ر.س</span></span>
                             {displayOldPricePiece && (
                                 <span className="text-[10px] text-red-400 line-through">{displayOldPricePiece}</span>
@@ -132,13 +179,4 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
             </div>
         </motion.div>
     )
-}, (prev, next) => {
-    // Custom comparison for better performance
-    return prev.item.id === next.item.id &&
-        prev.item.pricePiece === next.item.pricePiece &&
-        prev.item.priceDozen === next.item.priceDozen &&
-        prev.item.discountEndDate === next.item.discountEndDate &&
-        prev.item.oldPricePiece === next.item.oldPricePiece &&
-        prev.item.description === next.item.description && // Include description in comparison
-        prev.item.name === next.item.name // In case name changes
 })
