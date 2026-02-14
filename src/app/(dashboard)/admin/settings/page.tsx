@@ -589,20 +589,7 @@ export default function AdminSettingsPage() {
                             <div className="space-y-6">
                                 <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Barcode Scanner Card */}
-                                        <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-primary">
-                                                    <Scan className="w-5 h-5" />
-                                                    <h4 className="font-bold text-foreground">الماسح الضوئي (Barcode)</h4>
-                                                </div>
-                                                <Switch
-                                                    checked={formData.enableBarcodeScanner !== false}
-                                                    onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
-                                                />
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">تفعيل زر ماسح الباركود العائم في صفحة المنتجات.</p>
-                                        </div>
+
 
                                         {/* Product Reports Card */}
                                         <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
@@ -894,6 +881,21 @@ export default function AdminSettingsPage() {
                                                 />
                                             </div>
                                         ))}
+                                    </div>
+                                </Section>
+
+                                <Section icon={<Scan className="w-5 h-5" />} title="أدوات النظام (الباركود)">
+                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableBarcodeScanner", !formData.enableBarcodeScanner as any)}>
+                                                تفعيل الماسح الضوئي
+                                            </Label>
+                                            <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
+                                        </div>
+                                        <Switch
+                                            checked={formData.enableBarcodeScanner !== false}
+                                            onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
+                                        />
                                     </div>
                                 </Section>
                             </div>
