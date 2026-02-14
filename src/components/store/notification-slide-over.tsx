@@ -99,8 +99,8 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
                                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                     <Clock className="w-3 h-3" />
                                                     <span>
-                                                        {notification.createdAt && notification.createdAt.seconds
-                                                            ? format(new Date(notification.createdAt.seconds * 1000), "d MMM - h:mm a", { locale: ar })
+                                                        {(notification.createdAt as any)?.seconds
+                                                            ? format(new Date((notification.createdAt as any).seconds * 1000), "d MMM - h:mm a", { locale: ar })
                                                             : format(new Date(), "d MMM - h:mm a", { locale: ar })
                                                         }
                                                     </span>
