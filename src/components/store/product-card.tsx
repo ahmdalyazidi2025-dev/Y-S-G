@@ -17,19 +17,19 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
     const isExpired = item.discountEndDate && new Date(item.discountEndDate).getTime() < new Date().getTime()
 
     // Piece Pricing
-    const effectivePricePiece = isExpired && item.oldPricePiece
+    const effectivePricePiece = isExpired && item.oldPricePiece && item.oldPricePiece > 0
         ? item.oldPricePiece
         : item.pricePiece
 
-    const displayOldPricePiece = isExpired ? null : item.oldPricePiece
+    const displayOldPricePiece = (!isExpired && item.oldPricePiece && item.oldPricePiece > 0) ? item.oldPricePiece : null
 
     // Dozen Pricing
     const hasDozen = item.priceDozen && item.priceDozen > 0
-    const effectivePriceDozen = isExpired && item.oldPriceDozen
+    const effectivePriceDozen = isExpired && item.oldPriceDozen && item.oldPriceDozen > 0
         ? item.oldPriceDozen
         : (item.priceDozen || 0)
 
-    const displayOldPriceDozen = isExpired ? null : item.oldPriceDozen
+    const displayOldPriceDozen = (!isExpired && item.oldPriceDozen && item.oldPriceDozen > 0) ? item.oldPriceDozen : null
     // -------------------------
 
     // Offer Active Logic
@@ -75,7 +75,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
 
                     {/* Image Click Area */}
                     <div
-                        className="w-full h-full flex items-center justify-center cursor-pointer relative z-10 transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-full flex items-center justify-center cursor-pointer relative z-10 transition-transform duration-500 group-hover:scale-105 p-2"
                         onClick={() => onViewDetails?.(item)}
                     >
                         {item.image ? (
@@ -85,7 +85,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 fill
                                 sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
                                 loading="lazy"
-                                className="object-cover"
+                                className="object-contain"
                             />
                         ) : (
                             <div className="text-7xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">
