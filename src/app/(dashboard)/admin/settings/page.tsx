@@ -488,7 +488,108 @@ export default function AdminSettingsPage() {
                                             </div>
                                         </div>
 
-                                        {/* Barcode Scanner Toggle */}
+                                    </Section>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'alerts' && (
+                            <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
+                                <div className="space-y-4">
+                                    <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <SoundRow
+                                            title="طلب استعادة كلمة مرور 🔑"
+                                            description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
+                                            event="passwordRequest"
+                                            currentSound={formData.sounds?.passwordRequest}
+                                            onUpload={(file) => handleSoundUpload('passwordRequest', file)}
+                                            onPlay={() => {
+                                                if (formData.sounds?.passwordRequest) {
+                                                    new Audio(formData.sounds.passwordRequest).play()
+                                                } else {
+                                                    playSound('passwordRequest')
+                                                }
+                                            }}
+                                            onReset={() => resetSound('passwordRequest')}
+                                        />
+                                        <SoundRow
+                                            title="طلب جديد 💰"
+                                            description="أصوات لوحة التحكم للإداريين"
+                                            event="newOrder"
+                                            currentSound={formData.sounds?.newOrder}
+                                            onUpload={(file) => handleSoundUpload('newOrder', file)}
+                                            onPlay={() => {
+                                                if (formData.sounds?.newOrder) {
+                                                    new Audio(formData.sounds.newOrder).play()
+                                                } else {
+                                                    playSound('newOrder')
+                                                }
+                                            }}
+                                            onReset={() => resetSound('newOrder')}
+                                        />
+                                        <SoundRow
+                                            title="رسالة شات 💬"
+                                            description="تنبيه الدردشة الجماعية والخاصة"
+                                            event="newMessage"
+                                            currentSound={formData.sounds?.newMessage}
+                                            onUpload={(file) => handleSoundUpload('newMessage', file)}
+                                            onPlay={() => {
+                                                if (formData.sounds?.newMessage) {
+                                                    new Audio(formData.sounds.newMessage).play()
+                                                } else {
+                                                    playSound('newMessage')
+                                                }
+                                            }}
+                                            onReset={() => resetSound('newMessage')}
+                                        />
+                                        <SoundRow
+                                            title="تحديث الحالة 📦"
+                                            description="صوت يصل للعميل عند تغير حالة طلبه"
+                                            event="statusUpdate"
+                                            currentSound={formData.sounds?.statusUpdate}
+                                            onUpload={(file) => handleSoundUpload('statusUpdate', file)}
+                                            onPlay={() => {
+                                                if (formData.sounds?.statusUpdate) {
+                                                    new Audio(formData.sounds.statusUpdate).play()
+                                                } else {
+                                                    playSound('statusUpdate')
+                                                }
+                                            }}
+                                            onReset={() => resetSound('statusUpdate')}
+                                        />
+                                        <SoundRow
+                                            title="إشعار عام للعميل 🔔"
+                                            description="الصوت الذي يسمعه العميل عند وصول تنبيه أو عرض"
+                                            event="generalPush"
+                                            currentSound={formData.sounds?.generalPush}
+                                            onUpload={(file) => handleSoundUpload('generalPush', file)}
+                                            onPlay={() => {
+                                                if (formData.sounds?.generalPush) {
+                                                    new Audio(formData.sounds.generalPush).play()
+                                                } else {
+                                                    playSound('generalPush')
+                                                }
+                                            }}
+                                            onReset={() => resetSound('generalPush')}
+                                        />
+
+                                    </div>
+                                </div>
+                            </Section>
+                        )}
+
+                        {activeTab === 'coupons' && (
+                            <div className="glass-card p-2 rounded-3xl overflow-hidden">
+                                <CouponManager />
+                            </div>
+                        )}
+
+                        {activeTab === 'data' && (
+                            <div className="space-y-6">
+                                <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Barcode Scanner Card */}
                                         <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2 text-primary">
@@ -502,116 +603,6 @@ export default function AdminSettingsPage() {
                                             </div>
                                             <p className="text-xs text-muted-foreground">تفعيل زر ماسح الباركود العائم في صفحة المنتجات.</p>
                                         </div>
-                                    </Section>
-                                </div>
-                            </div>
-                        )}
-
-                        {
-                            activeTab === 'alerts' && (
-                                <div className="space-y-6">
-
-
-                                    <Section icon={<Music className="w-5 h-5" />} title="إدارة نغمات التنبيه">
-                                        <div className="space-y-4">
-                                            <p className="text-xs text-slate-500">تخصيص الأصوات لكل حدث مهم في المتجر والمشار إليها في لوحة العميل.</p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <SoundRow
-                                                    title="طلب استعادة كلمة مرور 🔑"
-                                                    description="تنبيه عند وصول طلب استعادة كلمة مرور جديد"
-                                                    event="passwordRequest"
-                                                    currentSound={formData.sounds?.passwordRequest}
-                                                    onUpload={(file) => handleSoundUpload('passwordRequest', file)}
-                                                    onPlay={() => {
-                                                        if (formData.sounds?.passwordRequest) {
-                                                            new Audio(formData.sounds.passwordRequest).play()
-                                                        } else {
-                                                            playSound('passwordRequest')
-                                                        }
-                                                    }}
-                                                    onReset={() => resetSound('passwordRequest')}
-                                                />
-                                                <SoundRow
-                                                    title="طلب جديد 💰"
-                                                    description="أصوات لوحة التحكم للإداريين"
-                                                    event="newOrder"
-                                                    currentSound={formData.sounds?.newOrder}
-                                                    onUpload={(file) => handleSoundUpload('newOrder', file)}
-                                                    onPlay={() => {
-                                                        if (formData.sounds?.newOrder) {
-                                                            new Audio(formData.sounds.newOrder).play()
-                                                        } else {
-                                                            playSound('newOrder')
-                                                        }
-                                                    }}
-                                                    onReset={() => resetSound('newOrder')}
-                                                />
-                                                <SoundRow
-                                                    title="رسالة شات 💬"
-                                                    description="تنبيه الدردشة الجماعية والخاصة"
-                                                    event="newMessage"
-                                                    currentSound={formData.sounds?.newMessage}
-                                                    onUpload={(file) => handleSoundUpload('newMessage', file)}
-                                                    onPlay={() => {
-                                                        if (formData.sounds?.newMessage) {
-                                                            new Audio(formData.sounds.newMessage).play()
-                                                        } else {
-                                                            playSound('newMessage')
-                                                        }
-                                                    }}
-                                                    onReset={() => resetSound('newMessage')}
-                                                />
-                                                <SoundRow
-                                                    title="تحديث الحالة 📦"
-                                                    description="صوت يصل للعميل عند تغير حالة طلبه"
-                                                    event="statusUpdate"
-                                                    currentSound={formData.sounds?.statusUpdate}
-                                                    onUpload={(file) => handleSoundUpload('statusUpdate', file)}
-                                                    onPlay={() => {
-                                                        if (formData.sounds?.statusUpdate) {
-                                                            new Audio(formData.sounds.statusUpdate).play()
-                                                        } else {
-                                                            playSound('statusUpdate')
-                                                        }
-                                                    }}
-                                                    onReset={() => resetSound('statusUpdate')}
-                                                />
-                                                <SoundRow
-                                                    title="إشعار عام للعميل 🔔"
-                                                    description="الصوت الذي يسمعه العميل عند وصول تنبيه أو عرض"
-                                                    event="generalPush"
-                                                    currentSound={formData.sounds?.generalPush}
-                                                    onUpload={(file) => handleSoundUpload('generalPush', file)}
-                                                    onPlay={() => {
-                                                        if (formData.sounds?.generalPush) {
-                                                            new Audio(formData.sounds.generalPush).play()
-                                                        } else {
-                                                            playSound('generalPush')
-                                                        }
-                                                    }}
-                                                    onReset={() => resetSound('generalPush')}
-                                                />
-
-                                            </div>
-                                        </div>
-                                    </Section>
-                                </div>
-                            )
-                        }
-
-                        {
-                            activeTab === 'coupons' && (
-                                <div className="glass-card p-2 rounded-3xl overflow-hidden">
-                                    <CouponManager />
-                                </div>
-                            )
-                        }
-
-
-                        {
-                            activeTab === 'data' && (
-                                <Section icon={<BarChart3 className="w-5 h-5" />} title="التقارير واستخراج البيانات">
-                                    <div className="space-y-6">
 
                                         {/* Product Reports Card */}
                                         <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
@@ -752,7 +743,7 @@ export default function AdminSettingsPage() {
                                         </div>
 
                                         {/* Quick Actions Grid */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Comprehensive Report */}
                                             <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-emerald-500/30 transition-all">
                                                 <div className="flex items-center gap-3">
@@ -852,67 +843,66 @@ export default function AdminSettingsPage() {
                                         </div>
                                     </div>
                                 </Section>
-                            )
-                        }
+                            </div>
+                        )}
 
-                        {
-                            activeTab === 'entity' && (
-                                <div className="grid grid-cols-1 gap-6">
-                                    <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                            <div className="flex flex-col gap-1">
-                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
-                                                    إلزام العميل بالاسم ورقم الجوال
-                                                </Label>
-                                                <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                        {activeTab === 'entity' && (
+                            <div className="grid grid-cols-1 gap-6">
+                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                إلزام العميل بالاسم ورقم الجوال
+                                            </Label>
+                                            <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                        </div>
+                                        <Switch
+                                            checked={formData.requireCustomerInfoOnCheckout}
+                                            onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
+                                        />
+                                    </div>
+                                </Section>
+
+                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                                    <StaffManager />
+                                </Section>
+
+                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                                    <SecuritySettingsPorted />
+                                </Section>
+
+                                <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[
+                                            { id: 'search', label: 'شريط البحث' },
+                                            { id: 'offers', label: 'بانر العروض (الأعلى)' },
+                                            { id: 'categories', label: 'شريط الأقسام' },
+                                            { id: 'products', label: 'قائمة المنتجات' }
+                                        ].map((item) => (
+                                            <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
+                                                <Switch
+                                                    checked={storeSettings.hiddenSections?.includes(item.id as any)}
+                                                    onCheckedChange={(checked) => {
+                                                        const current = storeSettings.hiddenSections || []
+                                                        const updated = checked
+                                                            ? [...current, item.id]
+                                                            : current.filter(id => id !== item.id)
+                                                        updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
+                                                    }}
+                                                    className="data-[state=checked]:bg-red-500"
+                                                />
                                             </div>
-                                            <Switch
-                                                checked={formData.requireCustomerInfoOnCheckout}
-                                                onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
-                                            />
-                                        </div>
-                                    </Section>
+                                        ))}
+                                    </div>
+                                </Section>
+                            </div>
+                        )}
 
-                                    <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
-                                        <StaffManager />
-                                    </Section>
-
-                                    <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                                        <SecuritySettingsPorted />
-                                    </Section>
-
-                                    <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { id: 'search', label: 'شريط البحث' },
-                                                { id: 'offers', label: 'بانر العروض (الأعلى)' },
-                                                { id: 'categories', label: 'شريط الأقسام' },
-                                                { id: 'products', label: 'قائمة المنتجات' }
-                                            ].map((item) => (
-                                                <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                                    <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
-                                                    <Switch
-                                                        checked={storeSettings.hiddenSections?.includes(item.id as any)}
-                                                        onCheckedChange={(checked) => {
-                                                            const current = storeSettings.hiddenSections || []
-                                                            const updated = checked
-                                                                ? [...current, item.id]
-                                                                : current.filter(id => id !== item.id)
-                                                            updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
-                                                        }}
-                                                        className="data-[state=checked]:bg-red-500"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </Section>
-                                </div>
-                            )
-                        }
-                    </motion.div >
-                </AnimatePresence >
-            </form >
-        </div >
+                    </motion.div>
+                </AnimatePresence>
+            </form>
+        </div>
     )
 }
 
@@ -982,12 +972,6 @@ function SoundRow({ title, description, event, currentSound, onUpload, onPlay, o
     )
 }
 
-
-
-
-
-
-
 function Section({ children, icon, title }: { children: React.ReactNode, icon: React.ReactNode, title: string }) {
     return (
         <div className="bg-card glass-card p-6 space-y-6 rounded-2xl border border-border/50 shadow-sm">
@@ -1039,8 +1023,6 @@ function SecuritySettingsPorted() {
                 )}
 
             </div>
-
-            {/* Admin Credentials - REMOVED */}
         </div>
     )
 }
@@ -1154,6 +1136,3 @@ function SingleAIKeyInput({ index, keyData, onChange, onBlur, onStatusChange }: 
         </div>
     )
 }
-
-
-
