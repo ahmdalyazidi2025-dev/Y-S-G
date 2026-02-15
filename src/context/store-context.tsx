@@ -810,79 +810,92 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
 
-        try {
-            // Non-transactional approach for maximum reliability
-            let orderId = "";
-            let newCounterValue = 0;
+        // Optimistic UI: Clear cart and show success immediately
+        const tempCart = [...cart];
+        setCart([])
+        toast.success(isDraft ? "تم حفظ المسودة" : "تم استلام طلبك بنجاح! 🚀")
+        hapticFeedback('success')
+        playSound('newOrder')
 
+        // Run in background to not block UI
+        const processOrder = async () => {
             try {
-                const counterRef = doc(db, "counters", "orders");
-                const counterSnap = await getDoc(counterRef);
+                // Non-transactional approach for maximum reliability
+                let orderId = "";
+                let newCounterValue = 0;
 
-                if (counterSnap.exists()) {
-                    newCounterValue = (counterSnap.data().current || 0) + 1;
-                } else {
-                    newCounterValue = 1;
-                }
-                orderId = newCounterValue.toString();
-            } catch (counterError) {
-                console.error("Counter Read Failed, using fallback ID", counterError);
-                // Fallback to timestamp ID if counter fails (to prevent blocking orders)
-                orderId = `ORD-${Date.now()}`;
-            }
-
-            // 1. Create the Order
-            await setDoc(doc(db, "orders", orderId), sanitizeData({
-                ...orderData,
-                id: orderId // Ensure ID is in data too
-            }));
-
-            // 2. Try to update counter (Fire and forget if it fails, or log)
-            if (newCounterValue > 0) {
                 try {
-                    await setDoc(doc(db, "counters", "orders"), { current: newCounterValue }, { merge: true });
-                } catch (writeError) {
-                    console.error("Failed to update counter, but order was created", writeError);
+                    const counterRef = doc(db, "counters", "orders");
+                    const counterSnap = await getDoc(counterRef);
+
+                    if (counterSnap.exists()) {
+                        newCounterValue = (counterSnap.data().current || 0) + 1;
+                    } else {
+                        newCounterValue = 1;
+                    }
+                    orderId = newCounterValue.toString();
+                } catch (counterError) {
+                    console.error("Counter Read Failed, using fallback ID", counterError);
+                    // Fallback to timestamp ID if counter fails (to prevent blocking orders)
+                    orderId = `ORD-${Date.now()}`;
                 }
+
+                // 1. Create the Order
+                await setDoc(doc(db, "orders", orderId), sanitizeData({
+                    ...orderData,
+                    id: orderId // Ensure ID is in data too
+                }));
+
+                // 2. Try to update counter (Fire and forget if it fails, or log)
+                if (newCounterValue > 0) {
+                    try {
+                        await setDoc(doc(db, "counters", "orders"), { current: newCounterValue }, { merge: true });
+                    } catch (writeError) {
+                        console.error("Failed to update counter, but order was created", writeError);
+                    }
+                }
+
+                // 3. Update customer lastActive
+                const customerId = currentUser?.id || "guest"
+                if (customerId !== "guest" && currentUser?.role === "customer") {
+                    const customerRef = doc(db, "customers", customerId)
+                    updateDoc(customerRef, { lastActive: Timestamp.now() }).catch(e => console.error("Update lastActive failed", e));
+                }
+
+
+
+                // Send Notification (Optimistic - fire and forget)
+                const notificationMsg = "تم رفع طلبك بنجاح! سنقوم بمراجعته قريباً."
+                const notifUserId = currentUser?.id || guestId || "guest"
+
+                addDoc(collection(db, "notifications"), sanitizeData({
+                    userId: notifUserId,
+                    title: "تم رفع طلبك",
+                    body: notificationMsg,
+                    type: "success",
+                    read: false,
+                    createdAt: Timestamp.now()
+                })).catch(console.error)
+
+                sendPushNotification(
+                    notifUserId,
+                    "تم رفع الطلب",
+                    notificationMsg,
+                    `/customer/invoices`
+                ).catch(console.error)
+
+
+            } catch (e) {
+                console.error("Order Creation Error (Background):", e)
+                // Revert UI changes on critical failure
+                setCart(tempCart)
+                toast.error("حدث خطأ أثناء حفظ الطلب، يرجى المحاولة مرة أخرى")
+                hapticFeedback('error')
             }
+        };
 
-            // 3. Update customer lastActive
-            const customerId = currentUser?.id || "guest"
-            if (customerId !== "guest" && currentUser?.role === "customer") {
-                const customerRef = doc(db, "customers", customerId)
-                updateDoc(customerRef, { lastActive: Timestamp.now() }).catch(e => console.error("Update lastActive failed", e));
-            }
-
-            setCart([])
-            toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
-
-            // Send Notification (Optimistic - fire and forget)
-            const notificationMsg = "تم رفع طلبك بنجاح! سنقوم بمراجعته قريباً."
-            const notifUserId = currentUser?.id || guestId || "guest"
-
-            addDoc(collection(db, "notifications"), sanitizeData({
-                userId: notifUserId,
-                title: "تم رفع طلبك",
-                body: notificationMsg,
-                type: "success",
-                read: false,
-                createdAt: Timestamp.now()
-            })).catch(console.error)
-
-            sendPushNotification(
-                notifUserId,
-                "تم رفع الطلب",
-                notificationMsg,
-                `/customer/invoices`
-            ).catch(console.error)
-
-            hapticFeedback('success')
-            playSound('newOrder')
-        } catch (e) {
-            console.error("Order Creation Error:", e)
-            toast.error("فشل إرسال الطلب: " + (e as Error).message)
-            hapticFeedback('error')
-        }
+        // Execute background process without awaiting
+        processOrder();
     }
 
     const fetchProducts = useCallback(async (categoryId?: string, isInitial = false) => {
