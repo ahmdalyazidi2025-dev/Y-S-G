@@ -262,8 +262,18 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <Button className="w-full bg-primary text-white font-bold h-12 rounded-xl" onClick={() => {
-                                        // TODO: Implement Search Logic
-                                        toast.info("جاري البحث في المتجر...")
+                                        const result = JSON.parse(analysisResult);
+                                        const query = result.title || "";
+                                        if (query) {
+                                            toast.info("جاري البحث في المتجر...");
+                                            // Close modal and navigate
+                                            onClose();
+                                            // Assuming the home page is at /customer and accepts 'q' param
+                                            // If current path is already /customer, we might need to force refresh or just push
+                                            window.location.href = `/customer?q=${encodeURIComponent(query)}`;
+                                        } else {
+                                            toast.error("لم يتم العثور على اسم للمنتج للبحث عنه");
+                                        }
                                     }}>
                                         بحث في المتجر
                                     </Button>

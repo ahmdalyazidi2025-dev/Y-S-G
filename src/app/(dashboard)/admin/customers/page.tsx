@@ -18,7 +18,10 @@ import { PasswordReveal } from "@/components/admin/password-reveal"
 import React from "react"
 
 export default function CustomersPage() {
-    const { customers, deleteCustomer, sendNotificationToGroup, orders, sendNotification } = useStore()
+    const { customers, deleteCustomer, sendNotificationToGroup, orders, sendNotification, markSectionAsViewed } = useStore()
+    /* eslint-disable react-hooks/exhaustive-deps */
+    React.useEffect(() => { markSectionAsViewed('customers') }, [])
+    /* eslint-enable react-hooks/exhaustive-deps */
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
     const [isBroadcastOpen, setIsBroadcastOpen] = useState(false)

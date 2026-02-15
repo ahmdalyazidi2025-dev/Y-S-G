@@ -26,10 +26,16 @@ const NAV_ITEMS = [
     { title: "الإعدادات", icon: Settings, href: "/admin/settings", color: "text-slate-400" },
 ]
 
+const toDate = (d: any) => {
+    if (d?.toDate) return d.toDate()
+    if (d instanceof Date) return d
+    return new Date(d || 0)
+}
+
 export function AdminSidebar() {
     const pathname = usePathname()
     const router = useRouter()
-    const { logout, currentUser, authInitialized, markNotificationsAsRead, adminPreferences, orders, joinRequests, passwordRequests, messages, productRequests } = useStore()
+    const { logout, currentUser, authInitialized, markNotificationsAsRead, adminPreferences, orders, joinRequests, passwordRequests, messages, productRequests, customers } = useStore()
 
     // If we have a user, show the sidebar immediately (optimistic). 
     // If no user AND not initialized, then hide (loading state).
@@ -132,28 +138,20 @@ export function AdminSidebar() {
                                         const lastViewed = adminPreferences?.lastViewed || {}
 
                                         if (item.href === "/admin/orders") {
-                                            const lastDate = lastViewed.orders || new Date(0)
-                                            count = orders.filter(o => o.status === "pending" && new Date(o.createdAt) > lastDate).length
+                                            const lastDate = toDate(lastViewed.orders)
+                                            count = orders.filter(o => o.status === "pending" && toDate(o.createdAt) > lastDate).length
                                         } else if (item.href === "/admin/requests") {
-                                            const lastDate = lastViewed.requests || new Date(0)
-                                            count = productRequests.filter(r => r.status === "pending" && new Date(r.createdAt) > lastDate).length
+                                            const lastDate = toDate(lastViewed.requests)
+                                            count = productRequests.filter(r => r.status === "pending" && toDate(r.createdAt) > lastDate).length
                                         } else if (item.href === "/admin/chat") {
-                                            // Chat has its own internal unread logic per customer, 
-                                            // but for global badge we can use unwatched messages?
-                                            // Actually, chat usually sums unread conversations.
-                                            // If we want "new since last view", we check message times.
-                                            // But users expect "Unread" to mean "Not Read", not "Not Viewed Section".
-                                            // BUT user requested "disappear when entering section".
-                                            // So we will use the same logic: New unread messages SINCE last visit?
-                                            // OR: Should we just rely on "Unread" status?
-                                            // User said: "In chat... disappear immediately [upon entry]".
-                                            // So clearing the badge on entry implies we track "seen state" of the BADGE.
-                                            // Let's use: Count of unread messages created AFTER lastViewed.chat
-                                            const lastDate = lastViewed.chat || new Date(0)
-                                            count = messages.filter(m => !m.isAdmin && !m.read && new Date(m.createdAt) > lastDate).length
+                                            const lastDate = toDate(lastViewed.chat)
+                                            count = messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastDate).length
                                         } else if (item.href === "/admin/join-requests") {
-                                            const lastDate = lastViewed.joinRequests || new Date(0)
-                                            count = joinRequests.filter(r => new Date(r.createdAt) > lastDate).length
+                                            const lastDate = toDate(lastViewed.joinRequests)
+                                            count = joinRequests.filter(r => toDate(r.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/customers") {
+                                            const lastDate = toDate(lastViewed.customers)
+                                            count = customers.filter(c => toDate(c.createdAt) > lastDate).length
                                         }
 
                                         if (count > 0) {
@@ -217,7 +215,7 @@ export function AdminSidebar() {
 
 export function AdminMobileNav() {
     const pathname = usePathname()
-    const { currentUser } = useStore()
+    const { currentUser, adminPreferences, orders, joinRequests, messages, productRequests, customers } = useStore()
     // Simplified items for mobile bottom bar
     const BOTTOM_ITEMS = [
         { title: "الرئيسية", icon: LayoutDashboard, href: "/admin" },
@@ -267,6 +265,36 @@ export function AdminMobileNav() {
                                     <item.icon className="w-5 h-5" />
                                 </div>
                                 <span className="text-[10px] font-bold">{item.title}</span>
+                                {(() => {
+                                    let count = 0
+                                    const lastViewed = adminPreferences?.lastViewed || {}
+
+                                    if (item.href === "/admin/orders") {
+                                        const lastDate = toDate(lastViewed.orders)
+                                        count = orders.filter(o => o.status === "pending" && toDate(o.createdAt) > lastDate).length
+                                    } else if (item.href === "/admin/requests") {
+                                        const lastDate = toDate(lastViewed.requests)
+                                        count = productRequests.filter(r => r.status === "pending" && toDate(r.createdAt) > lastDate).length
+                                    } else if (item.href === "/admin/chat") {
+                                        const lastDate = toDate(lastViewed.chat)
+                                        count = messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastDate).length
+                                    } else if (item.href === "/admin/join-requests") {
+                                        const lastDate = toDate(lastViewed.joinRequests)
+                                        count = joinRequests.filter(r => toDate(r.createdAt) > lastDate).length
+                                    } else if (item.href === "/admin/customers") {
+                                        const lastDate = toDate(lastViewed.customers)
+                                        count = customers.filter(c => toDate(c.createdAt) > lastDate).length
+                                    }
+
+                                    if (count > 0) {
+                                        return (
+                                            <span className="absolute top-0 right-1/4 w-4 h-4 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in border border-background">
+                                                {count}
+                                            </span>
+                                        )
+                                    }
+                                    return null
+                                })()}
                             </div>
                         </Link>
                     )

@@ -107,7 +107,23 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                 </button>
                                 <div className="flex gap-2">
                                     {/* Share Button (Future Feature) */}
-                                    <button className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-colors">
+                                    <button
+                                        onClick={() => {
+                                            if (navigator.share) {
+                                                navigator.share({
+                                                    title: product.name,
+                                                    text: product.description,
+                                                    url: window.location.href,
+                                                }).catch(console.error);
+                                            } else {
+                                                // Fallback for browsers that don't support share
+                                                navigator.clipboard.writeText(window.location.href);
+                                                // Assuming you have a toast library or similar
+                                                // toast.success("تم نسخ الرابط");
+                                                alert("تم نسخ الرابط");
+                                            }
+                                        }}
+                                        className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-colors">
                                         <Share2 className="w-5 h-5" />
                                     </button>
                                 </div>
