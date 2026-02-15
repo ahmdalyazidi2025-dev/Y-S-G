@@ -1935,7 +1935,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, finalEmail, password)
             // The onAuthStateChanged hook will handle setting the currentUser
             return true
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error("Login Error:", error)
 
             // Nice error handling
