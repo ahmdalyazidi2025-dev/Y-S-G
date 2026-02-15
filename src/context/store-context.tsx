@@ -93,16 +93,22 @@ export type StaffMember = {
     createdAt?: Date | Timestamp | null
 }
 
+export type PasswordRequest = {
+    id: string
+    phone: string
+    createdAt: Date | Timestamp
+}
+
 export type User = {
     id: string
     name: string
     role: "admin" | "customer" | "staff"
     username: string
-    email?: string // Added email field
+    permissions?: string[]
+    email?: string
     password?: string
     phone?: string
     location?: string
-    permissions?: string[]
     allowedCategories?: string[] | "all"
     referralCode?: string
     referralCount?: number
@@ -770,10 +776,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const createOrder = async (isDraft = false, additionalInfo?: { name?: string, phone?: string }) => {
+        if (!currentUser) {
+            toast.error("يجب تسجيل الدخول لإتمام الطلب")
+            router.push("/auth/login")
+            return
+        }
+
         if (cart.length === 0) return
 
         // Use logged-in user name or the one provided in checkout
-        const finalCustomerName = additionalInfo?.name || currentUser?.name || "عميل خارجي"
+        const finalCustomerName = additionalInfo?.name || currentUser?.name || "عميل"
         const finalCustomerPhone = additionalInfo?.phone || currentUser?.phone || ""
         const finalCustomerLocation = currentUser?.location || ""
 
@@ -781,7 +793,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             customerName: finalCustomerName,
             customerPhone: finalCustomerPhone,
             customerLocation: finalCustomerLocation,
-            customerId: currentUser?.id || "guest",
+            customerId: currentUser.id, // Confirmed user
             items: cart,
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
@@ -1511,7 +1523,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.success("تم إضافة الموظف بنجاح ✅", {
                 description: `اسم المستخدم للدخول: ${normalizedUsername}`
             })
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Add Staff Error:", error);
             if (error.code === 'auth/email-already-in-use') {
                 toast.error("اسم المستخدم مستخدم بالفعل")
@@ -1927,7 +1939,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await signInWithEmailAndPassword(auth, finalEmail, password)
             // The onAuthStateChanged hook will handle setting the currentUser
             return true
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Login Error:", error)
 
             // Nice error handling
@@ -2025,31 +2037,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     // --- Password Recovery Requests (Phone Based) ---
-    const [passwordRequests, setPasswordRequests] = useState<any[]>([])
+    const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
 
     useEffect(() => {
         if (!currentUser || currentUser.role === "customer") return
 
         const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
 
-            // Play sound if new request added
-            if (reqs.length > passwordRequests.length && passwordRequests.length > 0) {
+            // Check for added documents to play sound
+            const hasAdded = snapshot.docChanges().some(change => change.type === "added")
+            // Avoid sound on initial load (simple heuristic: if we have 0 requests locally and we get some, it might be initial load. 
+            // Better: only play if !fromCache or using docChanges logic which works fine.
+            // On initial load, all docs are 'added'.
+            // Current best practice: Don't beep on hydration.
+            // But checking 'snapshot.metadata.fromCache' helps.
+
+            // If we want to only beep for NEW requests coming in Live:
+            if (!snapshot.metadata.fromCache && hasAdded) {
+                // Optimization: Only beep if this is not the very first visual render set?
+                // docChanges with !fromCache usually works for live updates.
                 playSound('passwordRequest')
-            } else if (reqs.length > 0 && passwordRequests.length === 0) {
-                // Initial load or first request
-                // Optional: play sound here too if we want to alert on refresh if pending exist? 
-                // Better to only play on *new* arrival to avoid noise on refresh.
-                // checking snapshot.docChanges for 'added' is better but simple length check works for now
-                const hasNew = snapshot.docChanges().some(change => change.type === 'added')
-                if (hasNew) playSound('passwordRequest')
             }
 
             setPasswordRequests(reqs)
         })
         return () => unsubscribe()
-    }, [currentUser])
+    }, [currentUser, playSound])
 
     const requestPasswordResetPhone = async (phone: string) => {
         try {
