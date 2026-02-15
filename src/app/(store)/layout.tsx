@@ -98,7 +98,8 @@ export default function StoreLayout({
     const navItems = [
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
-        { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) },
+        // Show Scanner ONLY on Home Page (/customer)
+        ...(pathname === "/customer" ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
         {
             name: "طلب",
             icon: PlusCircle,
