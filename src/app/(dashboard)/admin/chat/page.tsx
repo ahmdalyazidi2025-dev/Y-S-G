@@ -1,5 +1,6 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, Fragment } from "react"
+import { differenceInDays } from "date-fns" // Ensure this is available or use native JS
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft, Search } from "lucide-react"
 import { useStore, Conversation } from "@/context/store-context"
@@ -11,7 +12,7 @@ import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ShoppingBag, Link as LinkIcon, X, Copy, Plus } from "lucide-react"
 export default function AdminChatPage() {
-    const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, customers } = useStore()
+    const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, customers, markMessagesRead } = useStore() // Added markMessagesRead
     const [msg, setMsg] = useState("")
     const [title, setTitle] = useState("") // Title for notification
     const [mode, setMode] = useState<"direct" | "broadcast" | "global_chat">("direct")
@@ -26,6 +27,14 @@ export default function AdminChatPage() {
     const [productSearch, setProductSearch] = useState("")
 
     const { products } = useStore() // Get products for picker
+
+    // Auto-mark messages as read when chat is opened
+    useEffect(() => {
+        if (selectedCustomer) {
+            markMessagesRead(selectedCustomer)
+        }
+    }, [selectedCustomer, messages, markMessagesRead])
+
 
     // Group messages into conversations
     const conversations = useMemo(() => {
@@ -51,12 +60,15 @@ export default function AdminChatPage() {
                     customerName: m.senderName || "عميل غير معروف",
                     lastMessage: m.text,
                     lastMessageDate: m.createdAt,
-                    unreadCount: 0
+                    unreadCount: !m.read && !m.isAdmin ? 1 : 0
                 }
             } else {
                 if (!convs[cid].lastMessageDate || m.createdAt > convs[cid].lastMessageDate!) {
                     convs[cid].lastMessage = m.text
                     convs[cid].lastMessageDate = m.createdAt
+                }
+                if (!m.read && !m.isAdmin) {
+                    convs[cid].unreadCount += 1
                 }
             }
         })
@@ -203,17 +215,45 @@ export default function AdminChatPage() {
                                 لا توجد رسائل سابقة مع هذا العميل
                             </div>
                         ) : (
-                            activeChatMessages.map((m) => (
-                                <div key={m.id} className={cn(
-                                    "max-w-[80%] p-3 rounded-2xl text-xs space-y-1 shadow-sm",
-                                    m.isAdmin
-                                        ? "bg-primary text-primary-foreground self-end rounded-br-none shadow-primary/10"
-                                        : "bg-secondary text-foreground self-start rounded-bl-none"
-                                )}>
-                                    <p>{m.isAdmin ? m.text.replace(`(@${selectedCustomer})`, "").trim() : m.text}</p>
-                                    <p className="text-[8px] opacity-70 text-left">{format(m.createdAt, "hh:mm a", { locale: ar })}</p>
-                                </div>
-                            ))
+                            (() => {
+                                let lastDate: Date | null = null;
+                                return activeChatMessages.map((m) => {
+                                    const messageDate = m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt as any); // Handle Firestore Timestamp conversion if needed
+                                    const showDateSeparator = !lastDate || differenceInDays(messageDate, lastDate) !== 0;
+                                    lastDate = messageDate;
+
+                                    return (
+                                        <Fragment key={m.id}>
+                                            {showDateSeparator && (
+                                                <div className="flex items-center justify-center my-4">
+                                                    <span className="bg-muted/50 text-muted-foreground text-[10px] px-3 py-1 rounded-full shadow-sm border border-border/50">
+                                                        {format(messageDate, "eeee, d MMMM yyyy", { locale: ar })}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className={cn(
+                                                "max-w-[75%] p-3 rounded-2xl text-xs space-y-1 shadow-sm relative group transition-all hover:shadow-md",
+                                                m.isAdmin
+                                                    ? "bg-primary text-primary-foreground self-end rounded-br-none shadow-primary/10"
+                                                    : "bg-white text-gray-800 self-start rounded-bl-none border border-gray-100"
+                                            )}>
+                                                <p className="leading-relaxed whitespace-pre-wrap">
+                                                    {m.isAdmin ? m.text.replace(`(@${selectedCustomer})`, "").trim() : m.text}
+                                                </p>
+                                                <div className={cn(
+                                                    "text-[9px] flex items-center justify-end gap-1 opacity-70",
+                                                    m.isAdmin ? "text-primary-foreground/80" : "text-gray-500"
+                                                )}>
+                                                    <span>{format(messageDate, "hh:mm a", { locale: ar })}</span>
+                                                    {m.isAdmin && (
+                                                        <span>{m.read ? "✓✓" : "✓"}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Fragment>
+                                    );
+                                });
+                            })()
                         )}
                     </div>
                 ) : (

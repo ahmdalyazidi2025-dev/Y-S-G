@@ -1649,6 +1649,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    const markMessagesRead = async (customerId?: string) => {
+        // If customerId is provided, mark only their messages as read
+        // If not provided (global/admin view), maybe mark all? Usually we mark per chat.
+        if (!customerId) return
+
+        const unreadMessages = messages.filter(m =>
+            m.senderId === customerId &&
+            !m.isAdmin &&
+            !m.read
+        )
+
+        if (unreadMessages.length === 0) return
+
+        const batchPromises = unreadMessages.map(m =>
+            updateDoc(doc(db, "messages", m.id), { read: true })
+        )
+
+        try {
+            await Promise.all(batchPromises)
+        } catch (error) {
+            console.error("Failed to mark messages as read:", error)
+        }
+    }
+
     const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
         if (!currentUser) return;
 
