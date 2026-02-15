@@ -33,7 +33,7 @@ const ADMIN_MODULES = [
 ]
 
 export default function AdminDashboard() {
-    const { orders, customers, products, logout, currentUser, productRequests, joinRequests, passwordRequests, messages, markNotificationsAsRead } = useStore()
+    const { orders, customers, products, logout, currentUser, productRequests, joinRequests, passwordRequests, messages, markNotificationsAsRead, adminPreferences } = useStore()
     const [isLoading, setIsLoading] = useState(true)
     const [statsTimeRange, setStatsTimeRange] = useState<"today" | "week" | "month" | "year" | "all">("all")
     const [filteredVisits, setFilteredVisits] = useState(0)
@@ -277,11 +277,26 @@ export default function AdminDashboard() {
                                         {(module as any).badge && (
                                             (() => {
                                                 let count = 0
-                                                if ((module as any).badge === 'orders') count = orders.filter(o => o.status === 'pending').length
-                                                if ((module as any).badge === 'requests') count = productRequests.filter(r => r.status === 'pending').length
-                                                if ((module as any).badge === 'joins') count = joinRequests.length
-                                                if ((module as any).badge === 'chat') count = messages.filter(m => !m.read && !m.isAdmin).length
-                                                // Assuming passwordRequests has a status or simple length
+                                                const lastViewed = adminPreferences?.lastViewed || {}
+                                                const toDate = (d: any) => d?.toDate ? d.toDate() : (d || new Date(0))
+
+                                                if ((module as any).badge === 'orders') {
+                                                    const lastDate = toDate(lastViewed.orders)
+                                                    count = orders.filter(o => o.status === 'pending' && toDate(o.createdAt) > lastDate).length
+                                                }
+                                                if ((module as any).badge === 'requests') {
+                                                    const lastDate = toDate(lastViewed.requests)
+                                                    count = productRequests.filter(r => r.status === 'pending' && toDate(r.createdAt) > lastDate).length
+                                                }
+                                                if ((module as any).badge === 'joins') {
+                                                    const lastDate = toDate(lastViewed.joinRequests)
+                                                    count = joinRequests.filter(r => toDate(r.createdAt) > lastDate).length
+                                                }
+                                                if ((module as any).badge === 'chat') {
+                                                    const lastDate = toDate(lastViewed.chat)
+                                                    count = messages.filter(m => !m.read && !m.isAdmin && toDate(m.createdAt) > lastDate).length
+                                                }
+                                                // Password requests? Needs lastViewed entry or just use total for now if no pref exists
                                                 if ((module as any).badge === 'passwords') count = passwordRequests?.length || 0
 
                                                 if (count > 0) {
