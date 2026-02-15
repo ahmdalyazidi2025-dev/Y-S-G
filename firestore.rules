@@ -11,6 +11,18 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Customer Profiles (Admin Access + Owner Access)
+    match /customers/{customerId} {
+      allow read, write: if isAdmin();
+      allow read, update: if request.auth != null && request.auth.uid == customerId;
+    }
+
+    // Staff Profiles (Admin Only)
+    match /staff/{staffId} {
+      allow read, write: if isAdmin();
+      allow read: if request.auth != null && request.auth.uid == staffId; // Staff can read own profile
+    }
+
     // Public Read, Admin Write
     match /products/{docId} { allow read: if true; allow write: if isAdmin(); }
     match /categories/{docId} { allow read: if true; allow write: if isAdmin(); }
