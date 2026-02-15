@@ -24,20 +24,29 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Product Requests
+    match /requests/{requestId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+
     // Join Requests: Admin only (Creation handled by Server Action)
     match /joinRequests/{requestId} {
       allow read, delete: if isAdmin();
       allow create: if false; // Block client-side creation, force Server Action
     }
 
-    // Messages
+    // Messages & Notifications
     match /messages/{msgId} {
-      allow read, write: if request.auth != null; // Refine later if needed
+      allow create: if request.auth != null;
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
     }
-
-    // Notifications
+    
     match /notifications/{notifId} {
-       allow read, write: if request.auth != null; // Refine later
+       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+       allow create: if isAdmin() || request.auth != null; // Allow system triggers
+       allow update: if request.auth != null && resource.data.userId == request.auth.uid; // For mark as read
     }
 
     match /coupons/{code} {

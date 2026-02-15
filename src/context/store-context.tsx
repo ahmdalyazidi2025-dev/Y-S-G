@@ -14,7 +14,8 @@ import {
     createUserWithEmailAndPassword,
     signOut as firebaseSignOut,
     onAuthStateChanged,
-    sendPasswordResetEmail // Added
+    sendPasswordResetEmail, // Added
+    signInAnonymously // Added for guest support
 } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { sendPushNotification, sendPushToUsers } from "@/app/actions/notifications"
@@ -102,7 +103,7 @@ export type PasswordRequest = {
 export type User = {
     id: string
     name: string
-    role: "admin" | "customer" | "staff"
+    role: "admin" | "customer" | "staff" | "guest" // Added guest
     username: string
     permissions?: string[]
     email?: string
@@ -112,6 +113,8 @@ export type User = {
     allowedCategories?: string[] | "all"
     referralCode?: string
     referralCount?: number
+    isAnonymous?: boolean // Added for guest tracking
+    lastActive?: Date // Added
 }
 
 export type Order = {
@@ -410,6 +413,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const savedUser = localStorage.getItem("ysg_user")
         if (savedUser && !currentUser) {
             try {
+                // If it's a guest session, ensure we don't overwrite with old data if invalid
+                // But for now, just load it
                 setCurrentUser(JSON.parse(savedUser))
             } catch (e) {
                 console.error("Failed to parse saved user", e)
@@ -419,44 +424,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             try {
                 if (firebaseUser) {
-                    // User is signed in, fetch profile from Firestore
-                    const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
-                    if (userDoc.exists()) {
-                        const userData = userDoc.data() as User
-
-                        // --- AUTO ADMIN FIX: Force promotion for these emails ---
-                        if (["ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
-                            if (userData.role !== "admin" || !userData.permissions?.includes("all")) {
-                                const newUserData = { ...userData, role: "admin", permissions: ["all"] }
-                                await setDoc(doc(db, "users", firebaseUser.uid), newUserData, { merge: true })
-                                setCurrentUser(newUserData as User)
-                                localStorage.setItem("ysg_user", JSON.stringify(newUserData))
-                                toast.success("تم ترقية حسابك لمدير تلقائياً! 🚀")
-                                return // Exit early as we set user
-                            }
+                    if (firebaseUser.isAnonymous) {
+                        // It's a Guest
+                        const guestUser: User = {
+                            id: firebaseUser.uid,
+                            name: "زائر",
+                            role: "guest",
+                            email: "guest@ysg.local", // Placeholder
+                            username: `guest_${firebaseUser.uid.substring(0, 5)}`,
+                            isAnonymous: true,
+                            lastActive: new Date()
                         }
-                        // --------------------------------------------------------
-
-                        setCurrentUser(userData)
-                        localStorage.setItem("ysg_user", JSON.stringify(userData))
+                        setCurrentUser(guestUser)
+                        // Ensure guestId matches uid for consistency
+                        setGuestId(firebaseUser.uid)
+                        localStorage.setItem("ysg_guest_id", firebaseUser.uid)
                     } else {
-                        // Fallback for Admin if not in 'users' collection yet (First run)
-                        // Also auto-create admin doc for these emails
-                        if (["admin@store.com", "ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
-                            const adminUser: User = {
-                                id: firebaseUser.uid,
-                                name: firebaseUser.displayName || "المشرف العام",
-                                role: "admin",
-                                username: firebaseUser.email || "admin",
-                                permissions: ["all"]
+                        // User is signed in, fetch profile from Firestore
+                        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+                        if (userDoc.exists()) {
+                            const userData = userDoc.data() as User
+
+                            // --- AUTO ADMIN FIX: Force promotion for these emails ---
+                            if (["ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
+                                if (userData.role !== "admin" || !userData.permissions?.includes("all")) {
+                                    const newUserData = { ...userData, role: "admin", permissions: ["all"] }
+                                    await setDoc(doc(db, "users", firebaseUser.uid), newUserData, { merge: true })
+                                    setCurrentUser(newUserData as User)
+                                    localStorage.setItem("ysg_user", JSON.stringify(newUserData))
+                                    toast.success("تم ترقية حسابك لمدير تلقائياً! 🚀")
+                                    return // Exit early as we set user
+                                }
                             }
-                            setCurrentUser(adminUser)
-                            await setDoc(doc(db, "users", firebaseUser.uid), adminUser)
-                            localStorage.setItem("ysg_user", JSON.stringify(adminUser))
+                            // --------------------------------------------------------
+
+                            setCurrentUser(userData)
+                            localStorage.setItem("ysg_user", JSON.stringify(userData))
+                        } else {
+                            // Fallback for Admin if not in 'users' collection yet (First run)
+                            // Also auto-create admin doc for these emails
+                            if (["admin@store.com", "ahmd.alyazidi2030@gmail.com", "ahmd.alyazidi2025@gmail.com"].includes(firebaseUser.email || "")) {
+                                const adminUser: User = {
+                                    id: firebaseUser.uid,
+                                    name: firebaseUser.displayName || "المشرف العام",
+                                    role: "admin",
+                                    username: firebaseUser.email || "admin",
+                                    permissions: ["all"]
+                                }
+                                setCurrentUser(adminUser)
+                                await setDoc(doc(db, "users", firebaseUser.uid), adminUser)
+                                localStorage.setItem("ysg_user", JSON.stringify(adminUser))
+                            }
                         }
                     }
                 } else {
-                    setCurrentUser(null)
+                    // No user -> Sign in Anonymously immediately
+                    console.log("No user found, signing in anonymously...")
+                    await signInAnonymously(auth).catch(e => console.error("Anon Auth Failed", e));
+                    // Don't set currentUser to null here, wait for the auth state change to fire again
                 }
             } catch (error) {
                 console.error("Auth State Change Error:", error)
@@ -543,8 +568,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 5. Orders (Role Based Limit)
         let ordersQuery;
-        if (currentUser?.role === 'customer') {
-            // Customer: Only my orders
+        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
+            // Customer/Guest: Only my orders
             ordersQuery = query(collection(db, "orders"), where("customerId", "==", currentUser.id), orderBy("createdAt", "desc"))
         } else {
             // Admin: Last 300 orders (Optimized from 500/All)
@@ -569,7 +594,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         // 7. Requests (Admin Only usually, or public?)
-        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50)), (snap: QuerySnapshot<DocumentData>) => {
+        // 7. Requests (Admin Only usually, or public?)
+        let requestsQuery;
+        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
+            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser.id), orderBy("createdAt", "desc"))
+        } else {
+            requestsQuery = query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50))
+        }
+
+        const unsubRequests = onSnapshot(requestsQuery, (snap: QuerySnapshot<DocumentData>) => {
             setProductRequests(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<ProductRequest, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
@@ -578,8 +611,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 8. Messages (Role Based & Caching)
         let messagesQuery;
-        if (currentUser?.role === 'customer') {
-            // Customer: Only my thread
+        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
+            // Customer/Guest: Only my thread
             messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id), orderBy("createdAt", "asc"))
         } else {
             // Admin: Recent active messages (Limit 50 for speed)
@@ -587,7 +620,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Optimistic Load from Cache for Customers
-        if (currentUser?.role === 'customer') {
+        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
             const cachedParams = localStorage.getItem(`chat_cache_${currentUser.id}`)
             if (cachedParams) {
                 try {
