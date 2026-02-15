@@ -321,10 +321,6 @@ type StoreContextType = {
     requestPasswordReset: (phone: string) => Promise<{ success: boolean; message: string }>
     adminPreferences: AdminPreferences
     markSectionAsViewed: (section: keyof AdminPreferences['lastViewed']) => Promise<void>
-    fetchProducts: (categoryId?: string, isInitial?: boolean) => Promise<void>
-    loadMoreProducts: (categoryId?: string) => Promise<void>
-    searchProducts: (queryTerm: string) => Promise<Product[]>
-    hasMoreProducts: boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
