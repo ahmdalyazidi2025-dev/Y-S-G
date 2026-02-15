@@ -297,7 +297,7 @@ export default function AdminChatPage() {
                                     <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-muted-foreground relative group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                                         <User className="w-6 h-6" />
                                         {conv.unreadCount > 0 && (
-                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background shadow-sm">
+                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background shadow-sm animate-in zoom-in">
                                                 {conv.unreadCount}
                                             </span>
                                         )}
