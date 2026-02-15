@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { ProductCard } from "@/components/store/product-card"
-import { Search, Bell, User } from "lucide-react"
+import { Search, Bell, User, Loader2, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { useStore, Product } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -23,7 +23,7 @@ import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skelet
 import { useSearchParams } from "next/navigation"
 
 export default function CustomerHome() {
-    const { products, banners, categories, loading, storeSettings } = useStore() // Assume loading is available
+    const { products, banners, categories, loading, storeSettings, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts } = useStore()
     const searchParams = useSearchParams()
     // const [searchQuery, setSearchQuery] = useState("")  <-- Removed local state
     const searchQuery = searchParams.get('q') || "" // Use URL param
@@ -52,24 +52,45 @@ export default function CustomerHome() {
         }
     }, [productIdFromUrl, products])
 
+    const [serverSearchResults, setServerSearchResults] = useState<Product[] | null>(null)
+    const [isSearching, setIsSearching] = useState(false)
+
+    // Initial Fetch & Category Change
+    useEffect(() => {
+        if (!searchQuery) {
+            fetchProducts(selectedCategory === "الكل" ? undefined : selectedCategory, true)
+        }
+    }, [selectedCategory, fetchProducts, searchQuery])
+
+    // Server Search (URL Param)
+    useEffect(() => {
+        const performSearch = async () => {
+            if (searchQuery) {
+                setIsSearching(true)
+                const results = await searchProducts(searchQuery)
+                setServerSearchResults(results)
+                setIsSearching(false)
+            } else {
+                setServerSearchResults(null)
+            }
+        }
+        performSearch()
+    }, [searchQuery, searchProducts])
+
     const handleRefresh = async () => {
-        // In a real app, refresh data here
-        await new Promise(r => setTimeout(r, 1500))
+        if (!searchQuery) {
+            await fetchProducts(selectedCategory === "الكل" ? undefined : selectedCategory, true)
+        }
     }
 
     const activeBanners = banners.filter(b => b.active)
 
-    const filteredProducts = products.filter(product => {
+    const filteredProducts = serverSearchResults || products.filter(product => {
         if (product.isDraft) return false;
-
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (product.barcode && product.barcode.includes(searchQuery))
-
-        // Fix: Compare category IDs (assuming product.category stores the ID now, or if it stores name, we need to find the ID)
-        // Store Context usually saves category ID in product.category
+        // Client-side category filter (safeguard)
         const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory
-        return matchesSearch && matchesCategory
-    }).sort((a, b) => {
+        return matchesCategory
+    }).sort((a, b) => { // Sort should ideally be server-side but for loaded buffer it's fine
         // 1. Featured first
         if (a.isFeatured && !b.isFeatured) return -1;
         if (!a.isFeatured && b.isFeatured) return 1;
@@ -143,7 +164,7 @@ export default function CustomerHome() {
                         {categories.map((cat) => (
                             <button
                                 key={cat.id}
-                                onClick={() => setSelectedCategory(cat.nameAr)} // Assuming you filter by nameAr based on page.tsx logic
+                                onClick={() => setSelectedCategory(cat.nameAr)}
                                 className={cn(
                                     "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
                                     selectedCategory === cat.nameAr
@@ -197,6 +218,21 @@ export default function CustomerHome() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Load More Button */}
+                        {!searchQuery && hasMoreProducts && filteredProducts.length > 0 && (
+                            <div className="flex justify-center pb-24">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)}
+                                    disabled={loading}
+                                    className="min-w-[200px] gap-2 bg-card/50 backdrop-blur-sm border-white/10 text-white hover:bg-white/10"
+                                >
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                                    {loading ? "جاري التحميل..." : "تحميل المزيد"}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 )}
 

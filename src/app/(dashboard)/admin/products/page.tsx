@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
 
 export default function ProductsPage() {
-    const { products, deleteProduct, updateProduct, categories } = useStore()
+    const { products, deleteProduct, updateProduct, categories, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts, loading } = useStore()
     const searchParams = useSearchParams()
 
     // Initialize search with URL param or empty string
@@ -32,8 +32,33 @@ export default function ProductsPage() {
     const expiredOffers = products.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) < new Date())
     const draftProducts = products.filter(p => p.isDraft)
 
-    const filteredProducts = products.filter((p: Product) => {
-        // 1. Tab Filtering
+    // Server Side Search State
+    const [serverSearchResults, setServerSearchResults] = useState<Product[] | null>(null)
+    const [isSearching, setIsSearching] = useState(false)
+
+    // Initial Fetch & Category Change
+    useEffect(() => {
+        fetchProducts(selectedCategory === "الكل" ? undefined : selectedCategory, true)
+    }, [selectedCategory, fetchProducts])
+
+    // Server Search Debounce
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.length > 2) {
+                setIsSearching(true)
+                const results = await searchProducts(searchQuery)
+                setServerSearchResults(results)
+                setIsSearching(false)
+            } else {
+                setServerSearchResults(null)
+            }
+        }, 600)
+        return () => clearTimeout(timer)
+    }, [searchQuery, searchProducts])
+
+
+    const filteredProducts = serverSearchResults || products.filter((p: Product) => {
+        // 1. Tab Filtering (Local on loaded buffer)
         if (activeTab === 'offers') {
             if (p.isDraft || !p.discountEndDate || new Date(p.discountEndDate) < new Date()) return false
         } else if (activeTab === 'frozen') {
@@ -41,27 +66,18 @@ export default function ProductsPage() {
         } else if (activeTab === 'drafts') {
             if (!p.isDraft) return false
         } else {
-            // "Active" Tab (Default): Show everything EXCLUDING drafts and expired offers? 
-            // OR Show everything? Let's show everything except drafts for "All" usually, 
-            // but user wants "Easy". Let's show ALL active products (not drafts).
-            // Actually, "All" usually implies the master list. 
-            // Let's stick to: "All" = All non-drafts. "Drafts" = Drafts.
             if (p.isDraft) return false
         }
 
-        // 2. Search & Category Logic (Applied on top of Tab)
-        const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "")
-        const normalizedQuery = normalize(searchQuery)
-
-        const matchesSearch =
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            normalize(p.barcode || "").includes(normalizedQuery) ||
-            (p.barcode || "").includes(searchQuery)
-
+        // 2. Client Side Category Filter (If not fetching by category)
+        // Since we fetch by category now, this is redundant but safe.
         const matchesCategory = selectedCategory === "الكل" || p.category === selectedCategory
-
-        return matchesSearch && matchesCategory
+        return matchesCategory
     })
+
+    const handleLoadMore = () => {
+        loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)
+    }
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product)
@@ -415,6 +431,16 @@ export default function ProductsPage() {
                             </div>
                         ))
                     )}
+                </div>
+            )}
+
+            {/* Load More Button */}
+            {!searchQuery && hasMoreProducts && filteredProducts.length > 0 && (
+                <div className="flex justify-center pb-20">
+                    <Button variant="outline" onClick={handleLoadMore} disabled={loading} className="min-w-[200px] gap-2">
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        {loading ? "جاري التحميل..." : "تحميل المزيد"}
+                    </Button>
                 </div>
             )}
 

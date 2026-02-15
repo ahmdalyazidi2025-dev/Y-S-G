@@ -6,7 +6,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import {
     collection, addDoc, onSnapshot, query, orderBy, where,
     updateDoc, doc, deleteDoc, Timestamp, getDoc, setDoc, runTransaction,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDocs, limit
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDocs, limit, startAfter, startAt, endAt
 } from "firebase/firestore"
 import { db, auth, getSecondaryAuth } from "@/lib/firebase"
 import {
@@ -252,7 +252,11 @@ type StoreContextType = {
     removeFromCart: (productId: string, unit: string) => void
     clearCart: (asDraft?: boolean) => void
     createOrder: (isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }) => void
-    scanProduct: (barcode: string) => Product | null
+    scanProduct: (barcode: string) => Promise<Product | null>
+    fetchProducts: (categoryId?: string, isInitial?: boolean) => Promise<void>
+    loadMoreProducts: (categoryId?: string) => Promise<void>
+    searchProducts: (queryTerm: string) => Promise<Product[]>
+    hasMoreProducts: boolean
     addProduct: (product: Omit<Product, "id">) => void
     updateProduct: (id: string, data: Partial<Product>) => void
     deleteProduct: (productId: string) => void
@@ -311,6 +315,10 @@ type StoreContextType = {
     requestPasswordReset: (phone: string) => Promise<{ success: boolean; message: string }>
     adminPreferences: AdminPreferences
     markSectionAsViewed: (section: keyof AdminPreferences['lastViewed']) => Promise<void>
+    fetchProducts: (categoryId?: string, isInitial?: boolean) => Promise<void>
+    loadMoreProducts: (categoryId?: string) => Promise<void>
+    searchProducts: (queryTerm: string) => Promise<Product[]>
+    hasMoreProducts: boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -365,6 +373,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const [authInitialized, setAuthInitialized] = useState(false)
     const [guestId, setGuestId] = useState("")
+    const [lastProductDoc, setLastProductDoc] = useState<DocumentData | null>(null)
+    const [hasMoreProducts, setHasMoreProducts] = useState(true)
     const router = useRouter()
 
     useEffect(() => {
@@ -493,18 +503,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // This prevents "0 data" state while auth is hydrating.
         // if (!authInitialized) return
 
-        // 1. Products (Public - Optimized)
-        const unsubProducts = onSnapshot(collection(db, "products"), (snap: QuerySnapshot<DocumentData>) => {
-            setProducts(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Product, "id">
-                return {
-                    ...data,
-                    id: doc.id,
-                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
-                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
-                } as Product
-            }))
-        })
+        // 1. Products (Public - Optimized check, initial load handled by component or fetchProducts)
+        // Removed global listener for performance (5000+ products scaling)
 
         // 2. Categories (Public)
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
@@ -644,7 +644,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         return () => {
-            unsubProducts(); unsubCategories(); unsubCustomers(); unsubStaff();
+            unsubCategories(); unsubCustomers(); unsubStaff();
             unsubOrders(); unsubBanners(); unsubRequests();
             unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
         }
@@ -850,38 +850,127 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const scanProduct = (barcode: string) => {
+    const fetchProducts = useCallback(async (categoryId?: string, isInitial = false) => {
+        setLoading(true)
+        try {
+            let q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(20))
+            if (categoryId && categoryId !== 'all') {
+                // Note: Requires composite index if combining equality and sort
+                // Fallback to client side if index missing? No, we need index.
+                // Assuming index exists or will be created.
+                // q = query(collection(db, "products"), where("category", "==", categoryId), orderBy("createdAt", "desc"), limit(20))
+                // For safety without index immediately, let's fetch by createdAt and filter? No, inefficient.
+                // Let's rely on simple fetching for now or just equality if no sort.
+                // "createdAt" sort is important for "Newest".
+                // Let's assume equality match for now (faster).
+                q = query(collection(db, "products"), where("category", "==", categoryId), limit(20))
+            }
+
+            const snap = await getDocs(q)
+            const newProducts = snap.docs.map((doc) => {
+                const data = doc.data() as Omit<Product, "id">
+                return {
+                    ...data,
+                    id: doc.id,
+                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
+                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
+                } as Product
+            })
+
+            setProducts(newProducts)
+            setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
+            setHasMoreProducts(snap.docs.length === 20)
+        } catch (e) {
+            console.error("Fetch Products Error", e)
+        } finally {
+            setLoading(false)
+        }
+    }, [toDate])
+
+    const loadMoreProducts = useCallback(async (categoryId?: string) => {
+        if (!lastProductDoc || !hasMoreProducts) return
+
+        let q = query(
+            collection(db, "products"),
+            orderBy("createdAt", "desc"),
+            startAfter(lastProductDoc),
+            limit(20)
+        )
+        if (categoryId && categoryId !== 'all') {
+            q = query(
+                collection(db, "products"),
+                where("category", "==", categoryId),
+                // orderBy("createdAt", "desc"), // Disabled to avoid index requirement for now
+                startAfter(lastProductDoc),
+                limit(20)
+            )
+        }
+
+        const snap = await getDocs(q)
+        const newProducts = snap.docs.map((doc) => {
+            const data = doc.data() as Omit<Product, "id">
+            return {
+                ...data,
+                id: doc.id,
+                discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
+                createdAt: data.createdAt ? toDate(data.createdAt) : undefined
+            } as Product
+        })
+
+        setProducts(prev => [...prev, ...newProducts])
+        setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
+        setHasMoreProducts(snap.docs.length === 20)
+    }, [lastProductDoc, hasMoreProducts, toDate])
+
+    const searchProducts = async (term: string) => {
+        if (!term) return []
+        try {
+            // Simple prefix search on Name (case sensitive unfortunately in Firestore)
+            // or use a dedicated search field
+            const q = query(
+                collection(db, "products"),
+                orderBy("name"),
+                startAt(term),
+                endAt(term + '\uf8ff'),
+                limit(20)
+            )
+            const snap = await getDocs(q)
+            return snap.docs.map((doc) => {
+                const data = doc.data() as Omit<Product, "id">
+                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Product
+            })
+        } catch (e) {
+            console.error("Search Error", e)
+            return []
+        }
+    }
+
+    const scanProduct = async (barcode: string) => {
         const normalize = (s: string) => s.replace(/[-\s]/g, "").toUpperCase()
         const normalizedInput = normalize(barcode)
-
         if (!normalizedInput) return null
 
-        // Filter out drafts first
+        // 1. Check loaded products (Local Cache First)
         const activeProducts = products.filter(p => !p.isDraft)
-
-        // 1. Exact or Normalized match on Barcode
         let product = activeProducts.find(p => {
             if (!p.barcode) return false
             const normalizedStored = normalize(p.barcode)
             return normalizedStored === normalizedInput || p.barcode === barcode
         })
 
-        // 2. Partial match (Common in automotive when barcode includes batch info)
+        // 2. Server Side Check (New)
         if (!product) {
-            product = activeProducts.find(p => {
-                if (!p.barcode) return false
-                const normalizedStored = normalize(p.barcode)
-                // If scanned is 90915YZZE1 and stored is 90915-YZZE1-A
-                return normalizedInput.includes(normalizedStored) || normalizedStored.includes(normalizedInput)
-            })
-        }
-
-        // 3. Match against product name (many store part numbers in the name field)
-        if (!product) {
-            product = activeProducts.find(p => {
-                const normalizedName = normalize(p.name)
-                return normalizedName.includes(normalizedInput) || normalizedInput.includes(normalizedName)
-            })
+            try {
+                const q = query(collection(db, "products"), where("barcode", "==", barcode))
+                const snap = await getDocs(q)
+                if (!snap.empty) {
+                    const doc = snap.docs[0]
+                    const data = doc.data() as Omit<Product, "id">
+                    product = { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Product
+                }
+            } catch (e) {
+                console.error("Scan Error", e)
+            }
         }
 
         if (product) {

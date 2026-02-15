@@ -87,7 +87,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
         setIsFlashOn(false)
     }, [])
 
-    const handleScanResult = useCallback((decodedText: string) => {
+    const handleScanResult = useCallback(async (decodedText: string) => {
         if (decodedText === lastScanned || !decodedText || decodedText.length < 3) return
 
         // Ignore common partial reads
@@ -108,7 +108,7 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
             return
         }
 
-        const product = scanProduct(decodedText)
+        const product = await scanProduct(decodedText)
         if (product) {
             if (isBatchMode) {
                 addToCart(product)
