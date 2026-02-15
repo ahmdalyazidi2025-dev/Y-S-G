@@ -809,43 +809,49 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
         }
 
+
         try {
-            await runTransaction(db, async (transaction) => {
-                // 1. Get the current order counter
-                const counterRef = doc(db, "counters", "orders")
-                let counterDoc;
-                try {
-                    counterDoc = await transaction.get(counterRef)
-                } catch (readError) {
-                    throw new Error("Failed to read order counter")
-                }
+            // Non-transactional approach for maximum reliability
+            let orderId = "";
+            let newCounterValue = 0;
 
-                let newId = 1
-                if (counterDoc.exists()) {
-                    const current = counterDoc.data().current
-                    if (typeof current === 'number') {
-                        newId = current + 1
-                    }
+            try {
+                const counterRef = doc(db, "counters", "orders");
+                const counterSnap = await getDoc(counterRef);
+
+                if (counterSnap.exists()) {
+                    newCounterValue = (counterSnap.data().current || 0) + 1;
                 } else {
-                    // Initialize if missing
-                    transaction.set(counterRef, { current: 1 })
+                    newCounterValue = 1;
                 }
+                orderId = newCounterValue.toString();
+            } catch (counterError) {
+                console.error("Counter Read Failed, using fallback ID", counterError);
+                // Fallback to timestamp ID if counter fails (to prevent blocking orders)
+                orderId = `ORD-${Date.now()}`;
+            }
 
-                // 2. Set the new counter value
-                transaction.set(counterRef, { current: newId }, { merge: true })
+            // 1. Create the Order
+            await setDoc(doc(db, "orders", orderId), sanitizeData({
+                ...orderData,
+                id: orderId // Ensure ID is in data too
+            }));
 
-                // 3. Create the order with the sequential ID
-                const orderId = newId.toString()
-                const orderRef = doc(db, "orders", orderId)
-                transaction.set(orderRef, sanitizeData(orderData))
-
-                // 4. Update customer lastActive if applicable
-                const customerId = currentUser?.id || "guest"
-                if (customerId !== "guest" && currentUser?.role === "customer") {
-                    const customerRef = doc(db, "customers", customerId)
-                    transaction.update(customerRef, { lastActive: Timestamp.now() })
+            // 2. Try to update counter (Fire and forget if it fails, or log)
+            if (newCounterValue > 0) {
+                try {
+                    await setDoc(doc(db, "counters", "orders"), { current: newCounterValue }, { merge: true });
+                } catch (writeError) {
+                    console.error("Failed to update counter, but order was created", writeError);
                 }
-            })
+            }
+
+            // 3. Update customer lastActive
+            const customerId = currentUser?.id || "guest"
+            if (customerId !== "guest" && currentUser?.role === "customer") {
+                const customerRef = doc(db, "customers", customerId)
+                updateDoc(customerRef, { lastActive: Timestamp.now() }).catch(e => console.error("Update lastActive failed", e));
+            }
 
             setCart([])
             toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
