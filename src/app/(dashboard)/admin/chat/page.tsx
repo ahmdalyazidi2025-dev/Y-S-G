@@ -1,6 +1,6 @@
 "use client"
 import { useState, useMemo, useEffect, Fragment } from "react"
-import { differenceInDays } from "date-fns" // Ensure this is available or use native JS
+import { differenceInDays, isSameDay } from "date-fns" // Ensure this is available or use native JS
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft, Search } from "lucide-react"
 import { useStore, Conversation } from "@/context/store-context"
@@ -218,8 +218,19 @@ export default function AdminChatPage() {
                             (() => {
                                 let lastDate: Date | null = null;
                                 return activeChatMessages.map((m) => {
-                                    const messageDate = m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt as any); // Handle Firestore Timestamp conversion if needed
-                                    const showDateSeparator = !lastDate || differenceInDays(messageDate, lastDate) !== 0;
+                                    // Robust Date Parsing
+                                    let messageDate: Date;
+                                    if (m.createdAt instanceof Date) {
+                                        messageDate = m.createdAt;
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    } else if ((m.createdAt as any)?.toDate) {
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                        messageDate = (m.createdAt as any).toDate();
+                                    } else {
+                                        messageDate = new Date(m.createdAt as any);
+                                    }
+
+                                    const showDateSeparator = !lastDate || !isSameDay(messageDate, lastDate);
                                     lastDate = messageDate;
 
                                     return (
