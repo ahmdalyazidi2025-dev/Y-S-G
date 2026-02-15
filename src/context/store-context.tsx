@@ -208,6 +208,7 @@ export type StoreSettings = {
     logoUrl?: string
     geminiCustomPrompt?: string
     geminiReferenceImageUrl?: string
+    enableMaintenance: boolean
     enableCoupons?: boolean
     enableAIChat?: boolean // New Toggle
     enableProductRequests?: boolean // New Toggle for Product Requests
@@ -220,6 +221,16 @@ export type StoreSettings = {
         passwordRequest?: string; // Admin: Password reset request alert
     }
     hiddenSections?: ("products" | "offers" | "categories" | "search")[] // New: Hide specific home sections
+}
+
+export type AdminPreferences = {
+    lastViewed: {
+        orders?: Date | Timestamp
+        requests?: Date | Timestamp
+        chat?: Date | Timestamp
+        joinRequests?: Date | Timestamp
+        customers?: Date | Timestamp
+    }
 }
 
 export type JoinRequest = {
@@ -297,7 +308,9 @@ type StoreContextType = {
     deleteJoinRequest: (id: string) => Promise<void>
     passwordRequests: any[] // Defining as any for simplicity, or define strict type
     resolvePasswordRequest: (id: string) => Promise<void>
-    requestPasswordReset: (phone: string) => Promise<boolean>
+    requestPasswordReset: (phone: string) => Promise<{ success: boolean; message: string }>
+    adminPreferences: AdminPreferences
+    markSectionAsViewed: (section: keyof AdminPreferences['lastViewed']) => Promise<void>
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -326,6 +339,7 @@ const MOCK_SETTINGS: StoreSettings = {
     logoUrl: "", // Optional store logo URL for branding
     geminiCustomPrompt: "",
     geminiReferenceImageUrl: "",
+    enableMaintenance: false,
     enableCoupons: true,
     enableAIChat: true,
     enableProductRequests: true,
@@ -452,8 +466,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 newOrder: "data:audio/wav;base64,UklGRiQIAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAIAACAgYCBgoKDA4SEhYUGhobHBweIiIiJCQoKCwwMDQ4ODxAQERITExQVFhcXFxgZGRobGxwcHR4eHyAgISIiIyQkJSUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/",
                 newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
                 statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
+                generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
             }
             const source = (storeSettings as any).sounds?.[event] || defaultSounds[event]
             if (source) {
@@ -583,6 +597,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
         }
     }, [toDate, authInitialized])
+
+    // Fetch Admin Preferences
+    const [adminPreferences, setAdminPreferences] = useState<AdminPreferences>({ lastViewed: {} })
+
+    useEffect(() => {
+        const unsubscribeAdminPrefs = onSnapshot(doc(db, "settings", "admin_preferences"), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data()
+                // Convert Timestamps to Dates if needed
+                const lastViewed = data.lastViewed || {}
+                Object.keys(lastViewed).forEach(key => {
+                    if (lastViewed[key] instanceof Timestamp) {
+                        lastViewed[key] = lastViewed[key].toDate()
+                    }
+                })
+                setAdminPreferences({ lastViewed })
+            } else {
+                // If preferences don't exist, initialize them
+                setDoc(doc(db, "settings", "admin_preferences"), { lastViewed: {} }, { merge: true })
+            }
+        })
+        return () => unsubscribeAdminPrefs()
+    }, [])
 
     // Filter categories based on user permissions
     useEffect(() => {
@@ -1601,7 +1638,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             // Trigger Batch Push Notification for the whole segment
             const targetIds = targetCustomers.map(c => c.id)
-            sendPushToUsers(targetIds, title, body, link)
+            sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", body, "/customer/chat")
 
             // Local feedback for admin
             playSound('newMessage')
@@ -1649,29 +1686,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const markMessagesRead = async (customerId?: string) => {
-        // If customerId is provided, mark only their messages as read
-        // If not provided (global/admin view), maybe mark all? Usually we mark per chat.
-        if (!customerId) return
-
-        const unreadMessages = messages.filter(m =>
-            m.senderId === customerId &&
-            !m.isAdmin &&
-            !m.read
-        )
-
-        if (unreadMessages.length === 0) return
-
-        const batchPromises = unreadMessages.map(m =>
-            updateDoc(doc(db, "messages", m.id), { read: true })
-        )
-
-        try {
-            await Promise.all(batchPromises)
-        } catch (error) {
-            console.error("Failed to mark messages as read:", error)
-        }
-    }
+    // markMessagesRead function moved to be declared once
 
     const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
         if (!currentUser) return;
@@ -1902,16 +1917,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             const result = await requestPasswordResetAction(phone)
 
             if (!result.success) {
-                toast.error(result.error || "حدث خطأ، حاول مرة أخرى")
-                return false
+                const msg = result.error || "حدث خطأ، حاول مرة أخرى"
+                toast.error(msg)
+                return { success: false, message: msg }
             }
 
-            toast.success("تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً")
-            return true
+            const msg = "تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً"
+            toast.success(msg)
+            return { success: true, message: msg }
         } catch (error) {
             console.error("Password Request Error:", error)
             toast.error("حدث خطأ، حاول مرة أخرى")
-            return false
+            return { success: false, message: "حدث خطأ غير متوقع" }
         }
     }
 
@@ -1944,6 +1961,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
     }, [products, allCategories, currentUser])
 
+    const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
+        try {
+            const now = new Date()
+            const newPrefs = {
+                ...adminPreferences,
+                lastViewed: {
+                    ...adminPreferences.lastViewed,
+                    [section]: now
+                }
+            }
+            setAdminPreferences(newPrefs) // Optimistic update
+
+            await setDoc(doc(db, "settings", "admin_preferences"), {
+                lastViewed: {
+                    ...newPrefs.lastViewed,
+                    [section]: Timestamp.fromDate(now)
+                }
+            }, { merge: true })
+        } catch (error) {
+            console.error("Error marking section as viewed:", error)
+        }
+    }
+
     const value = {
         products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
         addToCart, removeFromCart, clearCart, createOrder, scanProduct,
@@ -1969,7 +2009,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         cleanupOrphanedUsers,
         passwordRequests,
         resolvePasswordRequest,
-        requestPasswordReset: requestPasswordResetPhone
+        requestPasswordReset: requestPasswordResetPhone,
+        adminPreferences,
+        markSectionAsViewed
     }
     return (
         <StoreContext.Provider value={value}>

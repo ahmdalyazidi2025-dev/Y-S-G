@@ -2,7 +2,7 @@
 
 import { useStore } from "@/context/store-context"
 import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -11,7 +11,10 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function JoinRequestsPage() {
-    const { joinRequests, deleteJoinRequest } = useStore()
+    const { joinRequests, deleteJoinRequest, markSectionAsViewed } = useStore()
+    /* eslint-disable react-hooks/exhaustive-deps */
+    useEffect(() => { markSectionAsViewed('joinRequests') }, [])
+    /* eslint-enable react-hooks/exhaustive-deps */
     const [search, setSearch] = useState("")
 
     const filtered = joinRequests.filter(req =>

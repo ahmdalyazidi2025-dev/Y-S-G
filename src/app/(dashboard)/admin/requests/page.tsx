@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder, Bell, Send } from "lucide-react"
 import Link from "next/link"
@@ -23,7 +23,13 @@ const REQUEST_STATUS = {
 
 export default function AdminRequestsPage() {
     const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings, sendMessage, products } = useStore()
+    const [filter, setFilter] = useState("all")
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
+
+    // Smart Badge Clearing
+    const { markSectionAsViewed } = useStore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { markSectionAsViewed('requests') }, [])
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
     const [viewMode, setViewMode] = useState<'all' | 'folders'>('all')
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)

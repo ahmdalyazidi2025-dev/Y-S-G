@@ -37,6 +37,11 @@ export default function AdminOrdersPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
+    // Smart Badge Clearing
+    const { markSectionAsViewed } = useStore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { markSectionAsViewed('orders') }, [])
+
     // ... existing code ...
 
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
