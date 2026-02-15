@@ -569,7 +569,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         // 7. Requests (Admin Only usually, or public?)
-        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(100)), (snap: QuerySnapshot<DocumentData>) => {
+        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50)), (snap: QuerySnapshot<DocumentData>) => {
             setProductRequests(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<ProductRequest, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
@@ -582,8 +582,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             // Customer: Only my thread
             messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id), orderBy("createdAt", "asc"))
         } else {
-            // Admin: Recent active messages (Limit 300)
-            messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(300))
+            // Admin: Recent active messages (Limit 50 for speed)
+            messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50))
         }
 
         // Optimistic Load from Cache for Customers
@@ -801,7 +801,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await runTransaction(db, async (transaction) => {
                 // 1. Get the current order counter
                 const counterRef = doc(db, "counters", "orders")
-                const counterDoc = await transaction.get(counterRef)
+                let counterDoc;
+                try {
+                    counterDoc = await transaction.get(counterRef)
+                } catch (readError) {
+                    throw new Error("Failed to read order counter")
+                }
 
                 let newId = 1
                 if (counterDoc.exists()) {
@@ -809,6 +814,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     if (typeof current === 'number') {
                         newId = current + 1
                     }
+                } else {
+                    // Initialize if missing
+                    transaction.set(counterRef, { current: 1 })
                 }
 
                 // 2. Set the new counter value
@@ -829,31 +837,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             setCart([])
             toast.success(isDraft ? "تم حفظ المسودة برقم تسلسلي" : "تم إرسال الطلب بنجاح")
-            // Send Notification
+
+            // Send Notification (Optimistic - fire and forget)
             const notificationMsg = "تم رفع طلبك بنجاح! سنقوم بمراجعته قريباً."
             const notifUserId = currentUser?.id || guestId || "guest"
 
-            await addDoc(collection(db, "notifications"), sanitizeData({
+            addDoc(collection(db, "notifications"), sanitizeData({
                 userId: notifUserId,
                 title: "تم رفع طلبك",
                 body: notificationMsg,
                 type: "success",
                 read: false,
                 createdAt: Timestamp.now()
-            }))
+            })).catch(console.error)
 
-            await sendPushNotification(
+            sendPushNotification(
                 notifUserId,
                 "تم رفع الطلب",
                 notificationMsg,
                 `/customer/invoices`
-            )
+            ).catch(console.error)
 
             hapticFeedback('success')
-            playSound('newOrder') // Trigger sound for new order
+            playSound('newOrder')
         } catch (e) {
             console.error("Order Creation Error:", e)
-            toast.error("فشل إرسال الطلب (خطأ في الرقم التسلسلي)")
+            toast.error("فشل إرسال الطلب: " + (e as Error).message)
             hapticFeedback('error')
         }
     }
@@ -861,17 +870,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const fetchProducts = useCallback(async (categoryId?: string, isInitial = false) => {
         setLoading(true)
         try {
-            let q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(20))
+            let q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(15))
             if (categoryId && categoryId !== 'all') {
-                // Note: Requires composite index if combining equality and sort
-                // Fallback to client side if index missing? No, we need index.
-                // Assuming index exists or will be created.
-                // q = query(collection(db, "products"), where("category", "==", categoryId), orderBy("createdAt", "desc"), limit(20))
-                // For safety without index immediately, let's fetch by createdAt and filter? No, inefficient.
-                // Let's rely on simple fetching for now or just equality if no sort.
-                // "createdAt" sort is important for "Newest".
-                // Let's assume equality match for now (faster).
-                q = query(collection(db, "products"), where("category", "==", categoryId), limit(20))
+                q = query(collection(db, "products"), where("category", "==", categoryId), limit(15))
             }
 
             const snap = await getDocs(q)
@@ -887,7 +888,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             setProducts(newProducts)
             setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
-            setHasMoreProducts(snap.docs.length === 20)
+            setHasMoreProducts(snap.docs.length === 15)
         } catch (e) {
             console.error("Fetch Products Error", e)
         } finally {
@@ -902,15 +903,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             collection(db, "products"),
             orderBy("createdAt", "desc"),
             startAfter(lastProductDoc),
-            limit(20)
+            limit(15)
         )
         if (categoryId && categoryId !== 'all') {
             q = query(
                 collection(db, "products"),
                 where("category", "==", categoryId),
-                // orderBy("createdAt", "desc"), // Disabled to avoid index requirement for now
                 startAfter(lastProductDoc),
-                limit(20)
+                limit(15)
             )
         }
 

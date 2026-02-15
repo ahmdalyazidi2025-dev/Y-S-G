@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { ProductCard } from "@/components/store/product-card"
 import { Search, Bell, User, Loader2, RefreshCw } from "lucide-react"
 import Link from "next/link"
@@ -21,6 +21,36 @@ import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skelet
 
 
 import { useSearchParams } from "next/navigation"
+
+function ObserverTrigger({ onIntersect, loading }: { onIntersect: () => void, loading: boolean }) {
+    const observerTarget = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !loading) {
+                    onIntersect();
+                }
+            },
+            { threshold: 0.1, rootMargin: '100px' }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => {
+            if (observerTarget.current) observer.unobserve(observerTarget.current);
+        };
+    }, [loading, onIntersect]);
+
+    return (
+        <div ref={observerTarget} className="flex items-center gap-2 p-4">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">جاري تحميل المزيد...</span>
+        </div>
+    )
+}
 
 export default function CustomerHome() {
     const { products, banners, categories, loading, storeSettings, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts } = useStore()
@@ -219,18 +249,13 @@ export default function CustomerHome() {
                             )}
                         </div>
 
-                        {/* Load More Button */}
+                        {/* Infinite Scroll Trigger */}
                         {!searchQuery && hasMoreProducts && filteredProducts.length > 0 && (
                             <div className="flex justify-center pb-24">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)}
-                                    disabled={loading}
-                                    className="min-w-[200px] gap-2 bg-card/50 backdrop-blur-sm border-white/10 text-white hover:bg-white/10"
-                                >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                                    {loading ? "جاري التحميل..." : "تحميل المزيد"}
-                                </Button>
+                                <ObserverTrigger
+                                    onIntersect={() => loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)}
+                                    loading={loading}
+                                />
                             </div>
                         )}
                     </div>
