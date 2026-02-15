@@ -772,8 +772,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const createOrder = async (isDraft = false, additionalInfo?: { name?: string, phone?: string }) => {
+        // 1. Initial State Check (Optimistic)
         if (!currentUser) {
             toast.error("يجب تسجيل الدخول لإتمام الطلب")
+            router.push("/auth/login")
+            return
+        }
+
+        // 2. Strict SDK Auth Check (Prevents Permission Denied on Rules)
+        if (!auth.currentUser) {
+            console.error("Create Order Failed: currentUser set but auth.currentUser is null (stale session)")
+            toast.error("انتهت جلسة الدخول. يرجى تسجيل الدخول مرة أخرى للمتابعة.")
+            // Optional: Clear stale state?
+            // setCurrentUser(null) 
+            // localStorage.removeItem("ysg_user")
             router.push("/auth/login")
             return
         }
@@ -789,7 +801,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             customerName: finalCustomerName,
             customerPhone: finalCustomerPhone,
             customerLocation: finalCustomerLocation,
-            customerId: currentUser.id, // Confirmed user
+            customerId: auth.currentUser.uid, // Use SDK ID for consistency
             items: cart,
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
