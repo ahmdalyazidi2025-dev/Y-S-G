@@ -482,8 +482,8 @@ export default function AdminRequestsPage() {
                                             {/* Hidden Input to store link if needed manually or just display it */}
                                             {/* We can keep manual input as fallback or read-only debug */}
                                             <Input
-                                                placeholder="رابط المنتج (أو اختر من القائمة)"
-                                                className="bg-black/20 border-white/10 text-right h-10 text-xs hidden" // Hidden for now as user wants selection
+                                                placeholder="أو اكتب رابط المنتج يدوياً (/customer?product=ID)..."
+                                                className="bg-black/20 border-white/10 text-right h-10 text-xs"
                                                 value={notifyLink}
                                                 onChange={(e) => setNotifyLink(e.target.value)}
                                             />
