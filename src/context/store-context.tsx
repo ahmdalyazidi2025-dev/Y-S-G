@@ -493,6 +493,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // This prevents "0 data" state while auth is hydrating.
         // if (!authInitialized) return
 
+        // 1. Products (Public - Optimized)
         const unsubProducts = onSnapshot(collection(db, "products"), (snap: QuerySnapshot<DocumentData>) => {
             setProducts(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Product, "id">
@@ -505,28 +506,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        // Filter products for customers based on hidden categories
-        const filteredProducts = products.filter(p => {
-            if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") return true
-            const category = categories.find(c => c.id === p.category || c.nameAr === p.category)
-            return category ? !category.isHidden : true
-        })
-
+        // 2. Categories (Public)
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
             setAllCategories(snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
         })
 
-        const unsubCustomers = onSnapshot(collection(db, "customers"), (snap: QuerySnapshot<DocumentData>) => {
-            setCustomers(snap.docs.map((doc) => {
-                const data = doc.data()
-                return {
-                    ...data,
-                    id: doc.id,
-                    lastActive: data.lastActive ? toDate(data.lastActive) : undefined
-                } as Customer
-            }))
-        })
+        // 3. Customers (Admin/Staff Only)
+        // Only subscribe if user is admin/staff to save bandwidth
+        let unsubCustomers = () => { }
+        if (currentUser?.role === 'admin' || currentUser?.role === 'staff') {
+            unsubCustomers = onSnapshot(collection(db, "customers"), (snap: QuerySnapshot<DocumentData>) => {
+                setCustomers(snap.docs.map((doc) => {
+                    const data = doc.data()
+                    return {
+                        ...data,
+                        id: doc.id,
+                        lastActive: data.lastActive ? toDate(data.lastActive) : undefined
+                    } as Customer
+                }))
+            })
+        }
 
+        // 4. Staff (Public/Admin? Usually Admin)
         const unsubStaff = onSnapshot(collection(db, "staff"), (snap: QuerySnapshot<DocumentData>) => {
             setStaff(snap.docs.map((doc) => {
                 const data = doc.data()
@@ -538,7 +539,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), (snap: QuerySnapshot<DocumentData>) => {
+        // 5. Orders (Role Based Limit)
+        let ordersQuery;
+        if (currentUser?.role === 'customer') {
+            // Customer: Only my orders
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", currentUser.id), orderBy("createdAt", "desc"))
+        } else {
+            // Admin: Last 300 orders (Optimized from 500/All)
+            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(300))
+        }
+
+        const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
             setOrders(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Order, "id">
                 return {
@@ -550,33 +561,65 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
+        // 6. Banners (Public)
         const unsubBanners = onSnapshot(collection(db, "banners"), (snap: QuerySnapshot<DocumentData>) => {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
 
-        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
+        // 7. Requests (Admin Only usually, or public?)
+        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(100)), (snap: QuerySnapshot<DocumentData>) => {
             setProductRequests(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<ProductRequest, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
             }))
         })
 
-        const unsubMessages = onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snap: QuerySnapshot<DocumentData>) => {
-            setMessages(snap.docs.map((doc) => {
+        // 8. Messages (Role Based & Caching)
+        let messagesQuery;
+        if (currentUser?.role === 'customer') {
+            // Customer: Only my thread
+            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id), orderBy("createdAt", "asc"))
+        } else {
+            // Admin: Recent active messages (Limit 300)
+            messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(300))
+        }
+
+        // Optimistic Load from Cache for Customers
+        if (currentUser?.role === 'customer') {
+            const cachedParams = localStorage.getItem(`chat_cache_${currentUser.id}`)
+            if (cachedParams) {
+                try {
+                    const parsed = JSON.parse(cachedParams)
+                    // Transform dates back to objects if needed, or just use as is for initial render
+                    // For simplicity, we just rely on the fast listener below, but this is where hydration would happen
+                } catch (e) { }
+            }
+        }
+
+        const unsubMessages = onSnapshot(messagesQuery, (snap: QuerySnapshot<DocumentData>) => {
+            const msgs = snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Message, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
-            }))
+            })
+            setMessages(msgs)
+
+            // Update Cache for Customers
+            if (currentUser?.role === 'customer' && msgs.length > 0) {
+                // cache essential data
+                localStorage.setItem(`chat_cache_${currentUser.id}`, JSON.stringify(msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() }))))
+            }
         })
 
+        // 9. Settings (Public)
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
             if (snap.exists()) {
                 setStoreSettings(snap.data() as StoreSettings)
             } else {
-                // Initialize checks if not exists
                 setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
             }
         })
 
+        // 10. Coupons (Optimized)
         const unsubCoupons = onSnapshot(query(collection(db, "coupons"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
             setCoupons(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Coupon, "id">
@@ -584,7 +627,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
+        // 11. Notifications (User Specific)
+        let notifQuery;
+        if (currentUser) {
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser.id), orderBy("createdAt", "desc"), limit(50))
+        } else {
+            // Guest or Global
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", guestId || 'guest'), orderBy("createdAt", "desc"), limit(20))
+        }
+
+        const unsubNotifications = onSnapshot(notifQuery, (snap: QuerySnapshot<DocumentData>) => {
             setNotifications(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Notification, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Notification
@@ -596,7 +648,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubOrders(); unsubBanners(); unsubRequests();
             unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
         }
-    }, [toDate, authInitialized])
+    }, [toDate, authInitialized, currentUser, guestId]) // Added currentUser dependence to trigger re-subscription on login/logout
 
     // Fetch Admin Preferences
     const [adminPreferences, setAdminPreferences] = useState<AdminPreferences>({ lastViewed: {} })
