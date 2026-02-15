@@ -1519,12 +1519,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.success("تم إضافة الموظف بنجاح ✅", {
                 description: `اسم المستخدم للدخول: ${normalizedUsername}`
             })
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error("Add Staff Error:", error);
             if (error.code === 'auth/email-already-in-use') {
                 toast.error("اسم المستخدم مستخدم بالفعل")
             } else {
-                toast.error("فشل إضافة الموظف: " + (error as Error).message)
+                toast.error("فشل إضافة الموظف: " + (error.message || "خطأ غير معروف"))
             }
         }
     }
