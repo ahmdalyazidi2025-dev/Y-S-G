@@ -2163,7 +2163,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         resolvePasswordRequest,
         requestPasswordReset: requestPasswordResetPhone,
         adminPreferences,
-        markSectionAsViewed
+        markSectionAsViewed,
+        fetchProducts,
+        loadMoreProducts,
+        searchProducts,
+        hasMoreProducts
     }
     return (
         <StoreContext.Provider value={value}>
