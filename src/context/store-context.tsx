@@ -817,6 +817,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hapticFeedback('success')
         playSound('newOrder')
 
+        // Capture auth state *before* async process to ensure validity
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser) {
+            console.error("Critical: No firebaseUser available for background order creation")
+            setCart(tempCart)
+            toast.error("خطأ: يجب تسجيل الدخول مجدداً")
+            return;
+        }
+
         // Run in background to not block UI
         const processOrder = async () => {
             try {
@@ -841,10 +850,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 }
 
                 // 1. Create the Order
-                await setDoc(doc(db, "orders", orderId), sanitizeData({
+                // Re-construct orderData with verified user ID
+                const finalOrderData = {
                     ...orderData,
-                    id: orderId // Ensure ID is in data too
-                }));
+                    id: orderId,
+                    customerId: firebaseUser.uid, // Use captured UID
+                };
+
+                const orderRef = doc(db, "orders", orderId);
+                await setDoc(orderRef, sanitizeData(finalOrderData));
+
+                // VERIFICATION: Check if it actually wrote
+                const verifySnap = await getDoc(orderRef);
+                if (!verifySnap.exists()) {
+                    throw new Error("Order write verification failed - Document not found after write");
+                }
 
                 // 2. Try to update counter (Fire and forget if it fails, or log)
                 if (newCounterValue > 0) {
