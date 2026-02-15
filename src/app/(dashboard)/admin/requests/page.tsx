@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
 
 const REQUEST_STATUS = {
     pending: { label: "قيد المراجعة", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
@@ -20,7 +22,7 @@ const REQUEST_STATUS = {
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings, sendMessage } = useStore()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest, storeSettings, updateStoreSettings, sendMessage, products } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [statusFilter, setStatusFilter] = useState<'pending' | 'fulfilled' | 'rejected'>('pending')
     const [viewMode, setViewMode] = useState<'all' | 'folders'>('all')
@@ -30,6 +32,8 @@ export default function AdminRequestsPage() {
     const [isNotifyMode, setIsNotifyMode] = useState(false)
     const [notifyMessage, setNotifyMessage] = useState("")
     const [notifyLink, setNotifyLink] = useState("")
+    const [openProductSelect, setOpenProductSelect] = useState(false)
+    const [productSearch, setProductSearch] = useState("")
 
     const handleNotify = async () => {
         if (!selectedRequest || !selectedRequest.customerId) {
@@ -406,9 +410,80 @@ export default function AdminRequestsPage() {
                                                 value={notifyMessage}
                                                 onChange={(e) => setNotifyMessage(e.target.value)}
                                             />
+                                            <div className="flex gap-2">
+                                                <Popover open={openProductSelect} onOpenChange={setOpenProductSelect}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            role="combobox"
+                                                            aria-expanded={openProductSelect}
+                                                            className="flex-1 justify-between bg-black/20 border-white/10 text-right h-10 text-xs text-muted-foreground hover:bg-black/30 hover:text-white"
+                                                        >
+                                                            {notifyLink
+                                                                ? (products.find(p => `/customer?product=${p.id}` === notifyLink)?.name || notifyLink)
+                                                                : "اختر منتج لربطه..."}
+                                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-[300px] p-0 bg-[#1a1f2e] border-white/10">
+                                                        <div className="p-2 border-b border-white/10">
+                                                            <Input
+                                                                placeholder="بحث عن منتج..."
+                                                                value={productSearch}
+                                                                onChange={(e) => setProductSearch(e.target.value)}
+                                                                className="h-8 bg-black/20 border-white/10 text-right text-xs"
+                                                            />
+                                                        </div>
+                                                        <div className="max-h-[200px] overflow-y-auto p-1 custom-scrollbar">
+                                                            {products
+                                                                .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+                                                                .map((product) => (
+                                                                    <div
+                                                                        key={product.id}
+                                                                        className={cn(
+                                                                            "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-white/10 hover:text-white cursor-pointer transition-colors",
+                                                                            notifyLink === `/customer?product=${product.id}` && "bg-primary/20 text-primary"
+                                                                        )}
+                                                                        onClick={() => {
+                                                                            setNotifyLink(`/customer?product=${product.id}`)
+                                                                            setOpenProductSelect(false)
+                                                                            // Optional: auto-fill message if empty
+                                                                            if (!notifyMessage) {
+                                                                                setNotifyMessage(`مرحباً ${selectedRequest?.customerName || 'عزيزي العميل'}، المنتج "${product.name}" الذي طلبته أصبح متوفراً الآن!`)
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        <Check
+                                                                            className={cn(
+                                                                                "mr-2 h-4 w-4",
+                                                                                notifyLink === `/customer?product=${product.id}` ? "opacity-100" : "opacity-0"
+                                                                            )}
+                                                                        />
+                                                                        <div className="flex items-center gap-2 flex-1">
+                                                                            <div className="w-6 h-6 rounded-md overflow-hidden bg-white/5 flex-shrink-0">
+                                                                                <div
+                                                                                    className="w-full h-full bg-cover bg-center"
+                                                                                    style={{ backgroundImage: `url(${product.images?.[0] || ""})` }}
+                                                                                />
+                                                                            </div>
+                                                                            <span className="truncate">{product.name}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                                                                <div className="p-4 text-center text-xs text-muted-foreground">
+                                                                    لا توجد نتائج
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </div>
+                                            {/* Hidden Input to store link if needed manually or just display it */}
+                                            {/* We can keep manual input as fallback or read-only debug */}
                                             <Input
-                                                placeholder="رابط المنتج (اختياري)"
-                                                className="bg-black/20 border-white/10 text-right h-10 text-xs"
+                                                placeholder="رابط المنتج (أو اختر من القائمة)"
+                                                className="bg-black/20 border-white/10 text-right h-10 text-xs hidden" // Hidden for now as user wants selection
                                                 value={notifyLink}
                                                 onChange={(e) => setNotifyLink(e.target.value)}
                                             />
