@@ -30,13 +30,15 @@ export default function AdminChatPage() {
     // Auto-mark messages as read when chat is opened
     useEffect(() => {
         markSectionAsViewed('chat')
-    }, [markSectionAsViewed])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
         if (selectedCustomer) {
             markMessagesRead(selectedCustomer)
         }
-    }, [selectedCustomer, messages, markMessagesRead])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedCustomer]) // Only run when customer selection changes, avoiding message update loop
 
 
     // Group messages into conversations
