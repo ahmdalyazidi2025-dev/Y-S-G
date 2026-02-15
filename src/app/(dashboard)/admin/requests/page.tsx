@@ -49,7 +49,8 @@ export default function AdminRequestsPage() {
             selectedRequest.customerName,
             notifyLink,
             notifyLink ? "عرض المنتج" : undefined,
-            selectedRequest.image // Send request image
+            selectedRequest.image, // Send request image
+            true // isSystemNotification: true (Don't show in chat)
         )
 
         toast.success("تم إرسال الإشعار للعميل")

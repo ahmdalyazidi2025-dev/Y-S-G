@@ -23,7 +23,7 @@ export default function ChatPage() {
     }, [currentCustomerId]) // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const chatMessages = useMemo(() => {
-        return messages.filter(m => m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`)))
+        return messages.filter(m => (m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`))) && !m.isSystemNotification)
     }, [messages, currentCustomerId])
 
     const handleSend = () => {

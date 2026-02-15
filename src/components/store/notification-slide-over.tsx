@@ -20,7 +20,7 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
         // If m.userId is null/empty, it might be a broadcast if logic supports it, 
         // but here we check if it targets the user explicitly or via @mention
         const isForMe = m.userId === currentCustomerId || m.text.includes(`(@${currentCustomerId})`)
-        return isFromAdmin && isForMe
+        return isFromAdmin && isForMe && m.isSystemNotification
     }).sort((a, b) => {
         const timeA = (a.createdAt as any)?.seconds ? (a.createdAt as any).seconds * 1000 : 0
         const timeB = (b.createdAt as any)?.seconds ? (b.createdAt as any).seconds * 1000 : 0
@@ -85,8 +85,8 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
                                     >
                                         <div className="flex gap-3">
                                             <div className={cn(
-                                                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                                                notification.image ? "bg-transparent overflow-hidden" : "bg-primary/10"
+                                                "relative flex-shrink-0 overflow-hidden border border-border/50 shadow-sm",
+                                                notification.image ? "w-16 h-16 rounded-xl" : "w-10 h-10 rounded-full flex items-center justify-center bg-primary/10"
                                             )}>
                                                 {notification.image ? (
                                                     <img src={notification.image} alt="" className="w-full h-full object-cover" />

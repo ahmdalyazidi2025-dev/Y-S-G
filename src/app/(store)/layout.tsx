@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2, Bell } from "lucide-react"
-import React, { useState, useRef } from "react" // Added useRef
+import React, { useState, useRef, useEffect } from "react" // Added useRef
 import { useStore } from "@/context/store-context"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import ScannerModal from "@/components/store/scanner-modal"
@@ -12,6 +12,7 @@ import SmartCameraModal from "@/components/store/smart-camera-modal" // Added im
 import { CartDrawer } from "@/components/store/cart-drawer"
 import RequestModal from "@/components/store/request-modal"
 import NotificationSlideOver from "@/components/store/notification-slide-over"
+import { NotificationHandler } from "@/components/store/notification-handler" // Added import
 import { AiChatModal } from "@/components/store/ai-chat-modal"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
@@ -34,22 +35,24 @@ export default function StoreLayout({
     const { cart, logout, storeSettings, messages, currentUser, guestId, markNotificationsAsRead } = useStore()
 
     // Chat Logic
+    // const searchParams = useSearchParams() // Removed
+    // useEffect moved to NotificationHandler
+
+    // Chat Logic
     const currentCustomerId = currentUser?.id || guestId
     const unreadChatCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin
+        // Logic: Message from Admin to Me OR Broadcast
+        // If m.userId is null/empty, it might be a broadcast if logic supports it, 
+        // but here we check if it targets the user explicitly or via @mention
         const isForMe = m.text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
-        return isFromAdmin && isForMe && !m.read
+        return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin
-        // Notifications are also messages in this system, but maybe we distinguish by type?
-        // Actually, the user treats "Chat" as messages and "Notifications" as system alerts?
-        // The previous context "Notify Customer Feature" sends a message.
-        // So "Notifications" might refer to `SystemNotifications` or separate `notifications` collection?
-        // Let's check `store-context` for `notifications`.
-        // Proceeding with adding the button first.
-        return false // Placeholder
+        const isForMe = m.text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
+        return isFromAdmin && isForMe && !m.read && m.isSystemNotification
     }).length
 
     // --- Smart Camera Logic ---
@@ -348,6 +351,7 @@ export default function StoreLayout({
                 isOpen={isNotifyOpen}
                 onClose={() => setIsNotifyOpen(false)}
             />
+            <NotificationHandler onOpen={() => setIsNotifyOpen(true)} />
         </ProtectedRoute>
 
     )

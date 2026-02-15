@@ -172,6 +172,7 @@ export type Message = {
     actionLink?: string // Optional link
     actionTitle?: string // Optional button text
     image?: string // Added support for images
+    isSystemNotification?: boolean // New: To hide from chat history
 }
 
 export type Conversation = {
@@ -263,7 +264,7 @@ type StoreContextType = {
     deleteStaff: (memberId: string) => void
     broadcastToCategory: (category: string, text: string) => void
     messages: Message[]
-    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string, actionLink?: string, actionTitle?: string, image?: string) => void
+    sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string, actionLink?: string, actionTitle?: string, image?: string, isSystemNotification?: boolean) => void
     broadcastNotification: (text: string) => void
     markNotificationsAsRead: (type: "chat" | "system" | "orders", id?: string) => Promise<void>
     currentUser: User | null
@@ -1178,12 +1179,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string, image?: string) => {
+    const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string, image?: string, isSystemNotification = false) => {
         // Determine the target user. If admin sends, they must target a user (logic handled in UI usually via tagging or implicit context)
         // For general chat, if customer sends, userId is their ID.
-        // If admin sends, we should probably store the target userId. logic here assumes broadcast or context aware? 
-        // Existing logic for admin was: text includes (@id). 
-        // Let's keep it robust:
+        // If admin sends, we should probably store the target userId to avoid reliance on @mentions only.
+
+        const targetUserId = isAdmin ? customerId : (currentUser?.id || customerId)
 
         try {
             await addDoc(collection(db, "messages"), sanitizeData({
@@ -1192,20 +1193,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 text,
                 isAdmin,
                 read: false, // Default unread
-                userId: isAdmin ? null : (currentUser?.id || customerId), // If customer sends, tag it with their ID. If admin sends, UI handles tagging?
+                // Store userId so we can filter messages belonging to this user conversation easily
+                userId: targetUserId,
                 createdAt: Timestamp.now(),
                 actionLink, // Save link
                 actionTitle,
-                image // Save image
+                image, // Save image
+                isSystemNotification // Save flag
             }))
 
             // Send Push if Admin replying to a Customer
             if (isAdmin && customerId && customerId !== "guest") {
                 await sendPushNotification(
                     customerId,
-                    "رسالة جديدة من الدعم الفني",
+                    isSystemNotification ? "تحديث بخصوص طلبك" : "رسالة جديدة من الدعم الفني",
                     text,
-                    "/customer/chat"
+                    isSystemNotification ? "/customer?notifications=open" : "/customer/chat"
                 )
             }
 
