@@ -957,9 +957,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const fetchProducts = useCallback(async (categoryId?: string, isInitial = false) => {
         setLoading(true)
         try {
-            let q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(15))
+            let q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(50))
             if (categoryId && categoryId !== 'all') {
-                q = query(collection(db, "products"), where("category", "==", categoryId), limit(15))
+                // Note: This requires a composite index (category + createdAt)
+                // If it fails, check console for index creation link
+                q = query(collection(db, "products"), where("category", "==", categoryId), orderBy("createdAt", "desc"), limit(50))
             }
 
             const snap = await getDocs(q)
@@ -975,9 +977,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             setProducts(newProducts)
             setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
-            setHasMoreProducts(snap.docs.length === 15)
+            setHasMoreProducts(snap.docs.length === 50)
         } catch (e) {
             console.error("Fetch Products Error", e)
+            toast.error("فشل تحميل المنتجات. تحقق من الاتصال أو الفهارس.")
         } finally {
             setLoading(false)
         }
@@ -990,14 +993,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             collection(db, "products"),
             orderBy("createdAt", "desc"),
             startAfter(lastProductDoc),
-            limit(15)
+            limit(50)
         )
         if (categoryId && categoryId !== 'all') {
             q = query(
                 collection(db, "products"),
                 where("category", "==", categoryId),
+                orderBy("createdAt", "desc"),
                 startAfter(lastProductDoc),
-                limit(15)
+                limit(50)
             )
         }
 
