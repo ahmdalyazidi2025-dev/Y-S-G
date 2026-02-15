@@ -555,16 +555,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 4. Staff (Public/Admin? Usually Admin)
-        const unsubStaff = onSnapshot(collection(db, "staff"), (snap: QuerySnapshot<DocumentData>) => {
-            setStaff(snap.docs.map((doc) => {
-                const data = doc.data()
-                return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
-                } as StaffMember
-            }))
-        })
+        let unsubStaff = () => { }
+        if (currentUser?.role === 'admin' || currentUser?.role === 'staff') {
+            unsubStaff = onSnapshot(collection(db, "staff"), (snap: QuerySnapshot<DocumentData>) => {
+                setStaff(snap.docs.map((doc) => {
+                    const data = doc.data()
+                    return {
+                        ...data,
+                        id: doc.id,
+                        createdAt: data.createdAt ? toDate(data.createdAt) : undefined
+                    } as StaffMember
+                }))
+            })
+        }
 
         // 5. Orders (Role Based Limit)
         let ordersQuery;
