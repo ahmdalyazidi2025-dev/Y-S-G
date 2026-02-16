@@ -7,7 +7,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, CheckCircle, Circle, PlusSquare, Lock } from "lucide-react"
+import { Trash2, CheckCircle, Circle, PlusSquare, Lock, ShieldCheck } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
 
 export function StaffManager() {
@@ -174,6 +174,26 @@ export function StaffManager() {
                             </p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {currentUser?.id === member.id && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 rounded-lg text-amber-500 hover:bg-amber-500/10 text-xs gap-1"
+                                    onClick={() => {
+                                        if (confirm("هل تريد إصلاح صلاحياتك وتعيين نفسك كمسؤول شامل (Super Admin)؟")) {
+                                            updateStaff({
+                                                ...member,
+                                                role: "admin",
+                                                permissions: ALL_PERMS.map(p => p.id)
+                                            })
+                                            setTimeout(() => window.location.reload(), 1000)
+                                        }
+                                    }}
+                                >
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span className="hidden sm:inline">إصلاح صلاحياتي</span>
+                                </Button>
+                            )}
                             <Button
                                 size="sm"
                                 variant="ghost"
