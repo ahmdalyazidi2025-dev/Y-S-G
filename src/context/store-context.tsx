@@ -2318,6 +2318,19 @@ const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']
     }
 }
 
+const addExistingUserAsStaff = async (user: User) => {
+    try {
+        await setDoc(doc(db, "users", user.id), { role: "staff" }, { merge: true })
+        await setDoc(doc(db, "staff", user.id), {
+            uid: user.id, email: user.email, displayName: user.displayName, role: "staff", createdAt: new Date()
+        })
+        toast.success("تم إضافة المستخدم للكادر الإداري")
+    } catch (error) {
+        console.error("Error adding staff:", error)
+        toast.error("حدث خطأ أثناء الإضافة")
+    }
+}
+
 const value = {
     products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
     addToCart, removeFromCart, clearCart, createOrder, scanProduct,
