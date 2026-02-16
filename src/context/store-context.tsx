@@ -258,6 +258,7 @@ type StoreContextType = {
     customers: Customer[]
     banners: Banner[]
     productRequests: ProductRequest[]
+    cart: CartItem[]
     addToCart: (product: Product, unit?: string, price?: number) => void
     removeFromCart: (productId: string, unit: string) => void
     clearCart: (asDraft?: boolean) => void
@@ -2458,7 +2459,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
 
     const value = {
-        products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
+        products: visibleProducts, orders, categories: visibleCategories, customers, banners, productRequests,
+        cart,
         addToCart, removeFromCart, clearCart, createOrder, scanProduct,
         addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
         addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
