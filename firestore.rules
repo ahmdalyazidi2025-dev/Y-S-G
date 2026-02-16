@@ -28,6 +28,7 @@ service cloud.firestore {
     match /categories/{docId} { allow read: if true; allow write: if isAdmin(); }
     match /banners/{docId} { allow read: if true; allow write: if isAdmin(); }
     match /storeSettings/{docId} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{docId} { allow read: if true; allow write: if isAdmin(); }
 
     // Orders: Owner or Admin
     match /orders/{orderId} {
