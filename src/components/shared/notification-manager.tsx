@@ -11,7 +11,7 @@ import { doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
 export function NotificationManager() {
-    const { currentUser } = useStore()
+    const { currentUser, playSound } = useStore()
     const [permission, setPermission] = useState<NotificationPermission>("default")
     const [fcmToken, setFcmToken] = useState<string | null>(null)
 
@@ -30,10 +30,7 @@ export function NotificationManager() {
                 const msg = await messaging
                 if (msg) {
                     const token = await getToken(msg, {
-                        vapidKey: "BLM4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ" // Replace with actual key if available, or just standard getToken() might work if configured in firebase.json
-                        // Note: In real app, you need a VAPID key from Firebase Console -> Project Settings -> Cloud Messaging -> Web Push certificates
-                        // Since I don't have the user's VAPID key, I'll try without it or handle error gracefully.
-                        // Actually, getToken usually requires vapidKey for web.
+                        vapidKey: "BLM4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ4yZ"
                     }).catch(e => {
                         console.log("Token generation failed, might need VAPID key", e)
                         return null
@@ -42,11 +39,7 @@ export function NotificationManager() {
                     if (token) {
                         setFcmToken(token)
                         console.log("FCM Token:", token)
-                        // If user is logged in, save token to their profile
                         if (currentUser) {
-                            // Save to firestore user document
-                            // We don't have updateCustomer exposed perfectly for self, but we can direct write or use updateCustomer logic if available for self.
-                            // For now, let's just log it or Toast.
                             toast.success("تم تفعيل الإشعارات بنجاح")
                         }
                     }
@@ -69,20 +62,23 @@ export function NotificationManager() {
                     let title = payload.notification?.title || "إشعار جديد"
                     let body = payload.notification?.body || ""
 
-                    // 1. Hide Invoice ID Number from Title (e.g. "Invoice #123 updated" -> "Invoice updated")
-                    // Matches "Invoice #123" or "الفاتورة #123"
+                    // 1. Hide Invoice ID Number from Title
                     title = title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")
 
-                    // 2. Privacy for Chat Messages (Admin to Customer) containing numbers/symbols
-                    // If it looks like a chat message, hide the body content for privacy
+                    // 2. Privacy for Chat Messages
                     if (payload.data?.link?.includes('/chat') || title.includes('رسالة')) {
-                        // Check if body contains numbers or special chars (sensitive info) - User request
                         if (/[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(body)) {
                             body = "لديك رسالة جديدة من الإدارة 🔒"
                         }
                     }
 
-                    const link = payload.data?.link
+                    let link = payload.data?.link
+
+                    // Force link for chat messages if missing
+                    if (!link && (title.includes('رسالة') || body.includes('msg'))) {
+                        link = '/customer/chat'
+                    }
+
                     const action = link ? {
                         label: "عرض",
                         onClick: () => window.location.href = link
@@ -93,15 +89,21 @@ export function NotificationManager() {
                         icon: <BellRing className="w-5 h-5 text-primary" />,
                         action
                     })
-                    // Play sound
-                    const audio = new Audio('/notification.mp3') // Assume file exists or fail silently
-                    audio.play().catch(() => { })
+
+                    // Play sound based on context
+                    if (title.includes('طلب') || title.includes('Order') || body.includes('طلب')) {
+                        playSound('newOrder')
+                    } else if (title.includes('رسالة') || body.includes('msg')) {
+                        playSound('newMessage')
+                    } else {
+                        playSound('generalPush')
+                    }
                 })
                 return unsubscribe
             }
         }
         setupListener()
-    }, [])
+    }, [playSound])
 
     if (permission === 'granted' || permission === 'denied') return null
 

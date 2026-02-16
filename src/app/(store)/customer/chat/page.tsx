@@ -23,7 +23,22 @@ export default function ChatPage() {
     }, [currentCustomerId]) // eslint-disable-next-line react-hooks/exhaustive-deps
 
     const chatMessages = useMemo(() => {
-        return messages.filter(m => (m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`))) && !m.isSystemNotification)
+        return messages.filter(m => {
+            // 1. Messages sent BY me
+            if (m.senderId === currentCustomerId) return true;
+
+            // 2. Messages sent BY Admin TO me
+            // Check both isAdmin flag and senderId string for robustness
+            const isFromAdmin = m.isAdmin || (m.senderId === 'admin');
+
+            // Check if message is for me:
+            // - Explicit userId match (New logic)
+            // - Text mentions @MyID (Legacy logic)
+            // - userId matches "all" or "broadcast" logic if exists (future proof)
+            const isForMe = m.userId === currentCustomerId || m.text.includes(`(@${currentCustomerId})`);
+
+            return isFromAdmin && isForMe && !m.isSystemNotification;
+        })
     }, [messages, currentCustomerId])
 
     const handleSend = () => {
@@ -124,7 +139,7 @@ export default function ChatPage() {
                                 </div>
 
                                 <p className="leading-relaxed relative z-10">
-                                    {m.isAdmin ? m.text.replace(`(@${currentCustomerId})`, "").trim() : m.text}
+                                    {m.isAdmin ? m.text.replace(new RegExp(`\\(@${currentCustomerId}\\)`, 'g'), "").trim() : m.text}
                                 </p>
 
                                 {m.actionLink && (

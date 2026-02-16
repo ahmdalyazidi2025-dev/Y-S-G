@@ -324,6 +324,7 @@ type StoreContextType = {
     requestPasswordReset: (phone: string) => Promise<{ success: boolean; message: string }>
     adminPreferences: AdminPreferences
     markSectionAsViewed: (section: keyof AdminPreferences['lastViewed']) => Promise<void>
+    addExistingUserAsStaff: (user: User) => Promise<void>
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -572,15 +573,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 5. Orders (Role Based Limit)
         let ordersQuery;
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            // Customer/Guest: Only my orders
-            ordersQuery = query(collection(db, "orders"), where("customerId", "==", currentUser.id), orderBy("createdAt", "desc"))
+            // Customer/Guest: Only my orders (Removed orderBy to avoid index issues)
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", currentUser.id))
         } else {
             // Admin: Last 300 orders (Optimized from 500/All)
             ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(300))
         }
 
         const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
-            setOrders(snap.docs.map((doc) => {
+            const loadedOrders = snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Order, "id">
                 return {
                     ...data,
@@ -588,7 +589,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     createdAt: toDate(data.createdAt),
                     statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
                 } as Order
-            }))
+            })
+
+            // Sort in memory for customers to avoid index issues
+            if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
+                loadedOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            }
+
+            setOrders(loadedOrders)
         })
 
         // 6. Banners (Public)
@@ -625,7 +633,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         let messagesQuery;
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
             // Customer/Guest: Only my thread
-            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id), orderBy("createdAt", "asc"))
+            // REMOVED orderBy to avoid "Missing Index" issues. Sorting in memory.
+            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id))
         } else {
             // Admin: Recent active messages (Limit 50 for speed)
             messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50))
@@ -648,6 +657,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 const data = doc.data() as Omit<Message, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
             })
+
+            // Sort in memory (Newest Last for Chat)
+            msgs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+
             setMessages(msgs)
 
             // Update Cache for Customers
@@ -655,6 +668,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 // cache essential data
                 localStorage.setItem(`chat_cache_${currentUser.id}`, JSON.stringify(msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() }))))
             }
+        }, (error) => {
+            console.error("Messages Listener Error:", error)
+            // toast.error("Error fetching messages: " + error.message)
         })
 
         // 9. Settings (Public)
@@ -847,7 +863,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             customerPhone: finalCustomerPhone,
             customerLocation: finalCustomerLocation,
             customerId: auth.currentUser.uid, // Use SDK ID for consistency
-            items: cart,
+            items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price, // Required by Product type
+                pricePiece: item.pricePiece, // Required by Product type
+                unit: item.unit, // Required by Product type
+                selectedPrice: item.selectedPrice,
+                selectedUnit: item.selectedUnit,
+                quantity: item.quantity,
+                // Optimization: Only keep the main image to save space
+                image: item.image || (item.images && item.images.length > 0 ? item.images[0] : ""),
+                barcode: item.barcode || "",
+                category: item.category || "",
+                // Optional but useful? No, strip them. Just satisfy type.
+                costPrice: item.costPrice || 0, // Keep if needed for profit calculation later? Maybe store 0 if optimizing.
+            })),
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
             createdAt: Timestamp.now(),
@@ -1637,652 +1668,695 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
         }
     }
+}
 
-    const updateStaff = async (member: StaffMember) => {
-        try {
-            // 1. Check Phone Uniqueness (if changed)
-            const oldMember = staff.find(s => s.id === member.id);
-            if (oldMember && oldMember.phone !== member.phone) {
-                const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
-                const phoneQueryCustomers = query(collection(db, "customers"), where("phone", "==", member.phone));
-                const [staffSnap, customerSnap] = await Promise.all([getDocs(phoneQueryStaff), getDocs(phoneQueryCustomers)]);
+const addExistingUserAsStaff = async (user: User) => {
+    try {
+        if (!user.id) throw new Error("بيانات المستخدم غير مكتملة");
 
-                // Exclude self from staff check (though ID check handles it usually, query returns docs)
-                const duplicateStaff = staffSnap.docs.some(d => d.id !== member.id);
-                if (duplicateStaff || !customerSnap.empty) {
-                    toast.error("رقم الهاتف مستخدم بالفعل");
-                    return;
-                }
-            }
-
-            const { id, ...data } = member
-
-            // 2. Update Staff Document
-            await updateDoc(doc(db, "staff", id), sanitizeData(data))
-
-            // 3. Update User Document
-            await setDoc(doc(db, "users", id), {
-                id,
-                name: member.name,
-                role: member.role,
-                email: member.email,
-                phone: member.phone, // Sync phone
-                permissions: member.role === "admin"
-                    ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
-                    : member.permissions
-            }, { merge: true })
-
-            toast.success("تم تحديث بيانات الموظف والصلاحيات")
-        } catch (e) {
-            console.error("Update Staff Error:", e);
-            toast.error("فشل تحديث البيانات");
-        }
-    }
-
-    const deleteStaff = async (memberId: string) => {
-        try {
-            const member = staff.find(s => s.id === memberId)
-
-            await deleteDoc(doc(db, "staff", memberId))
-            await deleteDoc(doc(db, "users", memberId)) // Revoke login access
-
-            if (member?.username) {
-                await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))
-            } else if (member?.email && member.email.includes("@ysg.local")) {
-                // Try to guess username from legacy email if not present
-                const username = member.email.split("@")[0]
-                await deleteDoc(doc(db, "usernames", username))
-            }
-
-            toast.error("تم حذف الموظف وسحب الصلاحيات نهائياً")
-        } catch (e) {
-            console.error("Delete Staff Error:", e)
-            toast.error("فشل حذف الموظف")
-        }
-    }
-
-    const broadcastToCategory = async (category: string, text: string) => {
-        toast.info(`بث إلى فئة ${category}: ${text}`, { icon: "📢" })
-        hapticFeedback('success')
-    }
-
-    const addCoupon = async (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => {
-        await addDoc(collection(db, "coupons"), sanitizeData({
-            ...coupon,
-            usedCount: 0,
+        // 1. Create Staff Document using EXISTING ID
+        await setDoc(doc(db, "staff", user.id), sanitizeData({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            phone: user.phone || "",
+            role: "admin",
+            permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
             createdAt: Timestamp.now()
-        }))
-        toast.success("تم إنشاء الكوبون بنجاح 🎫", {
-            description: "سيتمكن العملاء من استخدام هذا الكود في سلة المشتريات للحصول على الخصم."
-        })
+        }), { merge: true })
+
+        // 2. Update User Document to be Admin
+        await setDoc(doc(db, "users", user.id), {
+            role: "admin",
+            permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
+            updatedAt: Timestamp.now()
+        }, { merge: true })
+
+        // 3. Update Username Mapping (Just in case)
+        if (user.username) {
+            await setDoc(doc(db, "usernames", user.username.toLowerCase()), {
+                email: user.email,
+                uid: user.id
+            }, { merge: true });
+        }
+
+        toast.success("تم ترقية حسابك لمدير بنجاح! 🚀 يرجى تحديث الصفحة لرؤية التغييرات.")
+        // trigger sound
+        playSound('statusUpdate')
+
+    } catch (error: any) {
+        console.error("Promote Error:", error);
+        toast.error("فشل الترقية: " + error.message)
     }
+}
 
-    const deleteCoupon = async (id: string) => {
-        await deleteDoc(doc(db, "coupons", id))
-        toast.error("تم حذف الكوبون")
-    }
+const updateStaff = async (member: StaffMember) => {
+    try {
+        // 1. Check Phone Uniqueness (if changed)
+        const oldMember = staff.find(s => s.id === member.id);
+        if (oldMember && oldMember.phone !== member.phone) {
+            const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
+            const phoneQueryCustomers = query(collection(db, "customers"), where("phone", "==", member.phone));
+            const [staffSnap, customerSnap] = await Promise.all([getDocs(phoneQueryStaff), getDocs(phoneQueryCustomers)]);
 
-    const applyCoupon = async (code: string) => {
-        const coupon = coupons.find(c => c.code === code && c.active)
-
-        if (!coupon) {
-            toast.error("كود الخصم غير صحيح")
-            return null
-        }
-
-        // 1. Expiry Check
-        if (coupon.expiryDate && coupon.expiryDate.toDate() < new Date()) {
-            toast.error("الخصم منتهي الصلاحية")
-            return null
-        }
-
-        // 2. Start Date Check
-        if (coupon.startDate && coupon.startDate.toDate() > new Date()) {
-            toast.error("الخصم لم يبدأ بعد")
-            return null
-        }
-
-        // 3. Global Usage Limit Check
-        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-            toast.error("تم تجاوز الحد الأقصى لاستخدام هذا الكوبون")
-            return null
-        }
-
-        // 4. Minimum Order Value Check
-        const currentTotal = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
-        if (coupon.minOrderValue && currentTotal < coupon.minOrderValue) {
-            toast.error(`يجب أن تكون قيمة الطلب أعلى من ${coupon.minOrderValue} ريال لاستخدام هذا الكوبون`)
-            return null
-        }
-
-        // 5. Customer Category Check
-        // Placeholder for category logic if we implement strict customer types
-        if (currentUser && coupon.allowedCustomerTypes !== "all" && coupon.allowedCustomerTypes) {
-            // Logic to be refined when Customer Types are strictly defined
-        }
-
-        // 6. Per Customer Usage Limit Check
-        if (currentUser && coupon.customerUsageLimit) {
-            const userUsageCount = orders.filter(o =>
-                o.customerId === currentUser.id &&
-                (o as any).couponCode === code
-            ).length
-
-            if (userUsageCount >= coupon.customerUsageLimit) {
-                toast.error(`لقد استخدمت هذا الكوبون الحد الأقصى المسموح به (${coupon.customerUsageLimit} مرات)`)
-                return null
+            // Exclude self from staff check (though ID check handles it usually, query returns docs)
+            const duplicateStaff = staffSnap.docs.some(d => d.id !== member.id);
+            if (duplicateStaff || !customerSnap.empty) {
+                toast.error("رقم الهاتف مستخدم بالفعل");
+                return;
             }
         }
 
-        return coupon
+        const { id, ...data } = member
+
+        // 2. Update Staff Document
+        await updateDoc(doc(db, "staff", id), sanitizeData(data))
+
+        // 3. Update User Document
+        await setDoc(doc(db, "users", id), {
+            id,
+            name: member.name,
+            role: member.role,
+            email: member.email,
+            phone: member.phone, // Sync phone
+            permissions: member.role === "admin"
+                ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
+                : member.permissions
+        }, { merge: true })
+
+        toast.success("تم تحديث بيانات الموظف والصلاحيات")
+    } catch (e) {
+        console.error("Update Staff Error:", e);
+        toast.error("فشل تحديث البيانات");
+    }
+}
+
+const deleteStaff = async (memberId: string) => {
+    try {
+        const member = staff.find(s => s.id === memberId)
+
+        await deleteDoc(doc(db, "staff", memberId))
+        await deleteDoc(doc(db, "users", memberId)) // Revoke login access
+
+        if (member?.username) {
+            await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))
+        } else if (member?.email && member.email.includes("@ysg.local")) {
+            // Try to guess username from legacy email if not present
+            const username = member.email.split("@")[0]
+            await deleteDoc(doc(db, "usernames", username))
+        }
+
+        toast.error("تم حذف الموظف وسحب الصلاحيات نهائياً")
+    } catch (e) {
+        console.error("Delete Staff Error:", e)
+        toast.error("فشل حذف الموظف")
+    }
+}
+
+const broadcastToCategory = async (category: string, text: string) => {
+    toast.info(`بث إلى فئة ${category}: ${text}`, { icon: "📢" })
+    hapticFeedback('success')
+}
+
+const addCoupon = async (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => {
+    await addDoc(collection(db, "coupons"), sanitizeData({
+        ...coupon,
+        usedCount: 0,
+        createdAt: Timestamp.now()
+    }))
+    toast.success("تم إنشاء الكوبون بنجاح 🎫", {
+        description: "سيتمكن العملاء من استخدام هذا الكود في سلة المشتريات للحصول على الخصم."
+    })
+}
+
+const deleteCoupon = async (id: string) => {
+    await deleteDoc(doc(db, "coupons", id))
+    toast.error("تم حذف الكوبون")
+}
+
+const applyCoupon = async (code: string) => {
+    const coupon = coupons.find(c => c.code === code && c.active)
+
+    if (!coupon) {
+        toast.error("كود الخصم غير صحيح")
+        return null
     }
 
-    const sendNotification = async (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
-        await addDoc(collection(db, "notifications"), sanitizeData({
-            ...notification,
+    // 1. Expiry Check
+    if (coupon.expiryDate && coupon.expiryDate.toDate() < new Date()) {
+        toast.error("الخصم منتهي الصلاحية")
+        return null
+    }
+
+    // 2. Start Date Check
+    if (coupon.startDate && coupon.startDate.toDate() > new Date()) {
+        toast.error("الخصم لم يبدأ بعد")
+        return null
+    }
+
+    // 3. Global Usage Limit Check
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+        toast.error("تم تجاوز الحد الأقصى لاستخدام هذا الكوبون")
+        return null
+    }
+
+    // 4. Minimum Order Value Check
+    const currentTotal = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
+    if (coupon.minOrderValue && currentTotal < coupon.minOrderValue) {
+        toast.error(`يجب أن تكون قيمة الطلب أعلى من ${coupon.minOrderValue} ريال لاستخدام هذا الكوبون`)
+        return null
+    }
+
+    // 5. Customer Category Check
+    // Placeholder for category logic if we implement strict customer types
+    if (currentUser && coupon.allowedCustomerTypes !== "all" && coupon.allowedCustomerTypes) {
+        // Logic to be refined when Customer Types are strictly defined
+    }
+
+    // 6. Per Customer Usage Limit Check
+    if (currentUser && coupon.customerUsageLimit) {
+        const userUsageCount = orders.filter(o =>
+            o.customerId === currentUser.id &&
+            (o as any).couponCode === code
+        ).length
+
+        if (userUsageCount >= coupon.customerUsageLimit) {
+            toast.error(`لقد استخدمت هذا الكوبون الحد الأقصى المسموح به (${coupon.customerUsageLimit} مرات)`)
+            return null
+        }
+    }
+
+    return coupon
+}
+
+const sendNotification = async (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
+    await addDoc(collection(db, "notifications"), sanitizeData({
+        ...notification,
+        read: false,
+        createdAt: Timestamp.now()
+    }))
+
+    // Trigger Push Notification with deep link to notifications sheet
+    sendPushNotification(
+        notification.userId,
+        notification.title,
+        notification.body,
+        notification.link || "/customer?notifications=open"
+    )
+
+    // Local feedback for admin
+    playSound('newMessage')
+    hapticFeedback('medium')
+
+    toast.success("تم إرسال الإشعار")
+}
+
+const markNotificationRead = async (id: string) => {
+    await updateDoc(doc(db, "notifications", id), { read: true })
+}
+
+const markAllNotificationsRead = async () => {
+    if (!currentUser) return
+
+    // Filter unread notifications for current user
+    const unread = notifications.filter(n => n.userId === currentUser.id && !n.read)
+    if (unread.length === 0) return
+
+    // Create batch update
+    const batchPromises = unread.map(n =>
+        updateDoc(doc(db, "notifications", n.id), { read: true })
+    )
+
+    try {
+        await Promise.all(batchPromises)
+    } catch (error) {
+        console.error("Failed to mark all read:", error)
+    }
+}
+
+const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link: string = "/customer?notifications=open") => {
+    let targetCustomers: Customer[] = []
+
+    const getStats = (customerId: string) => {
+        const customerOrders = orders.filter(o => o.customerId === customerId)
+        const totalSpent = customerOrders.reduce((sum, o) => sum + o.total, 0)
+        const lastOrderDate = customerOrders.length > 0
+            ? new Date(Math.max(...customerOrders.map(o => new Date(o.createdAt).getTime())))
+            : null
+        return { totalSpent, lastOrderDate, orderCount: customerOrders.length }
+    }
+
+    switch (segment) {
+        case "all":
+            targetCustomers = customers
+            break
+        case "vip":
+            targetCustomers = customers.filter(c => getStats(c.id).totalSpent > 5000)
+            break
+        case "active":
+            targetCustomers = customers.filter(c => {
+                const lastOrder = getStats(c.id).lastOrderDate
+                if (!lastOrder) return false
+                const days = (new Date().getTime() - lastOrder.getTime()) / (1000 * 3600 * 24)
+                return days <= 30
+            })
+            break
+        case "semi_active":
+            targetCustomers = customers.filter(c => {
+                const lastOrder = getStats(c.id).lastOrderDate
+                if (!lastOrder) return false
+                const days = (new Date().getTime() - lastOrder.getTime()) / (1000 * 3600 * 24)
+                return days > 30 && days <= 90
+            })
+            break
+        case "interactive":
+            targetCustomers = customers.filter(c => {
+                if (!c.lastActive) return false
+                const stats = getStats(c.id)
+                const daysSinceActive = (new Date().getTime() - new Date(c.lastActive).getTime()) / (1000 * 3600 * 24)
+                return daysSinceActive <= 7 && stats.orderCount === 0
+            })
+            break
+        case "dormant":
+            targetCustomers = customers.filter(c => {
+                if (!c.lastActive) return true
+                const daysSinceActive = (new Date().getTime() - new Date(c.lastActive).getTime()) / (1000 * 3600 * 24)
+                return daysSinceActive > 90
+            })
+            break
+    }
+
+    if (targetCustomers.length === 0) {
+        toast.error("لا يوجد عملاء في هذه الفئة")
+        return
+    }
+
+    const batchPromises = targetCustomers.map(customer =>
+        addDoc(collection(db, "notifications"), sanitizeData({
+            userId: customer.id,
+            title,
+            body,
+            type: "info",
             read: false,
+            link, // Add link
             createdAt: Timestamp.now()
         }))
+    )
 
-        // Trigger Push Notification with deep link to notifications sheet
-        sendPushNotification(
-            notification.userId,
-            notification.title,
-            notification.body,
-            notification.link || "/customer?notifications=open"
-        )
+    try {
+        await Promise.all(batchPromises)
+
+        // Trigger Batch Push Notification for the whole segment
+        const targetIds = targetCustomers.map(c => c.id)
+        sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", body, "/customer/chat")
 
         // Local feedback for admin
         playSound('newMessage')
-        hapticFeedback('medium')
+        hapticFeedback('success')
 
-        toast.success("تم إرسال الإشعار")
+        toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
+    } catch (error) {
+        console.error(error)
+        toast.error("حدث خطأ أثناء الإرسال")
+    }
+}
+
+const sendGlobalMessage = async (text: string, actionLink?: string, actionTitle?: string) => {
+    if (customers.length === 0) {
+        toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
+        return
     }
 
-    const markNotificationRead = async (id: string) => {
-        await updateDoc(doc(db, "notifications", id), { read: true })
+    const batchPromises = customers.map(customer =>
+        addDoc(collection(db, "messages"), sanitizeData({
+            senderId: "admin",
+            senderName: "الإدارة",
+            text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
+            isAdmin: true,
+            actionLink, // Save link
+            actionTitle,
+            createdAt: Timestamp.now()
+        }))
+    )
+
+    try {
+        await Promise.all(batchPromises)
+
+        // Trigger Global Push Notification for Chat
+        const targetIds = customers.map(c => c.id)
+        sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
+
+        // Play Sound
+        playSound('newMessage')
+
+        toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
+    } catch (error) {
+        console.error(error)
+        toast.error("حدث خطأ أثناء الإرسال")
     }
+}
 
-    const markAllNotificationsRead = async () => {
-        if (!currentUser) return
+// markMessagesRead function moved to be declared once
 
-        // Filter unread notifications for current user
-        const unread = notifications.filter(n => n.userId === currentUser.id && !n.read)
-        if (unread.length === 0) return
+const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
+    if (!currentUser) return;
 
-        // Create batch update
-        const batchPromises = unread.map(n =>
-            updateDoc(doc(db, "notifications", n.id), { read: true })
-        )
+    try {
+        if (type === "chat") {
+            // If ID is provided, it's a specific conversation (Customer ID)
+            // If no ID, maybe mark all? But usually we mark by conversation.
+            // For Admin: Mark all messages from this customer as read
+            // For Customer: Mark all messages from Admin as read
 
-        try {
-            await Promise.all(batchPromises)
-        } catch (error) {
-            console.error("Failed to mark all read:", error)
-        }
-    }
+            // Logic: Query messages where read=false AND (if admin: sender!=admin / if customer: sender=admin)
+            // This might be heavy to do "all".
+            // Let's assume we pass the CustomerID (id) when admin opens a chat.
+            // If customer is logged in, they mark their own received messages as read.
 
-    const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link: string = "/customer?notifications=open") => {
-        let targetCustomers: Customer[] = []
-
-        const getStats = (customerId: string) => {
-            const customerOrders = orders.filter(o => o.customerId === customerId)
-            const totalSpent = customerOrders.reduce((sum, o) => sum + o.total, 0)
-            const lastOrderDate = customerOrders.length > 0
-                ? new Date(Math.max(...customerOrders.map(o => new Date(o.createdAt).getTime())))
-                : null
-            return { totalSpent, lastOrderDate, orderCount: customerOrders.length }
-        }
-
-        switch (segment) {
-            case "all":
-                targetCustomers = customers
-                break
-            case "vip":
-                targetCustomers = customers.filter(c => getStats(c.id).totalSpent > 5000)
-                break
-            case "active":
-                targetCustomers = customers.filter(c => {
-                    const lastOrder = getStats(c.id).lastOrderDate
-                    if (!lastOrder) return false
-                    const days = (new Date().getTime() - lastOrder.getTime()) / (1000 * 3600 * 24)
-                    return days <= 30
-                })
-                break
-            case "semi_active":
-                targetCustomers = customers.filter(c => {
-                    const lastOrder = getStats(c.id).lastOrderDate
-                    if (!lastOrder) return false
-                    const days = (new Date().getTime() - lastOrder.getTime()) / (1000 * 3600 * 24)
-                    return days > 30 && days <= 90
-                })
-                break
-            case "interactive":
-                targetCustomers = customers.filter(c => {
-                    if (!c.lastActive) return false
-                    const stats = getStats(c.id)
-                    const daysSinceActive = (new Date().getTime() - new Date(c.lastActive).getTime()) / (1000 * 3600 * 24)
-                    return daysSinceActive <= 7 && stats.orderCount === 0
-                })
-                break
-            case "dormant":
-                targetCustomers = customers.filter(c => {
-                    if (!c.lastActive) return true
-                    const daysSinceActive = (new Date().getTime() - new Date(c.lastActive).getTime()) / (1000 * 3600 * 24)
-                    return daysSinceActive > 90
-                })
-                break
-        }
-
-        if (targetCustomers.length === 0) {
-            toast.error("لا يوجد عملاء في هذه الفئة")
-            return
-        }
-
-        const batchPromises = targetCustomers.map(customer =>
-            addDoc(collection(db, "notifications"), sanitizeData({
-                userId: customer.id,
-                title,
-                body,
-                type: "info",
-                read: false,
-                link, // Add link
-                createdAt: Timestamp.now()
-            }))
-        )
-
-        try {
-            await Promise.all(batchPromises)
-
-            // Trigger Batch Push Notification for the whole segment
-            const targetIds = targetCustomers.map(c => c.id)
-            sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", body, "/customer/chat")
-
-            // Local feedback for admin
-            playSound('newMessage')
-            hapticFeedback('success')
-
-            toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
-        } catch (error) {
-            console.error(error)
-            toast.error("حدث خطأ أثناء الإرسال")
-        }
-    }
-
-    const sendGlobalMessage = async (text: string, actionLink?: string, actionTitle?: string) => {
-        if (customers.length === 0) {
-            toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
-            return
-        }
-
-        const batchPromises = customers.map(customer =>
-            addDoc(collection(db, "messages"), sanitizeData({
-                senderId: "admin",
-                senderName: "الإدارة",
-                text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
-                isAdmin: true,
-                actionLink, // Save link
-                actionTitle,
-                createdAt: Timestamp.now()
-            }))
-        )
-
-        try {
-            await Promise.all(batchPromises)
-
-            // Trigger Global Push Notification for Chat
-            const targetIds = customers.map(c => c.id)
-            sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
-
-            // Play Sound
-            playSound('newMessage')
-
-            toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
-        } catch (error) {
-            console.error(error)
-            toast.error("حدث خطأ أثناء الإرسال")
-        }
-    }
-
-    // markMessagesRead function moved to be declared once
-
-    const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
-        if (!currentUser) return;
-
-        try {
-            if (type === "chat") {
-                // If ID is provided, it's a specific conversation (Customer ID)
-                // If no ID, maybe mark all? But usually we mark by conversation.
-                // For Admin: Mark all messages from this customer as read
-                // For Customer: Mark all messages from Admin as read
-
-                // Logic: Query messages where read=false AND (if admin: sender!=admin / if customer: sender=admin)
-                // This might be heavy to do "all".
-                // Let's assume we pass the CustomerID (id) when admin opens a chat.
-                // If customer is logged in, they mark their own received messages as read.
-
-                const q = query(
-                    collection(db, "messages"),
-                    where("read", "==", false),
-                    // Optimization: We should filter by conversation ID or User ID if possible
-                    // But our message structure is flat. 
-                    // Let's just find messages that are targeted to us or sent by the other party.
-                )
-
-                // This is a bit complex for a quick fix without a proper conversation sub-collection.
-                // A better approach for the badge:
-                // The badge counts `!m.read && !m.isAdmin` (for admin).
-                // So we need to update those messages to `read: true`.
-
-                // Let's implement a simple batch update for visual feedback
-                const querySnapshot = await getDocs(q);
-                // Filter in memory for safety if query is too broad
-                const updates: Promise<void>[] = []
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data() as Message
-
-                    // Admin clearing a specific customer's chat
-                    if (currentUser.role === 'admin' && id && data.senderId === id && !data.isAdmin) {
-                        updates.push(updateDoc(doc.ref, { read: true }))
-                    }
-
-                    // Customer clearing their own chat (messages from admin)
-                    if (currentUser.role === 'customer' && data.userId === currentUser.id && data.isAdmin) {
-                        updates.push(updateDoc(doc.ref, { read: true }))
-                    }
-                })
-                await Promise.all(updates)
-            }
-
-            if (type === "system") {
-                // Mark all notifications for this user as read
-                // Implementation depends on where 'notifications' are stored. 
-                // We have a `Notification` type but no `notifications` collection usage shown clearly in snippet.
-                // Assuming we have a `notifications` collection or field.
-                // For now, let's leave this placeholder or implement if we find the collection.
-            }
-
-        } catch (error) {
-            console.error("Error marking as read:", error)
-        }
-    }
-
-    const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
-        try {
-            let finalEmail = username.trim()
-
-            // Fix for Customer Login: valid customer emails are username@ysg.local
-            // If the user enters just "username", we append the domain.
-            if (role === "customer" && !finalEmail.includes("@")) {
-                const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
-                finalEmail = `${normalizedUsername}@ysg.local`
-            }
-
-            // Fix for Admin/Staff Login using Username
-            if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
-                // Check 'usernames' collection for mapping
-                try {
-                    const normalizedUsername = finalEmail.toLowerCase().trim()
-                    const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
-
-                    if (usernameDoc.exists()) {
-                        finalEmail = usernameDoc.data().email
-                        console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
-                    } else {
-                        // Fallback to legacy behavior just in case
-                        finalEmail = `${normalizedUsername}@ysg.local`
-                    }
-                } catch (err) {
-                    console.error("Username lookup failed:", err)
-                    // Fallback
-                    finalEmail = `${finalEmail}@ysg.local`
-                }
-            }
-
-            console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
-
-            await signInWithEmailAndPassword(auth, finalEmail, password)
-            // The onAuthStateChanged hook will handle setting the currentUser
-            return true
-        } catch (error: any) {
-            console.error("Login Error:", error)
-
-            // Nice error handling
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                toast.error("بيانات الدخول غير صحيحة")
-            } else if (error.code === 'auth/invalid-email') {
-                toast.error("صيغة اسم المستخدم غير صحيحة")
-            } else {
-                toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
-            }
-
-            return false
-        }
-    }
-
-    const updateAdminCredentials = async (username: string, password: string) => {
-        try {
-            await setDoc(doc(db, "settings", "security"), { username, password }, { merge: true })
-            toast.success("تم تحديث بيانات دخول الإدارة بنجاح")
-        } catch (e) {
-            console.error(e)
-            toast.error("فشل تحديث البيانات")
-            throw e
-        }
-    }
-
-    const logout = async () => {
-        await firebaseSignOut(auth)
-        setCurrentUser(null)
-        localStorage.removeItem("ysg_user")
-        router.push("/login")
-    }
-
-    const cleanupOrphanedUsers = async () => {
-        try {
-            console.log("Starting cleanup...")
-            // 1. Get all users from 'users' collection
-            const usersSnap = await getDocs(collection(db, "users"))
-            const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
-
-            // 2. Get valid IDs from customers and staff
-            // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
-            const customersSnap = await getDocs(collection(db, "customers"))
-            const staffSnap = await getDocs(collection(db, "staff"))
-
-            const validIds = new Set([
-                ...customersSnap.docs.map(d => d.id),
-                ...staffSnap.docs.map(d => d.id)
-            ])
-
-            // 3. Find orphans (User exists but no Customer/Staff profile)
-            // EXCEPTION: Hardcoded admins or special accounts if any? 
-            // Our logic: Every user MUST be either in 'customers' or 'staff'.
-            // Special case: The "admin" user might be created manually? 
-            // Usually we add them to staff. If not, we might delete them!
-            // Let's protect specific IDs or emails if needed. 
-            // For now, assume all legitimate users are in staff/customers.
-
-            const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
-
-            const orphans = allUsers.filter(u =>
-                !validIds.has(u.id) &&
-                !safeEmails.includes(u.email || "") &&
-                u.id !== currentUser?.id // Don't delete self just in case
+            const q = query(
+                collection(db, "messages"),
+                where("read", "==", false),
+                // Optimization: We should filter by conversation ID or User ID if possible
+                // But our message structure is flat. 
+                // Let's just find messages that are targeted to us or sent by the other party.
             )
 
-            console.log(`Found ${orphans.length} orphans`, orphans)
+            // This is a bit complex for a quick fix without a proper conversation sub-collection.
+            // A better approach for the badge:
+            // The badge counts `!m.read && !m.isAdmin` (for admin).
+            // So we need to update those messages to `read: true`.
 
-            if (orphans.length === 0) {
-                toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
-                return 0
-            }
+            // Let's implement a simple batch update for visual feedback
+            const querySnapshot = await getDocs(q);
+            // Filter in memory for safety if query is too broad
+            const updates: Promise<void>[] = []
+            querySnapshot.forEach((doc) => {
+                const data = doc.data() as Message
 
-            // 4. Delete them
-            const deletePromises = orphans.map(async (u) => {
-                // Delete User Doc
-                await deleteDoc(doc(db, "users", u.id))
-                // Delete Username Mapping
-                if (u.username) {
-                    await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
+                // Admin clearing a specific customer's chat
+                if (currentUser.role === 'admin' && id && data.senderId === id && !data.isAdmin) {
+                    updates.push(updateDoc(doc.ref, { read: true }))
+                }
+
+                // Customer clearing their own chat (messages from admin)
+                if (currentUser.role === 'customer' && data.userId === currentUser.id && data.isAdmin) {
+                    updates.push(updateDoc(doc.ref, { read: true }))
                 }
             })
-
-            await Promise.all(deletePromises)
-
-            const count = orphans.length
-            toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
-            return count
-
-        } catch (error) {
-            console.error("Cleanup Error:", error)
-            toast.error("حدث خطأ أثناء التنظيف")
-            throw error
+            await Promise.all(updates)
         }
+
+        if (type === "system") {
+            // Mark all notifications for this user as read
+            // Implementation depends on where 'notifications' are stored. 
+            // We have a `Notification` type but no `notifications` collection usage shown clearly in snippet.
+            // Assuming we have a `notifications` collection or field.
+            // For now, let's leave this placeholder or implement if we find the collection.
+        }
+
+    } catch (error) {
+        console.error("Error marking as read:", error)
     }
+}
 
-    // --- Password Recovery Requests (Phone Based) ---
-    const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
+const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
+    try {
+        let finalEmail = username.trim()
 
-    useEffect(() => {
-        if (!currentUser || currentUser.role === "customer") return
-
-        const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
-
-            // Check for added documents to play sound
-            const hasAdded = snapshot.docChanges().some(change => change.type === "added")
-            // Avoid sound on initial load (simple heuristic: if we have 0 requests locally and we get some, it might be initial load. 
-            // Better: only play if !fromCache or using docChanges logic which works fine.
-            // On initial load, all docs are 'added'.
-            // Current best practice: Don't beep on hydration.
-            // But checking 'snapshot.metadata.fromCache' helps.
-
-            // If we want to only beep for NEW requests coming in Live:
-            if (!snapshot.metadata.fromCache && hasAdded) {
-                // Optimization: Only beep if this is not the very first visual render set?
-                // docChanges with !fromCache usually works for live updates.
-                playSound('passwordRequest')
-            }
-
-            setPasswordRequests(reqs)
-        })
-        return () => unsubscribe()
-    }, [currentUser, playSound])
-
-    const requestPasswordResetPhone = async (phone: string) => {
-        try {
-            // Use Server Action to bypass client-side permission rules
-            const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
-            const result = await requestPasswordResetAction(phone)
-
-            if (!result.success) {
-                const msg = result.error || "حدث خطأ، حاول مرة أخرى"
-                toast.error(msg)
-                return { success: false, message: msg }
-            }
-
-            const msg = "تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً"
-            toast.success(msg)
-            return { success: true, message: msg }
-        } catch (error) {
-            console.error("Password Request Error:", error)
-            toast.error("حدث خطأ، حاول مرة أخرى")
-            return { success: false, message: "حدث خطأ غير متوقع" }
+        // Fix for Customer Login: valid customer emails are username@ysg.local
+        // If the user enters just "username", we append the domain.
+        if (role === "customer" && !finalEmail.includes("@")) {
+            const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
+            finalEmail = `${normalizedUsername}@ysg.local`
         }
-    }
 
-    const resolvePasswordRequest = async (id: string) => {
-        try {
-            await deleteDoc(doc(db, "password_requests", id))
-            toast.success("تم إغلاق الطلب")
-        } catch (error) {
-            console.error("Resolve Error:", error)
-        }
-    }
+        // Fix for Admin/Staff Login using Username
+        if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
+            // Check 'usernames' collection for mapping
+            try {
+                const normalizedUsername = finalEmail.toLowerCase().trim()
+                const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
 
-    // Filter categories based on visibility
-    const visibleCategories = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return allCategories
-        }
-        return allCategories.filter(c => !c.isHidden)
-    }, [allCategories, currentUser])
-
-    // Filter products based on category visibility
-    const visibleProducts = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return products
-        }
-        return products.filter(p => {
-            // Find the category for this product
-            const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
-            return category ? !category.isHidden : true
-        })
-    }, [products, allCategories, currentUser])
-
-    const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
-        try {
-            const now = new Date()
-            const newPrefs = {
-                ...adminPreferences,
-                lastViewed: {
-                    ...adminPreferences.lastViewed,
-                    [section]: now
+                if (usernameDoc.exists()) {
+                    finalEmail = usernameDoc.data().email
+                    console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
+                } else {
+                    // Fallback to legacy behavior just in case
+                    finalEmail = `${normalizedUsername}@ysg.local`
                 }
+            } catch (err) {
+                console.error("Username lookup failed:", err)
+                // Fallback
+                finalEmail = `${finalEmail}@ysg.local`
             }
-            setAdminPreferences(newPrefs) // Optimistic update
-
-            await setDoc(doc(db, "settings", "admin_preferences"), {
-                lastViewed: {
-                    ...newPrefs.lastViewed,
-                    [section]: Timestamp.fromDate(now)
-                }
-            }, { merge: true })
-        } catch (error) {
-            console.error("Error marking section as viewed:", error)
         }
-    }
 
-    const value = {
-        products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
-        addToCart, removeFromCart, clearCart, createOrder, scanProduct,
-        addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
-        addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
-        addBanner, deleteBanner, toggleBanner, addProductRequest,
-        updateProductRequestStatus,
-        deleteProductRequest,
-        messages, sendMessage,
-        broadcastNotification,
-        markNotificationsAsRead,
-        currentUser,
-        login, logout,
-        updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
-        staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
-        coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
-        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
-        markMessagesRead,
-        playSound,
-        joinRequests,
-        addJoinRequest,
-        deleteJoinRequest,
-        cleanupOrphanedUsers,
-        passwordRequests,
-        resolvePasswordRequest,
-        requestPasswordReset: requestPasswordResetPhone,
-        adminPreferences,
-        markSectionAsViewed,
-        fetchProducts,
-        loadMoreProducts,
-        searchProducts,
-        hasMoreProducts
+        console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
+
+        await signInWithEmailAndPassword(auth, finalEmail, password)
+        // The onAuthStateChanged hook will handle setting the currentUser
+        return true
+    } catch (error: any) {
+        console.error("Login Error:", error)
+
+        // Nice error handling
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            toast.error("بيانات الدخول غير صحيحة")
+        } else if (error.code === 'auth/invalid-email') {
+            toast.error("صيغة اسم المستخدم غير صحيحة")
+        } else {
+            toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
+        }
+
+        return false
     }
-    return (
-        <StoreContext.Provider value={value}>
-            {children}
-        </StoreContext.Provider>
-    )
+}
+
+const updateAdminCredentials = async (username: string, password: string) => {
+    try {
+        await setDoc(doc(db, "settings", "security"), { username, password }, { merge: true })
+        toast.success("تم تحديث بيانات دخول الإدارة بنجاح")
+    } catch (e) {
+        console.error(e)
+        toast.error("فشل تحديث البيانات")
+        throw e
+    }
+}
+
+const logout = async () => {
+    await firebaseSignOut(auth)
+    setCurrentUser(null)
+    localStorage.removeItem("ysg_user")
+    router.push("/login")
+}
+
+const cleanupOrphanedUsers = async () => {
+    try {
+        console.log("Starting cleanup...")
+        // 1. Get all users from 'users' collection
+        const usersSnap = await getDocs(collection(db, "users"))
+        const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
+
+        // 2. Get valid IDs from customers and staff
+        // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
+        const customersSnap = await getDocs(collection(db, "customers"))
+        const staffSnap = await getDocs(collection(db, "staff"))
+
+        const validIds = new Set([
+            ...customersSnap.docs.map(d => d.id),
+            ...staffSnap.docs.map(d => d.id)
+        ])
+
+        // 3. Find orphans (User exists but no Customer/Staff profile)
+        // EXCEPTION: Hardcoded admins or special accounts if any? 
+        // Our logic: Every user MUST be either in 'customers' or 'staff'.
+        // Special case: The "admin" user might be created manually? 
+        // Usually we add them to staff. If not, we might delete them!
+        // Let's protect specific IDs or emails if needed. 
+        // For now, assume all legitimate users are in staff/customers.
+
+        const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
+
+        const orphans = allUsers.filter(u =>
+            !validIds.has(u.id) &&
+            !safeEmails.includes(u.email || "") &&
+            u.id !== currentUser?.id // Don't delete self just in case
+        )
+
+        console.log(`Found ${orphans.length} orphans`, orphans)
+
+        if (orphans.length === 0) {
+            toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
+            return 0
+        }
+
+        // 4. Delete them
+        const deletePromises = orphans.map(async (u) => {
+            // Delete User Doc
+            await deleteDoc(doc(db, "users", u.id))
+            // Delete Username Mapping
+            if (u.username) {
+                await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
+            }
+        })
+
+        await Promise.all(deletePromises)
+
+        const count = orphans.length
+        toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
+        return count
+
+    } catch (error) {
+        console.error("Cleanup Error:", error)
+        toast.error("حدث خطأ أثناء التنظيف")
+        throw error
+    }
+}
+
+// --- Password Recovery Requests (Phone Based) ---
+const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
+
+useEffect(() => {
+    if (!currentUser || currentUser.role === "customer") return
+
+    const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
+
+        // Check for added documents to play sound
+        const hasAdded = snapshot.docChanges().some(change => change.type === "added")
+        // Avoid sound on initial load (simple heuristic: if we have 0 requests locally and we get some, it might be initial load. 
+        // Better: only play if !fromCache or using docChanges logic which works fine.
+        // On initial load, all docs are 'added'.
+        // Current best practice: Don't beep on hydration.
+        // But checking 'snapshot.metadata.fromCache' helps.
+
+        // If we want to only beep for NEW requests coming in Live:
+        if (!snapshot.metadata.fromCache && hasAdded) {
+            // Optimization: Only beep if this is not the very first visual render set?
+            // docChanges with !fromCache usually works for live updates.
+            playSound('passwordRequest')
+        }
+
+        setPasswordRequests(reqs)
+    })
+    return () => unsubscribe()
+}, [currentUser, playSound])
+
+const requestPasswordResetPhone = async (phone: string) => {
+    try {
+        // Use Server Action to bypass client-side permission rules
+        const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
+        const result = await requestPasswordResetAction(phone)
+
+        if (!result.success) {
+            const msg = result.error || "حدث خطأ، حاول مرة أخرى"
+            toast.error(msg)
+            return { success: false, message: msg }
+        }
+
+        const msg = "تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً"
+        toast.success(msg)
+        return { success: true, message: msg }
+    } catch (error) {
+        console.error("Password Request Error:", error)
+        toast.error("حدث خطأ، حاول مرة أخرى")
+        return { success: false, message: "حدث خطأ غير متوقع" }
+    }
+}
+
+const resolvePasswordRequest = async (id: string) => {
+    try {
+        await deleteDoc(doc(db, "password_requests", id))
+        toast.success("تم إغلاق الطلب")
+    } catch (error) {
+        console.error("Resolve Error:", error)
+    }
+}
+
+// Filter categories based on visibility
+const visibleCategories = React.useMemo(() => {
+    if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+        return allCategories
+    }
+    return allCategories.filter(c => !c.isHidden)
+}, [allCategories, currentUser])
+
+// Filter products based on category visibility
+const visibleProducts = React.useMemo(() => {
+    if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+        return products
+    }
+    return products.filter(p => {
+        // Find the category for this product
+        const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
+        return category ? !category.isHidden : true
+    })
+}, [products, allCategories, currentUser])
+
+const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
+    try {
+        const now = new Date()
+        const newPrefs = {
+            ...adminPreferences,
+            lastViewed: {
+                ...adminPreferences.lastViewed,
+                [section]: now
+            }
+        }
+        setAdminPreferences(newPrefs) // Optimistic update
+
+        await setDoc(doc(db, "settings", "admin_preferences"), {
+            lastViewed: {
+                ...newPrefs.lastViewed,
+                [section]: Timestamp.fromDate(now)
+            }
+        }, { merge: true })
+    } catch (error) {
+        console.error("Error marking section as viewed:", error)
+    }
+}
+
+const value = {
+    products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
+    addToCart, removeFromCart, clearCart, createOrder, scanProduct,
+    addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
+    addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+    addBanner, deleteBanner, toggleBanner, addProductRequest,
+    updateProductRequestStatus,
+    deleteProductRequest,
+    messages, sendMessage,
+    broadcastNotification,
+    markNotificationsAsRead,
+    currentUser,
+    login, logout,
+    updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
+    staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+    coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
+    updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
+    markMessagesRead,
+    playSound,
+    joinRequests,
+    addJoinRequest,
+    deleteJoinRequest,
+    cleanupOrphanedUsers,
+    passwordRequests,
+    resolvePasswordRequest,
+    requestPasswordReset: requestPasswordResetPhone,
+    adminPreferences,
+    markSectionAsViewed,
+    fetchProducts,
+    loadMoreProducts,
+    searchProducts,
+    hasMoreProducts,
+    addExistingUserAsStaff
+}
+return (
+    <StoreContext.Provider value={value}>
+        {children}
+    </StoreContext.Provider>
+)
 }
 
 // Helper to remove undefined values recursively from objects before sending to Firestore

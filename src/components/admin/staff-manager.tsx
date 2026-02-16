@@ -11,7 +11,7 @@ import { Trash2, CheckCircle, Circle, PlusSquare, Lock, ShieldCheck } from "luci
 import { PasswordInput } from "@/components/ui/password-input"
 
 export function StaffManager() {
-    const { staff, addStaff, deleteStaff, updateStaff, currentUser, resetPassword } = useStore() // Added resetPassword
+    const { staff, addStaff, deleteStaff, updateStaff, currentUser, resetPassword, addExistingUserAsStaff } = useStore() // Added addExistingUserAsStaff
     const [isAdding, setIsAdding] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [newStaff, setNewStaff] = useState({
@@ -104,18 +104,10 @@ export function StaffManager() {
             return;
         }
 
-        const staffData = {
-            id: currentUser.id, // Important to reuse ID
-            name: currentUser.name,
-            email: currentUser.username.includes('@') ? currentUser.username : `${currentUser.username}@ysg.local`,
-            phone: currentUser.phone,
-            role: "admin" as const,
-            permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
-            password: "existing_user" // Dummy password as auth is already handled
-        }
 
-        // We use addStaff but simpler
-        addStaff(staffData)
+
+        // Use specialized function to avoid creating new auth user
+        addExistingUserAsStaff(currentUser)
         toast.success("تم إضافة حسابك الحالي كمسؤول")
         hapticFeedback('success')
     }
