@@ -634,7 +634,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 7. Requests (Admin Only usually, or public?)
         let requestsQuery;
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser.id), orderBy("createdAt", "desc"))
+            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser!.id), orderBy("createdAt", "desc"))
         } else {
             requestsQuery = query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50))
         }
@@ -660,18 +660,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
             // Customer/Guest: Only my thread
             // REMOVED orderBy to avoid "Missing Index" issues. Sorting in memory.
-            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser.id))
+            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser!.id))
         } else {
             // Admin: Recent active messages (Limit 50 for speed)
             messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50))
         }
 
         // Optimistic Load from Cache for Customers
-        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            const cachedParams = localStorage.getItem(`chat_cache_${currentUser.id}`)
+        if ((currentUser?.role === 'customer' || currentUser?.role === 'guest') && currentUser?.id) {
+            const cachedParams = localStorage.getItem(`chat_cache_${currentUser!.id}`)
             if (cachedParams) {
                 try {
-                    const parsed = JSON.parse(cachedParams)
+                    const parsed = JSON.parse(cachedParams!)
                     // Transform dates back to objects if needed, or just use as is for initial render
                     // For simplicity, we just rely on the fast listener below, but this is where hydration would happen
                 } catch (e) { }
@@ -692,7 +692,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             // Update Cache for Customers
             if (currentUser?.role === 'customer' && msgs.length > 0) {
                 // cache essential data
-                localStorage.setItem(`chat_cache_${currentUser.id}`, JSON.stringify(msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() }))))
+                localStorage.setItem(`chat_cache_${currentUser!.id}`, JSON.stringify(msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() }))))
             }
         }, (error) => {
             console.error("Messages Listener Error:", error)
@@ -719,10 +719,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 11. Notifications (User Specific)
         let notifQuery;
         if (currentUser) {
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser.id), orderBy("createdAt", "desc"), limit(50))
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser!.id), orderBy("createdAt", "desc"), limit(50))
         } else {
             // Guest or Global
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", guestId || 'guest'), orderBy("createdAt", "desc"), limit(20))
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", (guestId || 'guest')), orderBy("createdAt", "desc"), limit(20))
         }
 
         const unsubNotifications = onSnapshot(notifQuery, (snap: QuerySnapshot<DocumentData>) => {
