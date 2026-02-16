@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useStore, StoreSettings } from "@/context/store-context"
 import { CouponManager } from "@/components/admin/coupon-manager"
 import { toast } from "sonner"
@@ -34,6 +34,14 @@ const PROTECTED_PIN = "4422707";
 type SoundEvent = 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest';
 
 export default function AdminSettingsPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+            <AdminSettingsContent />
+        </Suspense>
+    )
+}
+
+function AdminSettingsContent() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
@@ -1083,12 +1091,15 @@ function SecuritySettingsPorted() {
 
 function GeminiKeyInput() {
     const { storeSettings, updateStoreSettings } = useStore()
-    const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>(() => {
+    const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>([])
+
+    // Sync keys with storeSettings when it changes
+    useEffect(() => {
         const existing = storeSettings.aiApiKeys || []
         const filled = [...existing]
         while (filled.length < 3) filled.push({ key: "", status: "unchecked" })
-        return filled.slice(0, 3)
-    })
+        setKeys(filled.slice(0, 3))
+    }, [storeSettings.aiApiKeys])
 
     const saveToStore = (newKeys: typeof keys) => {
         updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
