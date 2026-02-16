@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import { QRCodeSVG } from 'qrcode.react'
 import { Order } from '@/context/store-context'
-import { generateInvoicePDF } from '@/lib/pdf-generator'
+import { generateOrderPDF } from '@/lib/pdf-utils'
 import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -18,7 +18,7 @@ interface PremiumInvoiceProps {
 export function PremiumInvoice({ order, id = "invoice-preview", isPreview = false, onClose }: PremiumInvoiceProps) {
     const containerClasses = isPreview
         ? "fixed inset-0 z-[1001] bg-[#080b12] text-white font-sans overflow-y-auto flex justify-center p-8 animate-in fade-in"
-        : "w-[800px] p-12 bg-[#080b12] text-white font-sans relative overflow-hidden absolute top-0 left-0 opacity-0 pointer-events-none -z-50"
+        : "w-[800px] p-12 bg-[#080b12] text-white font-sans relative overflow-hidden absolute top-0 left-0 opacity-[0.01] pointer-events-none -z-10"
 
     const wrapperClasses = isPreview ? "w-[800px] p-12 bg-[#080b12] relative shadow-2xl min-h-full" : ""
 
@@ -27,7 +27,7 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
             {isPreview && (
                 <div className="fixed top-6 right-6 z-[1002] flex gap-2 no-print">
                     <Button
-                        onClick={() => generateInvoicePDF(id, `Invoice-${order.id}`)}
+                        onClick={() => generateOrderPDF(id, order.id)}
                         className="bg-primary text-white shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
                     >
                         <Download className="w-4 h-4 ml-2" />
@@ -44,7 +44,7 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
             {!isPreview && (
                 <div className="fixed bottom-8 left-8 z-[1000] flex gap-2 no-print">
                     <Button
-                        onClick={() => generateInvoicePDF(id, `Invoice-${order.id}`)}
+                        onClick={() => generateOrderPDF(id, order.id)}
                         className="bg-primary text-white shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
                     >
                         <Download className="w-4 h-4 ml-2" />

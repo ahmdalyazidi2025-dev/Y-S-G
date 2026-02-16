@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown, Eye } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
 import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
@@ -26,9 +26,35 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart, addToCart } = useStore()
+    const { orders, restoreDraftToCart, addToCart, loadMoreOrders, hasMoreOrders } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const observerTarget = useRef<HTMLDivElement>(null)
+
+    const handleLoadMore = useCallback(async () => {
+        if (loadingMore || !hasMoreOrders) return
+        setLoadingMore(true)
+        await loadMoreOrders()
+        setLoadingMore(false)
+    }, [loadingMore, hasMoreOrders, loadMoreOrders])
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMoreOrders && !loadingMore) {
+                    handleLoadMore()
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current)
+        }
+
+        return () => observer.disconnect()
+    }, [handleLoadMore, hasMoreOrders, loadingMore])
 
     // ... existing ...
 
@@ -93,67 +119,99 @@ export default function InvoicesPage() {
             <div className="space-y-4">
                 {filteredOrders.length === 0 ? (
                     <div className="py-20 text-center text-slate-500">
-                        <p>لا توجد طلبات في هذا القسم</p>
+                        <p className="mb-4">لا توجد طلبات في هذا القسم</p>
+                        {hasMoreOrders && (
+                            <div ref={observerTarget} className="py-4 w-full flex flex-col items-center gap-2">
+                                {loadingMore ? (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                                            <div className="w-2 h-2 rounded-full bg-primary animate-bounce" />
+                                        </div>
+                                        <p className="text-xs text-slate-500">جاري البحث في الطلبات الأقدم...</p>
+                                    </>
+                                ) : (
+                                    <div className="h-4" />
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    filteredOrders.map((order) => {
-                        const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
-                        return (
-                            <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer border-gradient">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
+                    <>
+                        {filteredOrders.map((order) => {
+                            const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
+                            return (
+                                <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer border-gradient">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
 
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">رقم الطلب</p>
-                                        <p className="font-black text-foreground flex items-center gap-2 text-lg">
-                                            <FileText className="w-4 h-4 text-primary" />
-                                            #{order.id}
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">رقم الطلب</p>
+                                            <p className="font-black text-foreground flex items-center gap-2 text-lg">
+                                                <FileText className="w-4 h-4 text-primary" />
+                                                #{order.id}
+                                            </p>
+                                        </div>
+                                        <div className={cn("flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold", status.bg, status.color)}>
+                                            <status.icon className="w-3 h-3" />
+                                            {status.label}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between py-3 border-y border-border/50">
+                                        <div className="flex -space-x-2 rtl:space-x-reverse">
+                                            {order.items.slice(0, 3).map((item, idx) => (
+                                                <div key={idx} className="w-8 h-8 rounded-full bg-background border-2 border-border flex items-center justify-center text-[10px] overflow-hidden relative shadow-sm">
+                                                    {item.image ? (
+                                                        <Image
+                                                            src={item.image}
+                                                            alt=""
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                        />
+                                                    ) : item.name.charAt(0)}
+                                                </div>
+                                            ))}
+                                            {order.items.length > 3 && (
+                                                <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#1c2a36] flex items-center justify-center text-[10px] text-slate-400">
+                                                    +{order.items.length - 3}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-muted-foreground font-bold mb-0.5">التاريخ</p>
+                                            <p className="text-xs font-bold text-foreground">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-2">
+                                        <p className="text-xl font-black text-foreground">
+                                            {order.total.toFixed(2)} <span className="text-xs font-bold text-muted-foreground">ر.س</span>
                                         </p>
-                                    </div>
-                                    <div className={cn("flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold", status.bg, status.color)}>
-                                        <status.icon className="w-3 h-3" />
-                                        {status.label}
+                                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-xs font-black">
+                                            فتح الفاتورة
+                                        </Button>
                                     </div>
                                 </div>
+                            )
+                        })}
 
-                                <div className="flex items-center justify-between py-3 border-y border-border/50">
-                                    <div className="flex -space-x-2 rtl:space-x-reverse">
-                                        {order.items.slice(0, 3).map((item, idx) => (
-                                            <div key={idx} className="w-8 h-8 rounded-full bg-background border-2 border-border flex items-center justify-center text-[10px] overflow-hidden relative shadow-sm">
-                                                {item.image ? (
-                                                    <Image
-                                                        src={item.image}
-                                                        alt=""
-                                                        fill
-                                                        className="object-cover"
-                                                        unoptimized
-                                                    />
-                                                ) : item.name.charAt(0)}
-                                            </div>
-                                        ))}
-                                        {order.items.length > 3 && (
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#1c2a36] flex items-center justify-center text-[10px] text-slate-400">
-                                                +{order.items.length - 3}
-                                            </div>
-                                        )}
+                        {hasMoreOrders && (
+                            <div ref={observerTarget} className="py-8 w-full flex justify-center">
+                                {loadingMore ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce" />
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-muted-foreground font-bold mb-0.5">التاريخ</p>
-                                        <p className="text-xs font-bold text-foreground">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between pt-2">
-                                    <p className="text-xl font-black text-foreground">
-                                        {order.total.toFixed(2)} <span className="text-xs font-bold text-muted-foreground">ر.س</span>
-                                    </p>
-                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-xs font-black">
-                                        فتح الفاتورة
-                                    </Button>
-                                </div>
+                                ) : (
+                                    <div className="h-4" />
+                                )}
                             </div>
-                        )
-                    })
+                        )}
+                    </>
                 )}
             </div>
 

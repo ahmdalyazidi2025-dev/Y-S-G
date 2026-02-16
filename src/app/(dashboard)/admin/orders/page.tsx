@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useStore, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, customers, storeSettings } = useStore()
+    const { orders, updateOrderStatus, customers, storeSettings, loadMoreOrders, hasMoreOrders, loading, searchOrders } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
     const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
@@ -36,6 +36,60 @@ export default function AdminOrdersPage() {
     const [selectedCustomer, setSelectedCustomer] = useState("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
+    // Server Search State
+    const [serverSearchResults, setServerSearchResults] = useState<Order[] | null>(null)
+    const [isSearching, setIsSearching] = useState(false)
+
+    // Search Effect
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.length > 0) {
+                setIsSearching(true)
+                try {
+                    // If matches ID format or just search text
+                    const results = await searchOrders(searchQuery)
+                    setServerSearchResults(results)
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    setIsSearching(false)
+                }
+            } else {
+                setServerSearchResults(null)
+            }
+        }, 600)
+        return () => clearTimeout(timer)
+    }, [searchQuery, searchOrders])
+
+    // Infinite Scroll Observer
+    const observerTarget = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                // Only load more if:
+                // 1. Not searching (serverSearchResults is null)
+                // 2. Search query is empty
+                // 3. Has more orders to load
+                // 4. Not currently loading
+                const first = entries[0]
+                if (first.isIntersecting && hasMoreOrders && !loading && !searchQuery) {
+                    loadMoreOrders()
+                }
+            },
+            { threshold: 0.1 } // Trigger when 10% visible
+        )
+
+        const currentTarget = observerTarget.current
+        if (currentTarget) {
+            observer.observe(currentTarget)
+        }
+
+        return () => {
+            if (currentTarget) observer.unobserve(currentTarget)
+        }
+    }, [hasMoreOrders, loading, loadMoreOrders, searchQuery])
 
     // Smart Badge Clearing
     const { markSectionAsViewed } = useStore()
@@ -68,9 +122,16 @@ export default function AdminOrdersPage() {
         hapticFeedback('success')
     }
 
-    const filteredOrders = orders.filter(o => {
+    const allOrders = serverSearchResults || orders // Use server results if active, otherwise loaded buffer
+
+    const filteredOrders = allOrders.filter(o => {
         const date = new Date(o.createdAt)
         const now = new Date()
+
+        // If searching, we might want to skip date/status filters? 
+        // User asked for "Instant access". Usually search overrides filters.
+        // BUT strict filtering is good too. Let's keep filters but relaxing them if needed?
+        // Let's keep filters active on search results for power users.
 
         let matchesDate = true
         if (dateRange === "today") matchesDate = isToday(date)
@@ -93,14 +154,22 @@ export default function AdminOrdersPage() {
         const matchesStatus = filter === "all" || o.status === filter
         const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
 
-        const matchesName = o.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+        // Client side name filter (redundant if server search is used, but keeps consistency)
+        // If server search is active, we assume it returned relevant matches. 
+        // But if filtering by other criteria, we still check name?
+        // Actually, if serverSearch returns [Order 1, Order 2], we should show them.
+
+        const matchesName = true // Handled by server search OR infinite scroll + client filter (if we want client filter on loaded items)
+        // Wait, if !serverSearchResults, we still need client side name filter for the loaded 20 items.
+        // So:
+        const matchesNameClient = !serverSearchResults ? o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
         let matchesCustomer = true
         if (selectedCustomer !== "all") {
             matchesCustomer = o.customerId === selectedCustomer || o.customerName === selectedCustomer
         }
 
-        return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName && matchesCustomer
+        return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesNameClient && matchesCustomer
     })
 
     const regions = Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
@@ -273,6 +342,26 @@ export default function AdminOrdersPage() {
                             </div>
                         )
                     })
+                )}
+
+
+                {/* Sentinel for Infinite Scroll */}
+                {!searchQuery && hasMoreOrders && (
+                    <div ref={observerTarget} className="flex justify-center p-6">
+                        {loading && (
+                            <div className="flex items-center gap-2 text-muted-foreground bg-muted/20 px-4 py-2 rounded-full text-xs animate-pulse">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>جاري تحميل المزيد من الطلبات...</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Search Loading Indicator */}
+                {isSearching && (
+                    <div className="flex justify-center p-10">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
                 )}
             </div>
 

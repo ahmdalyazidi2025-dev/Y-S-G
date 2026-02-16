@@ -251,8 +251,9 @@ export type JoinRequest = {
 
 type StoreContextType = {
     products: Product[]
-    cart: CartItem[]
     orders: Order[]
+    loadMoreOrders: () => Promise<void>
+    hasMoreOrders: boolean
     categories: Category[]
     customers: Customer[]
     banners: Banner[]
@@ -265,6 +266,7 @@ type StoreContextType = {
     fetchProducts: (categoryId?: string, isInitial?: boolean) => Promise<void>
     loadMoreProducts: (categoryId?: string) => Promise<void>
     searchProducts: (queryTerm: string) => Promise<Product[]>
+    searchOrders: (term: string) => Promise<Order[]>
     hasMoreProducts: boolean
     addProduct: (product: Omit<Product, "id">) => void
     updateProduct: (id: string, data: Partial<Product>) => void
@@ -381,6 +383,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [guestId, setGuestId] = useState("")
     const [lastProductDoc, setLastProductDoc] = useState<DocumentData | null>(null)
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
+    const [lastOrderDoc, setLastOrderDoc] = useState<DocumentData | null>(null)
+    const [hasMoreOrders, setHasMoreOrders] = useState(true)
     const router = useRouter()
 
     useEffect(() => {
@@ -505,7 +509,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
                 statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
                 generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
+                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
             }
             const source = (storeSettings as any).sounds?.[event] || defaultSounds[event]
             if (source) {
@@ -570,41 +574,62 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             })
         }
 
-        // 5. Orders (Role Based Limit)
-        let ordersQuery;
-        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            // Customer/Guest: Only my orders (Removed orderBy to avoid index issues)
-            ordersQuery = query(collection(db, "orders"), where("customerId", "==", currentUser.id))
-        } else {
-            // Admin: Last 300 orders (Optimized from 500/All)
-            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(300))
-        }
-
-        const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
-            const loadedOrders = snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Order, "id">
-                return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: toDate(data.createdAt),
-                    statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
-                } as Order
-            })
-
-            // Sort in memory for customers to avoid index issues
-            if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-                loadedOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-            }
-
-            setOrders(loadedOrders)
-        })
-
         // 6. Banners (Public)
         const unsubBanners = onSnapshot(collection(db, "banners"), (snap: QuerySnapshot<DocumentData>) => {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
 
-        // 7. Requests (Admin Only usually, or public?)
+        // 5. Orders (Request with Pagination Limit)
+        const fetchInitialOrders = async () => {
+            if (!currentUser) return;
+
+            let q;
+            if (currentUser.role === 'customer' || currentUser.role === 'guest') {
+                try {
+                    q = query(
+                        collection(db, "orders"),
+                        where("customerId", "==", currentUser.id),
+                        orderBy("createdAt", "desc"),
+                        limit(5)
+                    )
+                } catch (e) {
+                    q = query(collection(db, "orders"), where("customerId", "==", currentUser.id), limit(5))
+                }
+            } else {
+                // Admin: Last 20 orders
+                q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(20))
+            }
+
+            const unsub = onSnapshot(q, (snap: QuerySnapshot<DocumentData>) => {
+                const loadedOrders = snap.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id,
+                    createdAt: toDate(doc.data().createdAt),
+                    statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                })) as Order[]
+
+                setOrders(loadedOrders)
+                setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
+                setHasMoreOrders(snap.docs.length === (currentUser.role === 'admin' ? 20 : 5))
+            }, (error) => {
+                console.error("Order Listener Error:", error)
+                if (error.code === 'failed-precondition') {
+                    toast.error("النظام يحتاج إلى فهرس قاعدة بيانات للترتيب. راجع المسؤول.")
+                    // Emergency Fallback
+                    getDocs(query(collection(db, "orders"), where("customerId", "==", currentUser!.id), limit(10))).then(snap => {
+                        const loaded = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) })) as Order[]
+                        loaded.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                        setOrders(loaded)
+                    })
+                }
+            })
+
+            return unsub;
+        }
+
+        const unsubOrdersPromise = fetchInitialOrders();
+        return () => { unsubOrdersPromise.then(unsub => unsub && unsub()) }
+
         // 7. Requests (Admin Only usually, or public?)
         let requestsQuery;
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
@@ -708,7 +733,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             unsubCategories(); unsubCustomers(); unsubStaff();
-            unsubOrders(); unsubBanners(); unsubRequests();
+            unsubOrdersPromise.then(unsub => unsub && unsub()); unsubBanners(); unsubRequests();
             unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
         }
     }, [toDate, authInitialized, currentUser, guestId]) // Added currentUser dependence to trigger re-subscription on login/logout
@@ -1058,7 +1083,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         setProducts(prev => [...prev, ...newProducts])
         setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
-        setHasMoreProducts(snap.docs.length === 20)
+        setHasMoreProducts(snap.docs.length === 50)
     }, [lastProductDoc, hasMoreProducts, toDate])
 
     const searchProducts = async (term: string) => {
@@ -1586,6 +1611,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const broadcastNotification = (text: string) => {
         toast.info(text, { duration: 5000, icon: "🔔" })
+        hapticFeedback('success')
     }
 
     // Helper: Reset Password
@@ -1710,6 +1736,117 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.error("فشل الترقية: " + error.message)
         }
     }
+
+    const loadMoreOrders = async () => {
+        if (!lastOrderDoc || !hasMoreOrders || !currentUser) return
+
+        try {
+            let q;
+            if (currentUser.role === 'customer') {
+                q = query(
+                    collection(db, "orders"),
+                    where("customerId", "==", currentUser.id),
+                    orderBy("createdAt", "desc"),
+                    startAfter(lastOrderDoc),
+                    limit(5)
+                )
+            } else {
+                q = query(
+                    collection(db, "orders"),
+                    orderBy("createdAt", "desc"),
+                    startAfter(lastOrderDoc),
+                    limit(20)
+                )
+            }
+
+            const snap = await getDocs(q)
+            const newOrders = snap.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: toDate(doc.data().createdAt),
+                statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
+            })) as Order[]
+
+            setOrders(prev => [...prev, ...newOrders])
+            setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
+            setHasMoreOrders(snap.docs.length === (currentUser.role === 'admin' ? 20 : 5))
+
+            if (newOrders.length > 0) {
+                toast.success("تم تحميل المزيد من الطلبات")
+            }
+        } catch (error) {
+            console.error("Load More Orders Error:", error)
+            toast.error("فشل تحميل المزيد")
+        }
+    }
+
+    const searchOrders = async (term: string) => {
+        if (!term) return []
+        setLoading(true)
+        try {
+            // Priority 1: Search by ID (Exact Match)
+            const idQuery = query(collection(db, "orders"), where("id", "==", term))
+            const idSnap = await getDocs(idQuery)
+
+            if (!idSnap.empty) {
+                return idSnap.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id,
+                    createdAt: toDate(doc.data().createdAt),
+                    statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                })) as Order[]
+            }
+
+            // Priority 2: Try fetching by Doc ID (if term is a valid doc ID)
+            try {
+                const docRef = doc(db, "orders", term)
+                const docSnap = await getDoc(docRef)
+                if (docSnap.exists()) {
+                    return [{
+                        ...docSnap.data(),
+                        id: docSnap.id,
+                        createdAt: toDate(docSnap.data().createdAt),
+                        statusHistory: (docSnap.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                    } as Order]
+                }
+            } catch (e) {
+                // Ignore invalid doc ID format errors
+            }
+
+            // Priority 3: Search by Customer Name (Prefix)
+            // This requires a composite index or single index on customerName.
+            try {
+                const nameQuery = query(
+                    collection(db, "orders"),
+                    orderBy("customerName"),
+                    startAt(term),
+                    endAt(term + '\uf8ff'),
+                    limit(20)
+                )
+                const nameSnap = await getDocs(nameQuery)
+                if (!nameSnap.empty) {
+                    return nameSnap.docs.map(doc => ({
+                        ...doc.data(),
+                        id: doc.id,
+                        createdAt: toDate(doc.data().createdAt),
+                        statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                    })) as Order[]
+                }
+            } catch (e) {
+                // console.warn("Name search failed (likely missing index)")
+            }
+
+            return []
+
+        } catch (error) {
+            console.error("Search Orders Error:", error)
+            toast.error("حدث خطأ أثناء البحث")
+            return []
+        } finally {
+            setLoading(false)
+        }
+    }
+
 
     const updateStaff = async (member: StaffMember) => {
         try {
@@ -2326,7 +2463,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
         addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
         addBanner, deleteBanner, toggleBanner, addProductRequest,
-        updateProductRequestStatus,
+        updateProductRequestStatus, loadMoreOrders, hasMoreOrders,
         deleteProductRequest,
         messages, sendMessage,
         broadcastNotification,
@@ -2351,6 +2488,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         fetchProducts,
         loadMoreProducts,
         searchProducts,
+        searchOrders,
         hasMoreProducts,
         addExistingUserAsStaff
     }

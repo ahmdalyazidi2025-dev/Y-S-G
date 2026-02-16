@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy, Folder, Loader2 } from "lucide-react"
 import Link from "next/link"
@@ -55,6 +55,30 @@ export default function ProductsPage() {
         }, 600)
         return () => clearTimeout(timer)
     }, [searchQuery, searchProducts])
+
+    // Infinite Scroll Observer
+    const observerTarget = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const first = entries[0]
+                if (first.isIntersecting && hasMoreProducts && !loading && !searchQuery) {
+                    loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)
+                }
+            },
+            { threshold: 0.1 }
+        )
+
+        const currentTarget = observerTarget.current
+        if (currentTarget) {
+            observer.observe(currentTarget)
+        }
+
+        return () => {
+            if (currentTarget) observer.unobserve(currentTarget)
+        }
+    }, [hasMoreProducts, loading, loadMoreProducts, searchQuery, selectedCategory])
 
 
     const filteredProducts = serverSearchResults || products.filter((p: Product) => {
@@ -435,12 +459,15 @@ export default function ProductsPage() {
             )}
 
             {/* Load More Button */}
+            {/* Load More Sentinel */}
             {!searchQuery && hasMoreProducts && filteredProducts.length > 0 && (
-                <div className="flex justify-center pb-20">
-                    <Button variant="outline" onClick={handleLoadMore} disabled={loading} className="min-w-[200px] gap-2">
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                        {loading ? "جاري التحميل..." : "تحميل المزيد"}
-                    </Button>
+                <div ref={observerTarget} className="flex justify-center pb-20 pt-10">
+                    {loading && (
+                        <div className="flex items-center gap-2 text-muted-foreground bg-muted/20 px-4 py-2 rounded-full text-xs animate-pulse">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>جاري تحميل المزيد من المنتجات...</span>
+                        </div>
+                    )}
                 </div>
             )}
 

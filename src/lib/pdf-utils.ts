@@ -1,10 +1,12 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
 
 export const generateOrderPDF = async (orderElementId: string, orderId: string) => {
     const element = document.getElementById(orderElementId);
     if (!element) {
         console.error("PDF Element not found:", orderElementId);
+        toast.error("لم يتم العثور على محتوى الفاتورة");
         return false;
     }
 
@@ -18,7 +20,7 @@ export const generateOrderPDF = async (orderElementId: string, orderId: string) 
             scale: 2,
             useCORS: true,
             backgroundColor: '#080b12',
-            logging: true,
+            logging: false, // Turn off logging in production
             allowTaint: true, // Allow tainting if CORS fails (might help with mixed content)
             onclone: (clonedDoc) => {
                 const el = clonedDoc.getElementById(orderElementId);
@@ -44,9 +46,11 @@ export const generateOrderPDF = async (orderElementId: string, orderId: string) 
 
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, undefined, 'SLOW');
         pdf.save(`YSG-Invoice-${orderId}.pdf`);
+        toast.success("تم تحميل الفاتورة بنجاح PDF");
         return true;
     } catch (error) {
         console.error('PDF Generation Detailed Error:', error);
+        toast.error("فشل إنشاء ملف PDF");
         return false;
     }
 };
