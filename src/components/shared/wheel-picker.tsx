@@ -27,6 +27,12 @@ const months = [
 export function WheelPicker({ date, setDate, label, placeholder = "اختر التاريخ", minYear = 2024, maxYear = 2030 }: WheelPickerProps) {
     const [open, setOpen] = React.useState(false)
     const [tempDate, setTempDate] = React.useState<Date>(date || new Date())
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
 
     // Refs for scrolling
     const yearRef = React.useRef<HTMLDivElement>(null)
@@ -79,6 +85,8 @@ export function WheelPicker({ date, setDate, label, placeholder = "اختر ال
         if (type === 'day') newDate.setDate(value)
         setTempDate(newDate)
     }
+
+    if (!mounted) return null
 
     return (
         <Drawer.Root open={open} onOpenChange={setOpen}>

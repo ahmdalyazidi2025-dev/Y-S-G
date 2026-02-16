@@ -18,8 +18,15 @@ export function CouponManager() {
     const [discount, setDiscount] = useState("10")
     const [usageLimit, setUsageLimit] = useState("100")
     // Replaced expiryDays with explicit dates
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
-    const [endDate, setEndDate] = useState(new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0])
+    // Replaced expiryDays with explicit dates
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
+
+    // Initialize dates on client side to avoid hydration mismatch
+    React.useEffect(() => {
+        setStartDate(new Date().toISOString().split('T')[0])
+        setEndDate(new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0])
+    }, [])
     const [customerLimit, setCustomerLimit] = useState("1") // New: Limit per customer
     const [minOrderValue, setMinOrderValue] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<string>("")
@@ -246,7 +253,7 @@ export function CouponManager() {
                                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-2">
                                         <span>استخدام: {coupon.usedCount}/{coupon.usageLimit}</span>
                                         <span>•</span>
-                                        <span>ينتهي: {coupon.expiryDate ? (coupon.expiryDate as unknown as Timestamp).toDate().toLocaleDateString('ar-SA') : 'غير محدد'}</span>
+                                        <span>ينتهي: {formatDate(coupon.expiryDate)}</span>
                                     </div>
                                 </div>
 
@@ -264,4 +271,22 @@ export function CouponManager() {
             </div>
         </div>
     )
+}
+
+function formatDate(date: any): string {
+    if (!date) return 'غير محدد'
+    try {
+        // Handle Firestore Timestamp
+        if (date.toDate && typeof date.toDate === 'function') {
+            return date.toDate().toLocaleDateString('ar-SA')
+        }
+        // Handle serialized Timestamp { seconds, nanoseconds }
+        if (date.seconds) {
+            return new Date(date.seconds * 1000).toLocaleDateString('ar-SA')
+        }
+        // Handle Date object or string
+        return new Date(date).toLocaleDateString('ar-SA')
+    } catch (e) {
+        return 'تاريخ غير صالح'
+    }
 }
