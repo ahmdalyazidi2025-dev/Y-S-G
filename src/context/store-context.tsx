@@ -2352,6 +2352,7 @@ const value = {
     hasMoreProducts,
     addExistingUserAsStaff
 }
+
 return (
     <StoreContext.Provider value={value}>
         {children}
