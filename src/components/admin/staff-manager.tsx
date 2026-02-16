@@ -73,7 +73,8 @@ export function StaffManager() {
     const startEdit = (member: StaffMember) => {
         // Extract username from email or use stored username
         const isLegacy = member.email.includes("@ysg.local")
-        const username = member.username || (isLegacy ? member.email.split("@")[0] : member.name)
+        const email = member.email || ""
+        const username = member.username || (isLegacy ? (email.includes("@") ? email.split("@")[0] : member.name) : member.name)
 
         setNewStaff({
             name: member.name,
@@ -168,7 +169,9 @@ export function StaffManager() {
                                 {member.role === "admin" && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded">مسؤول</span>}
                                 {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
                             </div>
-                            <p className="text-[10px] text-muted-foreground">{member.username || member.email.split('@')[0]} • {member.phone || "لا يوجد هاتف"} • {member.permissions.length} صلاحيات</p>
+                            <p className="text-[10px] text-muted-foreground">
+                                {member.username || (member.email?.includes('@') ? member.email.split('@')[0] : member.name)} • {member.phone || "لا يوجد هاتف"} • {member.permissions.length} صلاحيات
+                            </p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button

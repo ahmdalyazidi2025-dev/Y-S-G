@@ -45,7 +45,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 setFormData({
                     name: initialCustomer.name,
                     phone: initialCustomer.phone,
-                    username: initialCustomer.username || initialCustomer.email.split('@')[0],
+                    username: initialCustomer.username || (initialCustomer.email?.includes('@') ? initialCustomer.email.split('@')[0] : ''),
                     email: initialCustomer.email.includes('@ysg.local') ? "" : initialCustomer.email, // Only show if real email
                     password: initialCustomer.password || "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
