@@ -1096,7 +1096,7 @@ function GeminiKeyInput() {
 
     // Sync keys with storeSettings when it changes
     useEffect(() => {
-        const existing = storeSettings.aiApiKeys || []
+        const existing = Array.isArray(storeSettings.aiApiKeys) ? storeSettings.aiApiKeys : []
         const filled = [...existing]
         while (filled.length < 3) filled.push({ key: "", status: "unchecked" })
         setKeys(filled.slice(0, 3))

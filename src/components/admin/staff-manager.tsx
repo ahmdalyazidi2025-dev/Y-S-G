@@ -170,7 +170,7 @@ export function StaffManager() {
                                 {currentUser?.id === member.id && <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">أنت</span>}
                             </div>
                             <p className="text-[10px] text-muted-foreground">
-                                {member.username || (member.email?.includes('@') ? member.email.split('@')[0] : member.name)} • {member.phone || "لا يوجد هاتف"} • {member.permissions.length} صلاحيات
+                                {member.username || (member.email?.includes('@') ? member.email.split('@')[0] : member.name)} • {member.phone || "لا يوجد هاتف"} • {member.permissions?.length || 0} صلاحيات
                             </p>
                         </div>
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -293,12 +293,12 @@ export function StaffManager() {
                                     key={perm.id}
                                     type="button"
                                     onClick={() => togglePermission(perm.id)}
-                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${newStaff.permissions.includes(perm.id)
+                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${(newStaff.permissions || []).includes(perm.id)
                                         ? "bg-primary/20 border-primary text-primary"
                                         : "bg-muted border-border text-muted-foreground hover:border-foreground/20"
                                         }`}
                                 >
-                                    {newStaff.permissions.includes(perm.id) ? (
+                                    {(newStaff.permissions || []).includes(perm.id) ? (
                                         <CheckCircle className="w-3 h-3" />
                                     ) : (
                                         <Circle className="w-3 h-3" />
