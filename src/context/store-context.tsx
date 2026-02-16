@@ -586,16 +586,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             let q;
             if (currentUser.role === 'customer' || currentUser.role === 'guest') {
-                try {
-                    q = query(
-                        collection(db, "orders"),
-                        where("customerId", "==", currentUser.id),
-                        orderBy("createdAt", "desc"),
-                        limit(5)
-                    )
-                } catch (e) {
-                    q = query(collection(db, "orders"), where("customerId", "==", currentUser.id), limit(5))
-                }
+                // Remove orderBy to avoid "Missing Index" error. We sort client-side.
+                q = query(
+                    collection(db, "orders"),
+                    where("customerId", "==", currentUser.id),
+                    limit(20)
+                )
             } else {
                 // Admin: Last 20 orders
                 q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(20))
@@ -608,6 +604,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     createdAt: toDate(doc.data().createdAt),
                     statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
                 })) as Order[]
+
+                // Client-side sort to ensure correct order without composite index
+                loadedOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 
                 setOrders(loadedOrders)
                 setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
