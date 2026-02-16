@@ -804,8 +804,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     description: "سيتم تطبيق التغييرات فوراً على تطبيق العملاء."
                 })
             }
-        } catch {
-            toast.error("فشل تحديث الإعدادات")
+        } catch (error) {
+            console.error("Failed to update settings:", error)
+            toast.error("فشل تحديث الإعدادات", {
+                description: (error as Error)?.message || "خطأ غير معروف"
+            })
         }
     }
 
@@ -2503,24 +2506,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 }
 
 // Helper to remove undefined values recursively from objects before sending to Firestore
-// Helper to remove undefined values recursively from objects before sending to Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitizeData(data: any): any {
     if (data === null || data === undefined) return null
     if (data instanceof Date) return data
     if (data instanceof Timestamp) return data // Preserve Firebase Timestamps
     if (Array.isArray(data)) return data.map(item => sanitizeData(item))
+
     if (typeof data === 'object') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result: any = {}
-        for (const key in data) {
+        const result: Record<string, any> = {}
+        Object.keys(data).forEach(key => {
             const value = data[key]
             if (value !== undefined) {
                 result[key] = sanitizeData(value)
             }
-            // Skip undefined keys entirely instead of forcing null, 
-            // causing less "dirty" data in Firestore
-        }
+        })
         return result
     }
     return data
