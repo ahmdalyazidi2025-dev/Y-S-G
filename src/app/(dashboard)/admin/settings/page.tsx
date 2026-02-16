@@ -14,7 +14,7 @@ import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
 import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord, exportStaffToWord } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
-import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
+// import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -72,11 +72,11 @@ function AdminSettingsContent() {
         </div>
     }
 
-    useEffect(() => {
-        getRegisteredTokensCount().then(res => {
-            if (res.success) setTotalDevices(res.count)
-        })
-    }, [])
+    // useEffect(() => {
+    //     getRegisteredTokensCount().then(res => {
+    //         if (res.success) setTotalDevices(res.count)
+    //     })
+    // }, [])
 
     const searchParams = useSearchParams()
 
@@ -118,29 +118,30 @@ function AdminSettingsContent() {
             return
         }
 
-        toast.promise(
-            sendPushNotification(
-                currentUser.id,
-                "تجربة الإشعارات 🔔",
-                "نظام الإشعارات يعمل بنجاح! شكلك ومضمونك 10/10 ✨",
-                "/admin/settings"
-            ),
-            {
-                loading: "جاري إرسال الإشعار...",
-                success: (data) => {
-                    if (data.success) {
-                        playSound('newMessage')
-                        hapticFeedback('success')
-                        return `تم الإرسال بنجاح إلى ${data.sentCount} جهاز! 📱`
-                    }
-                    return `فشل الإرسال: ${data.error}`
-                },
-                error: (err) => {
-                    console.error("Test Notification Error:", err)
-                    return "حدث خطأ أثناء الإرسال"
-                }
-            }
-        )
+        // toast.promise(
+        //     sendPushNotification(
+        //         currentUser.id,
+        //         "تجربة الإشعارات 🔔",
+        //         "نظام الإشعارات يعمل بنجاح! شكلك ومضمونك 10/10 ✨",
+        //         "/admin/settings"
+        //     ),
+        //     {
+        //         loading: "جاري إرسال الإشعار...",
+        //         success: (data) => {
+        //             if (data.success) {
+        //                 playSound('newMessage')
+        //                 hapticFeedback('success')
+        //                 return `تم الإرسال بنجاح إلى ${data.sentCount} جهاز! 📱`
+        //             }
+        //             return `فشل الإرسال: ${data.error}`
+        //         },
+        //         error: (err) => {
+        //             console.error("Test Notification Error:", err)
+        //             return "حدث خطأ أثناء الإرسال"
+        //         }
+        //     }
+        // )
+        toast.info("تم تعطيل اختبار الإشعارات مؤقتاً للصيانة")
     }
 
     const handleSubmit = (e: React.FormEvent) => {
