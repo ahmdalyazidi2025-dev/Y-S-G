@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
@@ -26,6 +26,8 @@ import { Switch } from "@/components/ui/switch"
 import { WheelPicker } from "@/components/shared/wheel-picker"
 
 import { printProductList } from "@/lib/print-product-list"
+import { doc, setDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 const PROTECTED_PIN = "4422707";
 
@@ -56,6 +58,12 @@ export default function AdminSettingsPage() {
         { id: 'data', label: 'النظام والبيانات', icon: <BarChart3 className="w-5 h-5" />, color: 'text-emerald-400' },
     ] as const
 
+    if (!storeSettings || !formData) {
+        return <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+    }
+
     useEffect(() => {
         getRegisteredTokensCount().then(res => {
             if (res.success) setTotalDevices(res.count)
@@ -76,6 +84,25 @@ export default function AdminSettingsPage() {
             setActiveTab(tab)
         }
     }, [searchParams])
+
+    const handleRepairAdmin = async () => {
+        if (!currentUser?.id) return
+        if (!confirm("هل أنت متأكد؟ سيتم تعيين حسابك الحالي كمسؤول بصلاحيات كاملة.")) return
+        try {
+            await setDoc(doc(db, "users", currentUser.id), {
+                role: "admin",
+                permissions: ["all"],
+                email: currentUser.email || "",
+                name: currentUser.name || "Admin",
+                updatedAt: new Date()
+            }, { merge: true })
+            toast.success("تم إصلاح الصلاحيات بنجاح! يرجى تحديث الصفحة.")
+            window.location.reload()
+        } catch (e: any) {
+            console.error("Fix Admin Error:", e)
+            toast.error("فشل الإصلاح: " + e.message)
+        }
+    }
 
     const handleTestNotification = async () => {
         if (!currentUser?.id) {
@@ -798,11 +825,11 @@ export default function AdminSettingsPage() {
                                             <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-slate-500/30 transition-all">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2.5 bg-secondary text-secondary-foreground rounded-xl group-hover:scale-110 transition-transform">
-                                                        <Save className="w-5 h-5" />
+                                                        <Database className="w-5 h-5" />
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-sm text-foreground">نسخة احتياطية</h4>
-                                                        <p className="text-[10px] text-muted-foreground">Offline Backup كامل</p>
+                                                        <p className="text-[10px] text-muted-foreground">JSON كامل للنظام</p>
                                                     </div>
                                                 </div>
                                                 <Button
@@ -813,98 +840,123 @@ export default function AdminSettingsPage() {
                                                         settings: storeSettings,
                                                         products,
                                                         categories,
-                                                        staff,
                                                         customers,
                                                         orders,
+                                                        staff,
                                                         coupons,
                                                         banners,
                                                         productRequests,
                                                         messages,
                                                         notifications
                                                     })}
-                                                    className="h-8 bg-foreground text-background hover:bg-foreground/90 border-transparent"
+                                                    className="h-8 border-secondary-foreground/20 text-secondary-foreground hover:bg-secondary/80"
                                                 >
-                                                    تنزيل
+                                                    تحميل
                                                 </Button>
                                             </div>
-                                        </div>
-                                    </div>
-                                </Section>
-                            </div>
-                        )}
 
-                        {activeTab === 'entity' && (
-                            <div className="grid grid-cols-1 gap-6">
-                                <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
-                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                        <div className="flex flex-col gap-1">
-                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
-                                                إلزام العميل بالاسم ورقم الجوال
-                                            </Label>
-                                            <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
-                                        </div>
-                                        <Switch
-                                            checked={formData.requireCustomerInfoOnCheckout}
-                                            onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
-                                        />
-                                    </div>
-                                </Section>
-
-                                <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
-                                    <StaffManager />
-                                </Section>
-
-                                <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                                    <SecuritySettingsPorted />
-                                </Section>
-
-                                <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {[
-                                            { id: 'search', label: 'شريط البحث' },
-                                            { id: 'offers', label: 'بانر العروض (الأعلى)' },
-                                            { id: 'categories', label: 'شريط الأقسام' },
-                                            { id: 'products', label: 'قائمة المنتجات' }
-                                        ].map((item) => (
-                                            <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                                <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
-                                                <Switch
-                                                    checked={storeSettings.hiddenSections?.includes(item.id as any)}
-                                                    onCheckedChange={(checked) => {
-                                                        const current = storeSettings.hiddenSections || []
-                                                        const updated = checked
-                                                            ? [...current, item.id]
-                                                            : current.filter(id => id !== item.id)
-                                                        updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
-                                                    }}
-                                                    className="data-[state=checked]:bg-red-500"
-                                                />
+                                            {/* Repair Permissions */}
+                                            <div className="bg-card border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-rose-500/50 transition-all bg-rose-500/5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2.5 bg-rose-500/10 text-rose-600 rounded-xl group-hover:scale-110 transition-transform">
+                                                        <Shield className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-rose-700 dark:text-rose-400">إصلاح الصلاحيات</h4>
+                                                        <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70">اضغط هنا إذا واجهت مشاكل</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={handleRepairAdmin}
+                                                    className="h-8 border-rose-200 text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/30"
+                                                >
+                                                    إصلاح
+                                                </Button>
                                             </div>
-                                        ))}
-                                    </div>
-                                </Section>
 
-                                <Section icon={<Scan className="w-5 h-5" />} title="أدوات النظام (الباركود)">
-                                    <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                        <div className="flex flex-col gap-1">
-                                            <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableBarcodeScanner", !formData.enableBarcodeScanner as any)}>
-                                                تفعيل الماسح الضوئي
-                                            </Label>
-                                            <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
                                         </div>
-                                        <Switch
-                                            checked={formData.enableBarcodeScanner !== false}
-                                            onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
-                                        />
                                     </div>
                                 </Section>
                             </div>
-                        )}
+                        )
+                        }
 
-                    </motion.div>
-                </AnimatePresence>
-            </form>
-        </div>
+                        {
+                            activeTab === 'entity' && (
+                                <div className="grid grid-cols-1 gap-6">
+                                    <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                            <div className="flex flex-col gap-1">
+                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                    إلزام العميل بالاسم ورقم الجوال
+                                                </Label>
+                                                <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
+                                            </div>
+                                            <Switch
+                                                checked={formData.requireCustomerInfoOnCheckout}
+                                                onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
+                                            />
+                                        </div>
+                                    </Section>
+
+                                    <Section icon={<UserPlus className="w-5 h-5" />} title="إدارة الموظفين">
+                                        <StaffManager />
+                                    </Section>
+
+                                    <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
+                                        <SecuritySettingsPorted />
+                                    </Section>
+
+                                    <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {[
+                                                { id: 'search', label: 'شريط البحث' },
+                                                { id: 'offers', label: 'بانر العروض (الأعلى)' },
+                                                { id: 'categories', label: 'شريط الأقسام' },
+                                                { id: 'products', label: 'قائمة المنتجات' }
+                                            ].map((item) => (
+                                                <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                    <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
+                                                    <Switch
+                                                        checked={storeSettings?.hiddenSections?.includes(item.id as any)}
+                                                        onCheckedChange={(checked) => {
+                                                            const current = storeSettings?.hiddenSections || []
+                                                            const updated = checked
+                                                                ? [...current, item.id]
+                                                                : current.filter(id => id !== item.id)
+                                                            updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
+                                                        }}
+                                                        className="data-[state=checked]:bg-red-500"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Section>
+
+                                    <Section icon={<Scan className="w-5 h-5" />} title="أدوات النظام (الباركود)">
+                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                            <div className="flex flex-col gap-1">
+                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableBarcodeScanner", !formData.enableBarcodeScanner as any)}>
+                                                    تفعيل الماسح الضوئي
+                                                </Label>
+                                                <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
+                                            </div>
+                                            <Switch
+                                                checked={formData.enableBarcodeScanner !== false}
+                                                onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
+                                            />
+                                        </div>
+                                    </Section>
+                                </div>
+                            )
+                        }
+
+                    </motion.div >
+                </AnimatePresence >
+            </form >
+        </div >
     )
 }
 
