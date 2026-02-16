@@ -610,6 +610,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 const data = doc.data() as Omit<ProductRequest, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
             }))
+        }, (error) => {
+            console.error("Requests Listener Error:", error)
+            if (error.code === 'permission-denied') {
+                // toast.error("ليس لديك صلاحية لعرض الطلبات (Admin only)") 
+                // Suppress for customers/guests to avoid spam, mainly for debugging Admin
+                if (currentUser?.role === 'admin') toast.error("خطأ صلاحيات في عرض الطلبات")
+            } else if (error.code === 'failed-precondition') {
+                toast.error("مطلوب إنشاء فهرس (Index) لعرض الطلبات. راجع المنصة.")
+            }
         })
 
         // 8. Messages (Role Based & Caching)
@@ -1428,12 +1437,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const addProductRequest = async (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => {
-        await addDoc(collection(db, "requests"), sanitizeData({
-            ...request,
-            status: "pending",
-            createdAt: Timestamp.now()
-        }))
-        toast.success("تم إرسال طلبك للسحابة")
+        try {
+            await addDoc(collection(db, "requests"), sanitizeData({
+                ...request,
+                status: "pending",
+                createdAt: Timestamp.now()
+            }))
+            toast.success("تم إرسال طلبك للسحابة")
+        } catch (error: any) {
+            console.error("Add Request Error:", error)
+            if (error.code === 'permission-denied') {
+                toast.error("عفواً، ليس لديك صلاحية لإرسال الطلب")
+            } else {
+                toast.error("فشل إرسال الطلب، حاول مرة أخرى")
+            }
+        }
     }
 
     const updateProductRequestStatus = async (requestId: string, status: ProductRequest["status"]) => {
