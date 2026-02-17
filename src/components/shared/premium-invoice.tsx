@@ -85,21 +85,28 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
                     <div className="grid grid-cols-2 gap-12 mb-16 relative z-10">
                         <div className="glass-card p-8 border-white/10 bg-white/5 rounded-3xl">
                             <h3 className="text-primary text-[10px] font-black uppercase tracking-widest mb-4">Bill To | عميلنا العزيز</h3>
-                            <div className="space-y-0.5">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">صاحب الحساب / Account</p>
-                                <p className="text-2xl font-black">{order.accountName || order.customerName}</p>
+                            <div className="space-y-1">
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                    {order.accountName ? "صاحب الحساب / Account" : "العميل / Customer"}
+                                </p>
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    <p className="text-2xl font-black">{order.accountName || order.customerName}</p>
+                                    {(!order.accountName || order.accountName === order.customerName) && order.customerPhone && (
+                                        <span className="text-white/40 text-[10px] bg-white/5 px-2 py-0.5 rounded-md border border-white/10 font-mono tracking-widest">
+                                            {order.customerPhone}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
-                            {order.accountName && order.accountName !== order.customerName ? (
+                            {order.accountName && order.accountName !== order.customerName && (
                                 <div className="space-y-1 mt-4 pt-4 border-t border-white/5">
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 flex-wrap">
                                         <p className="text-sm font-black text-primary/80">{order.customerName}</p>
                                         <span className="text-white/40 text-[10px] bg-white/5 px-2 py-0.5 rounded-md border border-white/10 font-mono tracking-widest">{order.customerPhone}</span>
                                     </div>
                                 </div>
-                            ) : (
-                                <p className="text-slate-400 text-sm mt-2">{order.customerPhone}</p>
                             )}
                             <p className="text-slate-500 text-[10px] mt-4 pt-4 border-t border-white/5">رقم العميل: {order.customerId}</p>
                         </div>

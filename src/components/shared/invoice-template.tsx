@@ -89,18 +89,25 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                     <p className="text-sm text-slate-700 font-black mb-3 uppercase">معلومات العميل</p>
                     <div className="grid grid-cols-2 gap-6">
                         <div className="flex-1">
-                            <p className="text-sm text-slate-600 font-bold mb-1">الاسم / الحساب:</p>
-                            <p className="font-black text-lg text-slate-900 leading-tight">{order.accountName || order.customerName}</p>
+                            <p className="text-sm text-slate-600 font-bold mb-1">
+                                {order.accountName ? "صاحب الحساب / Account:" : "العميل / Customer:"}
+                            </p>
+                            <p className="font-black text-lg text-slate-900 leading-tight">
+                                {order.accountName || order.customerName}
+                                {(!order.accountName || order.accountName === order.customerName) && order.customerPhone && (
+                                    <span className="block text-xs text-slate-500 font-bold mt-1">({order.customerPhone})</span>
+                                )}
+                            </p>
                             {order.accountName && order.accountName !== order.customerName && (
-                                <p className="text-xs text-slate-500 font-black mt-1">
-                                    المستلم: {order.customerName} ({order.customerPhone})
+                                <p className="text-xs text-slate-500 font-black mt-2 pt-2 border-t border-slate-200">
+                                    المستلم / Recipient: {order.customerName} ({order.customerPhone})
                                 </p>
                             )}
                         </div>
                         <div className="text-right">
-                            <p className="text-sm text-slate-600 font-bold mb-1">رقم الهاتف / الدفع:</p>
-                            <p className="font-black text-lg text-slate-900">{order.customerPhone || '---'}</p>
-                            <p className="text-[10px] text-slate-500 font-bold mt-1">الدفع عند الاستلام</p>
+                            <p className="text-sm text-slate-600 font-bold mb-1">تفاصيل الدفع / Payment:</p>
+                            <p className="font-black text-lg text-slate-900">الدفع عند الاستلام</p>
+                            <p className="text-[10px] text-slate-500 font-bold mt-1">Cash on Delivery</p>
                         </div>
                     </div>
                 </div>

@@ -449,19 +449,29 @@ export default function AdminOrdersPage() {
                                         العميل
                                     </div>
                                     <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-3">
-                                        <div className="space-y-0.5">
-                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">صاحب الحساب / Account</p>
-                                            <p className="font-bold text-foreground text-sm leading-tight">
-                                                {selectedOrder.accountName || selectedOrder.customerName}
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                                {selectedOrder.accountName ? "صاحب الحساب / Account" : "العميل / Customer"}
                                             </p>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="font-bold text-foreground text-sm leading-tight">
+                                                    {selectedOrder.accountName || selectedOrder.customerName}
+                                                </p>
+                                                {/* Show phone here if it's the main/only name display to ensure it's NEVER missing */}
+                                                {(!selectedOrder.accountName || selectedOrder.accountName === selectedOrder.customerName) && selectedOrder.customerPhone && (
+                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono border border-border/50">
+                                                        {selectedOrder.customerPhone}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {selectedOrder.accountName && selectedOrder.accountName !== selectedOrder.customerName && (
                                             <div className="pt-2 border-t border-border/50 space-y-1">
                                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 flex-wrap">
                                                     <p className="text-xs font-black text-primary/80">{selectedOrder.customerName}</p>
-                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono">{selectedOrder.customerPhone}</span>
+                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono border border-border/50">{selectedOrder.customerPhone}</span>
                                                 </div>
                                             </div>
                                         )}
