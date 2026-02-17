@@ -448,13 +448,18 @@ export default function AdminOrdersPage() {
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <div className="p-3 bg-muted/20 rounded-xl border border-border">
-                                        <p className="font-bold text-foreground text-sm leading-tight">
-                                            {selectedOrder.accountName || selectedOrder.customerName}
-                                        </p>
+                                    <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-3">
+                                        <div className="space-y-0.5">
+                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">صاحب الحساب / Account</p>
+                                            <p className="font-bold text-foreground text-sm leading-tight">
+                                                {selectedOrder.accountName || selectedOrder.customerName}
+                                            </p>
+                                        </div>
+
                                         {selectedOrder.accountName && selectedOrder.accountName !== selectedOrder.customerName && (
-                                            <div className="mt-2 pt-2 border-t border-border/50">
-                                                <p className="text-[10px] text-slate-500 font-bold">المستلم: {selectedOrder.customerName}</p>
+                                            <div className="pt-2 border-t border-border/50 space-y-0.5">
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
+                                                <p className="text-xs font-black text-primary/80">{selectedOrder.customerName}</p>
                                                 <p className="text-[10px] text-slate-500">{selectedOrder.customerPhone}</p>
                                             </div>
                                         )}

@@ -951,9 +951,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const finalCustomerPhone = customPhone || currentUser?.phone || ""
         const finalCustomerLocation = currentUser?.location || ""
 
-        // If a custom name was provided, store the account name separately 
-        // We check if customName is provided AND it's different from the account name
-        const accountName = customName ? (currentUser?.name || undefined) : undefined
+        // Always capture the primary account holder's name if they are logged in
+        const accountName = currentUser?.name || undefined
 
         const orderData = {
             customerName: finalCustomerName,
