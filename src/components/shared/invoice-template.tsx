@@ -72,7 +72,7 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="bg-slate-900 text-white px-8 py-3 rounded-lg font-black text-2xl mb-3 inline-block shadow-lg">
+                        <div className="border-4 border-slate-900 text-slate-900 px-8 py-3 rounded-lg font-black text-2xl mb-3 inline-block">
                             فاتورة مبيعات
                         </div>
                         <p className="text-slate-700 text-base font-bold mb-1">
@@ -85,7 +85,7 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                 </div>
 
                 {/* Customer Info */}
-                <div className="mb-6 p-6 bg-slate-100 rounded-xl border-2 border-slate-300">
+                <div className="mb-6 p-6 bg-white rounded-xl border-4 border-slate-900">
                     <p className="text-sm text-slate-700 font-black mb-3 uppercase">معلومات العميل</p>
                     <div className="grid grid-cols-2 gap-6">
                         <div className="flex-1 space-y-4">
@@ -117,9 +117,9 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                 </div>
 
                 {/* Items Table */}
-                <table className="w-full mb-6 border-2 border-slate-900 no-break">
+                <table className="w-full mb-6 border-4 border-slate-900 no-break">
                     <thead>
-                        <tr className="bg-slate-900 text-white">
+                        <tr className="border-b-4 border-slate-900 text-slate-900">
                             <th className="text-right py-4 px-4 text-sm font-black">المنتج</th>
                             <th className="text-center py-4 px-3 text-sm font-black">الكمية</th>
                             <th className="text-center py-4 px-3 text-sm font-black">السعر</th>
@@ -136,7 +136,7 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                             const totalWithTax = priceWithTax * item.quantity;
 
                             return (
-                                <tr key={idx} className={`border-b-2 border-slate-300 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}>
+                                <tr key={idx} className={`border-b-2 border-slate-300 bg-white`}>
                                     <td className="py-4 px-4">
                                         <p className="font-black text-base text-slate-900">{item.name}</p>
                                         <p className="text-sm text-slate-600 font-bold">{item.unit}</p>
@@ -174,7 +174,7 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                         </div>
 
                         {/* Total with tax */}
-                        <div className="flex justify-between bg-slate-900 text-white font-black text-xl p-5 rounded-xl shadow-lg mt-3">
+                        <div className="flex justify-between border-4 border-slate-900 text-slate-900 font-black text-xl p-5 rounded-xl mt-3">
                             <span>الإجمالي شامل الضريبة:</span>
                             <span className="text-2xl">{order.total.toFixed(2)} ر.س</span>
                         </div>
