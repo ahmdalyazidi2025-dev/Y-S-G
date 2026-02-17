@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Check, Clock, Package, Truck, Home } from "lucide-react"
 
-type Status = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected"
+type Status = "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected" | "deleted"
 
 const STAGES = [
     { key: "pending", label: "بانتظار التأكيد", icon: Clock },
@@ -13,11 +13,13 @@ const STAGES = [
 ]
 
 export function OrderStatusProgress({ status }: { status: Status }) {
-    if (status === "canceled" || status === "rejected") {
+    if (status === "canceled" || status === "rejected" || status === "deleted") {
         return (
             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">
                 <p className="text-red-400 font-bold text-sm">
-                    {status === "canceled" ? "تم إلغاء هذا الطلب" : "تم رفض هذا الطلب"}
+                    {status === "canceled" ? "تم إلغاء هذا الطلب" :
+                        status === "rejected" ? "تم رفض هذا الطلب" :
+                            "تم حذف هذا الطلب"}
                 </p>
             </div>
         )
