@@ -831,7 +831,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
 
             // Important: Explicitly use settings to update Firestore
-            await setDoc(doc(db, "settings", "global"), sanitizeData(settings), { merge: true })
+            const sanitized = sanitizeData(settings)
+
+            // Re-check size after sanitation
+            const finalSize = new Blob([JSON.stringify(sanitized)]).size
+            if (finalSize > 950 * 1024) { // Firestore limit is strict 1MB
+                throw new Error("حجم البيانات كبير جداً (أكثر من 1 ميجابايت). يرجى تقليل حجم الصور أو الأصوات المخصصة.")
+            }
+
+            await setDoc(doc(db, "settings", "global"), sanitized, { merge: true })
             console.log("[StoreContext] Firestore setDoc completed successfully");
 
             // Educational Feedback for AI
@@ -2570,10 +2578,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 function sanitizeData(data: any): any {
     if (data === null || data === undefined) return null
     if (data instanceof Date) return data
-    if (data instanceof Timestamp) return data // Preserve Firebase Timestamps
-    if (Array.isArray(data)) return data.map(item => sanitizeData(item))
 
-    if (typeof data === 'object') {
+    // Duck-type check for Firestore Timestamp to be version-resilient
+    if (data && typeof data.toDate === 'function' && typeof data.toMillis === 'function') {
+        return data
+    }
+
+    if (Array.isArray(data)) {
+        return data.map(item => sanitizeData(item))
+    }
+
+    if (typeof data === 'object' && Object.getPrototypeOf(data) === Object.prototype) {
         const result: Record<string, any> = {}
         Object.keys(data).forEach(key => {
             const value = data[key]
@@ -2583,6 +2598,8 @@ function sanitizeData(data: any): any {
         })
         return result
     }
+
+    // Return primitives as-is
     return data
 }
 
