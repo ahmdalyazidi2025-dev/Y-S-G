@@ -99,7 +99,7 @@ export default function StoreLayout({
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         // Show Scanner ONLY on Home Page (/customer) AND if enabled
-        ...(pathname === "/customer" && storeSettings.enableBarcodeScanner === true ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
+        ...(storeSettings.enableBarcodeScanner === true ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
         {
             name: "طلب",
             icon: PlusCircle,
@@ -314,7 +314,7 @@ export default function StoreLayout({
                 </div>
 
                 {/* Floating Scanner Button (Isolated) - Only on Customer Home Page & Enabled */}
-                {pathname === "/customer" && storeSettings.enableBarcodeScanner === true && (
+                {storeSettings.enableBarcodeScanner === true && (
                     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
                         <button
                             // Mobile Touch Events

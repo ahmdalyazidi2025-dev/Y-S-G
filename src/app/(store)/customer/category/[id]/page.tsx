@@ -13,11 +13,12 @@ import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { PullToRefresh } from "@/components/store/pull-to-refresh"
 import Image from "next/image"
+import { toast } from "sonner"
 
 export default function CategoryPage() {
     const params = useParams()
     const router = useRouter()
-    const { products, categories, loading, storeSettings } = useStore()
+    const { products, categories, loading, storeSettings, scanProduct } = useStore()
     const categoryId = decodeURIComponent(params?.id as string)
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -131,8 +132,16 @@ export default function CategoryPage() {
                         isOpen={isScannerOpen}
                         onClose={() => setIsScannerOpen(false)}
                         onRequestProduct={() => { }} // Optional: Handle request from here if needed
-                        onScan={(code) => {
-                            setSearchQuery(code)
+                        onScan={async (code) => {
+                            const product = await scanProduct(code)
+                            if (product) {
+                                // Already added to cart by scanProduct
+                                toast.success(`تم العثورعلى ${product.name} وإضافته للسلة`)
+                                // If it's in the current category, also filter for it
+                                setSearchQuery(code)
+                            } else {
+                                setSearchQuery(code)
+                            }
                             setIsScannerOpen(false)
                         }}
                     />

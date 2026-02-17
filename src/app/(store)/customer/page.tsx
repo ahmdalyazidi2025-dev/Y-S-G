@@ -58,7 +58,6 @@ export default function CustomerHome() {
     // const [searchQuery, setSearchQuery] = useState("")  <-- Removed local state
     const searchQuery = searchParams.get('q') || "" // Use URL param
     const [selectedCategory, setSelectedCategory] = useState("الكل")
-    const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
@@ -268,13 +267,6 @@ export default function CustomerHome() {
                 </div>
 
 
-                {storeSettings.enableBarcodeScanner === true && (
-                    <ScannerModal
-                        isOpen={isScannerOpen}
-                        onClose={() => setIsScannerOpen(false)}
-                        onRequestProduct={() => setIsRequestModalOpen(true)}
-                    />
-                )}
                 <RequestModal
                     isOpen={isRequestModalOpen}
                     onClose={() => setIsRequestModalOpen(false)}

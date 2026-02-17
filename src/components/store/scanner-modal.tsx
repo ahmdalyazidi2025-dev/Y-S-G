@@ -29,6 +29,9 @@ declare global {
 
 export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan }: ScannerModalProps) {
     const { scanProduct, addToCart, storeSettings } = useStore() // Added storeSettings
+    useEffect(() => {
+        console.log("[ScannerModal] Barcode Setting:", storeSettings.enableBarcodeScanner)
+    }, [storeSettings.enableBarcodeScanner])
     const [error, setError] = useState<string | null>(null)
     const [isFlashOn, setIsFlashOn] = useState(false)
     const [isBatchMode, setIsBatchMode] = useState(false)
@@ -110,11 +113,14 @@ export default function ScannerModal({ isOpen, onClose, onRequestProduct, onScan
 
         const product = await scanProduct(decodedText)
         if (product) {
+            toast.success(`تم العثور على: ${product.name}`)
             if (isBatchMode) {
-                addToCart(product)
-                toast.success(`تم إضافة ${product.name}`)
+                // Already added to cart by scanProduct
             } else {
-                onClose()
+                hapticFeedback('success')
+                setTimeout(() => {
+                    onClose()
+                }, 800)
             }
         } else {
             if (isBatchMode) {
