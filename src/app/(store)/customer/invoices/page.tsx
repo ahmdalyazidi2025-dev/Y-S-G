@@ -142,7 +142,11 @@ export default function InvoicesPage() {
                         {filteredOrders.map((order) => {
                             const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
                             return (
-                                <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer border-gradient">
+                                <div
+                                    key={order.id}
+                                    onClick={() => { setSelectedOrder(order); hapticFeedback('light') }}
+                                    className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer border-gradient"
+                                >
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
 
                                     <div className="flex items-center justify-between">
@@ -190,7 +194,12 @@ export default function InvoicesPage() {
                                         <p className="text-xl font-black text-foreground">
                                             {order.total.toFixed(2)} <span className="text-xs font-bold text-muted-foreground">ر.س</span>
                                         </p>
-                                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-xs font-black">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); hapticFeedback('light') }}
+                                            className="text-primary hover:text-primary hover:bg-primary/10 text-xs font-black"
+                                        >
                                             فتح الفاتورة
                                         </Button>
                                     </div>

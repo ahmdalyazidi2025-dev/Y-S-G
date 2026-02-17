@@ -644,7 +644,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         const unsubOrdersPromise = fetchInitialOrders();
-        return () => { unsubOrdersPromise.then(unsub => unsub && unsub()) }
 
         // 7. Requests (Admin Only usually, or public?)
         let requestsQuery;
