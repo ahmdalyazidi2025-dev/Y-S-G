@@ -328,9 +328,13 @@ export default function AdminOrdersPage() {
                                         <status.icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors flex items-center gap-2">
+                                        <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors flex flex-wrap items-center gap-x-2">
                                             #{order.id} - {order.accountName || order.customerName}
-                                            {order.accountName && <span className="text-[10px] text-primary/70 font-bold">(لـ: {order.customerName})</span>}
+                                            {order.accountName && order.accountName !== order.customerName && (
+                                                <span className="text-[10px] text-primary/70 font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                                                    لـ: {order.customerName}
+                                                </span>
+                                            )}
                                         </h3>
                                         <p className="text-[10px] text-muted-foreground">{order.createdAt.toLocaleString('ar-SA')}</p>
                                     </div>
@@ -444,12 +448,17 @@ export default function AdminOrdersPage() {
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <p className="font-bold text-foreground text-sm leading-tight">
-                                        {selectedOrder.accountName || selectedOrder.customerName}
-                                        {selectedOrder.accountName && (
-                                            <span className="block text-[10px] text-slate-500 mt-0.5 font-bold">المستلم: {selectedOrder.customerName}</span>
+                                    <div className="p-3 bg-muted/20 rounded-xl border border-border">
+                                        <p className="font-bold text-foreground text-sm leading-tight">
+                                            {selectedOrder.accountName || selectedOrder.customerName}
+                                        </p>
+                                        {selectedOrder.accountName && selectedOrder.accountName !== selectedOrder.customerName && (
+                                            <div className="mt-2 pt-2 border-t border-border/50">
+                                                <p className="text-[10px] text-slate-500 font-bold">المستلم: {selectedOrder.customerName}</p>
+                                                <p className="text-[10px] text-slate-500">{selectedOrder.customerPhone}</p>
+                                            </div>
                                         )}
-                                    </p>
+                                    </div>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-muted-foreground text-xs">

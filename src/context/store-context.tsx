@@ -943,17 +943,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         if (cart.length === 0) return
 
-        // Use logged-in user name or the one provided in checkout
-        const finalCustomerName = additionalInfo?.name || currentUser?.name || "عميل"
-        const finalCustomerPhone = additionalInfo?.phone || currentUser?.phone || ""
+        // Determine final names with robust trimming
+        const customName = additionalInfo?.name?.trim()
+        const customPhone = additionalInfo?.phone?.trim()
+
+        const finalCustomerName = customName || currentUser?.name || "عميل"
+        const finalCustomerPhone = customPhone || currentUser?.phone || ""
         const finalCustomerLocation = currentUser?.location || ""
 
-        // If a custom name was provided, store the account name separately
-        const accountName = additionalInfo?.name ? currentUser?.name : undefined
+        // If a custom name was provided, store the account name separately 
+        // We check if customName is provided AND it's different from the account name
+        const accountName = customName ? (currentUser?.name || undefined) : undefined
 
         const orderData = {
             customerName: finalCustomerName,
-            accountName, // Key change for visibility
+            accountName, // Guaranteed to store primary account name if recipient name differs
             customerPhone: finalCustomerPhone,
             customerLocation: finalCustomerLocation,
             customerId: auth.currentUser.uid, // Use SDK ID for consistency

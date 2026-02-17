@@ -87,7 +87,7 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
                             <h3 className="text-primary text-[10px] font-black uppercase tracking-widest mb-4">Bill To | عميلنا العزيز</h3>
                             <p className="text-2xl font-black mb-1">{order.accountName || order.customerName}</p>
 
-                            {order.accountName ? (
+                            {order.accountName && order.accountName !== order.customerName ? (
                                 <div className="space-y-1 mt-3 pt-3 border-t border-white/5">
                                     <p className="text-xs font-bold text-slate-300">المستلم: {order.customerName}</p>
                                     <p className="text-[10px] font-medium text-slate-500">{order.customerPhone}</p>
