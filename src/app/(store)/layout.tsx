@@ -191,6 +191,16 @@ export default function StoreLayout({
                                             <span className="text-[9px] font-bold">طلب</span>
                                         </button>
 
+                                        {storeSettings.enableBarcodeScanner && (
+                                            <button
+                                                onClick={() => setIsScannerOpen(true)}
+                                                className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 active:scale-95 transition-all border border-border"
+                                            >
+                                                <Scan className="w-5 h-5" />
+                                                <span className="text-[9px] font-bold">الماسح</span>
+                                            </button>
+                                        )}
+
                                         {storeSettings.enableAIChat !== false && (
                                             <Link
                                                 href="/customer/chat"
@@ -275,7 +285,7 @@ export default function StoreLayout({
                                         </div>
                                         <input
                                             type="text"
-                                            placeholder={storeSettings.enableBarcodeScanner === true ? "ابحث عن منتج، قطعة، أو باركود..." : "ابحث عن منتج أو قطعة..."}
+                                            placeholder={storeSettings.enableBarcodeScanner ? "ابحث عن منتج، قطعة، أو باركود..." : "ابحث عن منتج أو قطعة..."}
                                             className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
                                             id="global-search-input"
                                             onChange={(e) => {
@@ -313,8 +323,8 @@ export default function StoreLayout({
                     <Footer />
                 </div>
 
-                {/* Floating Scanner Button (Isolated) - Only on Customer Home Page & Enabled */}
-                {storeSettings.enableBarcodeScanner === true && (
+                {/* Floating Scanner Button (Isolated) - Only on Customer Pages & Enabled */}
+                {storeSettings.enableBarcodeScanner && (
                     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
                         <button
                             // Mobile Touch Events
@@ -350,7 +360,7 @@ export default function StoreLayout({
             </div>
 
             {/* Modals moved outside the main layout container to avoid stacking context issues */}
-            {storeSettings.enableBarcodeScanner === true && (
+            {storeSettings.enableBarcodeScanner && (
                 <ScannerModal
                     isOpen={isScannerOpen}
                     onClose={() => setIsScannerOpen(false)}

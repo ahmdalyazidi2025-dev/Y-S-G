@@ -41,7 +41,7 @@ export default function CategoryPage() {
             const q = searchQuery.toLowerCase()
             return (
                 p.name.toLowerCase().includes(q) ||
-                (storeSettings.enableBarcodeScanner === true && p.barcode && p.barcode.includes(q)) ||
+                (storeSettings.enableBarcodeScanner && p.barcode && p.barcode.includes(q)) ||
                 (p.description && p.description.toLowerCase().includes(q))
             )
         })
@@ -85,14 +85,14 @@ export default function CategoryPage() {
                                 <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 group-focus-within:border-primary/50 transition-all" />
                                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors z-10" />
                                 <Input
-                                    placeholder={storeSettings.enableBarcodeScanner === true ? "بحث في القسم (اسم، باركود)..." : "بحث في القسم (اسم)..."}
+                                    placeholder={storeSettings.enableBarcodeScanner ? "بحث في القسم (اسم، باركود)..." : "بحث في القسم (اسم)..."}
                                     className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-12 text-sm focus:ring-0 text-white placeholder:text-slate-500 relative z-10"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     autoFocus={false}
                                 />
                             </div>
-                            {storeSettings.enableBarcodeScanner === true && (
+                            {storeSettings.enableBarcodeScanner && (
                                 <Button
                                     size="icon"
                                     className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all text-slate-400 shrink-0"
