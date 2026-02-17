@@ -448,33 +448,33 @@ export default function AdminOrdersPage() {
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-3">
+                                    <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-4">
+                                        {/* Account Section - Always visible if it exists/differs, or as primary placeholder */}
                                         <div className="space-y-1">
-                                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                                                {selectedOrder.accountName ? "صاحب الحساب / Account" : "العميل / Customer"}
+                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5">
+                                                <User className="w-2.5 h-2.5" />
+                                                صاحب الحساب / Account
                                             </p>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="font-bold text-foreground text-sm leading-tight">
-                                                    {selectedOrder.accountName || selectedOrder.customerName}
-                                                </p>
-                                                {/* Show phone here if it's the main/only name display to ensure it's NEVER missing */}
-                                                {(!selectedOrder.accountName || selectedOrder.accountName === selectedOrder.customerName) && selectedOrder.customerPhone && (
-                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono border border-border/50">
-                                                        {selectedOrder.customerPhone}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <p className="font-black text-foreground text-sm">
+                                                {selectedOrder.accountName || "---"}
+                                            </p>
                                         </div>
 
-                                        {selectedOrder.accountName && selectedOrder.accountName !== selectedOrder.customerName && (
-                                            <div className="pt-2 border-t border-border/50 space-y-1">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <p className="text-xs font-black text-primary/80">{selectedOrder.customerName}</p>
-                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono border border-border/50">{selectedOrder.customerPhone}</span>
+                                        {/* Recipient Section - ALWAYS visible as it contains the checkout name and phone */}
+                                        <div className="pt-3 border-t border-border/50 space-y-2">
+                                            <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                                <Phone className="w-2.5 h-2.5" />
+                                                بيانات المستلم / Recipient Details
+                                            </p>
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold text-foreground">{selectedOrder.customerName}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-primary text-[11px] font-mono font-bold bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                                                        {selectedOrder.customerPhone || "لا يوجد رقم"}
+                                                    </span>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-1">
