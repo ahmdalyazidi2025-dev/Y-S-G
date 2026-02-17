@@ -80,9 +80,18 @@ function AdminSettingsContent() {
 
     const searchParams = useSearchParams()
 
-    // Sync state when storeSettings loads from Firebase
+    // Sync state only on initial load or if explicitly reset
     useEffect(() => {
-        setFormData(storeSettings)
+        if (storeSettings && Object.keys(storeSettings).length > 0) {
+            setFormData(prev => {
+                // If we haven't touched formData yet (still using mock values)
+                // then sync from storeSettings
+                if (!prev || (prev.aboutTitle === "مجموعة يحيى سلمان غزواني التجارية" && !prev.logoUrl)) {
+                    return storeSettings;
+                }
+                return prev;
+            });
+        }
     }, [storeSettings])
 
     // Load tab from URL
@@ -150,7 +159,7 @@ function AdminSettingsContent() {
         hapticFeedback('success')
     }
 
-    const handleChange = (key: keyof StoreSettings, value: string) => {
+    const handleChange = (key: keyof StoreSettings, value: any) => {
         setFormData(prev => ({ ...prev, [key]: value }))
         // Subtle feedback for typing/changing
         hapticFeedback('light')
@@ -915,7 +924,7 @@ function AdminSettingsContent() {
                                     </Section>
 
                                     <Section icon={<Lock className="w-5 h-5" />} title="الأمان وبيانات الدخول">
-                                        <SecuritySettingsPorted />
+                                        <SecuritySettingsPorted formData={formData} handleChange={handleChange} />
                                     </Section>
 
                                     <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
@@ -929,13 +938,13 @@ function AdminSettingsContent() {
                                                 <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                                     <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
                                                     <Switch
-                                                        checked={storeSettings?.hiddenSections?.includes(item.id as any)}
+                                                        checked={formData.hiddenSections?.includes(item.id as any)}
                                                         onCheckedChange={(checked) => {
-                                                            const current = storeSettings?.hiddenSections || []
+                                                            const current = formData.hiddenSections || []
                                                             const updated = checked
                                                                 ? [...current, item.id]
                                                                 : current.filter(id => id !== item.id)
-                                                            updateStoreSettings({ ...storeSettings, hiddenSections: updated as any })
+                                                            handleChange("hiddenSections", updated)
                                                         }}
                                                         className="data-[state=checked]:bg-red-500"
                                                     />
@@ -1047,8 +1056,8 @@ function Section({ children, icon, title }: { children: React.ReactNode, icon: R
     )
 }
 
-function SecuritySettingsPorted() {
-    const { storeSettings, updateStoreSettings } = useStore()
+function SecuritySettingsPorted({ formData, handleChange }: { formData: StoreSettings, handleChange: (key: keyof StoreSettings, value: any) => void }) {
+    const { storeSettings } = useStore()
 
     return (
         <div className="space-y-6">
@@ -1063,12 +1072,12 @@ function SecuritySettingsPorted() {
                             <Label className="text-foreground font-bold text-base">مفتاح الذكاء الاصطناعي</Label>
                             <p className="text-xs text-muted-foreground mt-1">تفعيل/تعطيل المساعد الذكي (Gemini) في التطبيق</p>
                             <div className="flex items-center gap-3">
-                                <span className={`text-xs font-bold transition-colors ${storeSettings.enableAIChat !== false ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                                    {storeSettings.enableAIChat !== false ? "مفعل" : "معطل"}
+                                <span className={`text-xs font-bold transition-colors ${formData.enableAIChat !== false ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                                    {formData.enableAIChat !== false ? "مفعل" : "معطل"}
                                 </span>
                                 <Switch
-                                    checked={storeSettings.enableAIChat !== false}
-                                    onCheckedChange={(checked) => updateStoreSettings({ ...storeSettings, enableAIChat: checked })}
+                                    checked={formData.enableAIChat !== false}
+                                    onCheckedChange={(checked) => handleChange("enableAIChat", checked)}
                                     className="data-[state=checked]:bg-green-500"
                                 />
                             </div>
@@ -1076,11 +1085,11 @@ function SecuritySettingsPorted() {
                     </div>
                 </div>
 
-                {storeSettings.enableAIChat !== false && (
+                {formData.enableAIChat !== false && (
                     <>
                         <p className="text-xs text-muted-foreground mb-2">ضع المفتاح هنا لتفعيل مميزات "المساعد الذكي" وتحليل صور المنتجات.</p>
                         <div className="flex gap-2">
-                            <GeminiKeyInput />
+                            <GeminiKeyInput formData={formData} handleChange={handleChange} />
                         </div>
                     </>
                 )}
@@ -1090,20 +1099,19 @@ function SecuritySettingsPorted() {
     )
 }
 
-function GeminiKeyInput() {
-    const { storeSettings, updateStoreSettings } = useStore()
+function GeminiKeyInput({ formData, handleChange }: { formData: StoreSettings, handleChange: (key: keyof StoreSettings, value: any) => void }) {
     const [keys, setKeys] = useState<{ key: string, status: "valid" | "invalid" | "unchecked" }[]>([])
 
-    // Sync keys with storeSettings when it changes
+    // Sync keys with formData when it changes
     useEffect(() => {
-        const existing = Array.isArray(storeSettings.aiApiKeys) ? storeSettings.aiApiKeys : []
+        const existing = Array.isArray(formData.aiApiKeys) ? formData.aiApiKeys : []
         const filled = [...existing]
         while (filled.length < 3) filled.push({ key: "", status: "unchecked" })
         setKeys(filled.slice(0, 3))
-    }, [storeSettings.aiApiKeys])
+    }, [formData.aiApiKeys])
 
-    const saveToStore = (newKeys: typeof keys) => {
-        updateStoreSettings({ ...storeSettings, aiApiKeys: newKeys })
+    const saveToLocalState = (newKeys: typeof keys) => {
+        handleChange("aiApiKeys", newKeys)
     }
 
     const updateKey = (index: number, val: string) => {
@@ -1112,13 +1120,13 @@ function GeminiKeyInput() {
         setKeys(newKeys)
     }
 
-    const handleBlur = () => saveToStore(keys)
+    const handleBlur = () => saveToLocalState(keys)
 
     const updateStatus = (index: number, status: "valid" | "invalid" | "unchecked") => {
         const newKeys = [...keys]
         newKeys[index] = { ...newKeys[index], status }
         setKeys(newKeys)
-        saveToStore(newKeys)
+        saveToLocalState(newKeys)
     }
 
     return (

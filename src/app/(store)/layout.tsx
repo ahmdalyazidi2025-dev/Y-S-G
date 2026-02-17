@@ -62,7 +62,7 @@ export default function StoreLayout({
 
     const handleTouchStart = (e?: React.TouchEvent | React.MouseEvent) => {
         // e?.preventDefault() // Don't prevent default on start, or scrolling breaks
-        if (storeSettings.enableAIChat === false) return // Disable long press if AI is off
+        if (storeSettings.enableAIChat === false) return
 
         isLongPress.current = false
         longPressTimer.current = setTimeout(() => {
@@ -98,8 +98,8 @@ export default function StoreLayout({
     const navItems = [
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
-        // Show Scanner ONLY on Home Page (/customer)
-        ...(pathname === "/customer" ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
+        // Show Scanner ONLY on Home Page (/customer) AND if enabled
+        ...(pathname === "/customer" && storeSettings.enableBarcodeScanner !== false ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
         {
             name: "طلب",
             icon: PlusCircle,

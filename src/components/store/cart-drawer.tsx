@@ -60,13 +60,22 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const handleCreateOrder = (isDraft: boolean) => {
         // Validation if required
         if (storeSettings.requireCustomerInfoOnCheckout && !isDraft) {
-            const hasName = customerName.trim().length > 0 || !!currentUser?.name
-            const hasPhone = customerPhone.trim().length > 0 || !!currentUser?.phone || (currentUser?.role === 'customer' && false) // simple check
+            // Check if user is guest or missing info
+            const isGuest = !currentUser || currentUser?.role === 'guest' || currentUser?.name === 'زائر' || !currentUser?.phone
+            const hasManualInput = customerName.trim().length > 0 && customerPhone.trim().length > 0
 
-            if (!hasName || !hasPhone) {
-                toast.error("يرجى إدخال الاسم ورقم الجوال لإكمال الطلب")
+            if (isGuest && !hasManualInput) {
+                toast.error("الرجاء إكمال بياناتك (الاسم ورقم الهاتف) لإتمام الطلب")
+                setView('checkout') // Switch to Checkout View which has the form
                 return
             }
+        }
+        const hasName = customerName.trim().length > 0 || !!currentUser?.name
+        const hasPhone = customerPhone.trim().length > 0 || !!currentUser?.phone || (currentUser?.role === 'customer' && false) // simple check
+
+        if (!hasName || !hasPhone) {
+            toast.error("يرجى إدخال الاسم ورقم الجوال لإكمال الطلب")
+            return
         }
 
         createOrder(isDraft, { name: customerName, phone: customerPhone })

@@ -633,7 +633,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 7. Requests (Admin Only usually, or public?)
         let requestsQuery;
         if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser!.id), orderBy("createdAt", "desc"))
+            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser!.id))
         } else {
             requestsQuery = query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50))
         }
@@ -642,7 +642,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setProductRequests(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<ProductRequest, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
-            }))
+            }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
         }, (error) => {
             console.error("Requests Listener Error:", error)
             if (error.code === 'permission-denied') {
@@ -701,7 +701,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 9. Settings (Public)
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
             if (snap.exists()) {
-                setStoreSettings(snap.data() as StoreSettings)
+                // Merge with MOCK_SETTINGS to ensure all fields exist (handling new settings)
+                setStoreSettings({ ...MOCK_SETTINGS, ...snap.data() } as StoreSettings)
             } else {
                 setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
             }
@@ -718,17 +719,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 11. Notifications (User Specific)
         let notifQuery;
         if (currentUser) {
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser!.id), orderBy("createdAt", "desc"), limit(50))
+            // Remove orderBy to avoid Index Error
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser!.id), limit(50))
         } else {
             // Guest or Global
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", (guestId || 'guest')), orderBy("createdAt", "desc"), limit(20))
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", (guestId || 'guest')), limit(20))
         }
 
         const unsubNotifications = onSnapshot(notifQuery, (snap: QuerySnapshot<DocumentData>) => {
             setNotifications(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Notification, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Notification
-            }))
+            }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
         })
 
         return () => {
