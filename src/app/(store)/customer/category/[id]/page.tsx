@@ -17,7 +17,7 @@ import Image from "next/image"
 export default function CategoryPage() {
     const params = useParams()
     const router = useRouter()
-    const { products, categories, loading } = useStore()
+    const { products, categories, loading, storeSettings } = useStore()
     const categoryId = decodeURIComponent(params?.id as string)
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -91,13 +91,15 @@ export default function CategoryPage() {
                                     autoFocus={false}
                                 />
                             </div>
-                            <Button
-                                size="icon"
-                                className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all text-slate-400 shrink-0"
-                                onClick={() => setIsScannerOpen(true)}
-                            >
-                                <ScanBarcode className="w-6 h-6" />
-                            </Button>
+                            {storeSettings.enableBarcodeScanner !== false && (
+                                <Button
+                                    size="icon"
+                                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all text-slate-400 shrink-0"
+                                    onClick={() => setIsScannerOpen(true)}
+                                >
+                                    <ScanBarcode className="w-6 h-6" />
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -124,15 +126,17 @@ export default function CategoryPage() {
                 </div>
 
                 {/* Modals */}
-                <ScannerModal
-                    isOpen={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onRequestProduct={() => { }} // Optional: Handle request from here if needed
-                    onScan={(code) => {
-                        setSearchQuery(code)
-                        setIsScannerOpen(false)
-                    }}
-                />
+                {storeSettings.enableBarcodeScanner !== false && (
+                    <ScannerModal
+                        isOpen={isScannerOpen}
+                        onClose={() => setIsScannerOpen(false)}
+                        onRequestProduct={() => { }} // Optional: Handle request from here if needed
+                        onScan={(code) => {
+                            setSearchQuery(code)
+                            setIsScannerOpen(false)
+                        }}
+                    />
+                )}
 
                 <ProductDetailsModal
                     isOpen={!!selectedProduct}

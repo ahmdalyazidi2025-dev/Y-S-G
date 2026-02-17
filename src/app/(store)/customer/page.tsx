@@ -268,11 +268,13 @@ export default function CustomerHome() {
                 </div>
 
 
-                <ScannerModal
-                    isOpen={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onRequestProduct={() => setIsRequestModalOpen(true)}
-                />
+                {storeSettings.enableBarcodeScanner !== false && (
+                    <ScannerModal
+                        isOpen={isScannerOpen}
+                        onClose={() => setIsScannerOpen(false)}
+                        onRequestProduct={() => setIsRequestModalOpen(true)}
+                    />
+                )}
                 <RequestModal
                     isOpen={isRequestModalOpen}
                     onClose={() => setIsRequestModalOpen(false)}

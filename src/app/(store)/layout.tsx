@@ -350,11 +350,13 @@ export default function StoreLayout({
             </div>
 
             {/* Modals moved outside the main layout container to avoid stacking context issues */}
-            <ScannerModal
-                isOpen={isScannerOpen}
-                onClose={() => setIsScannerOpen(false)}
-                onRequestProduct={() => setIsRequestOpen(true)}
-            />
+            {storeSettings.enableBarcodeScanner !== false && (
+                <ScannerModal
+                    isOpen={isScannerOpen}
+                    onClose={() => setIsScannerOpen(false)}
+                    onRequestProduct={() => setIsRequestOpen(true)}
+                />
+            )}
 
             <AiChatModal
                 isOpen={isAiChatOpen}
