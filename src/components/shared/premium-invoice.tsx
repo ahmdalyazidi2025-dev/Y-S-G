@@ -93,8 +93,10 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
                             {order.accountName && order.accountName !== order.customerName ? (
                                 <div className="space-y-1 mt-4 pt-4 border-t border-white/5">
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
-                                    <p className="text-sm font-black text-primary/80">{order.customerName}</p>
-                                    <p className="text-[10px] font-medium text-slate-500">{order.customerPhone}</p>
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-sm font-black text-primary/80">{order.customerName}</p>
+                                        <span className="text-white/40 text-[10px] bg-white/5 px-2 py-0.5 rounded-md border border-white/10 font-mono tracking-widest">{order.customerPhone}</span>
+                                    </div>
                                 </div>
                             ) : (
                                 <p className="text-slate-400 text-sm mt-2">{order.customerPhone}</p>

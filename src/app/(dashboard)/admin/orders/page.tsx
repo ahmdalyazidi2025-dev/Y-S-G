@@ -457,10 +457,12 @@ export default function AdminOrdersPage() {
                                         </div>
 
                                         {selectedOrder.accountName && selectedOrder.accountName !== selectedOrder.customerName && (
-                                            <div className="pt-2 border-t border-border/50 space-y-0.5">
+                                            <div className="pt-2 border-t border-border/50 space-y-1">
                                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">المستلم / Recipient</p>
-                                                <p className="text-xs font-black text-primary/80">{selectedOrder.customerName}</p>
-                                                <p className="text-[10px] text-slate-500">{selectedOrder.customerPhone}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-xs font-black text-primary/80">{selectedOrder.customerName}</p>
+                                                    <span className="text-slate-500 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-md font-mono">{selectedOrder.customerPhone}</span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

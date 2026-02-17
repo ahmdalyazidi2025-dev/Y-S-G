@@ -92,7 +92,9 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                             <p className="text-sm text-slate-600 font-bold mb-1">الاسم / الحساب:</p>
                             <p className="font-black text-lg text-slate-900 leading-tight">{order.accountName || order.customerName}</p>
                             {order.accountName && order.accountName !== order.customerName && (
-                                <p className="text-xs text-slate-500 font-black mt-1">المستلم: {order.customerName}</p>
+                                <p className="text-xs text-slate-500 font-black mt-1">
+                                    المستلم: {order.customerName} ({order.customerPhone})
+                                </p>
                             )}
                         </div>
                         <div className="text-right">
