@@ -43,15 +43,15 @@ export default function StoreLayout({
     const unreadChatCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin
         // Logic: Message from Admin to Me OR Broadcast
-        // If m.userId is null/empty, it might be a broadcast if logic supports it, 
-        // but here we check if it targets the user explicitly or via @mention
-        const isForMe = m.text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
+        const text = m.text || ""
+        const isForMe = text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
         return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin
-        const isForMe = m.text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
+        const text = m.text || ""
+        const isForMe = text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
         return isFromAdmin && isForMe && !m.read && m.isSystemNotification
     }).length
 
@@ -277,6 +277,7 @@ export default function StoreLayout({
                                             type="text"
                                             placeholder="ابحث عن منتج، قطعة، أو باركود..."
                                             className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
+                                            id="global-search-input"
                                             onChange={(e) => {
                                                 const params = new URLSearchParams(window.location.search);
                                                 if (e.target.value) {
@@ -286,8 +287,18 @@ export default function StoreLayout({
                                                 }
                                                 router.replace(`${pathname}?${params.toString()}`);
                                             }}
-                                            defaultValue={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('q') || '' : ''}
                                         />
+                                        <script dangerouslySetInnerHTML={{
+                                            __html: `
+                                                (function() {
+                                                    const q = new URLSearchParams(window.location.search).get('q');
+                                                    if (q) {
+                                                        const el = document.getElementById('global-search-input');
+                                                        if (el) el.value = q;
+                                                    }
+                                                })()
+                                            `
+                                        }} />
                                     </div>
                                 </div>
                             </div>

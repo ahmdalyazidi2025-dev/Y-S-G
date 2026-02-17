@@ -938,7 +938,7 @@ function AdminSettingsContent() {
                                                 <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                                     <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
                                                     <Switch
-                                                        checked={formData.hiddenSections?.includes(item.id as any)}
+                                                        checked={formData.hiddenSections?.includes(item.id as any) || false}
                                                         onCheckedChange={(checked) => {
                                                             const current = formData.hiddenSections || []
                                                             const updated = checked
@@ -1104,11 +1104,12 @@ function GeminiKeyInput({ formData, handleChange }: { formData: StoreSettings, h
 
     // Sync keys with formData when it changes
     useEffect(() => {
+        if (!formData) return
         const existing = Array.isArray(formData.aiApiKeys) ? formData.aiApiKeys : []
         const filled = [...existing]
         while (filled.length < 3) filled.push({ key: "", status: "unchecked" })
         setKeys(filled.slice(0, 3))
-    }, [formData.aiApiKeys])
+    }, [formData?.aiApiKeys])
 
     const saveToLocalState = (newKeys: typeof keys) => {
         handleChange("aiApiKeys", newKeys)
