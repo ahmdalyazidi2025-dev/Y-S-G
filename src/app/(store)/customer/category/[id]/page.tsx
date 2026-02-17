@@ -127,7 +127,7 @@ export default function CategoryPage() {
                 </div>
 
                 {/* Modals */}
-                {storeSettings.enableBarcodeScanner === true && (
+                {storeSettings.enableBarcodeScanner && (
                     <ScannerModal
                         isOpen={isScannerOpen}
                         onClose={() => setIsScannerOpen(false)}
