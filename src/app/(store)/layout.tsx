@@ -99,7 +99,7 @@ export default function StoreLayout({
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         // Show Scanner ONLY on Home Page (/customer) AND if enabled
-        ...(storeSettings.enableBarcodeScanner === true ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
+        ...(storeSettings.enableBarcodeScanner ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
         {
             name: "طلب",
             icon: PlusCircle,

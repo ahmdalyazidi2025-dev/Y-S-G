@@ -84,13 +84,12 @@ function AdminSettingsContent() {
 
     const initialSyncRef = useRef(false)
 
-    // Sync state once on initial load from Firestore
+    // Keep formData in sync with storeSettings if no unsaved changes
     useEffect(() => {
-        if (!initialSyncRef.current && storeSettings && Object.keys(storeSettings).length > 0) {
+        if (!hasUnsavedChanges && storeSettings && Object.keys(storeSettings).length > 0) {
             setFormData(storeSettings)
-            initialSyncRef.current = true
         }
-    }, [storeSettings])
+    }, [storeSettings, hasUnsavedChanges])
 
     // Load tab from URL
     useEffect(() => {
@@ -961,18 +960,36 @@ function AdminSettingsContent() {
                                         </div>
                                     </Section>
 
-                                    <Section icon={<Scan className="w-5 h-5" />} title="أدوات النظام (الباركود)">
-                                        <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                            <div className="flex flex-col gap-1">
-                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableBarcodeScanner", !formData.enableBarcodeScanner as any)}>
-                                                    تفعيل الماسح الضوئي
-                                                </Label>
-                                                <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
+                                    <Section icon={<Scan className="w-5 h-5" />} title="أدوات النظام">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Barcode Scanner */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                <div className="flex flex-col gap-1">
+                                                    <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableBarcodeScanner", !formData.enableBarcodeScanner)}>
+                                                        تفعيل الماسح الضوئي
+                                                    </Label>
+                                                    <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
+                                                </div>
+                                                <Switch
+                                                    checked={formData.enableBarcodeScanner}
+                                                    onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked)}
+                                                />
                                             </div>
-                                            <Switch
-                                                checked={formData.enableBarcodeScanner === true}
-                                                onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked)}
-                                            />
+
+                                            {/* Product Requests Toggle */}
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                                                <div className="flex flex-col gap-1">
+                                                    <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("enableProductRequests", formData.enableProductRequests === false)}>
+                                                        تفعيل طلبات التوفير
+                                                    </Label>
+                                                    <span className="text-[10px] text-muted-foreground">السماح للعملاء برفع صور لمنتجات غير متوفرة</span>
+                                                </div>
+                                                <Switch
+                                                    checked={formData.enableProductRequests !== false}
+                                                    onCheckedChange={(checked) => handleChange("enableProductRequests", checked)}
+                                                    className="data-[state=checked]:bg-green-500"
+                                                />
+                                            </div>
                                         </div>
                                     </Section>
                                 </div>
