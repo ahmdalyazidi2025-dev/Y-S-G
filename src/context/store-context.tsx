@@ -381,6 +381,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
     const [authInitialized, setAuthInitialized] = useState(false)
+    const [settingsLoaded, setSettingsLoaded] = useState(false)
     const [guestId, setGuestId] = useState("")
     const [lastProductDoc, setLastProductDoc] = useState<DocumentData | null>(null)
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
@@ -493,7 +494,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 console.error("Auth State Change Error:", error)
                 toast.error(`خطأ في تحميل البيانات: ${(error as Error).message || "خطأ غير معروف"}`)
             } finally {
-                setLoading(false)
                 setAuthInitialized(true)
             }
         })
@@ -729,12 +729,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 // Merge with MOCK_SETTINGS to ensure all fields exist (handling new settings)
                 const mergedSettings = { ...MOCK_SETTINGS, ...data } as StoreSettings;
                 setStoreSettings(mergedSettings)
+                setSettingsLoaded(true)
             } else {
                 console.warn("[Settings] Global settings doc missing, initializing with defaults")
                 setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
+                setSettingsLoaded(true)
             }
         }, (err) => {
             console.error("[Settings] Listener error:", err)
+            setSettingsLoaded(true) // Don't block loading forever on error
         })
 
         // 10. Coupons (Optimized)
@@ -2510,6 +2513,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
 
+
+    // Unified loading state: Wait for BOTH Auth and Settings
+    useEffect(() => {
+        if (authInitialized && settingsLoaded) {
+            setLoading(false)
+        }
+    }, [authInitialized, settingsLoaded])
 
     const value = {
         products: visibleProducts, orders, categories: visibleCategories, customers, banners, productRequests,

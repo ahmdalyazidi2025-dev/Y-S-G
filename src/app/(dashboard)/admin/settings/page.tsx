@@ -45,6 +45,7 @@ function AdminSettingsContent() {
     const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
+    const [hasInteracted, setHasInteracted] = useState(false)
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
     const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data' | 'entity'>('identity')
 
@@ -82,14 +83,12 @@ function AdminSettingsContent() {
 
     const searchParams = useSearchParams()
 
-    const initialSyncRef = useRef(false)
-
-    // Keep formData in sync with storeSettings if no unsaved changes
+    // Keep formData in sync with storeSettings ONLY if no local interaction has started
     useEffect(() => {
-        if (!hasUnsavedChanges && storeSettings && Object.keys(storeSettings).length > 0) {
+        if (!hasInteracted && storeSettings) {
             setFormData(storeSettings)
         }
-    }, [storeSettings, hasUnsavedChanges])
+    }, [storeSettings, hasInteracted])
 
     // Load tab from URL
     useEffect(() => {
@@ -150,13 +149,15 @@ function AdminSettingsContent() {
         toast.info("تم تعطيل اختبار الإشعارات مؤقتاً للصيانة")
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        updateStoreSettings(formData)
+        await updateStoreSettings(formData)
+        setHasInteracted(false) // Reset interaction after successful save
         hapticFeedback('success')
     }
 
     const handleChange = (key: keyof StoreSettings, value: any) => {
+        setHasInteracted(true)
         setFormData(prev => ({ ...prev, [key]: value }))
         // Subtle feedback for typing/changing
         hapticFeedback('light')
