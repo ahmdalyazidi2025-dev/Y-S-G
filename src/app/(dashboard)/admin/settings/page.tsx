@@ -48,6 +48,8 @@ function AdminSettingsContent() {
     const [totalDevices, setTotalDevices] = useState<number | null>(null)
     const [activeTab, setActiveTab] = useState<'identity' | 'alerts' | 'coupons' | 'data' | 'entity'>('identity')
 
+    const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(storeSettings)
+
     // Report State
     const [reportStartDate, setReportStartDate] = useState("")
     const [reportEndDate, setReportEndDate] = useState("")
@@ -166,6 +168,12 @@ function AdminSettingsContent() {
     const handleSoundUpload = (event: SoundEvent, file: File) => {
         if (!file.type.startsWith('audio/')) {
             toast.error("يرجى اختيار ملف صوتي صحيح")
+            return
+        }
+
+        // 500KB Limit
+        if (file.size > 500 * 1024) {
+            toast.error("حجم الملف كبير جداً! الحد الأقصى هو 500 كيلوبايت لضمان سرعة التحميل.")
             return
         }
 
@@ -292,13 +300,17 @@ function AdminSettingsContent() {
                 </div>
 
                 <div className="flex items-center gap-3">
-
                     <Button
                         onClick={handleSubmit}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 rounded-2xl h-12 px-10 shadow-lg shadow-primary/20 transition-all active:translate-y-0.5 font-black uppercase tracking-wider"
+                        className={cn(
+                            "gap-2 rounded-2xl h-12 px-10 shadow-lg transition-all active:translate-y-0.5 font-black uppercase tracking-wider relative overflow-hidden",
+                            hasUnsavedChanges
+                                ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 ring-2 ring-amber-500/50 ring-offset-2 animate-pulse"
+                                : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+                        )}
                     >
-                        <Save className="w-5 h-5" />
-                        <span>حفظ الإعدادات</span>
+                        <Save className={cn("w-5 h-5", hasUnsavedChanges && "animate-bounce")} />
+                        <span>{hasUnsavedChanges ? "لديك تغييرات غير محفوظة" : "حفظ الإعدادات"}</span>
                     </Button>
                 </div>
             </div>
@@ -958,8 +970,8 @@ function AdminSettingsContent() {
                                                 <span className="text-[10px] text-muted-foreground">زر عائم في صفحة المنتجات لسهولة البحث</span>
                                             </div>
                                             <Switch
-                                                checked={formData.enableBarcodeScanner !== false}
-                                                onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked as any)}
+                                                checked={formData.enableBarcodeScanner === true}
+                                                onCheckedChange={(checked) => handleChange("enableBarcodeScanner", checked)}
                                             />
                                         </div>
                                     </Section>

@@ -360,8 +360,8 @@ const MOCK_SETTINGS: StoreSettings = {
     enableCoupons: true,
     enableAIChat: true,
     enableProductRequests: true,
-    enableBarcodeScanner: true,
-    sounds: {} // Defaults will be handled in the hook fallbacks
+    enableBarcodeScanner: false, // Default to hidden for robustness
+    sounds: {}
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -512,14 +512,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
                 passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
             }
-            const source = (storeSettings as any).sounds?.[event] || defaultSounds[event]
+            const customSound = (storeSettings as any).sounds?.[event]
+            const source = customSound || defaultSounds[event]
+
             if (source) {
+                // Validation: Ensure source is not corrupted or invalid
+                if (typeof source !== 'string' || (!source.startsWith('data:') && !source.startsWith('http') && !source.startsWith('/'))) {
+                    console.warn(`[Sound] Invalid sound source for ${event}, falling back to default`);
+                    const audio = new Audio(defaultSounds[event]);
+                    audio.play().catch(e => console.error("[Sound] Default fallback failed", e));
+                    return;
+                }
+
                 const audio = new Audio(source)
                 audio.volume = event === 'newOrder' ? 0.8 : 0.5
-                audio.play().catch(e => console.error("Sound play failed", e))
+                audio.play().catch(e => {
+                    console.error(`[Sound] Play failed for ${event}`, e)
+                    // Final fallback
+                    if (customSound) {
+                        new Audio(defaultSounds[event]).play().catch(() => { })
+                    }
+                })
             }
         } catch (e) {
-            console.error("Sound init failed", e)
+            console.error("[Sound] General init failed", e)
         }
     }
 
@@ -701,11 +717,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 9. Settings (Public)
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
             if (snap.exists()) {
+                const data = snap.data()
+                console.log("[Settings] Update received from Firestore:", {
+                    enableBarcodeScanner: data.enableBarcodeScanner,
+                    enableCoupons: data.enableCoupons,
+                    requireCustomerInfoOnCheckout: data.requireCustomerInfoOnCheckout
+                })
                 // Merge with MOCK_SETTINGS to ensure all fields exist (handling new settings)
-                setStoreSettings({ ...MOCK_SETTINGS, ...snap.data() } as StoreSettings)
+                setStoreSettings({ ...MOCK_SETTINGS, ...data } as StoreSettings)
             } else {
+                console.warn("[Settings] Global settings doc missing, using mocks")
                 setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
             }
+        }, (err) => {
+            console.error("[Settings] Listener error:", err)
         })
 
         // 10. Coupons (Optimized)
@@ -785,6 +810,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
+            // Log payload size for debugging
+            const size = new Blob([JSON.stringify(settings)]).size
+            console.log(`[StoreContext] Saving settings... Estimated size: ${(size / 1024).toFixed(2)} KB`)
+
+            if (size > 800 * 1024) { // Firestore limit is 1MB, let's warn at 800KB
+                toast.error("حجم الإعدادات كبير جداً! قد تفشل عملية الحفظ بسبب الملفات الصوتية المخصصة.")
+            }
+
             await setDoc(doc(db, "settings", "global"), sanitizeData(settings), { merge: true })
 
             // Educational Feedback for AI
@@ -801,15 +834,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     })
                 }
             } else {
-                toast.success("تم تحديث إعدادات المتجر في السحابة", {
-                    description: "سيتم تطبيق التغييرات فوراً على تطبيق العملاء."
+                toast.success("تم تحديث إعدادات المتجر بنجاح ✅", {
+                    description: "سيتم تطبيق التغييرات فوراً على جميع المستخدمين."
                 })
             }
+
+            setStoreSettings(settings)
+            hapticFeedback('success')
         } catch (error) {
-            console.error("Failed to update settings:", error)
-            toast.error("فشل تحديث الإعدادات", {
+            console.error("[StoreContext] Failed to update settings:", error)
+            toast.error("فشل حفظ الإعدادات، يرجى المحاولة مرة أخرى", {
                 description: (error as Error)?.message || "خطأ غير معروف"
             })
+            hapticFeedback('error')
         }
     }
 

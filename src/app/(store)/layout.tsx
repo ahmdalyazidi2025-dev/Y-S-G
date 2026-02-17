@@ -99,7 +99,7 @@ export default function StoreLayout({
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
         // Show Scanner ONLY on Home Page (/customer) AND if enabled
-        ...(pathname === "/customer" && storeSettings.enableBarcodeScanner !== false ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
+        ...(pathname === "/customer" && storeSettings.enableBarcodeScanner === true ? [{ name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }] : []),
         {
             name: "طلب",
             icon: PlusCircle,
@@ -275,7 +275,7 @@ export default function StoreLayout({
                                         </div>
                                         <input
                                             type="text"
-                                            placeholder="ابحث عن منتج، قطعة، أو باركود..."
+                                            placeholder={storeSettings.enableBarcodeScanner === true ? "ابحث عن منتج، قطعة، أو باركود..." : "ابحث عن منتج أو قطعة..."}
                                             className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
                                             id="global-search-input"
                                             onChange={(e) => {
@@ -314,7 +314,7 @@ export default function StoreLayout({
                 </div>
 
                 {/* Floating Scanner Button (Isolated) - Only on Customer Home Page & Enabled */}
-                {pathname === "/customer" && storeSettings.enableBarcodeScanner !== false && (
+                {pathname === "/customer" && storeSettings.enableBarcodeScanner === true && (
                     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
                         <button
                             // Mobile Touch Events
@@ -350,7 +350,7 @@ export default function StoreLayout({
             </div>
 
             {/* Modals moved outside the main layout container to avoid stacking context issues */}
-            {storeSettings.enableBarcodeScanner !== false && (
+            {storeSettings.enableBarcodeScanner === true && (
                 <ScannerModal
                     isOpen={isScannerOpen}
                     onClose={() => setIsScannerOpen(false)}

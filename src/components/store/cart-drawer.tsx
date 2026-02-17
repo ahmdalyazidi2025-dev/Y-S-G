@@ -70,13 +70,6 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 return
             }
         }
-        const hasName = customerName.trim().length > 0 || !!currentUser?.name
-        const hasPhone = customerPhone.trim().length > 0 || !!currentUser?.phone || (currentUser?.role === 'customer' && false) // simple check
-
-        if (!hasName || !hasPhone) {
-            toast.error("يرجى إدخال الاسم ورقم الجوال لإكمال الطلب")
-            return
-        }
 
         createOrder(isDraft, { name: customerName, phone: customerPhone })
         onClose()
@@ -215,7 +208,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 )}
 
                                 {/* Coupon */}
-                                {storeSettings.enableCoupons !== false && (
+                                {storeSettings.enableCoupons === true && (
                                     <div className="space-y-3 p-4 bg-black/20 rounded-2xl border border-white/5">
                                         <label className="text-xs text-slate-400 font-bold">كود الخصم (الكوبون)</label>
                                         <div className="flex gap-2 relative">
