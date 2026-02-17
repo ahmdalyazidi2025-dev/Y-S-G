@@ -24,6 +24,7 @@ const STATUS_CONFIG = {
     canceled: { label: "ملغاة", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
     accepted: { label: "تم القبول", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: CheckCircle2 },
     rejected: { label: "مرفوض", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
+    deleted: { label: "محذوف", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
 }
 
 export default function AdminOrdersPage() {

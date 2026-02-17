@@ -23,6 +23,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
     canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
     accepted: { label: "تم القبول", color: "text-emerald-400", bg: "bg-emerald-400/10", icon: CheckCircle2 },
     rejected: { label: "مرفوض", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
+    deleted: { label: "محذوف", color: "text-slate-400", bg: "bg-slate-400/10", icon: XCircle },
 }
 
 export default function InvoicesPage() {
