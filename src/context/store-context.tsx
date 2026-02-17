@@ -716,17 +716,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 9. Settings (Public)
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
+            console.log("[StoreContext] Settings snapshot received");
             if (snap.exists()) {
                 const data = snap.data()
                 console.log("[Settings] Update received from Firestore:", {
                     enableBarcodeScanner: data.enableBarcodeScanner,
                     enableCoupons: data.enableCoupons,
+                    enableAIChat: data.enableAIChat,
+                    enableProductRequests: data.enableProductRequests,
                     requireCustomerInfoOnCheckout: data.requireCustomerInfoOnCheckout
                 })
                 // Merge with MOCK_SETTINGS to ensure all fields exist (handling new settings)
-                setStoreSettings({ ...MOCK_SETTINGS, ...data } as StoreSettings)
+                const mergedSettings = { ...MOCK_SETTINGS, ...data } as StoreSettings;
+                setStoreSettings(mergedSettings)
             } else {
-                console.warn("[Settings] Global settings doc missing, using mocks")
+                console.warn("[Settings] Global settings doc missing, initializing with defaults")
                 setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
             }
         }, (err) => {
@@ -810,6 +814,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
+            console.log("[StoreContext] Starting updateStoreSettings...", {
+                enableBarcodeScanner: settings.enableBarcodeScanner,
+                enableAIChat: settings.enableAIChat
+            });
+
             // Log payload size for debugging
             const size = new Blob([JSON.stringify(settings)]).size
             console.log(`[StoreContext] Saving settings... Estimated size: ${(size / 1024).toFixed(2)} KB`)
@@ -818,7 +827,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 toast.error("حجم الإعدادات كبير جداً! قد تفشل عملية الحفظ بسبب الملفات الصوتية المخصصة.")
             }
 
+            // Important: Explicitly use settings to update Firestore
             await setDoc(doc(db, "settings", "global"), sanitizeData(settings), { merge: true })
+            console.log("[StoreContext] Firestore setDoc completed successfully");
 
             // Educational Feedback for AI
             if (settings.enableAIChat !== storeSettings.enableAIChat) {
@@ -839,6 +850,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 })
             }
 
+            // Local state will be updated by the onSnapshot listener, but we also update it here for immediate feedback
             setStoreSettings(settings)
             hapticFeedback('success')
         } catch (error) {
