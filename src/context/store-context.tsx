@@ -127,7 +127,7 @@ export type Order = {
     paymentMethod?: string
     items: CartItem[]
     total: number
-    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected"
+    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected" | "deleted"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
 }
