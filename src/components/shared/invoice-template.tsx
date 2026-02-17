@@ -88,13 +88,17 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                 <div className="mb-6 p-6 bg-slate-100 rounded-xl border-2 border-slate-300">
                     <p className="text-sm text-slate-700 font-black mb-3 uppercase">معلومات العميل</p>
                     <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <p className="text-sm text-slate-600 font-bold mb-1">الاسم:</p>
-                            <p className="font-black text-lg text-slate-900">{order.customerName}</p>
+                        <div className="flex-1">
+                            <p className="text-sm text-slate-600 font-bold mb-1">الاسم / الحساب:</p>
+                            <p className="font-black text-lg text-slate-900 leading-tight">{order.accountName || order.customerName}</p>
+                            {order.accountName && (
+                                <p className="text-xs text-slate-500 font-black mt-1">المستلم: {order.customerName}</p>
+                            )}
                         </div>
-                        <div>
-                            <p className="text-sm text-slate-600 font-bold mb-1">طريقة الدفع:</p>
-                            <p className="font-black text-lg text-slate-900">الدفع عند الاستلام</p>
+                        <div className="text-right">
+                            <p className="text-sm text-slate-600 font-bold mb-1">رقم الهاتف / الدفع:</p>
+                            <p className="font-black text-lg text-slate-900">{order.customerPhone || '---'}</p>
+                            <p className="text-[10px] text-slate-500 font-bold mt-1">الدفع عند الاستلام</p>
                         </div>
                     </div>
                 </div>

@@ -120,6 +120,7 @@ export type User = {
 export type Order = {
     id: string
     customerName: string
+    accountName?: string // Primary account holder name
     customerPhone?: string
     customerLocation?: string
     customerId: string
@@ -947,8 +948,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const finalCustomerPhone = additionalInfo?.phone || currentUser?.phone || ""
         const finalCustomerLocation = currentUser?.location || ""
 
+        // If a custom name was provided, store the account name separately
+        const accountName = additionalInfo?.name ? currentUser?.name : undefined
+
         const orderData = {
             customerName: finalCustomerName,
+            accountName, // Key change for visibility
             customerPhone: finalCustomerPhone,
             customerLocation: finalCustomerLocation,
             customerId: auth.currentUser.uid, // Use SDK ID for consistency

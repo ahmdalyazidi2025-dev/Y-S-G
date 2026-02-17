@@ -328,7 +328,10 @@ export default function AdminOrdersPage() {
                                         <status.icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">#{order.id} - {order.customerName}</h3>
+                                        <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors flex items-center gap-2">
+                                            #{order.id} - {order.accountName || order.customerName}
+                                            {order.accountName && <span className="text-[10px] text-primary/70 font-bold">(لـ: {order.customerName})</span>}
+                                        </h3>
                                         <p className="text-[10px] text-muted-foreground">{order.createdAt.toLocaleString('ar-SA')}</p>
                                     </div>
                                 </div>
@@ -441,7 +444,12 @@ export default function AdminOrdersPage() {
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <p className="font-bold text-foreground text-sm">{selectedOrder.customerName}</p>
+                                    <p className="font-bold text-foreground text-sm leading-tight">
+                                        {selectedOrder.accountName || selectedOrder.customerName}
+                                        {selectedOrder.accountName && (
+                                            <span className="block text-[10px] text-slate-500 mt-0.5 font-bold">المستلم: {selectedOrder.customerName}</span>
+                                        )}
+                                    </p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-muted-foreground text-xs">
