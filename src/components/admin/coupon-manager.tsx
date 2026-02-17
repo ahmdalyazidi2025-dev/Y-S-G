@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { useStore } from "@/context/store-context"
+import { useStore, StoreSettings } from "@/context/store-context"
 import { Timestamp } from "firebase/firestore"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -12,9 +12,21 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { motion, AnimatePresence } from "framer-motion"
 
-export function CouponManager() {
+export function CouponManager({ externalFormData, onExternalChange }: { externalFormData?: StoreSettings, onExternalChange?: (key: keyof StoreSettings, value: any) => void }) {
     const { coupons, addCoupon, deleteCoupon, categories, storeSettings, updateStoreSettings } = useStore()
+
+    // Use external formData/handleChange if provided (manual save flow), otherwise fallback to direct update
+    const currentSettings = externalFormData || storeSettings
+    const handleToggle = (checked: boolean) => {
+        if (onExternalChange) {
+            onExternalChange("enableCoupons", checked)
+        } else {
+            updateStoreSettings({ ...storeSettings, enableCoupons: checked })
+        }
+    }
+
     const [code, setCode] = useState("")
+    // ... rest of state ...
     const [discount, setDiscount] = useState("10")
     const [usageLimit, setUsageLimit] = useState("100")
     // Replaced expiryDays with explicit dates
@@ -109,8 +121,8 @@ export function CouponManager() {
                         <Label htmlFor="coupon-toggle" className="text-xs text-muted-foreground cursor-pointer">تفعيل النظام</Label>
                         <Switch
                             id="coupon-toggle"
-                            checked={storeSettings.enableCoupons}
-                            onCheckedChange={(checked: boolean) => updateStoreSettings({ ...storeSettings, enableCoupons: checked })}
+                            checked={currentSettings.enableCoupons}
+                            onCheckedChange={handleToggle}
                         />
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, Suspense } from "react"
+import React, { useState, useEffect, Suspense, useRef } from "react"
 import { useStore, StoreSettings } from "@/context/store-context"
 import { CouponManager } from "@/components/admin/coupon-manager"
 import { toast } from "sonner"
@@ -80,17 +80,13 @@ function AdminSettingsContent() {
 
     const searchParams = useSearchParams()
 
-    // Sync state only on initial load or if explicitly reset
+    const initialSyncRef = useRef(false)
+
+    // Sync state once on initial load from Firestore
     useEffect(() => {
-        if (storeSettings && Object.keys(storeSettings).length > 0) {
-            setFormData(prev => {
-                // If we haven't touched formData yet (still using mock values)
-                // then sync from storeSettings
-                if (!prev || (prev.aboutTitle === "مجموعة يحيى سلمان غزواني التجارية" && !prev.logoUrl)) {
-                    return storeSettings;
-                }
-                return prev;
-            });
+        if (!initialSyncRef.current && storeSettings && Object.keys(storeSettings).length > 0) {
+            setFormData(storeSettings)
+            initialSyncRef.current = true
         }
     }, [storeSettings])
 
@@ -626,7 +622,7 @@ function AdminSettingsContent() {
 
                         {activeTab === 'coupons' && (
                             <div className="glass-card p-2 rounded-3xl overflow-hidden">
-                                <CouponManager />
+                                <CouponManager externalFormData={formData} onExternalChange={handleChange} />
                             </div>
                         )}
 
@@ -907,14 +903,14 @@ function AdminSettingsContent() {
                                     <Section icon={<Shield className="w-5 h-5" />} title="سياسات العملاء">
                                         <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                                             <div className="flex flex-col gap-1">
-                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => setFormData({ ...formData, requireCustomerInfoOnCheckout: !formData.requireCustomerInfoOnCheckout })}>
+                                                <Label className="text-foreground font-bold cursor-pointer" onClick={() => handleChange("requireCustomerInfoOnCheckout", !formData.requireCustomerInfoOnCheckout)}>
                                                     إلزام العميل بالاسم ورقم الجوال
                                                 </Label>
                                                 <span className="text-[10px] text-muted-foreground">لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</span>
                                             </div>
                                             <Switch
                                                 checked={formData.requireCustomerInfoOnCheckout}
-                                                onCheckedChange={(checked) => setFormData({ ...formData, requireCustomerInfoOnCheckout: checked })}
+                                                onCheckedChange={(checked) => handleChange("requireCustomerInfoOnCheckout", checked)}
                                             />
                                         </div>
                                     </Section>
