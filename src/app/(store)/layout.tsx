@@ -19,6 +19,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import { Footer } from "@/components/store/footer"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VisitTracker } from "@/components/analytics/visit-tracker"
+import { InteractiveMarquee } from "@/components/shared/interactive-marquee"
 
 export default function StoreLayout({
     children,
@@ -164,97 +165,101 @@ export default function StoreLayout({
                                         </div>
 
                                         {/* Navigation Items */}
-                                        <Link
-                                            href="/customer/invoices"
-                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all border border-border"
-                                        >
-                                            <ClipboardList className="w-5 h-5" />
-                                            <span className="text-[9px] font-bold">فواتيري</span>
-                                        </Link>
+                                        <div className="flex-1 overflow-hidden">
+                                            <InteractiveMarquee speed={0.4} className="py-1">
+                                                <Link
+                                                    href="/customer/invoices"
+                                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <ClipboardList className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">فواتيري</span>
+                                                </Link>
 
-                                        <button
-                                            onClick={() => {
-                                                if (storeSettings.enableProductRequests === false) {
-                                                    import("sonner").then(({ toast }) => {
-                                                        toast.error("عفواً، رفع الطلبات مغلق حالياً", {
-                                                            description: "يمكنك التواصل مع الإدارة للمساعدة.",
-                                                            duration: 4000
-                                                        })
-                                                    })
-                                                } else {
-                                                    setIsRequestOpen(true)
-                                                }
-                                            }}
-                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all border border-border"
-                                        >
-                                            <PlusCircle className="w-5 h-5" />
-                                            <span className="text-[9px] font-bold">طلب</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => {
+                                                        if (storeSettings.enableProductRequests === false) {
+                                                            import("sonner").then(({ toast }) => {
+                                                                toast.error("عفواً، رفع الطلبات مغلق حالياً", {
+                                                                    description: "يمكنك التواصل مع الإدارة للمساعدة.",
+                                                                    duration: 4000
+                                                                })
+                                                            })
+                                                        } else {
+                                                            setIsRequestOpen(true)
+                                                        }
+                                                    }}
+                                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <PlusCircle className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">طلب</span>
+                                                </button>
 
-                                        {storeSettings.enableBarcodeScanner && (
-                                            <button
-                                                onClick={() => setIsScannerOpen(true)}
-                                                className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 active:scale-95 transition-all border border-border"
-                                            >
-                                                <Scan className="w-5 h-5" />
-                                                <span className="text-[9px] font-bold">الماسح</span>
-                                            </button>
-                                        )}
-
-                                        {storeSettings.enableAIChat !== false && (
-                                            <Link
-                                                href="/customer/chat"
-                                                onClick={() => markNotificationsAsRead('chat')}
-                                                className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
-                                            >
-                                                <MessageSquare className="w-5 h-5" />
-                                                <span className="text-[9px] font-bold">محادثة</span>
-                                                {unreadChatCount > 0 && (
-                                                    <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                                        {unreadChatCount}
-                                                    </span>
+                                                {storeSettings.enableBarcodeScanner && (
+                                                    <button
+                                                        onClick={() => setIsScannerOpen(true)}
+                                                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 active:scale-95 transition-all border border-border"
+                                                    >
+                                                        <Scan className="w-5 h-5" />
+                                                        <span className="text-[9px] font-bold">الماسح</span>
+                                                    </button>
                                                 )}
-                                            </Link>
-                                        )}
 
-                                        <button
-                                            onClick={() => setIsNotifyOpen(true)}
-                                            className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 active:scale-95 transition-all border border-border"
-                                        >
-                                            <Bell className="w-5 h-5" />
-                                            <span className="text-[9px] font-bold">تنبيهات</span>
-                                            {unreadNotificationCount > 0 && (
-                                                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                                    {unreadNotificationCount}
-                                                </span>
-                                            )}
-                                        </button>
+                                                {storeSettings.enableAIChat !== false && (
+                                                    <Link
+                                                        href="/customer/chat"
+                                                        onClick={() => markNotificationsAsRead('chat')}
+                                                        className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
+                                                    >
+                                                        <MessageSquare className="w-5 h-5" />
+                                                        <span className="text-[9px] font-bold">محادثة</span>
+                                                        {unreadChatCount > 0 && (
+                                                            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                                                {unreadChatCount}
+                                                            </span>
+                                                        )}
+                                                    </Link>
+                                                )}
 
-                                        <button
-                                            onClick={() => {
-                                                const url = window.location.origin
-                                                const text = "تسوق أفضل المنتجات من YSG Store"
-                                                if (navigator.share) {
-                                                    navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
-                                                } else {
-                                                    navigator.clipboard.writeText(url)
-                                                    import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
-                                                }
-                                                hapticFeedback('light')
-                                            }}
-                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all border border-border"
-                                        >
-                                            <Share2 className="w-5 h-5" />
-                                            <span className="text-[9px] font-bold">نشر</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => setIsNotifyOpen(true)}
+                                                    className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <Bell className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">تنبيهات</span>
+                                                    {unreadNotificationCount > 0 && (
+                                                        <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                                            {unreadNotificationCount}
+                                                        </span>
+                                                    )}
+                                                </button>
 
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all border border-border"
-                                        >
-                                            <LogOut className="w-5 h-5" />
-                                            <span className="text-[9px] font-bold">خروج</span>
-                                        </button>
+                                                <button
+                                                    onClick={() => {
+                                                        const url = window.location.origin
+                                                        const text = "تسوق أفضل المنتجات من YSG Store"
+                                                        if (navigator.share) {
+                                                            navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
+                                                        } else {
+                                                            navigator.clipboard.writeText(url)
+                                                            import("sonner").then(({ toast }) => toast.success("تم نسخ الرابط"))
+                                                        }
+                                                        hapticFeedback('light')
+                                                    }}
+                                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <Share2 className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">نشر</span>
+                                                </button>
+
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <LogOut className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">خروج</span>
+                                                </button>
+                                            </InteractiveMarquee>
+                                        </div>
 
                                         <div className="mx-1 scale-75 sm:scale-90 origin-center">
                                             <ThemeToggle />

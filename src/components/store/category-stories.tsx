@@ -8,6 +8,8 @@ import Image from "next/image"
 
 import { useRouter } from "next/navigation"
 
+import { InteractiveMarquee } from "@/components/shared/interactive-marquee"
+
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
     const { categories } = useStore()
     const router = useRouter()
@@ -22,7 +24,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
     }
 
     return (
-        <div className="flex gap-4 overflow-x-auto pb-6 no-scrollbar px-4 pt-2">
+        <InteractiveMarquee speed={0.3} className="pb-6 pt-2">
             {allCategories.map((cat, idx) => {
                 const isActive = selectedCategory === cat
                 const dbCat = categories.find(c => c.nameAr === cat)
@@ -69,6 +71,6 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                     </motion.button>
                 )
             })}
-        </div>
+        </InteractiveMarquee>
     )
 }

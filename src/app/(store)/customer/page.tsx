@@ -17,6 +17,7 @@ import { CartDrawer } from "@/components/store/cart-drawer"
 import { CustomerNotifications } from "@/components/store/customer-notifications"
 import { HeroBanner } from "@/components/store/hero-banner"
 import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skeletons"
+import { InteractiveMarquee } from "@/components/shared/interactive-marquee"
 
 
 
@@ -175,39 +176,41 @@ export default function CustomerHome() {
                 )}
 
                 {!hiddenSections.includes('categories') && (
-                    <div className="hidden lg:flex gap-3 overflow-x-auto pb-4 pt-2 no-scrollbar px-4 relative z-30 customer-scrollbar mb-4 sticky top-[142px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
-                        <button
-                            onClick={() => setSelectedCategory("الكل")}
-                            className={cn(
-                                "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                selectedCategory === "الكل"
-                                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
-                                    : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
-                            )}
-                        >
-                            <span className="relative z-10">الكل</span>
-                            {selectedCategory === "الكل" && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                            )}
-                        </button>
-                        {categories.map((cat) => (
+                    <div className="hidden lg:block relative z-30 mb-4 sticky top-[142px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
+                        <InteractiveMarquee speed={0.4} className="pb-4 pt-2">
                             <button
-                                key={cat.id}
-                                onClick={() => setSelectedCategory(cat.nameAr)}
+                                onClick={() => setSelectedCategory("الكل")}
                                 className={cn(
                                     "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                    selectedCategory === cat.nameAr
+                                    selectedCategory === "الكل"
                                         ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
                                         : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
                                 )}
                             >
-                                <span className="relative z-10">{cat.nameAr}</span>
-                                {selectedCategory === cat.nameAr && (
+                                <span className="relative z-10">الكل</span>
+                                {selectedCategory === "الكل" && (
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                 )}
                             </button>
-                        ))}
-                        {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setSelectedCategory(cat.nameAr)}
+                                    className={cn(
+                                        "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
+                                        selectedCategory === cat.nameAr
+                                            ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
+                                            : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
+                                    )}
+                                >
+                                    <span className="relative z-10">{cat.nameAr}</span>
+                                    {selectedCategory === cat.nameAr && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                                    )}
+                                </button>
+                            ))}
+                            {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
+                        </InteractiveMarquee>
                     </div>
                 )}
 
