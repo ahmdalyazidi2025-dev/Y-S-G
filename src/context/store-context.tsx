@@ -1443,7 +1443,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const order = orders.find(o => o.id === orderId)
         if (!order) return
 
-        // 1. Update Order Document
+        // 1. Update Order Document (using JS Date for local compatibility)
         const newHistory = status === 'deleted'
             ? [{ status, timestamp: new Date() }] // Prune history on delete
             : [...(order.statusHistory || []), { status, timestamp: new Date() }]
