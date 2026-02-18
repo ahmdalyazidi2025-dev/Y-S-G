@@ -28,6 +28,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const [isEditorOpen, setIsEditorOpen] = useState(false)
     const [editingFile, setEditingFile] = useState<File | null>(null)
     const [useBranding, setUseBranding] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -100,12 +101,15 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files
         if (!files || files.length === 0) return
+        await processFiles(files)
+        e.target.value = "";
+    }
 
+    const processFiles = async (files: FileList | File[]) => {
         // If Branding/Magic Fix is enabled, open the Editor with the first file
-        if (useBranding) {
+        if (useBranding && files.length > 0) {
             setEditingFile(files[0]);
             setIsEditorOpen(true);
-            e.target.value = "";
             return;
         }
 
@@ -117,8 +121,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 const file = files[i]
                 if (!file.type.startsWith('image/')) continue
 
-                // Compress and CROP image to square before adding
-                // Max width 1000px, Quality 0.8, CropSquare = true
+                // Compress and fit image to square before adding
+                // Max width 1000px, Quality 0.8, CropSquare = true (now uses 'contain' logic)
                 const compressedBase64 = await compressImage(file, 1000, 0.8, true)
                 newImages.push(compressedBase64)
             }
@@ -136,7 +140,25 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             toast.dismiss(loadingToast);
             toast.error("حدث خطأ أثناء معالجة الصور، يرجى المحاولة مرة أخرى")
         }
-        e.target.value = "";
+    }
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(true)
+    }
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+    }
+
+    const handleDrop = async (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        const files = e.dataTransfer.files
+        if (files && files.length > 0) {
+            await processFiles(files)
+        }
     }
 
     const handleEditorSave = async (processedFile: File) => {
@@ -368,7 +390,12 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Image Inputs (Grid) */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div
+                                className={`grid grid-cols-2 lg:grid-cols-4 gap-4 p-2 rounded-3xl transition-all ${isDragging ? 'bg-primary/20 ring-2 ring-primary ring-dashed' : ''}`}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                            >
                                 {/* Upload From Gallery */}
                                 <div
                                     onClick={() => galleryInputRef.current?.click()}

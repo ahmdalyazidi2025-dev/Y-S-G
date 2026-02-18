@@ -27,37 +27,45 @@ export async function compressImage(file: File, maxWidth = 1024, quality = 0.7, 
                 let sx = 0, sy = 0, sWidth = width, sHeight = height;
 
                 if (cropSquare) {
-                    const minDim = Math.min(width, height);
-                    sx = (width - minDim) / 2;
-                    sy = (height - minDim) / 2;
-                    sWidth = minDim;
-                    sHeight = minDim;
+                    // Balanced Scaling (Contain): Ensure the entire image fits in the square
+                    const ratio = Math.min(maxWidth / width, maxWidth / height);
+                    const newWidth = width * ratio;
+                    const newHeight = height * ratio;
 
-                    // Destination dimensions
-                    width = maxWidth;
-                    height = maxWidth;
-                } else if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
-                }
+                    canvas.width = maxWidth;
+                    canvas.height = maxWidth;
 
-                canvas.width = width;
-                canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error("Could not get canvas context"));
+                        return;
+                    }
 
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    reject(new Error("Could not get canvas context"));
-                    return;
-                }
+                    // Fill white background
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, maxWidth, maxWidth);
 
-                if (cropSquare) {
-                    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
+                    // Center the image within the square canvas
+                    const dx = (maxWidth - newWidth) / 2;
+                    const dy = (maxWidth - newHeight) / 2;
+                    ctx.drawImage(img, dx, dy, newWidth, newHeight);
                 } else {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error("Could not get canvas context"));
+                        return;
+                    }
                     ctx.drawImage(img, 0, 0, width, height);
                 }
 
-                // Compress specific types as JPEG (good for photos), others as PNG/WebP if needed
-                // Using image/jpeg ensures good compression for photos.
+                // Use JPEG for general compression, but we can also use WebP if supported/needed
                 const dataUrl = canvas.toDataURL('image/jpeg', quality);
                 resolve(dataUrl);
             };
