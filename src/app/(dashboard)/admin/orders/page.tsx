@@ -393,7 +393,7 @@ export default function AdminOrdersPage() {
                                             key={order.id}
                                             className={cn(
                                                 "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group relative overflow-hidden",
-                                                order.status === "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
+                                                order.status === "deleted" && filter !== "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
                                                 !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
                                             )}
                                             onClick={() => {
@@ -402,7 +402,7 @@ export default function AdminOrdersPage() {
                                             }}
                                         >
                                             {/* New Badge Pulse Indicator */}
-                                            {!order.isRead && (
+                                            {!order.isRead && order.status !== "deleted" && (
                                                 <div className="absolute top-0 right-0 p-1">
                                                     <div className="flex items-center gap-1.5 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-bl-xl animate-pulse shadow-lg">
                                                         <div className="w-1 h-1 bg-white rounded-full animate-ping" />
