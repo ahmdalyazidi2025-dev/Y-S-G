@@ -177,7 +177,7 @@ export default function CustomerHome() {
 
                 {!hiddenSections.includes('categories') && (
                     <div className="hidden lg:block relative z-30 mb-4 sticky top-[142px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
-                        <InteractiveMarquee speed={0.4} className="pb-4 pt-2">
+                        <InteractiveMarquee speed={0.6} className="pb-4 pt-2">
                             <button
                                 onClick={() => setSelectedCategory("الكل")}
                                 className={cn(

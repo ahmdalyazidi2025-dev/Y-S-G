@@ -166,7 +166,7 @@ export default function StoreLayout({
 
                                         {/* Navigation Items */}
                                         <div className="flex-1 overflow-hidden">
-                                            <InteractiveMarquee speed={0.4} className="py-1">
+                                            <InteractiveMarquee speed={0.6} className="py-1">
                                                 <Link
                                                     href="/customer/invoices"
                                                     className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 active:scale-95 transition-all border border-border"
@@ -258,11 +258,12 @@ export default function StoreLayout({
                                                     <LogOut className="w-5 h-5" />
                                                     <span className="text-[9px] font-bold">خروج</span>
                                                 </button>
-                                            </InteractiveMarquee>
-                                        </div>
 
-                                        <div className="mx-1 scale-75 sm:scale-90 origin-center">
-                                            <ThemeToggle />
+                                                <div className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-background hover:bg-accent active:scale-95 transition-all border border-border">
+                                                    <ThemeToggle />
+                                                    <span className="text-[9px] font-bold text-muted-foreground">الثيم</span>
+                                                </div>
+                                            </InteractiveMarquee>
                                         </div>
                                     </div>
 

@@ -24,7 +24,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
     }
 
     return (
-        <InteractiveMarquee speed={0.3} className="pb-6 pt-2">
+        <InteractiveMarquee speed={0.5} className="pb-6 pt-2">
             {allCategories.map((cat, idx) => {
                 const isActive = selectedCategory === cat
                 const dbCat = categories.find(c => c.nameAr === cat)
