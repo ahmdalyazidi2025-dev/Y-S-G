@@ -497,15 +497,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!currentUser || currentUser.role === "customer") return
         const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
+            const reqs = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: toDate(doc.data().createdAt)
+            })) as PasswordRequest[]
+
             const hasAdded = snapshot.docChanges().some(change => change.type === "added")
-            if (!snapshot.metadata.fromCache && hasAdded) {
+            if (!snapshot.metadata.fromCache && hasAdded && snapshot.docChanges().length < 5) {
                 playSound('passwordRequest')
             }
             setPasswordRequests(reqs)
         })
         return () => unsubscribe()
-    }, [currentUser, playSound])
+    }, [currentUser, playSound, toDate])
 
 
     useEffect(() => {
@@ -519,18 +524,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setGuestId(newGuestId)
         }
 
-        // Join Requests Listener
+        // 1. Join Requests Listener
         const unsubJoin = onSnapshot(query(collection(db, "joinRequests"), orderBy("createdAt", "desc")), (snap) => {
-            setJoinRequests(snap.docs.map(doc => {
-                const data = doc.data() as JoinRequest
-                return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: data.createdAt ? toDate(data.createdAt) : new Date()
-                }
-            }))
+            setJoinRequests(snap.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: toDate(doc.data().createdAt)
+            } as JoinRequest)))
         })
-        return () => unsubJoin()
+
+        // 2. Product Requests Listener (طلبات التوفير)
+        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap) => {
+            setProductRequests(snap.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id,
+                createdAt: toDate(doc.data().createdAt)
+            } as ProductRequest)))
+        })
+
+        return () => {
+            unsubJoin()
+            unsubRequests()
+        }
     }, [toDate])
 
     // 0. Global Settings & Preferences Sync
