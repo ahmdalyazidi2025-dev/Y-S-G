@@ -98,7 +98,7 @@ export function InteractiveMarquee({
         <div
             ref={scrollContainerRef}
             className={cn(
-                "flex overflow-x-auto no-scrollbar select-none touch-pan-x",
+                "flex overflow-x-auto no-scrollbar touch-pan-x",
                 className
             )}
             onMouseEnter={() => pauseOnHover && (isPausedRef.current = true)}
