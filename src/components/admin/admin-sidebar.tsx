@@ -27,9 +27,12 @@ const NAV_ITEMS = [
 ]
 
 const toDate = (d: any) => {
-    if (d?.toDate) return d.toDate()
+    if (!d) return new Date(0)
+    if (d.toDate && typeof d.toDate === 'function') return d.toDate()
     if (d instanceof Date) return d
-    return new Date(d || 0)
+    if (typeof d === 'object' && 'seconds' in d) return new Date(d.seconds * 1000)
+    const parsed = new Date(d)
+    return isNaN(parsed.getTime()) ? new Date(0) : parsed
 }
 
 export function AdminSidebar() {
@@ -138,7 +141,7 @@ export function AdminSidebar() {
 
                                         if (item.href === "/admin/orders") {
                                             const lastDate = toDate(lastViewed.orders)
-                                            count = orders.filter(o => o.status === "pending" && toDate(o.createdAt) > lastDate).length
+                                            count = orders.filter(o => (o.status === "pending" || o.status === "processing") && toDate(o.createdAt) > lastDate).length
                                         } else if (item.href === "/admin/requests") {
                                             const lastDate = toDate(lastViewed.requests)
                                             count = productRequests.filter(r => r.status === "pending" && toDate(r.createdAt) > lastDate).length
@@ -273,7 +276,7 @@ export function AdminMobileNav() {
 
                                     if (item.href === "/admin/orders") {
                                         const lastDate = toDate(lastViewed.orders)
-                                        count = orders.filter(o => o.status === "pending" && toDate(o.createdAt) > lastDate).length
+                                        count = orders.filter(o => (o.status === "pending" || o.status === "processing") && toDate(o.createdAt) > lastDate).length
                                     } else if (item.href === "/admin/requests") {
                                         const lastDate = toDate(lastViewed.requests)
                                         count = productRequests.filter(r => r.status === "pending" && toDate(r.createdAt) > lastDate).length

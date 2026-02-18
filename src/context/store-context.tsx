@@ -531,6 +531,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return () => unsubJoin()
     }, [toDate])
 
+    // 0. Global Settings & Preferences Sync
+    useEffect(() => {
+        const unsubGlobal = onSnapshot(doc(db, "settings", "global"), (snap) => {
+            if (snap.exists()) {
+                setStoreSettings(snap.data() as StoreSettings)
+            }
+            setSettingsLoaded(true) // Marks settings as ready
+        })
+
+        const unsubPrefs = onSnapshot(doc(db, "settings", "admin_preferences"), (snap) => {
+            if (snap.exists()) {
+                setAdminPreferences(snap.data() as AdminPreferences)
+            }
+        })
+
+        return () => {
+            unsubGlobal()
+            unsubPrefs()
+        }
+    }, [])
+
     // Listen to Auth State Changes
     useEffect(() => {
         // Optimistic Load from LocalStorage

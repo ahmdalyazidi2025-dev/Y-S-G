@@ -3,7 +3,7 @@ import { useStore } from "@/context/store-context"
 import { motion } from "framer-motion"
 import { Search, Phone, User, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { ar } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
@@ -17,9 +17,13 @@ const formatDate = (date: any) => {
 }
 
 export default function PasswordRequestsPage() {
-    const { passwordRequests, resolvePasswordRequest, customers } = useStore()
+    const { passwordRequests, resolvePasswordRequest, customers, markSectionAsViewed } = useStore()
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null) // For opening customer form
+
+    useEffect(() => {
+        markSectionAsViewed('passwordRequests')
+    }, [markSectionAsViewed])
 
     // Filter requests
     const filteredRequests = passwordRequests.filter(req =>
