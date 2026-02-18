@@ -24,60 +24,77 @@ export function InteractiveMarquee({
     const resumeTimeoutRef = useRef<NodeJS.Timeout>(undefined)
     const boundaryTimeoutRef = useRef<NodeJS.Timeout>(undefined)
 
-    // Refs for animation state to avoid closure issues and unnecessary re-renders
     const isPausedRef = useRef(false)
-    const directionRef = useRef<-1 | 1>(-1) // -1 for left (forward in RTL), 1 for right (backward)
+    const directionRef = useRef<-1 | 1>(-1)
     const isAtBoundaryRef = useRef(false)
+
+    // Cache dimensions to avoid layout thrashing in the animation loop
+    const dimsRef = useRef({ scrollWidth: 0, clientWidth: 0 })
+
+    const updateDims = useCallback(() => {
+        if (scrollContainerRef.current) {
+            dimsRef.current = {
+                scrollWidth: scrollContainerRef.current.scrollWidth,
+                clientWidth: scrollContainerRef.current.clientWidth
+            }
+        }
+    }, [])
 
     const startAnimation = useCallback(() => {
         const scrollContainer = scrollContainerRef.current
         if (!scrollContainer) return
 
+        updateDims()
+
         const animate = () => {
             if (!isPausedRef.current && !isInteracting && !isAtBoundaryRef.current) {
-                const { scrollLeft, scrollWidth, clientWidth } = scrollContainer
+                const { scrollLeft } = scrollContainer
+                const { scrollWidth, clientWidth } = dimsRef.current
 
-                // In RTL, scrollLeft is usually 0 at max right and negative at left.
-                // We move by subtracting speed * direction (direction -1 moves left, 1 moves right)
+                if (scrollWidth <= clientWidth) {
+                    requestRef.current = requestAnimationFrame(animate)
+                    return
+                }
+
                 const nextScroll = scrollLeft + (speed * directionRef.current)
                 scrollContainer.scrollLeft = nextScroll
 
-                // Boundary Detection
+                // Boundary Detection for RTL
                 const maxScrollLeft = -(scrollWidth - clientWidth)
 
-                // If we hit the "left" end (most negative)
-                if (directionRef.current === -1 && scrollContainer.scrollLeft <= maxScrollLeft + 1) {
+                if (directionRef.current === -1 && scrollLeft <= maxScrollLeft + 1) {
                     scrollContainer.scrollLeft = maxScrollLeft
                     isAtBoundaryRef.current = true
                     boundaryTimeoutRef.current = setTimeout(() => {
-                        directionRef.current = 1 // Reverse to right
+                        directionRef.current = 1
                         isAtBoundaryRef.current = false
-                    }, 1500) // Pause at the end
+                    }, 1500)
                 }
-                // If we hit the "right" end (0)
-                else if (directionRef.current === 1 && scrollContainer.scrollLeft >= -1) {
+                else if (directionRef.current === 1 && scrollLeft >= -1) {
                     scrollContainer.scrollLeft = 0
                     isAtBoundaryRef.current = true
                     boundaryTimeoutRef.current = setTimeout(() => {
-                        directionRef.current = -1 // Reverse to left
+                        directionRef.current = -1
                         isAtBoundaryRef.current = false
-                    }, 1500) // Pause at the start
+                    }, 1500)
                 }
             }
             requestRef.current = requestAnimationFrame(animate)
         }
 
         requestRef.current = requestAnimationFrame(animate)
-    }, [speed, isInteracting])
+    }, [speed, isInteracting, updateDims])
 
     useEffect(() => {
         startAnimation()
+        window.addEventListener('resize', updateDims)
         return () => {
+            window.removeEventListener('resize', updateDims)
             if (requestRef.current) cancelAnimationFrame(requestRef.current)
             if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current)
             if (boundaryTimeoutRef.current) clearTimeout(boundaryTimeoutRef.current)
         }
-    }, [startAnimation])
+    }, [startAnimation, updateDims])
 
     const handleInteractionStart = () => {
         setIsInteracting(true)

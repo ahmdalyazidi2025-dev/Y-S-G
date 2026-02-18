@@ -63,9 +63,13 @@ export default function CustomerHome() {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
 
-    // Optimization: Stable handler for viewing product details
+    // Optimization: Stable handler for viewing product details with micro-delay for UI smoothness
     const handleViewDetails = React.useCallback((product: Product) => {
-        setSelectedProduct(product)
+        // Use a tiny delay to allow the browser to process the click and ripple effects
+        // before rendering the heavy details modal
+        setTimeout(() => {
+            setSelectedProduct(product)
+        }, 30)
     }, [])
 
     // Deep linking: Detect if notifications should be open
