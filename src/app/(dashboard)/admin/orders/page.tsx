@@ -393,16 +393,32 @@ export default function AdminOrdersPage() {
                                         <div
                                             key={order.id}
                                             className={cn(
-                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group",
-                                                order.status === "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20"
+                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group relative overflow-hidden",
+                                                order.status === "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
+                                                !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
                                             )}
                                             onClick={() => {
                                                 setSelectedOrder(order)
                                                 if (!order.isRead) markOrderAsRead(order.id)
                                             }}
                                         >
+                                            {/* New Badge Pulse Indicator */}
+                                            {!order.isRead && (
+                                                <div className="absolute top-0 right-0 p-1">
+                                                    <div className="flex items-center gap-1.5 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-bl-xl animate-pulse shadow-lg">
+                                                        <div className="w-1 h-1 bg-white rounded-full animate-ping" />
+                                                        جديد
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-center gap-4">
-                                                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", status.bg, status.color)}>
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                                                    status.bg,
+                                                    status.color,
+                                                    !order.isRead && "ring-2 ring-red-500/20 ring-offset-2 ring-offset-background"
+                                                )}>
                                                     <status.icon className="w-5 h-5" />
                                                 </div>
                                                 <div className="space-y-0.5">
