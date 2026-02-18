@@ -240,6 +240,7 @@ export type AdminPreferences = {
         chat?: Date | Timestamp
         joinRequests?: Date | Timestamp
         customers?: Date | Timestamp
+        passwordRequests?: Date | Timestamp
     }
 }
 
@@ -388,7 +389,122 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
     const [lastOrderDoc, setLastOrderDoc] = useState<DocumentData | null>(null)
     const [hasMoreOrders, setHasMoreOrders] = useState(true)
+    const [adminPreferences, setAdminPreferences] = useState<AdminPreferences>({ lastViewed: {} })
+    const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
     const router = useRouter()
+
+    const toDate = useCallback((ts: Timestamp | Date | { seconds: number, nanoseconds: number } | null | undefined): Date => {
+        if (!ts) return new Date()
+        if (ts instanceof Timestamp) return ts.toDate()
+        if (ts instanceof Date) return ts
+        if (typeof ts === 'object' && 'seconds' in ts) return new Timestamp(ts.seconds, ts.nanoseconds).toDate()
+        return new Date()
+    }, [])
+
+    const sanitizeData = useCallback((data: any): any => {
+        if (!data || typeof data !== 'object') return data
+        if (data instanceof Timestamp || data instanceof Date) return data
+        if (Array.isArray(data)) return data.map(sanitizeData)
+
+        const sanitized: any = {}
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined) {
+                sanitized[key] = sanitizeData(data[key])
+            }
+        })
+        return sanitized
+    }, [])
+
+    const hapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error') => {
+        if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            const patterns = {
+                light: [10],
+                medium: [20],
+                heavy: [40],
+                success: [10, 50, 10],
+                warning: [50, 100, 50],
+                error: [100, 50, 100, 50, 100]
+            }
+            navigator.vibrate(patterns[type])
+        }
+    }, [])
+
+
+    const playSound = useCallback((event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => {
+        if (typeof window === 'undefined') return
+        try {
+            const defaultSounds = {
+                newOrder: "data:audio/wav;base64,UklGRiQIAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAIAACAgYCBgoKDA4SEhYUGhobHBweIiIiJCQoKCwwMDQ4ODxAQERITExQVFhcXFxgZGRobGxwcHR4eHyAgISIiIyQkJSUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/",
+                newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
+                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
+            }
+            const customSound = (storeSettings as any).sounds?.[event]
+            const source = customSound || defaultSounds[event]
+
+            if (source) {
+                if (typeof source !== 'string' || (!source.startsWith('data:') && !source.startsWith('http') && !source.startsWith('/'))) {
+                    console.warn(`[Sound] Invalid sound source for ${event}, falling back to default`);
+                    new Audio(defaultSounds[event]).play().catch(e => console.error("[Sound] Default fallback failed", e));
+                    return;
+                }
+                const audio = new Audio(source)
+                audio.volume = event === 'newOrder' ? 0.8 : 0.5
+                audio.play().catch(e => {
+                    console.error(`[Sound] Play failed for ${event}`, e)
+                    if (customSound) new Audio(defaultSounds[event]).play().catch(() => { })
+                })
+            }
+        } catch (e) {
+            console.error("[Sound] General init failed", e)
+        }
+    }, [storeSettings])
+
+    // Filter categories based on user permissions
+    const visibleCategories = React.useMemo(() => {
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+            return allCategories
+        }
+        // It's a customer
+        const customerAllowed = currentUser.allowedCategories
+        if (!customerAllowed || customerAllowed === "all") {
+            // Filter out hidden categories for general customers
+            return allCategories.filter(cat => !cat.isHidden)
+        } else {
+            // Filter categories
+            return allCategories.filter(cat => customerAllowed.includes(cat.id))
+        }
+    }, [allCategories, currentUser])
+
+    // Filter products based on category visibility
+    const visibleProducts = React.useMemo(() => {
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
+            return products
+        }
+        return products.filter(p => {
+            const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
+            return category ? !category.isHidden : true
+        })
+    }, [products, allCategories, currentUser])
+
+    // --- Password Recovery Requests ---
+    const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
+
+    useEffect(() => {
+        if (!currentUser || currentUser.role === "customer") return
+        const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
+            const hasAdded = snapshot.docChanges().some(change => change.type === "added")
+            if (!snapshot.metadata.fromCache && hasAdded) {
+                playSound('passwordRequest')
+            }
+            setPasswordRequests(reqs)
+        })
+        return () => unsubscribe()
+    }, [currentUser, playSound])
+
 
     useEffect(() => {
         // ... (existing Guest ID logic)
@@ -413,7 +529,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
         return () => unsubJoin()
-    }, [])
+    }, [toDate])
 
     // Listen to Auth State Changes
     useEffect(() => {
@@ -499,53 +615,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
         })
         return () => unsubscribe()
-    }, [])
-    const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
-
-    // Sound Logic inside Provider (No circular hook dependency)
-    const playSound = (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => {
-        if (typeof window === 'undefined') return
-        try {
-            const defaultSounds = {
-                newOrder: "data:audio/wav;base64,UklGRiQIAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAIAACAgYCBgoKDA4SEhYUGhobHBweIiIiJCQoKCwwMDQ4ODxAQERITExQVFhcXFxgZGRobGxwcHR4eHyAgISIiIyQkJSUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/",
-                newMessage: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                statusUpdate: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                generalPush: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA=",
-                passwordRequest: "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbqWEzM2CfutvKZDY2YZ/K381iNjZhmMbV4GU4N2CSutXVZzg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YI+51dRmODhgj7nV1GY4OGCPudXUZjg4YIA="
-            }
-            const customSound = (storeSettings as any).sounds?.[event]
-            const source = customSound || defaultSounds[event]
-
-            if (source) {
-                // Validation: Ensure source is not corrupted or invalid
-                if (typeof source !== 'string' || (!source.startsWith('data:') && !source.startsWith('http') && !source.startsWith('/'))) {
-                    console.warn(`[Sound] Invalid sound source for ${event}, falling back to default`);
-                    const audio = new Audio(defaultSounds[event]);
-                    audio.play().catch(e => console.error("[Sound] Default fallback failed", e));
-                    return;
-                }
-
-                const audio = new Audio(source)
-                audio.volume = event === 'newOrder' ? 0.8 : 0.5
-                audio.play().catch(e => {
-                    console.error(`[Sound] Play failed for ${event}`, e)
-                    // Final fallback
-                    if (customSound) {
-                        new Audio(defaultSounds[event]).play().catch(() => { })
-                    }
-                })
-            }
-        } catch (e) {
-            console.error("[Sound] General init failed", e)
-        }
-    }
-
-    const toDate = useCallback((ts: Timestamp | Date | { seconds: number, nanoseconds: number } | null | undefined): Date => {
-        if (!ts) return new Date()
-        if (ts instanceof Timestamp) return ts.toDate()
-        if (ts instanceof Date) return ts
-        if (typeof ts === 'object' && 'seconds' in ts) return new Timestamp(ts.seconds, ts.nanoseconds).toDate()
-        return new Date()
     }, [])
 
     useEffect(() => {
@@ -646,174 +715,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         const unsubOrdersPromise = fetchInitialOrders();
 
-        // 7. Requests (Admin Only usually, or public?)
-        let requestsQuery;
-        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            requestsQuery = query(collection(db, "requests"), where("customerId", "==", currentUser!.id))
-        } else {
-            requestsQuery = query(collection(db, "requests"), orderBy("createdAt", "desc"), limit(50))
-        }
-
-        const unsubRequests = onSnapshot(requestsQuery, (snap: QuerySnapshot<DocumentData>) => {
-            setProductRequests(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<ProductRequest, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
-            }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
-        }, (error) => {
-            console.error("Requests Listener Error:", error)
-            if (error.code === 'permission-denied') {
-                // toast.error("ليس لديك صلاحية لعرض الطلبات (Admin only)") 
-                // Suppress for customers/guests to avoid spam, mainly for debugging Admin
-                if (currentUser?.role === 'admin') toast.error("خطأ صلاحيات في عرض الطلبات")
-            } else if (error.code === 'failed-precondition') {
-                toast.error("مطلوب إنشاء فهرس (Index) لعرض الطلبات. راجع المنصة.")
-            }
-        })
-
-        // 8. Messages (Role Based & Caching)
-        let messagesQuery;
-        if (currentUser?.role === 'customer' || currentUser?.role === 'guest') {
-            // Customer/Guest: Only my thread
-            // REMOVED orderBy to avoid "Missing Index" issues. Sorting in memory.
-            messagesQuery = query(collection(db, "messages"), where("userId", "==", currentUser!.id))
-        } else {
-            // Admin: Recent active messages (Limit 50 for speed)
-            messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(50))
-        }
-
-        // Optimistic Load from Cache for Customers
-        if ((currentUser?.role === 'customer' || currentUser?.role === 'guest') && currentUser?.id) {
-            const cachedParams = localStorage.getItem(`chat_cache_${currentUser!.id}`)
-            if (cachedParams) {
-                try {
-                    const parsed = JSON.parse(cachedParams!)
-                    // Transform dates back to objects if needed, or just use as is for initial render
-                    // For simplicity, we just rely on the fast listener below, but this is where hydration would happen
-                } catch (e) { }
-            }
-        }
-
-        const unsubMessages = onSnapshot(messagesQuery, (snap: QuerySnapshot<DocumentData>) => {
-            const msgs = snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Message, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
-            })
-
-            // Sort in memory (Newest Last for Chat)
-            msgs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-
-            setMessages(msgs)
-
-            // Update Cache for Customers
-            if (currentUser?.role === 'customer' && msgs.length > 0) {
-                // cache essential data
-                localStorage.setItem(`chat_cache_${currentUser!.id}`, JSON.stringify(msgs.map(m => ({ ...m, createdAt: m.createdAt.toISOString() }))))
-            }
-        }, (error) => {
-            console.error("Messages Listener Error:", error)
-            // toast.error("Error fetching messages: " + error.message)
-        })
-
-        // 9. Settings (Public)
-        const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
-            console.log("[StoreContext] Settings snapshot received");
-            if (snap.exists()) {
-                const data = snap.data()
-                console.log("[Settings] Update received from Firestore:", {
-                    enableBarcodeScanner: data.enableBarcodeScanner,
-                    enableCoupons: data.enableCoupons,
-                    enableAIChat: data.enableAIChat,
-                    enableProductRequests: data.enableProductRequests,
-                    requireCustomerInfoOnCheckout: data.requireCustomerInfoOnCheckout
-                })
-                // Merge with MOCK_SETTINGS to ensure all fields exist (handling new settings)
-                const mergedSettings = { ...MOCK_SETTINGS, ...data } as StoreSettings;
-                setStoreSettings(mergedSettings)
-                setSettingsLoaded(true)
-            } else {
-                console.warn("[Settings] Global settings doc missing, initializing with defaults")
-                setDoc(doc(db, "settings", "global"), MOCK_SETTINGS)
-                setSettingsLoaded(true)
-            }
-        }, (err) => {
-            console.error("[Settings] Listener error:", err)
-            setSettingsLoaded(true) // Don't block loading forever on error
-        })
-
-        // 10. Coupons (Optimized)
-        const unsubCoupons = onSnapshot(query(collection(db, "coupons"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
-            setCoupons(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Coupon, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt), expiryDate: data.expiryDate ? toDate(data.expiryDate) : undefined } as Coupon
-            }))
-        })
-
-        // 11. Notifications (User Specific)
-        let notifQuery;
-        if (currentUser) {
-            // Remove orderBy to avoid Index Error
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", currentUser!.id), limit(50))
-        } else {
-            // Guest or Global
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", (guestId || 'guest')), limit(20))
-        }
-
-        const unsubNotifications = onSnapshot(notifQuery, (snap: QuerySnapshot<DocumentData>) => {
-            setNotifications(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Notification, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Notification
-            }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()))
-        })
-
         return () => {
-            unsubCategories(); unsubCustomers(); unsubStaff();
-            unsubOrdersPromise.then(unsub => unsub && unsub()); unsubBanners(); unsubRequests();
-            unsubMessages(); unsubSettings(); unsubCoupons(); unsubNotifications();
+            unsubCategories()
+            unsubCustomers()
+            unsubStaff()
+            unsubBanners()
+            unsubOrdersPromise.then(unsub => unsub && unsub())
         }
-    }, [toDate, authInitialized, currentUser, guestId]) // Added currentUser dependence to trigger re-subscription on login/logout
+    }, [currentUser, toDate])
 
-    // Fetch Admin Preferences
-    const [adminPreferences, setAdminPreferences] = useState<AdminPreferences>({ lastViewed: {} })
 
-    useEffect(() => {
-        const unsubscribeAdminPrefs = onSnapshot(doc(db, "settings", "admin_preferences"), (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data()
-                // Convert Timestamps to Dates if needed
-                const lastViewed = data.lastViewed || {}
-                Object.keys(lastViewed).forEach(key => {
-                    if (lastViewed[key] instanceof Timestamp) {
-                        lastViewed[key] = lastViewed[key].toDate()
-                    }
-                })
-                setAdminPreferences({ lastViewed })
-            } else {
-                // If preferences don't exist, initialize them
-                setDoc(doc(db, "settings", "admin_preferences"), { lastViewed: {} }, { merge: true })
-            }
-        })
-        return () => unsubscribeAdminPrefs()
-    }, [])
 
-    // Filter categories based on user permissions
-    useEffect(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            setCategories(allCategories)
-            return
-        }
-
-        // It's a customer
-        const customerAllowed = currentUser.allowedCategories
-
-        if (!customerAllowed || customerAllowed === "all") {
-            // Filter out hidden categories for general customers
-            setCategories(allCategories.filter(cat => !cat.isHidden))
-        } else {
-            // Filter categories
-            setCategories(allCategories.filter(cat => customerAllowed.includes(cat.id)))
-        }
-
-    }, [currentUser, allCategories])
 
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
@@ -2428,48 +2340,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    // --- Password Recovery Requests (Phone Based) ---
-    const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
-
-    useEffect(() => {
-        if (!currentUser || currentUser.role === "customer") return
-
-        const q = query(collection(db, "password_requests"), orderBy("createdAt", "desc"))
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reqs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PasswordRequest[]
-
-            // Check for added documents to play sound
-            const hasAdded = snapshot.docChanges().some(change => change.type === "added")
-            // Avoid sound on initial load (simple heuristic: if we have 0 requests locally and we get some, it might be initial load. 
-            // Better: only play if !fromCache or using docChanges logic which works fine.
-            // On initial load, all docs are 'added'.
-            // Current best practice: Don't beep on hydration.
-            // But checking 'snapshot.metadata.fromCache' helps.
-
-            // If we want to only beep for NEW requests coming in Live:
-            if (!snapshot.metadata.fromCache && hasAdded) {
-                // Optimization: Only beep if this is not the very first visual render set?
-                // docChanges with !fromCache usually works for live updates.
-                playSound('passwordRequest')
-            }
-
-            setPasswordRequests(reqs)
-        })
-        return () => unsubscribe()
-    }, [currentUser, playSound])
-
     const requestPasswordResetPhone = async (phone: string) => {
         try {
-            // Use Server Action to bypass client-side permission rules
             const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
             const result = await requestPasswordResetAction(phone)
-
             if (!result.success) {
                 const msg = result.error || "حدث خطأ، حاول مرة أخرى"
                 toast.error(msg)
                 return { success: false, message: msg }
             }
-
             const msg = "تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً"
             toast.success(msg)
             return { success: true, message: msg }
@@ -2489,25 +2368,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    // Filter categories based on visibility
-    const visibleCategories = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return allCategories
-        }
-        return allCategories.filter(c => !c.isHidden)
-    }, [allCategories, currentUser])
 
-    // Filter products based on category visibility
-    const visibleProducts = React.useMemo(() => {
-        if (!currentUser || currentUser.role === "admin" || currentUser.role === "staff") {
-            return products
-        }
-        return products.filter(p => {
-            // Find the category for this product
-            const category = allCategories.find(c => c.id === p.category || c.nameAr === p.category)
-            return category ? !category.isHidden : true
-        })
-    }, [products, allCategories, currentUser])
 
     const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
         try {

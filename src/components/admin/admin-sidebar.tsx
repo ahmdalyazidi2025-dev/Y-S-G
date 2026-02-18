@@ -132,6 +132,39 @@ export function AdminSidebar() {
                                 <div className="flex items-center gap-3 relative z-10">
                                     <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : item.color)} />
                                     <span className="text-xs font-bold">{item.title}</span>
+                                    {(() => {
+                                        let count = 0
+                                        const lastViewed = adminPreferences?.lastViewed || {}
+
+                                        if (item.href === "/admin/orders") {
+                                            const lastDate = toDate(lastViewed.orders)
+                                            count = orders.filter(o => o.status === "pending" && toDate(o.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/requests") {
+                                            const lastDate = toDate(lastViewed.requests)
+                                            count = productRequests.filter(r => r.status === "pending" && toDate(r.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/chat") {
+                                            const lastDate = toDate(lastViewed.chat)
+                                            count = messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/password-requests") {
+                                            const lastDate = toDate(lastViewed.passwordRequests || lastViewed.customers)
+                                            count = passwordRequests.filter(r => toDate(r.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/join-requests") {
+                                            const lastDate = toDate(lastViewed.joinRequests || lastViewed.customers)
+                                            count = joinRequests.filter(r => toDate(r.createdAt) > lastDate).length
+                                        } else if (item.href === "/admin/customers") {
+                                            const lastDate = toDate(lastViewed.customers)
+                                            count = customers.filter(c => toDate(c.createdAt) > lastDate).length
+                                        }
+
+                                        if (count > 0) {
+                                            return (
+                                                <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-in zoom-in shadow-lg shadow-red-500/20">
+                                                    {count > 99 ? '99+' : count}
+                                                </span>
+                                            )
+                                        }
+                                        return null
+                                    })()}
                                 </div>
 
                                 {isActive && (
