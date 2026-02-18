@@ -1493,9 +1493,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!order) return
 
         // 1. Update Order Document
+        const newHistory = status === 'deleted'
+            ? [{ status, timestamp: Timestamp.now() }] // Prune history on delete
+            : [...(order.statusHistory || []), { status, timestamp: Timestamp.now() }]
+
         await updateDoc(doc(db, "orders", orderId), sanitizeData({
             status,
-            statusHistory: [...order.statusHistory, { status, timestamp: Timestamp.now() }]
+            statusHistory: newHistory
         }))
 
         // 2. Create Persistent Notification for Customer
