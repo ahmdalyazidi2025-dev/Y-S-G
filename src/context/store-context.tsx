@@ -1453,6 +1453,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             statusHistory: newHistory
         }))
 
+        // Manual state update for immediate UI feedback (handles paginated/searched orders)
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status, statusHistory: newHistory } : o))
+
         // 2. Create Persistent Notification for Customer
         const statusMessages: Record<string, string> = {
             processing: `🛠️ نعمل بجد! طلبك رقم #${orderId} الآن في مرحلة التحضير والتحقق.`,
@@ -2413,6 +2416,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         try {
             const orderRef = doc(db, "orders", orderId)
             await updateDoc(orderRef, { isRead: true })
+
+            // Manual state update for immediate UI feedback
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isRead: true } : o))
         } catch (error) {
             console.error("Error marking order as read:", error)
         }
