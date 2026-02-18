@@ -10,59 +10,42 @@ const toDate = (d: any) => {
 }
 
 export function AppBadgeManager() {
-    const { messages, orders, productRequests, currentUser, adminPreferences, joinRequests } = useStore()
+    const { messages, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId } = useStore()
     const [badgeCount, setBadgeCount] = useState(0)
 
     useEffect(() => {
         let count = 0
         const lastViewed = adminPreferences?.lastViewed || {}
+        const targetId = currentUser?.id || guestId
 
-        if (currentUser) {
-            if (currentUser.role === 'admin' || currentUser.role === 'staff') {
-                // Admin: Smart Count using lastViewed
+        if (currentUser?.role === 'admin' || currentUser?.role === 'staff') {
+            // Admin: Smart Count using lastViewed
+            // ... (existing admin logic)
+            const lastOrders = toDate(lastViewed.orders)
+            count += orders.filter(o => o.status === 'pending' && toDate(o.createdAt) > lastOrders).length
 
-                // 1. Orders
-                const lastOrders = toDate(lastViewed.orders)
-                count += orders.filter(o => o.status === 'pending' && toDate(o.createdAt) > lastOrders).length
+            const lastRequests = toDate(lastViewed.requests)
+            count += productRequests.filter(r => r.status === 'pending' && toDate(r.createdAt) > lastRequests).length
 
-                // 2. Requests
-                const lastRequests = toDate(lastViewed.requests)
-                count += productRequests.filter(r => r.status === 'pending' && toDate(r.createdAt) > lastRequests).length
+            const lastChat = toDate(lastViewed.chat)
+            count += messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastChat).length
 
-                // 3. Chat (Unread messages SINCE last view)
-                const lastChat = toDate(lastViewed.chat)
-                count += messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastChat).length
-
-                // 4. Join Requests
-                const lastJoin = toDate(lastViewed.joinRequests)
-                count += joinRequests.filter(r => toDate(r.createdAt) > lastJoin).length
-
-                // 5. Customers (New customers) - Optional but consistent
-                const lastCustomers = toDate(lastViewed.customers)
-                count += 0 // Usually we don't badge customers globally, but sidebar does. 
-                // Let's exclude from Global Badge to reduce noise, OR include if critical.
-                // User asked for "Main Icon" to clear. If sidebar has it, main icon probably should too.
-                // Let's include it.
-                // NOTE: We need to access `customers` from store if we want to count them here. 
-                // But `AppBadgeManager` doesn't destructure `customers` yet. 
-                // Let's skip customers for PWA badge to keep it focused on actionable items (orders/msgs).
-
-            } else {
-                // Customer: Standard Unread Count (for now, or implement smart logic for them too?)
-                // User complaint was about "Admin Section".
-                // Keep customer logic simple for now: Unread Messages from Admin
-                const unreadMessages = messages.filter(m =>
-                    m.isAdmin && !m.read && m.userId === currentUser.id
-                ).length
-                count += unreadMessages
-
-                // Add order status updates? maybe later.
-            }
+            const lastJoin = toDate(lastViewed.joinRequests)
+            count += joinRequests.filter(r => toDate(r.createdAt) > lastJoin).length
+        } else {
+            // Customer/Guest: Standard Unread Count
+            // Logic must match StoreLayout for consistency
+            count = messages.filter(m => {
+                const isFromAdmin = m.isAdmin
+                const text = m.text || ""
+                const isForMe = text.includes(`(@${targetId})`) || m.userId === targetId
+                return isFromAdmin && isForMe && !m.read
+            }).length
         }
 
         setBadgeCount(count)
 
-    }, [messages, orders, productRequests, currentUser, adminPreferences, joinRequests])
+    }, [messages, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId])
 
 
     // Update PWA Badge & Favicon

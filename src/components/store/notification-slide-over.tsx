@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Bell, Clock, CheckCircle2, Info, AlertTriangle } from "lucide-react"
 import { useStore } from "@/context/store-context"
@@ -9,7 +9,14 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { messages, currentUser, guestId } = useStore()
+    const { messages, currentUser, guestId, markNotificationsAsRead } = useStore()
+
+    // Clear notifications when opened
+    useEffect(() => {
+        if (isOpen) {
+            markNotificationsAsRead('system')
+        }
+    }, [isOpen, markNotificationsAsRead])
 
     // Filter messages/notifications for this user
     // Assuming 'messages' are used for notifications as per previous context

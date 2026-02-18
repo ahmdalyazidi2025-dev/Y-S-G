@@ -1664,10 +1664,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return m.senderId === targetId && !m.isAdmin && !m.read
             } else {
                 // Customer reading admin messages
-                // Filter messages that are from admin AND directed to this user (or global)
-                // Legacy logic used @mention in text. New logic might use userId field if present.
-                // Let's handle both for backward compat.
-                const isForMe = m.text.includes(`(@${targetId})`) || m.userId === targetId
+                const text = m.text || ""
+                const isForMe = text.includes(`(@${targetId})`) || m.userId === targetId
                 return m.isAdmin && isForMe && !m.read
             }
         })
@@ -2250,42 +2248,45 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 const q = query(
                     collection(db, "messages"),
                     where("read", "==", false),
-                    // Optimization: We should filter by conversation ID or User ID if possible
-                    // But our message structure is flat. 
-                    // Let's just find messages that are targeted to us or sent by the other party.
                 )
 
-                // This is a bit complex for a quick fix without a proper conversation sub-collection.
-                // A better approach for the badge:
-                // The badge counts `!m.read && !m.isAdmin` (for admin).
-                // So we need to update those messages to `read: true`.
-
-                // Let's implement a simple batch update for visual feedback
                 const querySnapshot = await getDocs(q);
-                // Filter in memory for safety if query is too broad
                 const updates: Promise<void>[] = []
                 querySnapshot.forEach((doc) => {
                     const data = doc.data() as Message
 
                     // Admin clearing a specific customer's chat
-                    if (currentUser.role === 'admin' && id && data.senderId === id && !data.isAdmin) {
+                    if ((currentUser.role === 'admin' || currentUser.role === 'staff') && id && data.senderId === id && !data.isAdmin && !data.isSystemNotification) {
                         updates.push(updateDoc(doc.ref, { read: true }))
                     }
 
-                    // Customer clearing their own chat (messages from admin)
-                    if (currentUser.role === 'customer' && data.userId === currentUser.id && data.isAdmin) {
-                        updates.push(updateDoc(doc.ref, { read: true }))
+                    // Customer/Guest clearing their own chat (messages from admin)
+                    if (data.isAdmin && !data.isSystemNotification) {
+                        const targetId = currentUser.id || guestId
+                        const text = data.text || ""
+                        const isForMe = data.userId === targetId || text.includes(`(@${targetId})`)
+                        if (isForMe) {
+                            updates.push(updateDoc(doc.ref, { read: true }))
+                        }
                     }
                 })
                 await Promise.all(updates)
             }
 
             if (type === "system") {
-                // Mark all notifications for this user as read
-                // Implementation depends on where 'notifications' are stored. 
-                // We have a `Notification` type but no `notifications` collection usage shown clearly in snippet.
-                // Assuming we have a `notifications` collection or field.
-                // For now, let's leave this placeholder or implement if we find the collection.
+                const targetId = currentUser?.id || guestId
+                if (!targetId) return
+
+                const unreadSystem = messages.filter(m => {
+                    const text = m.text || ""
+                    const isForMe = m.userId === targetId || text.includes(`(@${targetId})`)
+                    return m.isAdmin && isForMe && m.isSystemNotification && !m.read
+                })
+
+                if (unreadSystem.length > 0) {
+                    const updates = unreadSystem.map(m => updateDoc(doc(db, "messages", m.id), { read: true }))
+                    await Promise.all(updates)
+                }
             }
 
         } catch (error) {
