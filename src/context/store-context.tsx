@@ -127,7 +127,7 @@ export type Order = {
     paymentMethod?: string
     items: CartItem[]
     total: number
-    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected" | "deleted"
+    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "deleted"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
     isRead?: boolean // Added for persistent notifications
@@ -1466,7 +1466,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 userId: order.customerId,
                 title: "تحديث حالة الطلب",
                 body: statusMessages[status],
-                type: status === "rejected" || status === "canceled" ? "error" : "success",
+                type: status === "deleted" || status === "canceled" ? "error" : "success",
                 read: false,
                 createdAt: Timestamp.now()
             }))

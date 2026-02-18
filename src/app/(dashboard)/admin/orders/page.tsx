@@ -23,8 +23,7 @@ const STATUS_CONFIG = {
     delivered: { label: "تم التسليم", color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", icon: CheckCircle2 },
     canceled: { label: "ملغاة", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
     accepted: { label: "تم القبول", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: CheckCircle2 },
-    rejected: { label: "مرفوض", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
-    deleted: { label: "محذوف", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
+    deleted: { label: "المحذوفات", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
 }
 
 export default function AdminOrdersPage() {
@@ -323,7 +322,7 @@ export default function AdminOrdersPage() {
 
             {/* Quick Status Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                {["all", "processing", "shipped", "delivered", "canceled", "accepted", "rejected"].map((s) => (
+                {["all", "processing", "shipped", "delivered", "canceled", "accepted", "deleted"].map((s) => (
                     <button
                         key={s}
                         onClick={() => { setFilter(s); hapticFeedback('light') }}

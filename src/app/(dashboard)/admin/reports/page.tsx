@@ -24,7 +24,7 @@ export default function ReportsPage() {
     // 1. Total Revenue
     // Only count processed/delivered/shipped orders? Or all paid?
     // Let's assume all except 'canceled' | 'rejected'
-    const validOrders = orders.filter(o => o.status !== "canceled" && o.status !== "rejected")
+    const validOrders = orders.filter(o => o.status !== "canceled" && o.status !== "deleted")
     const totalRevenue = validOrders.reduce((sum, o) => sum + o.total, 0)
 
     // 2. Total Profit

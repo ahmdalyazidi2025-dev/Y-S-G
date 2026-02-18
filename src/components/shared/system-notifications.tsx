@@ -80,7 +80,7 @@ export function SystemNotifications() {
                         msg = "تمت الموافقة على طلبك! سيصلك قريباً"
                         sound = 'newOrder' // Happy sound!
                         icon = <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    } else if (order.status === 'rejected') {
+                    } else if (order.status === 'deleted') {
                         msg = "عذراً، تم رفض الطلب. يرجى مراجعة الإشعارات"
                         // Alert sound logic usually maps to statusUpdate or I can reuse generalPush
                         sound = 'statusUpdate'
