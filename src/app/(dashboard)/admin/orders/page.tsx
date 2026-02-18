@@ -154,7 +154,7 @@ export default function AdminOrdersPage() {
         else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
         else if (activeCategory === "received") matchesCategory = o.status === "delivered"
 
-        const matchesStatus = filter === "all" || o.status === filter
+        const matchesStatus = filter === "all" ? o.status !== "deleted" : o.status === filter
         const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
 
         // Customer grouping filter

@@ -85,7 +85,7 @@ export default function InvoicesPage() {
         setSelectedOrder(null)
     }
 
-    const filteredOrders = filter === "all" ? orders : orders.filter(o => o.status === filter)
+    const filteredOrders = orders.filter(o => filter === "all" ? o.status !== "deleted" : o.status === filter)
 
     return (
         <div className="space-y-6 pb-20">
