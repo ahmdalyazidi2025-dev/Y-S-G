@@ -28,7 +28,7 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, customers, storeSettings, loadMoreOrders, hasMoreOrders, loading, searchOrders } = useStore()
+    const { orders, updateOrderStatus, customers, storeSettings, loadMoreOrders, hasMoreOrders, loading, searchOrders, markOrderAsRead } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
     const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
@@ -96,10 +96,6 @@ export default function AdminOrdersPage() {
         }
     }, [hasMoreOrders, loading, loadMoreOrders, searchQuery])
 
-    // Smart Badge Clearing
-    const { markSectionAsViewed } = useStore()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { markSectionAsViewed('orders') }, [])
 
     // ... existing code ...
 
@@ -400,7 +396,10 @@ export default function AdminOrdersPage() {
                                                 "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group",
                                                 order.status === "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20"
                                             )}
-                                            onClick={() => setSelectedOrder(order)}
+                                            onClick={() => {
+                                                setSelectedOrder(order)
+                                                if (!order.isRead) markOrderAsRead(order.id)
+                                            }}
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", status.bg, status.color)}>

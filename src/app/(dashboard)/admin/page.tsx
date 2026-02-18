@@ -281,8 +281,7 @@ export default function AdminDashboard() {
                                                 const toDate = (d: any) => d?.toDate ? d.toDate() : (d || new Date(0))
 
                                                 if ((module as any).badge === 'orders') {
-                                                    const lastDate = toDate(lastViewed.orders)
-                                                    count = orders.filter(o => o.status === 'pending' && toDate(o.createdAt) > lastDate).length
+                                                    count = orders.filter(o => !o.isRead && (o.status === 'pending' || o.status === 'processing')).length
                                                 }
                                                 if ((module as any).badge === 'requests') {
                                                     const lastDate = toDate(lastViewed.requests)

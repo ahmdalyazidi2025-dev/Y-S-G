@@ -130,6 +130,7 @@ export type Order = {
     status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "rejected" | "deleted"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
+    isRead?: boolean // Added for persistent notifications
 }
 
 export type ProductRequest = {
@@ -320,6 +321,7 @@ type StoreContextType = {
     guestId: string
     markAllNotificationsRead: () => void
     markMessagesRead: (customerId?: string) => void
+    markOrderAsRead: (orderId: string) => Promise<void>
     playSound: (event: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => void
     joinRequests: JoinRequest[]
     addJoinRequest: (name: string, phone: string) => Promise<void>
@@ -912,7 +914,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
             createdAt: Timestamp.now(),
-            statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
+            statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }],
+            isRead: false
         }
 
 
@@ -2391,6 +2394,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
 
 
+    const markOrderAsRead = async (orderId: string) => {
+        try {
+            const orderRef = doc(db, "orders", orderId)
+            await updateDoc(orderRef, { isRead: true })
+        } catch (error) {
+            console.error("Error marking order as read:", error)
+        }
+    }
+
+
     const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
         try {
             const now = new Date()
@@ -2442,6 +2455,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
         updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
         markMessagesRead,
+        markOrderAsRead,
         playSound,
         joinRequests,
         addJoinRequest,
