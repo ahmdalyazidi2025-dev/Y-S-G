@@ -21,8 +21,8 @@ export function InteractiveMarquee({
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [isPaused, setIsPaused] = useState(false)
     const [isInteracting, setIsInteracting] = useState(false)
-    const requestRef = useRef<number>()
-    const resumeTimeoutRef = useRef<NodeJS.Timeout>()
+    const requestRef = useRef<number>(undefined)
+    const resumeTimeoutRef = useRef<NodeJS.Timeout>(undefined)
 
     // Use a secondary ref to track pause state without re-rendering the animation loop
     const isPausedRef = useRef(false)
