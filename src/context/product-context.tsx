@@ -177,39 +177,33 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            // 3. Sequential Updates (One-by-one) with setDoc fallback for reliability
+            // 3. Sequential Updates (One-by-one) - No artificial timeout to see actual Firebase result
             for (let i = 0; i < totalItems; i++) {
                 const cat = changedItems[i]
                 const finalOrder = orderedCategories.findIndex(c => c.id === cat.id)
                 const catRef = doc(db, "categories", cat.id)
 
-                // Real-time progress update
-                toast.info(`جاري الحفظ: ${i + 1} من ${totalItems}`, { id: "reorder-status" })
+                // Real-time progress update with category name
+                toast.info(`جاري مزامنة: ${cat.nameAr || cat.id} (${i + 1}/${totalItems})`, { id: "reorder-status" })
 
-                // Ultra-high 30s timeout per item + path logging
-                console.log(`[Reorder] Syncing category ${cat.id} to order ${finalOrder} (Path: categories/${cat.id})`)
+                console.log(`[Diagnostic] Syncing ${cat.id} to order ${finalOrder}`)
 
-                const individualTimeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error(`انتهت مهلة المزامنة (30s) للقسم: ${cat.nameAr || cat.id}`)), 30000)
-                )
+                // Let Firebase handle the write naturally
+                await updateDoc(catRef, { order: finalOrder })
 
-                // Using setDoc with merge for maximum resilience across different Firestore states
-                const { setDoc } = await import("firebase/firestore")
-                await Promise.race([
-                    setDoc(catRef, { order: finalOrder }, { merge: true }),
-                    individualTimeout
-                ])
-
-                // Longer throttle (300ms) to allow the network buffer to clear
-                await new Promise(r => setTimeout(r, 300))
+                // Throttle (500ms) for stability
+                await new Promise(r => setTimeout(r, 500))
             }
 
             console.log("Reorder successful")
             toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
         } catch (error: any) {
-            console.error("CRITICAL: Reorder error details:", error)
+            console.error("DIAGNOSTIC: Reorder error details:", error)
             setCategories(previousCategories)
-            toast.error(`فشل التحديث: ${error.message || 'خطأ غير معروف'}`, { id: "reorder-status" })
+
+            // Show exact error code if it's a Firebase error (e.g., permission-denied)
+            const errorMsg = error.code ? `[${error.code}] ${error.message}` : error.message
+            toast.error(`فشل التحديث: ${errorMsg}`, { id: "reorder-status" })
             throw error
         }
     }, [categories])
