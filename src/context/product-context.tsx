@@ -145,8 +145,13 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف القسم")
     }
 
-    const reorderCategories = async (orderedCategories: Category[]) => {
+    const reorderCategories = useCallback(async (orderedCategories: Category[]) => {
         console.log("reorderCategories starting", orderedCategories.length)
+
+        if (typeof window !== 'undefined' && !window.navigator.onLine) {
+            toast.error("لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.")
+            return
+        }
 
         // 1. Calculate Deltas: Only items that actually changed their position
         const changedItems = orderedCategories.filter((cat, index) => {
@@ -160,7 +165,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             return
         }
 
-        toast.info(`جاري تحديث ${changedItems.length} قسم...`)
+        const totalItems = changedItems.length
+        toast.info(`جاري تحديث ${totalItems} قسم لضمان الثبات...`, { id: "reorder-status" })
 
         // 2. Optimistic Update
         const previousCategories = [...categories]
@@ -171,30 +177,37 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            // 3. Batch Update with Extended Timeout (60s)
-            const batch = writeBatch(db)
-            changedItems.forEach((cat) => {
+            // 3. Sequential Updates (One-by-one) for maximum reliability
+            for (let i = 0; i < totalItems; i++) {
+                const cat = changedItems[i]
                 const finalOrder = orderedCategories.findIndex(c => c.id === cat.id)
                 const catRef = doc(db, "categories", cat.id)
-                batch.update(catRef, { order: finalOrder })
-            })
 
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("انتهت مهلة الاتصال - يرجى فحص الإنترنت (60s Timeout)")), 60000)
-            )
+                // Real-time progress update
+                toast.info(`جاري الحفظ: ${i + 1} من ${totalItems}`, { id: "reorder-status" })
 
-            console.log(`Committing batch for ${changedItems.length} items...`)
-            await Promise.race([batch.commit(), timeoutPromise])
+                const individualTimeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("انتهت مهلة المزامنة لهذا القسم")), 15000)
+                )
+
+                await Promise.race([
+                    updateDoc(catRef, { order: finalOrder }),
+                    individualTimeout
+                ])
+
+                // Small delay between writes to avoid congestion
+                await new Promise(r => setTimeout(r, 150))
+            }
 
             console.log("Reorder successful")
-            toast.success("تم تحديث ترتيب الأقسام")
+            toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
         } catch (error: any) {
             console.error("CRITICAL: Reorder error:", error)
             setCategories(previousCategories)
-            toast.error(`فشل التحديث: ${error.message || 'خطأ غير معروف'}`)
+            toast.error(`فشل التحديث: ${error.message || 'خطأ غير معروف'}`, { id: "reorder-status" })
             throw error
         }
-    }
+    }, [categories])
 
     return (
         <ProductContext.Provider value={{
