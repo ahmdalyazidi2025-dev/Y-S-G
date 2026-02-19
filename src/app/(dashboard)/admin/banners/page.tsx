@@ -46,6 +46,7 @@ export default function AdminBannersPage() {
                                     alt="banner"
                                     width={1200}
                                     height={400}
+                                    priority={banners.indexOf(banner) < 2}
                                     className={cn("w-full h-full object-cover transition-opacity", !banner.active && "opacity-40")}
                                 />
                             </div>

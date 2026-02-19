@@ -708,17 +708,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const fetchInitialOrders = async () => {
             if (!currentUser) return;
 
+            // Progressive Loading: Start with a smaller set (10 instead of 20)
+            const initialLimit = currentUser.role === 'admin' ? 12 : 5;
+
             let q;
             if (currentUser.role === 'customer' || currentUser.role === 'guest') {
-                // Remove orderBy to avoid "Missing Index" error. We sort client-side.
                 q = query(
                     collection(db, "orders"),
                     where("customerId", "==", currentUser.id),
-                    limit(20)
+                    limit(initialLimit)
                 )
             } else {
-                // Admin: Last 20 orders
-                q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(20))
+                // Admin: Small initial batch for faster first render
+                q = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(initialLimit))
             }
 
             const unsub = onSnapshot(q, (snap: QuerySnapshot<DocumentData>) => {
@@ -729,22 +731,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     statusHistory: (doc.data().statusHistory || []).map((h: any) => ({ ...h, timestamp: toDate(h.timestamp) }))
                 })) as Order[]
 
-                // Client-side sort to ensure correct order without composite index
+                // Client-side sort to ensure correct order
                 loadedOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 
                 setOrders(loadedOrders)
                 setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
-                setHasMoreOrders(snap.docs.length === (currentUser.role === 'admin' ? 20 : 5))
+                setHasMoreOrders(snap.docs.length === initialLimit)
             }, (error) => {
                 console.error("Order Listener Error:", error)
                 if (error.code === 'failed-precondition') {
-                    toast.error("النظام يحتاج إلى فهرس قاعدة بيانات للترتيب. راجع المسؤول.")
-                    // Emergency Fallback
-                    getDocs(query(collection(db, "orders"), where("customerId", "==", currentUser!.id), limit(10))).then(snap => {
-                        const loaded = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) })) as Order[]
-                        loaded.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                        setOrders(loaded)
-                    })
+                    toast.error("النظام يحتاج إلى فهرس قاعدة بيانات للترتيب.")
                 }
             })
 
@@ -753,14 +749,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         const unsubOrdersPromise = fetchInitialOrders();
 
+        // Optimized Cleanup: Ensure all listeners are detached correctly
         return () => {
             unsubCategories()
             unsubCustomers()
             unsubStaff()
             unsubBanners()
-            unsubOrdersPromise.then(unsub => unsub && unsub())
+            unsubOrdersPromise.then(unsub => {
+                if (typeof unsub === 'function') unsub();
+            })
         }
-    }, [currentUser, toDate])
+    }, [currentUser?.id, currentUser?.role, toDate]) // Stabilized dependency array
 
 
 

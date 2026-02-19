@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2, Phone } from "lucide-react"
 import Link from "next/link"
@@ -124,68 +124,77 @@ export default function AdminOrdersPage() {
 
     const allOrders = serverSearchResults || orders // Use server results if active, otherwise loaded buffer
 
-    const filteredOrders = allOrders.filter(o => {
-        const date = new Date(o.createdAt)
-        const now = new Date()
+    const filteredOrders = React.useMemo(() => {
+        return allOrders.filter(o => {
+            const date = new Date(o.createdAt)
+            const now = new Date()
 
-        // If searching, we might want to skip date/status filters? 
-        // User asked for "Instant access". Usually search overrides filters.
-        // BUT strict filtering is good too. Let's keep filters but relaxing them if needed?
-        // Let's keep filters active on search results for power users.
+            let matchesDate = true
+            if (dateRange === "today") matchesDate = isToday(date)
+            else if (dateRange === "week") matchesDate = isWithinInterval(date, { start: startOfWeek(now), end: endOfDay(now) })
+            else if (dateRange === "month") matchesDate = isWithinInterval(date, { start: startOfMonth(now), end: endOfDay(now) })
+            else if (dateRange === "year") matchesDate = isWithinInterval(date, { start: startOfYear(now), end: endOfDay(now) })
+            else if (dateRange === "custom" && customStart && customEnd) {
+                matchesDate = isWithinInterval(date, {
+                    start: startOfDay(new Date(customStart)),
+                    end: endOfDay(new Date(customEnd))
+                })
+            }
 
-        let matchesDate = true
-        if (dateRange === "today") matchesDate = isToday(date)
-        else if (dateRange === "week") matchesDate = isWithinInterval(date, { start: startOfWeek(now), end: endOfDay(now) })
-        else if (dateRange === "month") matchesDate = isWithinInterval(date, { start: startOfMonth(now), end: endOfDay(now) })
-        else if (dateRange === "year") matchesDate = isWithinInterval(date, { start: startOfYear(now), end: endOfDay(now) })
-        else if (dateRange === "custom" && customStart && customEnd) {
-            matchesDate = isWithinInterval(date, {
-                start: startOfDay(new Date(customStart)),
-                end: endOfDay(new Date(customEnd))
-            })
-        }
+            if (filter !== "deleted" && o.status === "deleted") return false
 
-        // Hide deleted from 'all' view unless explicitly filtered
-        if (filter !== "deleted" && o.status === "deleted") return false
+            let matchesCategory = true
+            if (activeCategory === "active") matchesCategory = ["processing", "shipped"].includes(o.status)
+            else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
+            else if (activeCategory === "received") matchesCategory = o.status === "delivered"
 
-        let matchesCategory = true
-        // Active includes processing, shipped (Drafts/Pending hidden)
-        if (activeCategory === "active") matchesCategory = ["processing", "shipped"].includes(o.status)
-        else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
-        else if (activeCategory === "received") matchesCategory = o.status === "delivered"
+            const matchesStatus = filter === "all" ? o.status !== "deleted" : o.status === filter
+            const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
 
-        const matchesStatus = filter === "all" ? o.status !== "deleted" : o.status === filter
-        const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
+            const matchesCustomerGroup = !selectedCustomerForGroup ||
+                o.customerId === selectedCustomerForGroup ||
+                o.customerName === selectedCustomerForGroup
 
-        // Customer grouping filter
-        const matchesCustomerGroup = !selectedCustomerForGroup ||
-            o.customerId === selectedCustomerForGroup ||
-            o.customerName === selectedCustomerForGroup
+            const matchesNameClient = !serverSearchResults ? o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
-        // Client side name filter
-        const matchesNameClient = !serverSearchResults ? o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) : true
+            let matchesCustomer = true
+            if (selectedCustomer !== "all") {
+                matchesCustomer = o.customerId === selectedCustomer || o.customerName === selectedCustomer
+            }
 
-        let matchesCustomer = true
-        if (selectedCustomer !== "all") {
-            matchesCustomer = o.customerId === selectedCustomer || o.customerName === selectedCustomer
-        }
+            return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesCustomerGroup && matchesNameClient && matchesCustomer
+        })
+    }, [allOrders, dateRange, customStart, customEnd, filter, activeCategory, regionFilter, selectedCustomerForGroup, searchQuery, serverSearchResults, selectedCustomer])
 
-        return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesCustomerGroup && matchesNameClient && matchesCustomer
-    })
+    const regions = React.useMemo(() => {
+        return Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
+    }, [orders])
 
-    const regions = Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
+    const customerGroups = React.useMemo(() => {
+        return orders.reduce((acc: Record<string, { id: string, name: string, count: number, total: number }>, order) => {
+            const id = order.customerId || order.customerName
+            if (!acc[id]) {
+                acc[id] = { id, name: order.customerName, count: 0, total: 0 }
+            }
+            acc[id].count++
+            acc[id].total += order.total
+            return acc
+        }, {})
+    }, [orders])
 
-    const customerGroups = orders.reduce((acc: Record<string, { id: string, name: string, count: number, total: number }>, order) => {
-        const id = order.customerId || order.customerName
-        if (!acc[id]) {
-            acc[id] = { id, name: order.customerName, count: 0, total: 0 }
-        }
-        acc[id].count++
-        acc[id].total += order.total
-        return acc
-    }, {})
+    const sortedCustomerGroups = React.useMemo(() => {
+        return Object.values(customerGroups).sort((a, b) => b.count - a.count)
+    }, [customerGroups])
 
-    const sortedCustomerGroups = Object.values(customerGroups).sort((a, b) => b.count - a.count)
+    // Progressive rendering: only show 10 at a time visually
+    const [visibleCount, setVisibleCount] = useState(10)
+    useEffect(() => {
+        setVisibleCount(10)
+    }, [filter, activeCategory, searchQuery])
+
+    const displayedOrders = React.useMemo(() => {
+        return filteredOrders.slice(0, visibleCount)
+    }, [filteredOrders, visibleCount])
 
     return (
         <div className="flex flex-col min-h-screen bg-background p-4 md:p-8 space-y-6 pb-24">
@@ -386,7 +395,7 @@ export default function AdminOrdersPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-3">
-                                {filteredOrders.map((order) => {
+                                {displayedOrders.map((order) => {
                                     const status = STATUS_CONFIG[order.status]
                                     return (
                                         <div
@@ -442,6 +451,15 @@ export default function AdminOrdersPage() {
                                         </div>
                                     )
                                 })}
+                                {displayedOrders.length < filteredOrders.length && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-black mt-4"
+                                        onClick={() => setVisibleCount(prev => prev + 10)}
+                                    >
+                                        عرض المزيد من الطلبات ({filteredOrders.length - displayedOrders.length})
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </>
