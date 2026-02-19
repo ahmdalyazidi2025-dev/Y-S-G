@@ -94,7 +94,7 @@ export default function CategoriesPage() {
                         </Button>
                     </div>
                 ) : (
-                    categories.map((category) => (
+                    categories.map((category, index) => (
                         <div
                             key={category.id}
                             className={cn(
@@ -146,7 +146,7 @@ export default function CategoriesPage() {
 
                                         <div className="flex flex-col items-end gap-1">
                                             <span className="text-[10px] font-mono bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg text-primary font-bold">
-                                                ترتيب: {category.order || categories.indexOf(category) + 1}
+                                                ترتيب: {category.order || index + 1}
                                             </span>
                                             <span className="text-[10px] font-mono bg-muted/50 border border-border px-2 py-1 rounded-lg text-muted-foreground group-hover:text-foreground transition-colors">
                                                 #{category.id.slice(0, 4)}
