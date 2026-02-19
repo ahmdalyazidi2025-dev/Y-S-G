@@ -37,13 +37,30 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
             const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
-            // Sort in-memory: order asc, then nameAr asc (fallback for duplicates or missing values)
+
+            // Critical: Find if any category is missing an 'order' field
+            const needsMigration = cats.some(c => c.order === undefined || c.order === null)
+
+            // Sort in-memory: order asc, then nameAr asc (fallback)
             const sortedCats = cats.sort((a, b) => {
                 const orderA = a.order ?? 0
                 const orderB = b.order ?? 0
                 if (orderA !== orderB) return orderA - orderB
                 return (a.nameAr || "").localeCompare(b.nameAr || "")
             })
+
+            // If we detected categories missing 'order', we automatically "seal" the current order
+            // This happens once to migrate old data to the new sequential system
+            if (needsMigration && sortedCats.length > 0) {
+                console.log("Migrating categories to sequential order...")
+                const batch = writeBatch(db)
+                sortedCats.forEach((cat, index) => {
+                    const catRef = doc(db, "categories", cat.id)
+                    batch.update(catRef, { order: index })
+                })
+                batch.commit().catch(err => console.error("Migration failed:", err))
+            }
+
             setCategories(sortedCats)
         })
         return () => unsubscribe()
@@ -114,7 +131,15 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const addCategory = async (category: Omit<Category, "id">) => {
-        await addDoc(collection(db, "categories"), sanitizeData(category))
+        // Find next sequential order
+        const maxOrder = categories.length > 0
+            ? Math.max(...categories.map(c => c.order ?? 0))
+            : -1
+
+        await addDoc(collection(db, "categories"), sanitizeData({
+            ...category,
+            order: maxOrder + 1
+        }))
         toast.success("تم إضافة القسم")
     }
 
@@ -130,7 +155,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
-        // Optimistic update: Update the order property of each category object in the array
+        // Optimistic update
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
             order: index
@@ -143,7 +168,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             const batch = writeBatch(db)
 
             // Force update ALL categories in the batch to ensure they all have valid sequence numbers
-            // This prevents clumping if some were previously missing the 'order' field
             optimisticCategories.forEach((cat) => {
                 const catRef = doc(db, "categories", cat.id)
                 batch.update(catRef, { order: cat.order })
