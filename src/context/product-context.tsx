@@ -124,7 +124,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
             await addDoc(collection(db, "categories"), sanitizeData({
                 ...category,
-                order: maxOrder + 1
+                order: maxOrder === -1 ? 1 : maxOrder + 1
             }))
             toast.success("تم إضافة القسم")
         } catch (error) {
@@ -169,7 +169,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             orderedCategories.forEach((cat, index) => {
                 const catRef = doc(db, "categories", cat.id)
                 // Use set with merge: true to ensure the field is created/updated reliably
-                batch.set(catRef, { order: index, lastOrderUpdate: Timestamp.now() }, { merge: true })
+                // User requested 1-indexed: index + 1
+                batch.set(catRef, { order: index + 1, lastOrderUpdate: Timestamp.now() }, { merge: true })
             })
 
             await batch.commit()
