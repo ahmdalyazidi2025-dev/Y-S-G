@@ -146,29 +146,15 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = useCallback(async (orderedCategories: Category[]) => {
-        console.log("reorderCategories starting", orderedCategories.length)
-
         if (typeof window !== 'undefined' && !window.navigator.onLine) {
             toast.error("لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.")
             return
         }
 
-        // 1. Calculate Deltas: Only items that actually changed their position
-        const changedItems = orderedCategories.filter((cat, index) => {
-            const current = categories.find(c => c.id === cat.id)
-            return current?.order !== index
-        })
+        const totalItems = orderedCategories.length
+        toast.info(`جاري تحديث ترتيب ${totalItems} قسم بشكل آمن...`, { id: "reorder-status" })
 
-        if (changedItems.length === 0) {
-            console.log("No changes detected")
-            toast.success("الترتيب الحالي محفوظ بالفعل")
-            return
-        }
-
-        const totalItems = changedItems.length
-        toast.info(`جاري تحديث ${totalItems} قسم لضمان الثبات...`, { id: "reorder-status" })
-
-        // 2. Optimistic Update
+        // 1. Optimistic Update (Immediate UI response)
         const previousCategories = [...categories]
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
@@ -177,31 +163,21 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            // 3. Sequential Updates (One-by-one) - No artificial timeout to see actual Firebase result
-            for (let i = 0; i < totalItems; i++) {
-                const cat = changedItems[i]
-                const finalOrder = orderedCategories.findIndex(c => c.id === cat.id)
+            // 2. Atomic Batch Update
+            const batch = writeBatch(db)
+
+            orderedCategories.forEach((cat, index) => {
                 const catRef = doc(db, "categories", cat.id)
+                batch.update(catRef, { order: index })
+            })
 
-                // Real-time progress update with category name
-                toast.info(`جاري مزامنة: ${cat.nameAr || cat.id} (${i + 1}/${totalItems})`, { id: "reorder-status" })
+            await batch.commit()
 
-                console.log(`[Diagnostic] Syncing ${cat.id} to order ${finalOrder}`)
-
-                // Let Firebase handle the write naturally
-                await updateDoc(catRef, { order: finalOrder })
-
-                // Throttle (500ms) for stability
-                await new Promise(r => setTimeout(r, 500))
-            }
-
-            console.log("Reorder successful")
+            console.log("Reorder successful via writeBatch")
             toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
         } catch (error: any) {
-            console.error("DIAGNOSTIC: Reorder error details:", error)
+            console.error("Reorder batch error:", error)
             setCategories(previousCategories)
-
-            // Show exact error code if it's a Firebase error (e.g., permission-denied)
             const errorMsg = error.code ? `[${error.code}] ${error.message}` : error.message
             toast.error(`فشل التحديث: ${errorMsg}`, { id: "reorder-status" })
             throw error
