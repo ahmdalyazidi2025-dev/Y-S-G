@@ -107,8 +107,8 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                         </div>
 
                         {/* Drag and Drop List */}
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mb-6 -mx-1 px-1">
-                            <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-3">
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mb-6 -mx-1 px-1 py-4">
+                            <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-3 pb-8">
                                 {items.map((item) => (
                                     <ReorderItem key={item.id} item={item} />
                                 ))}
