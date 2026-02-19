@@ -146,9 +146,9 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
-        console.log("reorderCategories started with:", orderedCategories.length, "items")
+        console.log("reorderCategories started", orderedCategories.length)
+        toast.info("جاري تحديث الترتيب...")
 
-        // Optimistic update
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
             order: index
@@ -158,26 +158,32 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            const batch = writeBatch(db)
-            console.log("Batch created")
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("انتهت مهلة الاتصال - Timeout")), 15000)
+            )
 
-            // Force update ALL categories in the batch to ensure they all have valid sequence numbers
-            optimisticCategories.forEach((cat) => {
-                if (!cat.id) {
-                    console.error("Category missing ID:", cat)
-                    return
+            // Perform updates individually to see if one hangs, but wrap in Promise.all for speed
+            const updatePromise = (async () => {
+                console.log("Starting individual updates...")
+                for (let i = 0; i < optimisticCategories.length; i++) {
+                    const cat = optimisticCategories[i]
+                    if (!cat.id) continue
+
+                    const catRef = doc(db, "categories", cat.id)
+                    console.log(`Updating category ${i + 1}/${optimisticCategories.length}: ${cat.id}`)
+                    await updateDoc(catRef, { order: cat.order })
                 }
-                const catRef = doc(db, "categories", cat.id)
-                batch.update(catRef, { order: cat.order })
-            })
+                console.log("All updates completed successfully")
+            })()
 
-            console.log("Committing batch...")
-            await batch.commit()
-            console.log("Batch committed successfully")
-            toast.success("تم تحديث ترتيب الأقسام")
+            // Race the updates against the timeout
+            await Promise.race([updatePromise, timeoutPromise])
+
+            toast.success("تم تحديث ترتيب الأقسام بنجاح")
         } catch (error: any) {
             console.error("CRITICAL: Error reordering categories:", error)
-            setCategories(previousCategories) // Revert on failure
+            setCategories(previousCategories)
             toast.error(`فشل في تحديث الترتيب: ${error.message || 'خطأ غير معروف'}`)
             throw error
         }
