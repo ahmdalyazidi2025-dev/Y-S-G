@@ -38,7 +38,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         // Implement coupon validation logic
         if (!couponCode) return
 
-        const coupon = await applyCoupon(couponCode.toUpperCase())
+        const coupon = await applyCoupon(couponCode.toUpperCase(), rawTotal, currentUser)
 
         if (!coupon) {
             setCouponError("الكوبون غير صحيح أو غير مستوفٍ للشروط")
@@ -71,7 +71,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             }
         }
 
-        createOrder(isDraft, { name: customerName, phone: customerPhone })
+        createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
         onClose()
         setCustomerName("")
         setCustomerPhone("")

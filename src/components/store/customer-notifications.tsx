@@ -25,7 +25,7 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
     useEffect(() => {
         if (isOpen) {
             // Small delay to ensure UI opens first
-            setTimeout(() => markAllNotificationsRead(), 500)
+            setTimeout(() => markAllNotificationsRead(currentUser?.id || ""), 500)
         }
     }, [isOpen, markAllNotificationsRead])
 

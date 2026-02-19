@@ -8,10 +8,12 @@ import NextImage from "next/image"
 import { useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { AdminBannerForm } from "@/components/admin/banner-form"
+import { Banner } from "@/types/store"
 
 export default function AdminBannersPage() {
     const { banners, deleteBanner, toggleBanner } = useStore()
     const [isFormOpen, setIsFormOpen] = useState(false)
+    const [visibleCount, setVisibleCount] = useState(5)
 
     return (
         <div className="space-y-6">
@@ -38,7 +40,7 @@ export default function AdminBannersPage() {
                         لا توجد صور عرض مسجلة
                     </div>
                 ) : (
-                    banners.map((banner) => (
+                    banners.slice(0, visibleCount).map((banner: Banner) => (
                         <div key={banner.id} className="glass-card overflow-hidden group relative">
                             <div className="aspect-[3/1] bg-black/40 overflow-hidden">
                                 <NextImage
@@ -47,6 +49,7 @@ export default function AdminBannersPage() {
                                     width={1200}
                                     height={400}
                                     priority={banners.indexOf(banner) < 2}
+                                    unoptimized // Base64 images don't benefit from Next.js server-side optimization
                                     className={cn("w-full h-full object-cover transition-opacity", !banner.active && "opacity-40")}
                                 />
                             </div>
@@ -87,6 +90,18 @@ export default function AdminBannersPage() {
                     ))
                 )}
             </div>
+
+            {visibleCount < banners.length && (
+                <div className="flex justify-center pt-4">
+                    <Button
+                        variant="ghost"
+                        className="text-primary hover:bg-primary/10 rounded-xl"
+                        onClick={() => setVisibleCount(prev => prev + 5)}
+                    >
+                        عرض المزيد من الصور ({banners.length - visibleCount})
+                    </Button>
+                </div>
+            )}
 
             <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 border-dashed text-center">
                 <p className="text-sm text-slate-400">ملاحظة: المقاس المفضل لصور العرض هو 1200x400 بكسل</p>

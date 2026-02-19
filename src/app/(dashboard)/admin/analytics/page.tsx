@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { getVisits, DailyVisit } from "@/lib/analytics"
 import { WheelPicker } from "@/components/shared/wheel-picker"
+import { Order } from "@/types/store"
 
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -95,7 +96,7 @@ export default function AnalyticsPage() {
         }
 
         // If timeRange is 'all', just return all orders (or filter by start date 2000 which effectively is all)
-        return orders.filter(o => {
+        return orders.filter((o: Order) => {
             const date = new Date(o.createdAt)
             let matchesTime = true
             if (timeRange === "custom") {
@@ -161,19 +162,19 @@ export default function AnalyticsPage() {
 
             if (timeUnit === 'hour') {
                 label = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })
-                periodOrders = orders.filter(o => {
+                periodOrders = orders.filter((o: Order) => {
                     const od = new Date(o.createdAt)
                     return od.getDate() === date.getDate() && od.getHours() === date.getHours() && od.getFullYear() === date.getFullYear() && od.getMonth() === date.getMonth()
                 })
             } else if (timeUnit === 'month') {
                 label = date.toLocaleDateString('ar-SA', { month: 'short', year: '2-digit' })
-                periodOrders = orders.filter(o => {
+                periodOrders = orders.filter((o: Order) => {
                     const od = new Date(o.createdAt)
                     return od.getMonth() === date.getMonth() && od.getFullYear() === date.getFullYear()
                 })
             } else {
                 label = date.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' })
-                periodOrders = orders.filter(o => {
+                periodOrders = orders.filter((o: Order) => {
                     const od = new Date(o.createdAt)
                     return od.toDateString() === date.toDateString()
                 })
@@ -181,7 +182,7 @@ export default function AnalyticsPage() {
 
             return {
                 date: label,
-                revenue: periodOrders.reduce((sum, o) => sum + o.total, 0),
+                revenue: periodOrders.reduce((sum: number, o: Order) => sum + o.total, 0),
                 orders: periodOrders.length
             }
         })
@@ -190,7 +191,7 @@ export default function AnalyticsPage() {
     // 2. Top Selling Products (Filtered)
     const topProductsData = useMemo(() => {
         const productSales: Record<string, number> = {}
-        filteredOrders.forEach(order => {
+        filteredOrders.forEach((order: Order) => {
             order.items.forEach(item => {
                 productSales[item.name] = (productSales[item.name] || 0) + item.quantity
             })
@@ -204,7 +205,7 @@ export default function AnalyticsPage() {
     // 3. Order Status Distribution (Filtered)
     const statusData = useMemo(() => {
         const stats: Record<string, number> = {}
-        filteredOrders.forEach(o => {
+        filteredOrders.forEach((o: Order) => {
             stats[o.status] = (stats[o.status] || 0) + 1
         })
         return Object.entries(stats).map(([name, value]) => ({
@@ -213,8 +214,8 @@ export default function AnalyticsPage() {
         }))
     }, [filteredOrders])
 
-    const totalRevenue = filteredOrders.reduce((sum, o) => sum + o.total, 0)
-    const uniqueCustomers = new Set(filteredOrders.map(o => o.customerId)).size
+    const totalRevenue = filteredOrders.reduce((sum: number, o: Order) => sum + o.total, 0)
+    const uniqueCustomers = new Set(filteredOrders.map((o: Order) => o.customerId)).size
 
     return (
         <div className="space-y-6 pb-20">
@@ -321,7 +322,7 @@ export default function AnalyticsPage() {
                         <CardDescription className="text-blue-500 font-bold">الطلبات النشطة</CardDescription>
                         <CardTitle className="text-2xl text-foreground flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
-                            {filteredOrders.filter(o => o.status === "processing" || o.status === "pending").length}
+                            {filteredOrders.filter((o: Order) => o.status === "processing" || o.status === "pending").length}
                         </CardTitle>
                     </CardHeader>
                 </Card>
@@ -338,7 +339,7 @@ export default function AnalyticsPage() {
                     <CardHeader className="pb-2">
                         <CardDescription className="text-purple-500 font-bold">المنتجات المباعة</CardDescription>
                         <CardTitle className="text-lg text-foreground">
-                            {filteredOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0)}
+                            {filteredOrders.reduce((sum: number, o: Order) => sum + o.items.reduce((s: number, i: any) => s + i.quantity, 0), 0)}
                         </CardTitle>
                     </CardHeader>
                 </Card>
