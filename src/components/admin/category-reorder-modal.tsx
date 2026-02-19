@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion, AnimatePresence, Reorder } from "framer-motion"
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion"
 import { X, GripVertical, Save, Move } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Category, useStore } from "@/context/store-context"
@@ -10,6 +10,46 @@ import { cn } from "@/lib/utils"
 interface CategoryReorderModalProps {
     isOpen: boolean
     onClose: () => void
+}
+
+interface ReorderItemProps {
+    item: Category
+}
+
+function ReorderItem({ item }: ReorderItemProps) {
+    const dragControls = useDragControls()
+
+    return (
+        <Reorder.Item
+            value={item}
+            dragListener={false}
+            dragControls={dragControls}
+            className={cn(
+                "bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-4 hover:bg-white/10 transition-colors group relative",
+                item.isHidden && "opacity-50"
+            )}
+        >
+            <div
+                onPointerDown={(e) => dragControls.start(e)}
+                className="cursor-grab active:cursor-grabbing p-2 -ml-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+            >
+                <GripVertical className="w-5 h-5 text-slate-500 group-hover:text-amber-500 transition-colors" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-white font-bold truncate">{item.nameAr}</p>
+                <p className="text-[10px] text-slate-500 font-mono">#{item.id.slice(0, 6)}</p>
+            </div>
+            {item.image ? (
+                <div className="w-10 h-10 rounded-lg bg-muted border border-white/5 overflow-hidden flex-shrink-0">
+                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                </div>
+            ) : (
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl flex-shrink-0">
+                    {item.icon || "📁"}
+                </div>
+            )}
+        </Reorder.Item>
+    )
 }
 
 export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalProps) {
@@ -26,14 +66,10 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            // We call it but don't await the close, let the context handle it
-            // This provides an instant experience
-            reorderCategories(items).catch(err => {
-                console.error("Delayed error in reorder:", err)
-            })
+            await reorderCategories(items)
             onClose()
         } catch (error) {
-            console.error("Error starting reorder:", error)
+            console.error("Error reordering categories:", error)
         } finally {
             setIsSaving(false)
         }
@@ -63,7 +99,7 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">ترتيب الأقسام</h2>
-                                <p className="text-xs text-slate-400">اسحب الأقسام لتغيير ترتيب ظهورها</p>
+                                <p className="text-xs text-slate-400">اسحب المقبض ☰ لتغيير ترتيب الأقسام</p>
                             </div>
                             <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
@@ -71,32 +107,10 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                         </div>
 
                         {/* Drag and Drop List */}
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mb-6">
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar mb-6 -mx-1 px-1">
                             <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-3">
                                 {items.map((item) => (
-                                    <Reorder.Item
-                                        key={item.id}
-                                        value={item}
-                                        className={cn(
-                                            "bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-4 cursor-grab active:cursor-grabbing hover:bg-white/10 transition-colors group",
-                                            item.isHidden && "opacity-50"
-                                        )}
-                                    >
-                                        <GripVertical className="w-5 h-5 text-slate-500 group-hover:text-amber-500 transition-colors flex-shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-white font-bold truncate">{item.nameAr}</p>
-                                            <p className="text-[10px] text-slate-500 font-mono">#{item.id.slice(0, 6)}</p>
-                                        </div>
-                                        {item.image ? (
-                                            <div className="w-10 h-10 rounded-lg bg-muted border border-white/5 overflow-hidden">
-                                                <img src={item.image} alt="" className="w-full h-full object-cover" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl">
-                                                {item.icon || "📁"}
-                                            </div>
-                                        )}
-                                    </Reorder.Item>
+                                    <ReorderItem key={item.id} item={item} />
                                 ))}
                             </Reorder.Group>
                         </div>
