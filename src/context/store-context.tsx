@@ -51,6 +51,7 @@ export interface StoreContextType {
     addCategory: (category: Omit<Category, "id">) => Promise<void>
     updateCategory: (category: Category) => Promise<void>
     deleteCategory: (categoryId: string) => Promise<void>
+    reorderCategories: (orderedCategories: Category[]) => Promise<void>
     cart: CartItem[]
     addToCart: (product: Product, unit?: string, price?: number) => void
     removeFromCart: (productId: string, unit: string) => void

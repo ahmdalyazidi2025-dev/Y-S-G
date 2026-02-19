@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { db } from "@/lib/firebase"
-import { collection, query, orderBy, where, getDocs, limit, startAfter, addDoc, doc, updateDoc, deleteDoc, Timestamp, startAt, endAt } from "firebase/firestore"
+import { collection, query, orderBy, where, getDocs, limit, startAfter, addDoc, doc, updateDoc, deleteDoc, Timestamp, startAt, endAt, writeBatch } from "firebase/firestore"
 import { toast } from "sonner"
 import { Product, Category } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
@@ -22,6 +22,7 @@ interface ProductContextType {
     addCategory: (category: Omit<Category, "id">) => Promise<void>
     updateCategory: (category: Category) => Promise<void>
     deleteCategory: (categoryId: string) => Promise<void>
+    reorderCategories: (orderedCategories: Category[]) => Promise<void>
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
@@ -129,9 +130,20 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف القسم")
     }
 
+    const reorderCategories = async (orderedCategories: Category[]) => {
+        const batch = writeBatch(db)
+        orderedCategories.forEach((cat, index) => {
+            const catRef = doc(db, "categories", cat.id)
+            batch.update(catRef, { order: index })
+        })
+        await batch.commit()
+        setCategories(orderedCategories)
+        toast.success("تم تحديث ترتيب الأقسام")
+    }
+
     return (
         <ProductContext.Provider value={{
-            products, categories, loading, hasMoreProducts, fetchProducts, loadMoreProducts, searchProducts, scanProduct, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory
+            products, categories, loading, hasMoreProducts, fetchProducts, loadMoreProducts, searchProducts, scanProduct, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, reorderCategories
         }}>
             {children}
         </ProductContext.Provider>

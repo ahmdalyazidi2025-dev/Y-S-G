@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff, Eye } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff, Eye, Move } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
 import { AdminCategoryForm } from "@/components/admin/category-form"
+import { CategoryReorderModal } from "@/components/admin/category-reorder-modal"
 import { cn } from "@/lib/utils"
 
 export default function CategoriesPage() {
     const { categories, deleteCategory } = useStore()
     const [isFormOpen, setIsFormOpen] = useState(false)
+    const [isReorderOpen, setIsReorderOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
     // Quick Toggle Visibility
@@ -58,13 +60,23 @@ export default function CategoriesPage() {
                         </p>
                     </div>
                 </div>
-                <Button
-                    className="bg-primary hover:bg-emerald-600 text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 gap-2 rounded-xl h-11 px-6 transition-all duration-300 transform hover:scale-105"
-                    onClick={handleAddNew}
-                >
-                    <Plus className="w-5 h-5" />
-                    <span>إضافة قسم جديد</span>
-                </Button>
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        className="border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 h-11 px-6 rounded-xl gap-2 transition-all"
+                        onClick={() => setIsReorderOpen(true)}
+                    >
+                        <Move className="w-5 h-5" />
+                        <span>ترتيب الأقسام</span>
+                    </Button>
+                    <Button
+                        className="bg-primary hover:bg-emerald-600 text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 gap-2 rounded-xl h-11 px-6 transition-all duration-300 transform hover:scale-105"
+                        onClick={handleAddNew}
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span>إضافة قسم جديد</span>
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -207,6 +219,10 @@ export default function CategoriesPage() {
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 initialCategory={editingCategory}
+            />
+            <CategoryReorderModal
+                isOpen={isReorderOpen}
+                onClose={() => setIsReorderOpen(false)}
             />
         </div>
     )
