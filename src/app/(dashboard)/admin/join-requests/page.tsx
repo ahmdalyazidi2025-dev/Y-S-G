@@ -1,6 +1,6 @@
 "use client"
 
-import { useStore } from "@/context/store-context"
+import { useCommunication, useSettings } from "@/context/store-context"
 import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
@@ -11,7 +11,8 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function JoinRequestsPage() {
-    const { joinRequests, deleteJoinRequest, markSectionAsViewed } = useStore()
+    const { joinRequests, deleteJoinRequest } = useCommunication()
+    const { markSectionAsViewed } = useSettings()
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => { markSectionAsViewed('joinRequests') }, [])
     /* eslint-enable react-hooks/exhaustive-deps */

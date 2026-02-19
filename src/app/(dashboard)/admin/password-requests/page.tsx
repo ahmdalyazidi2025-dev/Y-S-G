@@ -1,5 +1,5 @@
 "use client"
-import { useStore } from "@/context/store-context"
+import { useCommunication, useCustomers, useSettings, Customer, PasswordRequest } from "@/context/store-context"
 import { motion } from "framer-motion"
 import { Search, Phone, User, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
@@ -17,16 +17,18 @@ const formatDate = (date: any) => {
 }
 
 export default function PasswordRequestsPage() {
-    const { passwordRequests, resolvePasswordRequest, customers, markSectionAsViewed } = useStore()
+    const { passwordRequests, resolvePasswordRequest } = useCommunication()
+    const { customers } = useCustomers()
+    const { markSectionAsViewed } = useSettings()
     const [searchTerm, setSearchTerm] = useState("")
-    const [selectedCustomer, setSelectedCustomer] = useState<any>(null) // For opening customer form
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null) // For opening customer form
 
     useEffect(() => {
         markSectionAsViewed('passwordRequests')
     }, [markSectionAsViewed])
 
     // Filter requests
-    const filteredRequests = passwordRequests.filter(req =>
+    const filteredRequests = passwordRequests.filter((req: PasswordRequest) =>
         req.phone.includes(searchTerm) ||
         req.customerName.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -67,7 +69,7 @@ export default function PasswordRequestsPage() {
                         <p>لا توجد طلبات معلقة حالياً</p>
                     </div>
                 ) : (
-                    filteredRequests.map((req) => (
+                    filteredRequests.map((req: PasswordRequest) => (
                         <motion.div
                             key={req.id}
                             initial={{ opacity: 0, y: 10 }}

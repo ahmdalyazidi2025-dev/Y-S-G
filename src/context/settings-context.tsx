@@ -89,13 +89,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const markSectionAsViewed = useCallback(async (section: keyof AdminPreferences['lastViewed']) => {
         try {
             const now = new Date()
-            const newPrefs = { ...adminPreferences, lastViewed: { ...adminPreferences.lastViewed, [section]: now } }
-            setAdminPreferences(newPrefs)
-            await setDoc(doc(db, "settings", "admin_preferences"), { lastViewed: { ...newPrefs.lastViewed, [section]: Timestamp.fromDate(now) } }, { merge: true })
+            setAdminPreferences(prev => ({ ...prev, lastViewed: { ...prev.lastViewed, [section]: now } }))
+            await setDoc(doc(db, "settings", "admin_preferences"), { lastViewed: { [section]: Timestamp.fromDate(now) } }, { merge: true })
         } catch (error) {
             console.error("Error marking section as viewed:", error)
         }
-    }, [adminPreferences])
+    }, []) // Now zero dependencies
 
     const addBanner = useCallback(async (banner: Omit<Banner, "id">) => {
         try {
