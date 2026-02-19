@@ -132,7 +132,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                                     )}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h3 className="font-bold text-foreground">{item.name}</h3>
+                                                    <h3 className="font-bold text-foreground break-words">{item.name}</h3>
                                                     <p className="text-primary font-bold text-sm">
                                                         {item.selectedPrice} ر.س <span className="text-[10px] text-muted-foreground font-normal">/ {item.selectedUnit}</span>
                                                     </p>

@@ -136,7 +136,7 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                 <div className="flex flex-col gap-1 px-1">
                     <div className="flex flex-col items-start gap-1 w-full">
                         <h3
-                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 cursor-pointer hover:text-primary transition-colors w-full"
+                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 break-words cursor-pointer hover:text-primary transition-colors w-full"
                             onClick={() => onViewDetails?.(item)}
                         >
                             {item.name}

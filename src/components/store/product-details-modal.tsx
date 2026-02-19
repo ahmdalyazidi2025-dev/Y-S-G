@@ -171,7 +171,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                         </div>
                                     )}
                                 </div>
-                                <h2 className="text-2xl font-black text-foreground leading-tight mb-2">{product.name}</h2>
+                                <h2 className="text-2xl font-black text-foreground leading-tight mb-2 break-words">{product.name}</h2>
                                 <div className="flex items-center gap-2">
                                     <div className="flex text-amber-400">
                                         <Star className="w-4 h-4 fill-current" />
@@ -191,7 +191,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                         <Info className="w-4 h-4 text-primary" />
                                         تفاصيل المنتج
                                     </h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                                         {product.description}
                                     </p>
                                 </div>
