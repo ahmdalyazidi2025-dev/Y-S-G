@@ -10,6 +10,8 @@ import { OrderProvider, useOrders } from "./order-context"
 import { CustomerProvider, useCustomers } from "./customer-context"
 import { playSound } from "@/lib/utils/store-helpers"
 
+export { useAuth, useSettings, useProducts, useCart, useCommunication, useOrders, useCustomers }
+
 
 export * from "@/types/store"
 import { User, Product, Category, Customer, StaffMember, Banner, CartItem, Order, ProductRequest, Coupon, Notification, Message, StoreSettings, AdminPreferences, JoinRequest, PasswordRequest } from "@/types/store"

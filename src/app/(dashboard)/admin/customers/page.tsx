@@ -3,22 +3,24 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, Lock, Search } from "lucide-react"
-import { useStore, Customer } from "@/context/store-context"
+import { useCustomers, useOrders, useSettings, useCommunication, Customer, Order } from "@/context/store-context"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
-import Link from "next/link"
-import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { AdminCustomerForm } from "@/components/admin/customer-form"
 import { PasswordReveal } from "@/components/admin/password-reveal"
 import React from "react"
+import Link from "next/link"
 
-export default function CustomersPage() {
-    const { customers, deleteCustomer, sendNotificationToGroup, orders, sendNotification, markSectionAsViewed } = useStore()
+export default function AdminCustomersPage() {
+    const { customers, deleteCustomer, updateCustomer } = useCustomers()
+    const { orders } = useOrders()
+    const { markSectionAsViewed } = useSettings()
+    const { sendNotificationToGroup, sendNotification } = useCommunication()
     /* eslint-disable react-hooks/exhaustive-deps */
     React.useEffect(() => { markSectionAsViewed('customers') }, [])
     /* eslint-enable react-hooks/exhaustive-deps */
@@ -39,10 +41,10 @@ export default function CustomersPage() {
     const [activeTab, setActiveTab] = useState<"all" | "vip" | "active" | "semi_active" | "interactive" | "dormant">("all")
 
     const getCustomerStats = (customerId: string) => {
-        const customerOrders = orders.filter(o => o.customerId === customerId)
-        const totalSpent = customerOrders.reduce((sum, o) => sum + o.total, 0)
+        const customerOrders = orders.filter((o: Order) => o.customerId === customerId)
+        const totalSpent = customerOrders.reduce((sum: number, o: Order) => sum + o.total, 0)
         const lastOrderDate = customerOrders.length > 0
-            ? new Date(Math.max(...customerOrders.map(o => new Date(o.createdAt).getTime())))
+            ? new Date(Math.max(...customerOrders.map((o: Order) => new Date(o.createdAt).getTime())))
             : null
         return { totalSpent, lastOrderDate, orderCount: customerOrders.length }
     }
@@ -75,7 +77,7 @@ export default function CustomersPage() {
         }
     }
 
-    const filteredCustomers = customers.filter(c => {
+    const filteredCustomers = customers.filter((c: Customer) => {
         // 1. Tab Filter
         let matchesTab = true;
         if (activeTab !== "all") {
@@ -269,7 +271,7 @@ export default function CustomersPage() {
                         لا يوجد عملاء في هذه الفئة
                     </div>
                 ) : (
-                    filteredCustomers.map((customer) => {
+                    filteredCustomers.map((customer: Customer) => {
                         const stats = getCustomerStats(customer.id)
                         return (
                             <div key={customer.id} className="glass-card p-5 group flex items-center justify-between">

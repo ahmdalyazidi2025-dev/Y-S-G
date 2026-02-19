@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2, Phone } from "lucide-react"
 import Link from "next/link"
-import { useStore, Order } from "@/context/store-context"
+import { useOrders, useCustomers, useSettings, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,10 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, customers, storeSettings, loadMoreOrders, hasMoreOrders, loading, searchOrders, markOrderAsRead } = useStore()
+    const { orders, updateOrderStatus, loadMoreOrders, hasMoreOrders, searchOrders, markOrderAsRead } = useOrders()
+    const { customers } = useCustomers()
+    const { storeSettings, settingsLoaded } = useSettings()
+    const loading = !settingsLoaded // Simplified loading for this page
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
     const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
@@ -125,7 +128,7 @@ export default function AdminOrdersPage() {
     const allOrders = serverSearchResults || orders // Use server results if active, otherwise loaded buffer
 
     const filteredOrders = React.useMemo(() => {
-        return allOrders.filter(o => {
+        return allOrders.filter((o: Order) => {
             const date = new Date(o.createdAt)
             const now = new Date()
 
@@ -167,11 +170,11 @@ export default function AdminOrdersPage() {
     }, [allOrders, dateRange, customStart, customEnd, filter, activeCategory, regionFilter, selectedCustomerForGroup, searchQuery, serverSearchResults, selectedCustomer])
 
     const regions = React.useMemo(() => {
-        return Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
+        return Array.from(new Set(orders.map((o: Order) => o.customerLocation).filter(Boolean))) as string[]
     }, [orders])
 
     const customerGroups = React.useMemo(() => {
-        return orders.reduce((acc: Record<string, { id: string, name: string, count: number, total: number }>, order) => {
+        return orders.reduce((acc: Record<string, { id: string, name: string, count: number, total: number }>, order: Order) => {
             const id = order.customerId || order.customerName
             if (!acc[id]) {
                 acc[id] = { id, name: order.customerName, count: 0, total: 0 }
@@ -395,7 +398,7 @@ export default function AdminOrdersPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-3">
-                                {displayedOrders.map((order) => {
+                                {displayedOrders.map((order: Order) => {
                                     const status = STATUS_CONFIG[order.status]
                                     return (
                                         <div

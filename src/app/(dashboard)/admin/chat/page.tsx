@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, Fragment } from "react"
 import { differenceInDays, isSameDay } from "date-fns" // Ensure this is available or use native JS
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft, Search } from "lucide-react"
-import { useStore, Conversation } from "@/context/store-context"
+import { useCommunication, useCustomers, useSettings, useProducts, Conversation } from "@/context/store-context"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -12,7 +12,10 @@ import Link from "next/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ShoppingBag, Link as LinkIcon, X, Copy, Plus } from "lucide-react"
 export default function AdminChatPage() {
-    const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, customers, markMessagesRead, markSectionAsViewed } = useStore() // Added markMessagesRead
+    const { messages, sendMessage, sendNotificationToGroup, sendGlobalMessage, markMessagesRead } = useCommunication()
+    const { customers } = useCustomers()
+    const { markSectionAsViewed } = useSettings()
+    const { products } = useProducts()
     const [msg, setMsg] = useState("")
     const [title, setTitle] = useState("") // Title for notification
     const [mode, setMode] = useState<"direct" | "broadcast" | "global_chat">("direct")
@@ -25,8 +28,6 @@ export default function AdminChatPage() {
     const [showLinkInput, setShowLinkInput] = useState(false)
     const [isProductPickerOpen, setIsProductPickerOpen] = useState(false)
     const [productSearch, setProductSearch] = useState("")
-
-    const { products } = useStore() // Get products for picker
     // Auto-mark messages as read when chat is opened
     useEffect(() => {
         markSectionAsViewed('chat')

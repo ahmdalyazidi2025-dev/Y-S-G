@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Trash2, Image as ImageIcon, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import NextImage from "next/image"
-import { useStore } from "@/context/store-context"
+import { useSettings } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { AdminBannerForm } from "@/components/admin/banner-form"
 import { Banner } from "@/types/store"
 
 export default function AdminBannersPage() {
-    const { banners, deleteBanner, toggleBanner } = useStore()
+    const { banners, deleteBanner, toggleBanner } = useSettings()
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [visibleCount, setVisibleCount] = useState(5)
 

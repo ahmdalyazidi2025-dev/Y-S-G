@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { useStore } from "@/context/store-context"
+import { useOrders, useAuth, Order } from "@/context/store-context"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
@@ -12,13 +12,13 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { getVisits, DailyVisit } from "@/lib/analytics"
 import { WheelPicker } from "@/components/shared/wheel-picker"
-import { Order } from "@/types/store"
 
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function AnalyticsPage() {
-    const { orders, currentUser } = useStore()
+    const { orders } = useOrders()
+    const { currentUser } = useAuth()
     const router = useRouter()
 
     useEffect(() => {

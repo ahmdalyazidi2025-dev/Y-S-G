@@ -38,10 +38,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         const unsubCoupons = onSnapshot(collection(db, "coupons"), (snap) => {
             setCoupons(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Coupon)))
         })
-        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(20)), (snap) => {
+        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(50)), (snap) => {
             setOrders(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order)))
             setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
-            setHasMoreOrders(snap.docs.length === 20)
+            setHasMoreOrders(snap.docs.length === 50)
         })
         return () => { unsubCoupons(); unsubOrders() }
     }, [])
@@ -89,16 +89,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     const loadMoreOrders = async (currentUserArg?: User | null) => {
         if (!lastOrderDoc || !hasMoreOrders) return
 
-        let q = query(collection(db, "orders"), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(20))
+        let q = query(collection(db, "orders"), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(50))
         if (currentUserArg?.role === 'customer') {
-            q = query(collection(db, "orders"), where("customerId", "==", currentUserArg.id), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(20))
+            q = query(collection(db, "orders"), where("customerId", "==", currentUserArg.id), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(50))
         }
 
         const snap = await getDocs(q)
         const newOrders = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
         setOrders(prev => [...prev, ...newOrders])
         setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
-        setHasMoreOrders(snap.docs.length === 20)
+        setHasMoreOrders(snap.docs.length === 50)
     }
 
     const searchOrders = async (term: string) => {
