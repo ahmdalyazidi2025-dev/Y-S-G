@@ -158,7 +158,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         const previousCategories = [...categories]
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
-            order: index
+            order: index + 1
         }))
         setCategories(optimisticCategories)
 
@@ -173,15 +173,22 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
                 batch.set(catRef, { order: index + 1, lastOrderUpdate: Timestamp.now() }, { merge: true })
             })
 
-            await batch.commit()
+            // 3. Robust Commit with Timeout (15s)
+            // This prevents the UI from "spinning forever" if the connection is partially dead
+            const commitPromise = batch.commit()
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("نهاية وقت المحاولة - تحقق من اتصال الإنترنت")), 15000)
+            )
+
+            await Promise.race([commitPromise, timeoutPromise])
 
             console.log("Reorder successful via writeBatch set/merge")
             toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
             return true
         } catch (error: any) {
-            console.error("Reorder batch error:", error)
+            console.error("Reorder robust error:", error)
             setCategories(previousCategories)
-            const errorMsg = error.code ? `[${error.code}] ${error.message}` : error.message
+            const errorMsg = error.message || (error.code ? `[${error.code}] ${error.message}` : "فشل غير متوقع")
             toast.error(`فشل التحديث: ${errorMsg}`, { id: "reorder-status" })
             return false
         }
