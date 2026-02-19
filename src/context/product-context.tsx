@@ -177,7 +177,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            // 3. Sequential Updates (One-by-one) for maximum reliability
+            // 3. Sequential Updates (One-by-one) with setDoc fallback for reliability
             for (let i = 0; i < totalItems; i++) {
                 const cat = changedItems[i]
                 const finalOrder = orderedCategories.findIndex(c => c.id === cat.id)
@@ -186,23 +186,28 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
                 // Real-time progress update
                 toast.info(`جاري الحفظ: ${i + 1} من ${totalItems}`, { id: "reorder-status" })
 
+                // Ultra-high 30s timeout per item + path logging
+                console.log(`[Reorder] Syncing category ${cat.id} to order ${finalOrder} (Path: categories/${cat.id})`)
+
                 const individualTimeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("انتهت مهلة المزامنة لهذا القسم")), 15000)
+                    setTimeout(() => reject(new Error(`انتهت مهلة المزامنة (30s) للقسم: ${cat.nameAr || cat.id}`)), 30000)
                 )
 
+                // Using setDoc with merge for maximum resilience across different Firestore states
+                const { setDoc } = await import("firebase/firestore")
                 await Promise.race([
-                    updateDoc(catRef, { order: finalOrder }),
+                    setDoc(catRef, { order: finalOrder }, { merge: true }),
                     individualTimeout
                 ])
 
-                // Small delay between writes to avoid congestion
-                await new Promise(r => setTimeout(r, 150))
+                // Longer throttle (300ms) to allow the network buffer to clear
+                await new Promise(r => setTimeout(r, 300))
             }
 
             console.log("Reorder successful")
             toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
         } catch (error: any) {
-            console.error("CRITICAL: Reorder error:", error)
+            console.error("CRITICAL: Reorder error details:", error)
             setCategories(previousCategories)
             toast.error(`فشل التحديث: ${error.message || 'خطأ غير معروف'}`, { id: "reorder-status" })
             throw error
