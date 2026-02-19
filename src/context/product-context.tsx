@@ -38,9 +38,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
             const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
 
-            // Critical: Find if any category is missing an 'order' field
-            const needsMigration = cats.some(c => c.order === undefined || c.order === null)
-
             // Sort in-memory: order asc, then nameAr asc (fallback)
             const sortedCats = cats.sort((a, b) => {
                 const orderA = a.order ?? 0
@@ -48,18 +45,6 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
                 if (orderA !== orderB) return orderA - orderB
                 return (a.nameAr || "").localeCompare(b.nameAr || "")
             })
-
-            // If we detected categories missing 'order', we automatically "seal" the current order
-            // This happens once to migrate old data to the new sequential system
-            if (needsMigration && sortedCats.length > 0) {
-                console.log("Migrating categories to sequential order...")
-                const batch = writeBatch(db)
-                sortedCats.forEach((cat, index) => {
-                    const catRef = doc(db, "categories", cat.id)
-                    batch.update(catRef, { order: index })
-                })
-                batch.commit().catch(err => console.error("Migration failed:", err))
-            }
 
             setCategories(sortedCats)
         })
