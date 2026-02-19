@@ -14,13 +14,11 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
     const { categories } = useStore()
     const router = useRouter()
 
-    // Default categories if none exist in DB, but we'll use "الكل" + DB categories (filtered by visibility)
     const activeCategories = categories.filter(c => !c.isHidden)
     const allCategories = ["الكل", ...activeCategories.map(c => c.nameAr)]
 
-    const handleCategoryClick = (cat: string, id?: string) => {
+    const handleCategoryClick = (cat: string) => {
         hapticFeedback('light')
-        // Force local selection instead of navigation
         onSelect(cat)
     }
 
@@ -37,7 +35,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: idx * 0.05, type: "spring" }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleCategoryClick(cat, dbCat?.id)}
+                        onClick={() => handleCategoryClick(cat)}
                         className="flex flex-col items-center gap-2 flex-shrink-0 group"
                     >
                         <div className={cn(

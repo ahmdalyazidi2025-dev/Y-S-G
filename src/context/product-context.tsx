@@ -130,26 +130,26 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
-        // Optimistic update
+        // Optimistic update: Update the order property of each category object in the array
+        const optimisticCategories = orderedCategories.map((cat, index) => ({
+            ...cat,
+            order: index
+        }))
+
         const previousCategories = [...categories]
-        setCategories(orderedCategories)
+        setCategories(optimisticCategories)
 
         try {
             const batch = writeBatch(db)
-            let hasChanges = false
 
-            orderedCategories.forEach((cat, index) => {
-                // Only update if order actually changed to save writes and performance
-                if (cat.order !== index) {
-                    const catRef = doc(db, "categories", cat.id)
-                    batch.update(catRef, { order: index })
-                    hasChanges = true
-                }
+            // Force update ALL categories in the batch to ensure they all have valid sequence numbers
+            // This prevents clumping if some were previously missing the 'order' field
+            optimisticCategories.forEach((cat) => {
+                const catRef = doc(db, "categories", cat.id)
+                batch.update(catRef, { order: cat.order })
             })
 
-            if (hasChanges) {
-                await batch.commit()
-            }
+            await batch.commit()
             toast.success("تم تحديث ترتيب الأقسام")
         } catch (error) {
             console.error("Error reordering categories:", error)
