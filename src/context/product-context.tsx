@@ -35,9 +35,16 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const q = query(collection(db, "categories"), orderBy("order", "asc"), orderBy("nameAr", "asc"))
-            const snap = await getDocs(q)
-            setCategories(snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
+            const snap = await getDocs(collection(db, "categories"))
+            const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
+            // Sort in-memory: order asc, then nameAr asc
+            const sortedCats = cats.sort((a, b) => {
+                const orderA = a.order ?? 0
+                const orderB = b.order ?? 0
+                if (orderA !== orderB) return orderA - orderB
+                return (a.nameAr || "").localeCompare(b.nameAr || "")
+            })
+            setCategories(sortedCats)
         }
         fetchCategories()
     }, [])
