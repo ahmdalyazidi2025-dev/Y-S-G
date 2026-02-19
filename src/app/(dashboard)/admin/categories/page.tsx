@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff, Eye, Move } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, EyeOff, Eye, SortAsc, LayoutList } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
@@ -63,11 +63,11 @@ export default function CategoriesPage() {
                 <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
-                        className="border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 h-11 px-6 rounded-xl gap-2 transition-all"
+                        className="border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary h-11 px-6 rounded-xl gap-2 transition-all shadow-sm hover:shadow-md group"
                         onClick={() => setIsReorderOpen(true)}
                     >
-                        <Move className="w-5 h-5" />
-                        <span>ترتيب الأقسام</span>
+                        <LayoutList className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                        <span className="font-bold">ترتيب الأقسام</span>
                     </Button>
                     <Button
                         className="bg-primary hover:bg-emerald-600 text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 gap-2 rounded-xl h-11 px-6 transition-all duration-300 transform hover:scale-105"

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion"
-import { X, GripVertical, Save, Move } from "lucide-react"
+import { X, GripVertical, Save, Move, LayoutList, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Category, useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -56,6 +56,7 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     const { categories, reorderCategories } = useStore()
     const [items, setItems] = useState<Category[]>([])
     const [isSaving, setIsSaving] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
 
     useEffect(() => {
         if (isOpen) {
@@ -64,13 +65,17 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     }, [isOpen, categories])
 
     const handleSave = async () => {
-        console.log("Modal handleSave clicked")
         setIsSaving(true)
         try {
-            console.log("Calling reorderCategories with items:", items.length)
-            await reorderCategories(items)
-            console.log("reorderCategories resolved successfully")
-            onClose()
+            const success = await reorderCategories(items)
+            if (success) {
+                setIsSuccess(true)
+                // Small delay to show the success state before closing
+                setTimeout(() => {
+                    onClose()
+                    setIsSuccess(false)
+                }, 1500)
+            }
         } catch (error: any) {
             console.error("Modal Save Error:", error)
             import("sonner").then(({ toast }) => {
@@ -100,12 +105,12 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                     >
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500">
-                                <Move className="w-6 h-6" />
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg shadow-primary/5">
+                                <LayoutList className="w-6 h-6" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">ترتيب الأقسام</h2>
-                                <p className="text-xs text-slate-400">اسحب المقبض ☰ لتغيير ترتيب الأقسام</p>
+                                <h2 className="text-xl font-bold text-white">ترتيب الأقسام مخصص</h2>
+                                <p className="text-[10px] text-slate-400 font-medium">قم بسحب الأقسام لتغيير ترتيب ظهورها للعملاء</p>
                             </div>
                             <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
@@ -137,10 +142,14 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                             >
                                 {isSaving ? (
                                     <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : isSuccess ? (
+                                    <CheckCircle2 className="w-6 h-6 animate-in zoom-in duration-300" />
                                 ) : (
                                     <Save className="w-5 h-5" />
                                 )}
-                                <span>حفظ الترتيب</span>
+                                <span>
+                                    {isSaving ? "جاري الحفظ..." : isSuccess ? "تم الحفظ بنجاح!" : "حفظ الترتيب الجديد"}
+                                </span>
                             </Button>
                         </div>
                     </motion.div>

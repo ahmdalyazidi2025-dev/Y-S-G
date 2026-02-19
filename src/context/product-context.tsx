@@ -22,7 +22,7 @@ interface ProductContextType {
     addCategory: (category: Omit<Category, "id">) => Promise<void>
     updateCategory: (category: Category) => Promise<void>
     deleteCategory: (categoryId: string) => Promise<void>
-    reorderCategories: (orderedCategories: Category[]) => Promise<void>
+    reorderCategories: (orderedCategories: Category[]) => Promise<boolean>
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
@@ -145,10 +145,10 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف القسم")
     }
 
-    const reorderCategories = useCallback(async (orderedCategories: Category[]) => {
+    const reorderCategories = useCallback(async (orderedCategories: Category[]): Promise<boolean> => {
         if (typeof window !== 'undefined' && !window.navigator.onLine) {
             toast.error("لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة.")
-            return
+            return false
         }
 
         const totalItems = orderedCategories.length
@@ -168,19 +168,21 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
             orderedCategories.forEach((cat, index) => {
                 const catRef = doc(db, "categories", cat.id)
-                batch.update(catRef, { order: index })
+                // Use set with merge: true to ensure the field is created/updated reliably
+                batch.set(catRef, { order: index, lastOrderUpdate: Timestamp.now() }, { merge: true })
             })
 
             await batch.commit()
 
-            console.log("Reorder successful via writeBatch")
+            console.log("Reorder successful via writeBatch set/merge")
             toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
+            return true
         } catch (error: any) {
             console.error("Reorder batch error:", error)
             setCategories(previousCategories)
             const errorMsg = error.code ? `[${error.code}] ${error.message}` : error.message
             toast.error(`فشل التحديث: ${errorMsg}`, { id: "reorder-status" })
-            throw error
+            return false
         }
     }, [categories])
 
