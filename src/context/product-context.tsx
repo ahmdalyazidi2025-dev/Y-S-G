@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { db } from "@/lib/firebase"
-import { collection, query, orderBy, where, getDocs, limit, startAfter, addDoc, doc, updateDoc, deleteDoc, Timestamp, startAt, endAt, writeBatch } from "firebase/firestore"
+import { collection, query, orderBy, where, getDocs, limit, startAfter, addDoc, doc, updateDoc, deleteDoc, Timestamp, startAt, endAt, writeBatch, onSnapshot } from "firebase/firestore"
 import { toast } from "sonner"
 import { Product, Category } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
@@ -35,8 +35,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            const snap = await getDocs(collection(db, "categories"))
+        const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
             const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
             // Sort in-memory: order asc, then nameAr asc
             const sortedCats = cats.sort((a, b) => {
@@ -46,8 +45,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
                 return (a.nameAr || "").localeCompare(b.nameAr || "")
             })
             setCategories(sortedCats)
-        }
-        fetchCategories()
+        })
+        return () => unsubscribe()
     }, [])
 
     const fetchProducts = useCallback(async (categoryId?: string, isInitial = false) => {

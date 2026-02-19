@@ -118,6 +118,7 @@ export default function CustomerHome() {
     }
 
     const activeBanners = banners.filter(b => b.active)
+    const activeCategories = categories.filter(c => !c.isHidden)
 
     const filteredProducts = serverSearchResults || products.filter(product => {
         if (product.isDraft) return false;
@@ -196,7 +197,7 @@ export default function CustomerHome() {
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
                                 )}
                             </button>
-                            {categories.map((cat) => (
+                            {activeCategories.map((cat) => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setSelectedCategory(cat.nameAr)}

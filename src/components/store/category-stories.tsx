@@ -14,8 +14,9 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
     const { categories } = useStore()
     const router = useRouter()
 
-    // Default categories if none exist in DB, but we'll use "الكل" + DB categories
-    const allCategories = ["الكل", ...categories.map(c => c.nameAr)]
+    // Default categories if none exist in DB, but we'll use "الكل" + DB categories (filtered by visibility)
+    const activeCategories = categories.filter(c => !c.isHidden)
+    const allCategories = ["الكل", ...activeCategories.map(c => c.nameAr)]
 
     const handleCategoryClick = (cat: string, id?: string) => {
         hapticFeedback('light')
