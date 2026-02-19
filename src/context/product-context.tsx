@@ -146,45 +146,52 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
-        console.log("reorderCategories started", orderedCategories.length)
-        toast.info("جاري تحديث الترتيب...")
+        console.log("reorderCategories starting", orderedCategories.length)
 
+        // 1. Calculate Deltas: Only items that actually changed their position
+        const changedItems = orderedCategories.filter((cat, index) => {
+            const current = categories.find(c => c.id === cat.id)
+            return current?.order !== index
+        })
+
+        if (changedItems.length === 0) {
+            console.log("No changes detected")
+            toast.success("الترتيب الحالي محفوظ بالفعل")
+            return
+        }
+
+        toast.info(`جاري تحديث ${changedItems.length} قسم...`)
+
+        // 2. Optimistic Update
+        const previousCategories = [...categories]
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
             order: index
         }))
-
-        const previousCategories = [...categories]
         setCategories(optimisticCategories)
 
         try {
-            // Create a timeout promise
+            // 3. Batch Update with Extended Timeout (60s)
+            const batch = writeBatch(db)
+            changedItems.forEach((cat) => {
+                const finalOrder = orderedCategories.findIndex(c => c.id === cat.id)
+                const catRef = doc(db, "categories", cat.id)
+                batch.update(catRef, { order: finalOrder })
+            })
+
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("انتهت مهلة الاتصال - Timeout")), 15000)
+                setTimeout(() => reject(new Error("انتهت مهلة الاتصال - يرجى فحص الإنترنت (60s Timeout)")), 60000)
             )
 
-            // Perform updates individually to see if one hangs, but wrap in Promise.all for speed
-            const updatePromise = (async () => {
-                console.log("Starting individual updates...")
-                for (let i = 0; i < optimisticCategories.length; i++) {
-                    const cat = optimisticCategories[i]
-                    if (!cat.id) continue
+            console.log(`Committing batch for ${changedItems.length} items...`)
+            await Promise.race([batch.commit(), timeoutPromise])
 
-                    const catRef = doc(db, "categories", cat.id)
-                    console.log(`Updating category ${i + 1}/${optimisticCategories.length}: ${cat.id}`)
-                    await updateDoc(catRef, { order: cat.order })
-                }
-                console.log("All updates completed successfully")
-            })()
-
-            // Race the updates against the timeout
-            await Promise.race([updatePromise, timeoutPromise])
-
-            toast.success("تم تحديث ترتيب الأقسام بنجاح")
+            console.log("Reorder successful")
+            toast.success("تم تحديث ترتيب الأقسام")
         } catch (error: any) {
-            console.error("CRITICAL: Error reordering categories:", error)
+            console.error("CRITICAL: Reorder error:", error)
             setCategories(previousCategories)
-            toast.error(`فشل في تحديث الترتيب: ${error.message || 'خطأ غير معروف'}`)
+            toast.error(`فشل التحديث: ${error.message || 'خطأ غير معروف'}`)
             throw error
         }
     }
