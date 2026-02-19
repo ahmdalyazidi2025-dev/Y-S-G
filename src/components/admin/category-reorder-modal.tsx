@@ -26,10 +26,14 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            await reorderCategories(items)
+            // We call it but don't await the close, let the context handle it
+            // This provides an instant experience
+            reorderCategories(items).catch(err => {
+                console.error("Delayed error in reorder:", err)
+            })
             onClose()
         } catch (error) {
-            console.error("Error reordering categories:", error)
+            console.error("Error starting reorder:", error)
         } finally {
             setIsSaving(false)
         }

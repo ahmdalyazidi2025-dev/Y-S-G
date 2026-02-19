@@ -131,14 +131,33 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
-        const batch = writeBatch(db)
-        orderedCategories.forEach((cat, index) => {
-            const catRef = doc(db, "categories", cat.id)
-            batch.update(catRef, { order: index })
-        })
-        await batch.commit()
+        // Optimistic update
+        const previousCategories = [...categories]
         setCategories(orderedCategories)
-        toast.success("تم تحديث ترتيب الأقسام")
+
+        try {
+            const batch = writeBatch(db)
+            let hasChanges = false
+
+            orderedCategories.forEach((cat, index) => {
+                // Only update if order actually changed to save writes and performance
+                if (cat.order !== index) {
+                    const catRef = doc(db, "categories", cat.id)
+                    batch.update(catRef, { order: index })
+                    hasChanges = true
+                }
+            })
+
+            if (hasChanges) {
+                await batch.commit()
+            }
+            toast.success("تم تحديث ترتيب الأقسام")
+        } catch (error) {
+            console.error("Error reordering categories:", error)
+            setCategories(previousCategories) // Revert on failure
+            toast.error("فشل في تحديث الترتيب")
+            throw error
+        }
     }
 
     return (
