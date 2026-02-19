@@ -9,7 +9,7 @@ import { Trash2, Plus, Minus, FileText, Send, X, User, Phone, ChevronDown } from
 import { toast } from "sonner"
 
 export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { cart, removeFromCart, createOrder, updateCartQuantity, currentUser, storeSettings, categories, coupons, applyCoupon } = useStore()
+    const { cart, removeFromCart, createOrder, updateCartQuantity, clearCart, currentUser, storeSettings, categories, coupons, applyCoupon } = useStore()
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
     const [couponCode, setCouponCode] = useState("")
@@ -57,7 +57,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         setCouponError("")
     }
 
-    const handleCreateOrder = (isDraft: boolean) => {
+    const handleCreateOrder = async (isDraft: boolean) => {
         // Validation if required
         if (storeSettings.requireCustomerInfoOnCheckout && !isDraft) {
             // Check if user is guest or missing info
@@ -71,18 +71,14 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             }
         }
 
-        createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
-        onClose()
-        setCustomerName("")
-        setCustomerPhone("")
-        setView('cart')
+        const success = await createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
 
-        // Helpful toast for Drafts
-        if (isDraft) {
-            toast.success("تم حفظ المسودة في قائمة الفواتير", {
-                description: "يمكنك العودة لها لاحقاً لإكمال الطلب",
-                duration: 4000
-            })
+        if (success) {
+            onClose()
+            setCustomerName("")
+            setCustomerPhone("")
+            setView('cart')
+            clearCart()
         }
     }
 

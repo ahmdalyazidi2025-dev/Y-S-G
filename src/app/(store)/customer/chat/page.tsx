@@ -1,7 +1,9 @@
 "use client"
 import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Send, MessageCircle, Paperclip, MoreVertical, Phone, Video } from "lucide-react"
+import { toast } from "sonner"
+import { hapticFeedback } from "@/lib/haptics"
+import { ArrowRight, Send, MessageCircle, Paperclip, MoreVertical, Phone, Video, X, Camera } from "lucide-react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { useStore } from "@/context/store-context"
@@ -9,10 +11,14 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { compressImage } from "@/lib/image-utils"
 
 export default function ChatPage() {
     const { messages, sendMessage, currentUser, guestId, markMessagesRead } = useStore()
     const [msg, setMsg] = useState("")
+    const [previewImage, setPreviewImage] = useState<string | null>(null)
+    const [isCompressing, setIsCompressing] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Use logged in user or fallback to unique guest ID
     const currentCustomerId = currentUser?.id || guestId
@@ -42,10 +48,34 @@ export default function ChatPage() {
     }, [messages, currentCustomerId])
 
     const handleSend = () => {
-        if (!msg.trim()) return
+        if (!msg.trim() && !previewImage) return
         // sendMessage uses currentUser internally if available, but passing explicit ID ensures consistency with the filter
-        sendMessage(msg, false, currentCustomerId, currentUser?.name || "عميل")
+        sendMessage(msg, false, currentCustomerId, currentUser?.name || "عميل", undefined, undefined, previewImage || undefined)
         setMsg("")
+        setPreviewImage(null)
+    }
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsCompressing(true)
+        try {
+            const compressed = await compressImage(file)
+            setPreviewImage(compressed)
+            hapticFeedback('light')
+        } catch (error) {
+            console.error("Compression failed:", error)
+            toast.error("فشل معالجة الصورة")
+        } finally {
+            setIsCompressing(false)
+            if (fileInputRef.current) fileInputRef.current.value = ""
+        }
+    }
+
+    const removePreview = () => {
+        setPreviewImage(null)
+        hapticFeedback('medium')
     }
 
     return (
@@ -162,6 +192,11 @@ export default function ChatPage() {
                                     <span>{format(m.createdAt, "hh:mm a", { locale: ar })}</span>
                                     {!m.isAdmin && <span>✓</span>}
                                 </div>
+                                {m.image && (
+                                    <div className="mt-3 rounded-xl overflow-hidden border border-border/50 bg-black/5">
+                                        <img src={m.image} alt="Sent image" className="w-full h-auto max-h-60 object-cover" />
+                                    </div>
+                                )}
                             </motion.div>
                         ))
                     )}
@@ -170,9 +205,45 @@ export default function ChatPage() {
 
             {/* Floating Input Area */}
             <div className="mt-4 relative">
+                <AnimatePresence>
+                    {previewImage && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute bottom-full left-4 mb-4 p-2 glass-card border border-primary/20 rounded-2xl shadow-xl z-20 group"
+                        >
+                            <img src={previewImage} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-border/50" />
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 w-6 h-6 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={removePreview}
+                            >
+                                <X className="w-3 h-3" />
+                            </Button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-xl rounded-[2rem] border border-border/50 shadow-lg -z-10" />
                 <div className="flex gap-2 p-2 items-end">
-                    <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                    />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                            "rounded-full h-10 w-10 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors",
+                            isCompressing && "animate-pulse pointer-events-none"
+                        )}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
                         <Paperclip className="w-5 h-5" />
                     </Button>
 
@@ -191,12 +262,12 @@ export default function ChatPage() {
                         size="icon"
                         className={cn(
                             "rounded-full h-10 w-10 flex-shrink-0 shadow-md transition-all duration-300",
-                            msg.trim()
+                            (msg.trim() || previewImage)
                                 ? "bg-gradient-to-br from-primary to-primary/80 hover:scale-105 hover:shadow-lg shadow-primary/20"
                                 : "bg-muted text-muted-foreground hover:bg-muted/80"
                         )}
                         onClick={handleSend}
-                        disabled={!msg.trim()}
+                        disabled={!msg.trim() && !previewImage}
                     >
                         <Send className="w-4 h-4" />
                     </Button>

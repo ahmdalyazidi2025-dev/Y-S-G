@@ -36,8 +36,15 @@ export default function StoreLayout({
     const { cart, logout, storeSettings, messages, currentUser, guestId, markNotificationsAsRead } = useStore()
 
     // Chat Logic
-    // const searchParams = useSearchParams() // Removed
-    // useEffect moved to NotificationHandler
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    useEffect(() => {
+        if (searchParams?.get("request_invoice") === "true") {
+            setIsRequestOpen(true)
+            // Remove the param to avoid re-opening
+            const newUrl = window.location.pathname
+            window.history.replaceState({}, '', newUrl)
+        }
+    }, [searchParams])
 
     // Chat Logic
     const currentCustomerId = currentUser?.id || guestId

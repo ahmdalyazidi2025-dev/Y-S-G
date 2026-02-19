@@ -13,7 +13,7 @@ interface OrderContextType {
     orders: Order[]
     coupons: Coupon[]
     hasMoreOrders: boolean
-    createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }) => Promise<void>
+    createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }) => Promise<boolean>
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
@@ -46,13 +46,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         return () => { unsubCoupons(); unsubOrders() }
     }, [])
 
-    const createOrder = async (currentUser: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }) => {
+    const createOrder = async (currentUser: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }): Promise<boolean> => {
         if (!currentUser || !auth.currentUser) {
             toast.error("يجب تسجيل الدخول لإتمام الطلب")
             router.push("/auth/login")
-            return
+            return false
         }
-        if (cart.length === 0) return
+        if (cart.length === 0) return false
 
         const orderData = {
             customerName: additionalInfo?.name?.trim() || currentUser?.name || "عميل",
@@ -76,8 +76,11 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
             toast.success(isDraft ? "تم حفظ المسودة" : "تم استلام طلبك بنجاح! 🚀")
             hapticFeedback('success')
+            return true
         } catch (e) {
+            console.error("Error creating order:", e)
             toast.error("حدث خطأ أثناء حفظ الطلب")
+            return false
         }
     }
 

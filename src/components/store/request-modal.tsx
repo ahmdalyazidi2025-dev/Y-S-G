@@ -74,7 +74,7 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                         className="glass-card w-full max-w-sm p-6 relative my-auto"
                     >
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold">طلب منتج جديد</h2>
+                            <h2 className="text-xl font-bold">طلب منتج / رفع فاتورة</h2>
                             <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full">
                                 <X className="w-5 h-5 text-slate-400" />
                             </button>
@@ -101,11 +101,11 @@ export default function RequestModal({ isOpen, onClose }: { isOpen: boolean; onC
                                         />
                                     </div>
                                 )}
-                                <label className="text-xs text-muted-foreground mr-2">وصف المنتج (اختياري)</label>
+                                <label className="text-xs text-muted-foreground mr-2">التفاصيل أو الملاحظات</label>
                                 <div className="relative">
                                     <Type className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="اكتب اسم أو ميزة المنتج..."
+                                        placeholder="اكتب تفاصيل المنتج أو رقم الفاتورة..."
                                         className="bg-muted/50 border-border pr-10"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}

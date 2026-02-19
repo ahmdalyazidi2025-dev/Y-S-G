@@ -96,6 +96,17 @@ export default function InvoicesPage() {
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">سجل الطلبات</h1>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold text-xs"
+                    onClick={() => {
+                        window.location.search = "?request_invoice=true"
+                    }}
+                >
+                    <Plus className="w-4 h-4" />
+                    رفع فاتورة
+                </Button>
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
