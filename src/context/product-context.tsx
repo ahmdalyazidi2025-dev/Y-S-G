@@ -116,16 +116,22 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const addCategory = async (category: Omit<Category, "id">) => {
-        // Find next sequential order
-        const maxOrder = categories.length > 0
-            ? Math.max(...categories.map(c => c.order ?? 0))
-            : -1
+        try {
+            // Find next sequential order
+            const maxOrder = categories.length > 0
+                ? Math.max(...categories.map(c => c.order ?? 0))
+                : -1
 
-        await addDoc(collection(db, "categories"), sanitizeData({
-            ...category,
-            order: maxOrder + 1
-        }))
-        toast.success("تم إضافة القسم")
+            await addDoc(collection(db, "categories"), sanitizeData({
+                ...category,
+                order: maxOrder + 1
+            }))
+            toast.success("تم إضافة القسم")
+        } catch (error) {
+            console.error("Error adding category:", error)
+            toast.error("فشل إضافة القسم")
+            throw error
+        }
     }
 
     const updateCategory = async (category: Category) => {
@@ -140,6 +146,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }
 
     const reorderCategories = async (orderedCategories: Category[]) => {
+        console.log("reorderCategories started with:", orderedCategories.length, "items")
+
         // Optimistic update
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
@@ -151,19 +159,26 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const batch = writeBatch(db)
+            console.log("Batch created")
 
             // Force update ALL categories in the batch to ensure they all have valid sequence numbers
             optimisticCategories.forEach((cat) => {
+                if (!cat.id) {
+                    console.error("Category missing ID:", cat)
+                    return
+                }
                 const catRef = doc(db, "categories", cat.id)
                 batch.update(catRef, { order: cat.order })
             })
 
+            console.log("Committing batch...")
             await batch.commit()
+            console.log("Batch committed successfully")
             toast.success("تم تحديث ترتيب الأقسام")
-        } catch (error) {
-            console.error("Error reordering categories:", error)
+        } catch (error: any) {
+            console.error("CRITICAL: Error reordering categories:", error)
             setCategories(previousCategories) // Revert on failure
-            toast.error("فشل في تحديث الترتيب")
+            toast.error(`فشل في تحديث الترتيب: ${error.message || 'خطأ غير معروف'}`)
             throw error
         }
     }

@@ -64,12 +64,18 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     }, [isOpen, categories])
 
     const handleSave = async () => {
+        console.log("Modal handleSave clicked")
         setIsSaving(true)
         try {
+            console.log("Calling reorderCategories with items:", items.length)
             await reorderCategories(items)
+            console.log("reorderCategories resolved successfully")
             onClose()
-        } catch (error) {
-            console.error("Error reordering categories:", error)
+        } catch (error: any) {
+            console.error("Modal Save Error:", error)
+            import("sonner").then(({ toast }) => {
+                toast.error(`خطأ في الحفظ: ${error.message || 'يرجى المحاولة مرة أخرى'}`)
+            })
         } finally {
             setIsSaving(false)
         }
