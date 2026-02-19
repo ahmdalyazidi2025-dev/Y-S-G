@@ -11,17 +11,18 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
     const [isChecking, setIsChecking] = useState(true)
 
     useEffect(() => {
-        // Wait for context to load user from localStorage
+        // Optimized check: only re-check if currentUser OR role requirement changes
+        // pathname is removed to prevent spinning on every internal navigation
         const checkAuth = async () => {
-            // Give a tiny bit of time for the Provider's useEffect to run
-            await new Promise(resolve => setTimeout(resolve, 50))
-
             const savedUser = localStorage.getItem("ysg_user")
             const user = savedUser ? JSON.parse(savedUser) : currentUser
 
             if (!user) {
                 router.push(`/login?role=${role}`)
-            } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
+                return
+            }
+
+            if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
                 router.push("/customer")
             } else if (role === "customer" && user.role !== "customer") {
                 router.push(user.role === "admin" || user.role === "staff" ? "/admin" : "/login?role=customer")
@@ -31,7 +32,7 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
         }
 
         checkAuth()
-    }, [currentUser, router, role, pathname])
+    }, [currentUser, router, role]) // Removed pathname
 
     if (isChecking) {
         return (

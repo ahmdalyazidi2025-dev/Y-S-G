@@ -1148,7 +1148,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
     }
 
-    const addJoinRequest = async (name: string, phone: string) => {
+    const addJoinRequest = useCallback(async (name: string, phone: string) => {
         try {
             // Use Server Action to bypass client-side rules
             const { submitJoinRequest } = await import("@/app/actions");
@@ -1163,9 +1163,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Add Request Error:", e)
             toast.error("فشل إرسال الطلب")
         }
-    }
+    }, [])
 
-    const deleteJoinRequest = async (id: string) => {
+    const deleteJoinRequest = useCallback(async (id: string) => {
         try {
             await deleteDoc(doc(db, "joinRequests", id))
             toast.success("تم حذف الطلب")
@@ -1173,7 +1173,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Delete Request Error:", e)
             toast.error("فشل حذف الطلب")
         }
-    }
+    }, [])
 
     const updateCategory = useCallback(async (category: Category) => {
         const { id, ...data } = category
@@ -1186,37 +1186,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف القسم")
     }, [])
 
-    const addCustomer = async (data: Omit<Customer, "id" | "createdAt"> & { password?: string, username?: string, email?: string }) => {
+    const addCustomer = useCallback(async (data: Omit<Customer, "id" | "createdAt"> & { password?: string, username?: string, email?: string }) => {
         try {
-            // 1. Determine Email & Username
-            // If email is provided (Recovery Email), use it. Otherwise generate fake one.
             const username = data.username || data.name.replace(/\s/g, '').toLowerCase();
             const email = data.email && data.email.includes('@') ? data.email : `${username}@ysg.local`;
-            const password = data.password || "123456"; // Default if not provided
+            const password = data.password || "123456";
 
-            // 2. Create Auth User
             const secondaryAuth = getSecondaryAuth();
             const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
             const uid = userCredential.user.uid;
 
-            // --- REFERRAL SYSTEM (Generate Early) ---
             const referralCode = (username.substring(0, 3) + Math.floor(1000 + Math.random() * 9000)).toUpperCase();
 
-            // 3. Create Username Mapping (Username -> Real Email)
-            // Always map the username so they can login with it
             await setDoc(doc(db, "usernames", username.toLowerCase()), {
                 email: email,
                 uid: uid
             });
 
-            // 4. Create User Profile (for auth/permissions check)
             await setDoc(doc(db, "users", uid), {
                 id: uid,
                 name: data.name,
                 role: "customer",
                 email: email,
                 username: username,
-                permissions: [], // Customers don't have admin panel permissions
+                permissions: [],
                 referralCode,
                 referralCount: 0
             });
@@ -1234,26 +1227,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                             referralCount: newCount
                         });
 
-                        // --- REWARDS CHECKS ---
                         if (newCount === 3) {
-                            // Milestone Reached: 3 Referrals
                             const couponCode = `GIFT-${referrerData.username?.substring(0, 4).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-                            // 1. Create Coupon
                             await addDoc(collection(db, "coupons"), {
                                 code: couponCode,
                                 discount: 15,
                                 type: "percentage",
                                 active: true,
-                                expiryDate: null, // No expiry or set one? Let's say unlimited for now
-                                usageLimit: 1, // One time use
+                                expiryDate: null,
+                                usageLimit: 1,
                                 usedCount: 0,
                                 createdAt: Timestamp.now(),
                                 createdReason: "referral_reward",
                                 ownerId: referrerDoc.id
                             });
 
-                            // 2. Notify Referrer
                             const title = "🎁 مبروك! حصلت على هدية";
                             const body = `شكراً لدعوتك 3 أصدقاء! لقد حصلت على كوبون خصم 15% خاص بك: ${couponCode}`;
 
@@ -1266,7 +1254,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                                 createdAt: Timestamp.now()
                             });
 
-                            // Send Push
                             sendPushNotification(referrerDoc.id, title, body, "/customer?notifications=open");
                         }
                     }
@@ -1275,20 +1262,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 }
             }
 
-            // 5. Create Customer Document
             await setDoc(doc(db, "customers", uid), sanitizeData({
                 ...data,
                 id: uid,
-                email: email, // Store the actual used email
+                email: email,
                 username: username,
-                referralCode, // Save Generated Code
+                referralCode,
                 referralCount: 0,
                 createdAt: Timestamp.now()
             }))
 
             await firebaseSignOut(secondaryAuth);
 
-            // Send Welcome Notification (First time interaction)
             const welcomeTitle = "مرحباً بك في YSG GROUP! 👋"
             const welcomeBody = "سعداء بانضمامك إلينا! 🌹 هذا القسم مخصص لإشعاراتك الخاصة، حيث ستصلك تحديثات حالة الطلب والعروض الحصرية هنا."
 
@@ -1301,28 +1286,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 createdAt: Timestamp.now()
             }))
 
-            // Trigger Welcome Push
             sendPushNotification(uid, welcomeTitle, welcomeBody, "/customer?notifications=open")
 
-            // Send Welcome Chat Message
             await addDoc(collection(db, "messages"), sanitizeData({
-                senderId: "admin", // Admin sender
+                senderId: "admin",
                 senderName: "الإدارة",
                 text: "مرحباً بك! 👋 هذا قسم الدردشة المباشرة مع الإدارة. نحن هنا لمساعدتك.",
                 isAdmin: true,
                 read: false,
-                userId: uid, // Target user
-                createdAt: Timestamp.now()
-            }))
-
-            // Send Welcome Chat Message
-            await addDoc(collection(db, "messages"), sanitizeData({
-                senderId: "admin", // Admin sender
-                senderName: "الإدارة",
-                text: "مرحباً بك! 👋 هذا قسم الدردشة المباشرة مع الإدارة. نحن هنا لمساعدتك.",
-                isAdmin: true,
-                read: false,
-                userId: uid, // Target user
+                userId: uid,
                 createdAt: Timestamp.now()
             }))
 
@@ -1335,9 +1307,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 toast.error("فشل إضافة العميل: " + error.message)
             }
         }
-    }
+    }, [sanitizeData])
 
-    const updateCustomer = async (id: string, data: Partial<Customer>) => {
+    const updateCustomer = useCallback(async (id: string, data: Partial<Customer>) => {
         await updateDoc(doc(db, "customers", id), sanitizeData(data))
 
         // If email changed, we should ideally update Auth email too, but that's complex (requires admin SDK or re-auth).
@@ -1350,12 +1322,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         toast.success("تم تحديث بيانات العميل")
-    }
+    }, [sanitizeData])
 
-    const deleteCustomer = async (customerId: string) => {
-        // 1. Get Customer to find username (if we want to be precise) or just try to delete common patterns
-        // We need to delete: customers/{id}, users/{id}, usernames/{username}
-
+    const deleteCustomer = useCallback(async (customerId: string) => {
         const customer = customers.find(c => c.id === customerId)
 
         await deleteDoc(doc(db, "customers", customerId))
@@ -1366,7 +1335,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         toast.error("تم حذف العميل وبيانات دخوله نهائياً")
-    }
+    }, [customers])
 
     const updateOrderStatus = useCallback(async (orderId: string, status: Order["status"]) => {
         const order = orders.find(o => o.id === orderId)
@@ -1419,7 +1388,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hapticFeedback('medium')
     }, [orders, hapticFeedback, playSound, sanitizeData])
 
-    const addBanner = async (banner: Omit<Banner, "id">) => {
+    const addBanner = useCallback(async (banner: Omit<Banner, "id">) => {
         try {
             if (!banner.image || banner.image.length < 100) {
                 throw new Error("بيانات الصورة غير صالحة")
@@ -1431,14 +1400,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.error("فشل إضافة الصورة (قد تكون كبيرة جداً)")
             throw error
         }
-    }
+    }, [sanitizeData])
 
-    const deleteBanner = async (bannerId: string) => {
+    const deleteBanner = useCallback(async (bannerId: string) => {
         await deleteDoc(doc(db, "banners", bannerId))
         toast.error("تم حذف الصورة")
-    }
+    }, [])
 
-    const toggleBanner = async (bannerId: string) => {
+    const toggleBanner = useCallback(async (bannerId: string) => {
         const banner = banners.find(b => b.id === bannerId)
         if (banner) {
             const newState = !banner.active
@@ -1449,9 +1418,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     : "لن يظهر هذا البانر للعملاء بعد الآن."
             })
         }
-    }
+    }, [banners])
 
-    const addProductRequest = async (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => {
+    const addProductRequest = useCallback(async (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => {
         try {
             await addDoc(collection(db, "requests"), sanitizeData({
                 ...request,
@@ -1467,9 +1436,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 toast.error("فشل إرسال الطلب، حاول مرة أخرى")
             }
         }
-    }
+    }, [sanitizeData])
 
-    const updateProductRequestStatus = async (requestId: string, status: ProductRequest["status"]) => {
+    const updateProductRequestStatus = useCallback(async (requestId: string, status: ProductRequest["status"]) => {
         try {
             await updateDoc(doc(db, "requests", requestId), { status })
             toast.success("تم تحديث حالة الطلب")
@@ -1477,9 +1446,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Update Request Status Error:", e)
             toast.error("فشل تحديث حالة الطلب")
         }
-    }
+    }, [])
 
-    const deleteProductRequest = async (requestId: string) => {
+    const deleteProductRequest = useCallback(async (requestId: string) => {
         try {
             await deleteDoc(doc(db, "requests", requestId))
             toast.success("تم حذف الطلب بنجاح")
@@ -1487,7 +1456,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Delete Request Error:", e)
             toast.error("فشل حذف الطلب")
         }
-    }
+    }, [])
 
     const sendMessage = useCallback(async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل", actionLink?: string, actionTitle?: string, image?: string, isSystemNotification = false) => {
         const targetUserId = isAdmin ? customerId : (currentUser?.id || customerId)
@@ -1521,22 +1490,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }, [currentUser, playSound, sanitizeData])
 
-    const markMessagesRead = async (customerId?: string) => {
+    const markMessagesRead = useCallback(async (customerId?: string) => {
         const targetId = customerId || currentUser?.id
         if (!targetId) return
-
-        // If I am customer, I want to mark messages FROM admin as read.
-        // If I am admin, I want to mark messages FROM customer as read.
-        // Assuming this function is called by the viewer of the messages.
 
         const isViewerAdmin = currentUser?.role === "admin" || currentUser?.role === "staff"
 
         const unreadMessages = messages.filter(m => {
             if (isViewerAdmin) {
-                // Admin reading customer messages
                 return m.senderId === targetId && !m.isAdmin && !m.read
             } else {
-                // Customer reading admin messages
                 const text = m.text || ""
                 const isForMe = text.includes(`(@${targetId})`) || m.userId === targetId
                 return m.isAdmin && isForMe && !m.read
@@ -1554,15 +1517,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
             console.error("Failed to mark messages read", e)
         }
-    }
+    }, [currentUser, messages])
 
-    const broadcastNotification = (text: string) => {
+    const broadcastNotification = useCallback((text: string) => {
         toast.info(text, { duration: 5000, icon: "🔔" })
         hapticFeedback('success')
-    }
+    }, [hapticFeedback])
 
     // Helper: Reset Password
-    const resetPassword = async (email: string) => {
+    const resetPassword = useCallback(async (email: string) => {
         try {
             await sendPasswordResetEmail(auth, email)
             toast.success("تم إرسال رابط استعادة كلمة المرور للبريد الإلكتروني")
@@ -1572,11 +1535,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.error("فشل إرسال الرابط: " + (error as Error).message)
             return false
         }
-    }
+    }, [])
 
-    const addStaff = async (member: Omit<StaffMember, "id" | "createdAt" | "role"> & { password?: string, role: "admin" | "staff" }) => {
+    const addStaff = useCallback(async (member: Omit<StaffMember, "id" | "createdAt" | "role"> & { password?: string, role: "admin" | "staff" }) => {
         try {
-            // 1. Validate Phone Uniqueness
             if (!member.phone) throw new Error("رقم الهاتف مطلوب");
 
             const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
@@ -1588,18 +1550,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 throw new Error("رقم الهاتف مستخدم بالفعل (كموظف أو عميل)");
             }
 
-            // 2. Determine Email from Username (or generate one)
-            // The member.email passed here might be empty now from UI.
             const username = (member as any).username || member.name.replace(/\s/g, '').toLowerCase();
             const normalizedUsername = username.toLowerCase().trim();
             const generatedEmail = `${normalizedUsername}@staff.ysg.local`;
 
-            // 3. Create Auth User
             const secondaryAuth = getSecondaryAuth();
             const userCredential = await createUserWithEmailAndPassword(secondaryAuth, generatedEmail, member.password || "123456");
             const uid = userCredential.user.uid;
 
-            // 4. Create User Profile
             await setDoc(doc(db, "users", uid), {
                 id: uid,
                 name: member.name,
@@ -1612,19 +1570,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     : member.permissions
             });
 
-            // 5. Create Username Mapping
             await setDoc(doc(db, "usernames", normalizedUsername), {
                 email: generatedEmail,
                 uid: uid
             });
 
-            // 6. Create Staff Document
             await setDoc(doc(db, "staff", uid), sanitizeData({
                 ...member,
                 id: uid,
-                email: generatedEmail, // Store generated email
+                email: generatedEmail,
                 username: normalizedUsername,
-                password: null, // Don't store password in plain text
+                password: null,
                 createdAt: Timestamp.now()
             }))
 
@@ -1640,14 +1596,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 toast.error("فشل إضافة الموظف: " + (error.message || "خطأ غير معروف"))
             }
         }
-    }
+    }, [sanitizeData])
 
 
-    const addExistingUserAsStaff = async (user: User) => {
+    const addExistingUserAsStaff = useCallback(async (user: User) => {
         try {
             if (!user.id) throw new Error("بيانات المستخدم غير مكتملة");
 
-            // 1. Create Staff Document using EXISTING ID
             await setDoc(doc(db, "staff", user.id), sanitizeData({
                 id: user.id,
                 name: user.name,
@@ -1659,14 +1614,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 createdAt: Timestamp.now()
             }), { merge: true })
 
-            // 2. Update User Document to be Admin
             await setDoc(doc(db, "users", user.id), {
                 role: "admin",
                 permissions: ["orders", "products", "customers", "settings", "chat", "sales", "admins"],
                 updatedAt: Timestamp.now()
             }, { merge: true })
 
-            // 3. Update Username Mapping (Just in case)
             if (user.username) {
                 await setDoc(doc(db, "usernames", user.username.toLowerCase()), {
                     email: user.email,
@@ -1675,14 +1628,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
 
             toast.success("تم ترقية حسابك لمدير بنجاح! 🚀 يرجى تحديث الصفحة لرؤية التغييرات.")
-            // trigger sound
             playSound('statusUpdate')
 
         } catch (error: any) {
             console.error("Promote Error:", error);
             toast.error("فشل الترقية: " + error.message)
         }
-    }
+    }, [sanitizeData, playSound])
 
     const loadMoreOrders = useCallback(async () => {
         if (!lastOrderDoc || !hasMoreOrders || !currentUser) return
@@ -1795,16 +1747,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [toDate])
 
 
-    const updateStaff = async (member: StaffMember) => {
+    const updateStaff = useCallback(async (member: StaffMember) => {
         try {
-            // 1. Check Phone Uniqueness (if changed)
             const oldMember = staff.find(s => s.id === member.id);
             if (oldMember && oldMember.phone !== member.phone) {
                 const phoneQueryStaff = query(collection(db, "staff"), where("phone", "==", member.phone));
                 const phoneQueryCustomers = query(collection(db, "customers"), where("phone", "==", member.phone));
                 const [staffSnap, customerSnap] = await Promise.all([getDocs(phoneQueryStaff), getDocs(phoneQueryCustomers)]);
 
-                // Exclude self from staff check (though ID check handles it usually, query returns docs)
                 const duplicateStaff = staffSnap.docs.some(d => d.id !== member.id);
                 if (duplicateStaff || !customerSnap.empty) {
                     toast.error("رقم الهاتف مستخدم بالفعل");
@@ -1813,17 +1763,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }
 
             const { id, ...data } = member
-
-            // 2. Update Staff Document
             await updateDoc(doc(db, "staff", id), sanitizeData(data))
 
-            // 3. Update User Document
             await setDoc(doc(db, "users", id), {
                 id,
                 name: member.name,
                 role: member.role,
                 email: member.email,
-                phone: member.phone, // Sync phone
+                phone: member.phone,
                 permissions: member.role === "admin"
                     ? ["orders", "products", "customers", "settings", "chat", "sales", "admins"]
                     : member.permissions
@@ -1834,19 +1781,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Update Staff Error:", e);
             toast.error("فشل تحديث البيانات");
         }
-    }
+    }, [staff, sanitizeData])
 
-    const deleteStaff = async (memberId: string) => {
+    const deleteStaff = useCallback(async (memberId: string) => {
         try {
             const member = staff.find(s => s.id === memberId)
 
             await deleteDoc(doc(db, "staff", memberId))
-            await deleteDoc(doc(db, "users", memberId)) // Revoke login access
+            await deleteDoc(doc(db, "users", memberId))
 
             if (member?.username) {
                 await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))
             } else if (member?.email && member.email.includes("@ysg.local")) {
-                // Try to guess username from legacy email if not present
                 const username = member.email.split("@")[0]
                 await deleteDoc(doc(db, "usernames", username))
             }
@@ -1856,14 +1802,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Delete Staff Error:", e)
             toast.error("فشل حذف الموظف")
         }
-    }
+    }, [staff])
 
-    const broadcastToCategory = async (category: string, text: string) => {
+    const broadcastToCategory = useCallback(async (category: string, text: string) => {
         toast.info(`بث إلى فئة ${category}: ${text}`, { icon: "📢" })
         hapticFeedback('success')
-    }
+    }, [hapticFeedback])
 
-    const addCoupon = async (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => {
+    const addCoupon = useCallback(async (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => {
         await addDoc(collection(db, "coupons"), sanitizeData({
             ...coupon,
             usedCount: 0,
@@ -1872,14 +1818,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.success("تم إنشاء الكوبون بنجاح 🎫", {
             description: "سيتمكن العملاء من استخدام هذا الكود في سلة المشتريات للحصول على الخصم."
         })
-    }
+    }, [sanitizeData])
 
-    const deleteCoupon = async (id: string) => {
+    const deleteCoupon = useCallback(async (id: string) => {
         await deleteDoc(doc(db, "coupons", id))
         toast.error("تم حذف الكوبون")
-    }
+    }, [])
 
-    const applyCoupon = async (code: string) => {
+    const applyCoupon = useCallback(async (code: string) => {
         const coupon = coupons.find(c => c.code === code && c.active)
 
         if (!coupon) {
@@ -1887,38 +1833,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             return null
         }
 
-        // 1. Expiry Check
         if (coupon.expiryDate && coupon.expiryDate.toDate() < new Date()) {
             toast.error("الخصم منتهي الصلاحية")
             return null
         }
 
-        // 2. Start Date Check
         if (coupon.startDate && coupon.startDate.toDate() > new Date()) {
             toast.error("الخصم لم يبدأ بعد")
             return null
         }
 
-        // 3. Global Usage Limit Check
         if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
             toast.error("تم تجاوز الحد الأقصى لاستخدام هذا الكوبون")
             return null
         }
 
-        // 4. Minimum Order Value Check
         const currentTotal = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
         if (coupon.minOrderValue && currentTotal < coupon.minOrderValue) {
             toast.error(`يجب أن تكون قيمة الطلب أعلى من ${coupon.minOrderValue} ريال لاستخدام هذا الكوبون`)
             return null
         }
 
-        // 5. Customer Category Check
-        // Placeholder for category logic if we implement strict customer types
-        if (currentUser && coupon.allowedCustomerTypes !== "all" && coupon.allowedCustomerTypes) {
-            // Logic to be refined when Customer Types are strictly defined
-        }
-
-        // 6. Per Customer Usage Limit Check
         if (currentUser && coupon.customerUsageLimit) {
             const userUsageCount = orders.filter(o =>
                 o.customerId === currentUser.id &&
@@ -1932,16 +1867,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         return coupon
-    }
+    }, [coupons, cart, currentUser, orders])
 
-    const sendNotification = async (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
+    const sendNotification = useCallback(async (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
         await addDoc(collection(db, "notifications"), sanitizeData({
             ...notification,
             read: false,
             createdAt: Timestamp.now()
         }))
 
-        // Trigger Push Notification with deep link to notifications sheet
         sendPushNotification(
             notification.userId,
             notification.title,
@@ -1949,16 +1883,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             notification.link || "/customer?notifications=open"
         )
 
-        // Local feedback for admin
         playSound('newMessage')
         hapticFeedback('medium')
 
         toast.success("تم إرسال الإشعار")
-    }
+    }, [sanitizeData, playSound, hapticFeedback])
 
-    const markNotificationRead = async (id: string) => {
+    const markNotificationRead = useCallback(async (id: string) => {
         await updateDoc(doc(db, "notifications", id), { read: true })
-    }
+    }, [])
 
     const markAllNotificationsRead = useCallback(async () => {
         if (!currentUser) return
@@ -1974,7 +1907,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }, [currentUser, notifications])
 
-    const sendNotificationToGroup = async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link: string = "/customer?notifications=open") => {
+    const sendNotificationToGroup = useCallback(async (segment: "vip" | "active" | "semi_active" | "interactive" | "dormant" | "all", title: string, body: string, link: string = "/customer?notifications=open") => {
         let targetCustomers: Customer[] = []
 
         const getStats = (customerId: string) => {
@@ -2038,30 +1971,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 body,
                 type: "info",
                 read: false,
-                link, // Add link
+                link,
                 createdAt: Timestamp.now()
             }))
         )
 
         try {
             await Promise.all(batchPromises)
-
-            // Trigger Batch Push Notification for the whole segment
             const targetIds = targetCustomers.map(c => c.id)
             sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", body, "/customer/chat")
-
-            // Local feedback for admin
             playSound('newMessage')
             hapticFeedback('success')
-
             toast.success(`تم إرسال الإشعار لـ ${targetCustomers.length} عميل`)
         } catch (error) {
             console.error(error)
             toast.error("حدث خطأ أثناء الإرسال")
         }
-    }
+    }, [orders, customers, sanitizeData, playSound, hapticFeedback])
 
-    const sendGlobalMessage = async (text: string, actionLink?: string, actionTitle?: string) => {
+    const sendGlobalMessage = useCallback(async (text: string, actionLink?: string, actionTitle?: string) => {
         if (customers.length === 0) {
             toast.error("لا يوجد عملاء لإرسال الرسالة لهم")
             return
@@ -2071,9 +1999,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             addDoc(collection(db, "messages"), sanitizeData({
                 senderId: "admin",
                 senderName: "الإدارة",
-                text: `${text} (@${customer.id})`, // Tagging to ensure visibility in customer view
+                text: `${text} (@${customer.id})`,
                 isAdmin: true,
-                actionLink, // Save link
+                actionLink,
                 actionTitle,
                 createdAt: Timestamp.now()
             }))
@@ -2081,54 +2009,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         try {
             await Promise.all(batchPromises)
-
-            // Trigger Global Push Notification for Chat
             const targetIds = customers.map(c => c.id)
             sendPushToUsers(targetIds, "رسالة جماعية جديدة 💬", text, "/customer/chat")
-
-            // Play Sound
             playSound('newMessage')
-
             toast.success(`تم إرسال الرسالة لـ ${customers.length} عميل`)
         } catch (error) {
             console.error(error)
             toast.error("حدث خطأ أثناء الإرسال")
         }
-    }
+    }, [customers, sanitizeData, playSound])
 
     // markMessagesRead function moved to be declared once
 
-    const markNotificationsAsRead = async (type: "chat" | "system" | "orders", id?: string) => {
+    const markNotificationsAsRead = useCallback(async (type: "chat" | "system" | "orders", id?: string) => {
         if (!currentUser) return;
-
         try {
             if (type === "chat") {
-                // If ID is provided, it's a specific conversation (Customer ID)
-                // If no ID, maybe mark all? But usually we mark by conversation.
-                // For Admin: Mark all messages from this customer as read
-                // For Customer: Mark all messages from Admin as read
-
-                // Logic: Query messages where read=false AND (if admin: sender!=admin / if customer: sender=admin)
-                // This might be heavy to do "all".
-                // Let's assume we pass the CustomerID (id) when admin opens a chat.
-                // If customer is logged in, they mark their own received messages as read.
-
-                const q = query(
-                    collection(db, "messages"),
-                    where("read", "==", false),
-                )
-
+                const q = query(collection(db, "messages"), where("read", "==", false))
                 const querySnapshot = await getDocs(q);
                 const updates: Promise<void>[] = []
                 querySnapshot.forEach((doc) => {
                     const data = doc.data() as Message
-
-                    // Admin clearing a specific customer's chat
                     if ((currentUser.role === 'admin' || currentUser.role === 'staff') && id && data.senderId === id && !data.isAdmin && !data.isSystemNotification) {
                         updates.push(updateDoc(doc.ref, { read: true }))
                     }
-
-                    // Customer/Guest clearing their own chat (messages from admin)
                     if (data.isAdmin && !data.isSystemNotification) {
                         const targetId = currentUser.id || guestId
                         const text = data.text || ""
@@ -2140,42 +2044,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 })
                 await Promise.all(updates)
             }
-
             if (type === "system") {
                 const targetId = currentUser?.id || guestId
                 if (!targetId) return
-
                 const unreadSystem = messages.filter(m => {
                     const text = m.text || ""
                     const isForMe = m.userId === targetId || text.includes(`(@${targetId})`)
                     return m.isAdmin && isForMe && m.isSystemNotification && !m.read
                 })
-
                 if (unreadSystem.length > 0) {
                     const updates = unreadSystem.map(m => updateDoc(doc(db, "messages", m.id), { read: true }))
                     await Promise.all(updates)
                 }
             }
-
         } catch (error) {
             console.error("Error marking as read:", error)
         }
-    }
+    }, [currentUser, guestId, messages])
 
-    const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
+    const login = useCallback(async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
         try {
             let finalEmail = username.trim()
 
-            // Fix for Customer Login: valid customer emails are username@ysg.local
-            // If the user enters just "username", we append the domain.
             if (role === "customer" && !finalEmail.includes("@")) {
                 const normalizedUsername = finalEmail.toLowerCase().replace(/\s/g, '')
                 finalEmail = `${normalizedUsername}@ysg.local`
             }
 
-            // Fix for Admin/Staff Login using Username
             if ((role === "admin" || role === "staff") && !finalEmail.includes("@")) {
-                // Check 'usernames' collection for mapping
                 try {
                     const normalizedUsername = finalEmail.toLowerCase().trim()
                     const usernameDoc = await getDoc(doc(db, "usernames", normalizedUsername))
@@ -2184,25 +2080,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                         finalEmail = usernameDoc.data().email
                         console.log(`Resolved username ${normalizedUsername} to email ${finalEmail}`)
                     } else {
-                        // Fallback to legacy behavior just in case
                         finalEmail = `${normalizedUsername}@ysg.local`
                     }
                 } catch (err) {
                     console.error("Username lookup failed:", err)
-                    // Fallback
                     finalEmail = `${finalEmail}@ysg.local`
                 }
             }
 
-            console.log(`Attempting login for ${role}: ${finalEmail}`) // Debug log
-
+            console.log(`Attempting login for ${role}: ${finalEmail}`)
             await signInWithEmailAndPassword(auth, finalEmail, password)
-            // The onAuthStateChanged hook will handle setting the currentUser
             return true
         } catch (error: any) {
             console.error("Login Error:", error)
-
-            // Nice error handling
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
                 toast.error("بيانات الدخول غير صحيحة")
             } else if (error.code === 'auth/invalid-email') {
@@ -2210,12 +2100,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             } else {
                 toast.error("حدث خطأ غير متوقع في تسجيل الدخول")
             }
-
             return false
         }
-    }
+    }, [])
 
-    const updateAdminCredentials = async (username: string, password: string) => {
+    const updateAdminCredentials = useCallback(async (username: string, password: string) => {
         try {
             await setDoc(doc(db, "settings", "security"), { username, password }, { merge: true })
             toast.success("تم تحديث بيانات دخول الإدارة بنجاح")
@@ -2224,24 +2113,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.error("فشل تحديث البيانات")
             throw e
         }
-    }
+    }, [])
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         await firebaseSignOut(auth)
         setCurrentUser(null)
         localStorage.removeItem("ysg_user")
         router.push("/login")
-    }
+    }, [router])
 
-    const cleanupOrphanedUsers = async () => {
+    const cleanupOrphanedUsers = useCallback(async () => {
         try {
             console.log("Starting cleanup...")
-            // 1. Get all users from 'users' collection
             const usersSnap = await getDocs(collection(db, "users"))
             const allUsers = usersSnap.docs.map(d => ({ id: d.id, ...d.data() } as User))
 
-            // 2. Get valid IDs from customers and staff
-            // Note: In a huge app, fetching all is bad. Here it's fine for admin maintenance.
             const customersSnap = await getDocs(collection(db, "customers"))
             const staffSnap = await getDocs(collection(db, "staff"))
 
@@ -2250,53 +2136,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 ...staffSnap.docs.map(d => d.id)
             ])
 
-            // 3. Find orphans (User exists but no Customer/Staff profile)
-            // EXCEPTION: Hardcoded admins or special accounts if any? 
-            // Our logic: Every user MUST be either in 'customers' or 'staff'.
-            // Special case: The "admin" user might be created manually? 
-            // Usually we add them to staff. If not, we might delete them!
-            // Let's protect specific IDs or emails if needed. 
-            // For now, assume all legitimate users are in staff/customers.
-
-            const safeEmails = ["admin@store.com"] // Add any hardcoded safeguards
-
+            const safeEmails = ["admin@store.com"]
             const orphans = allUsers.filter(u =>
                 !validIds.has(u.id) &&
                 !safeEmails.includes(u.email || "") &&
-                u.id !== currentUser?.id // Don't delete self just in case
+                u.id !== currentUser?.id
             )
-
-            console.log(`Found ${orphans.length} orphans`, orphans)
 
             if (orphans.length === 0) {
                 toast.success("قاعدة البيانات نظيفة! لا توجد حسابات معلقة.")
                 return 0
             }
 
-            // 4. Delete them
             const deletePromises = orphans.map(async (u) => {
-                // Delete User Doc
                 await deleteDoc(doc(db, "users", u.id))
-                // Delete Username Mapping
                 if (u.username) {
                     await deleteDoc(doc(db, "usernames", u.username.toLowerCase()))
                 }
             })
 
             await Promise.all(deletePromises)
-
             const count = orphans.length
             toast.success(`تم تنظيف ${count} حساب معلق بنجاح 🧹`)
             return count
-
         } catch (error) {
             console.error("Cleanup Error:", error)
             toast.error("حدث خطأ أثناء التنظيف")
             throw error
         }
-    }
+    }, [currentUser])
 
-    const requestPasswordResetPhone = async (phone: string) => {
+    const requestPasswordResetPhone = useCallback(async (phone: string) => {
         try {
             const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
             const result = await requestPasswordResetAction(phone)
@@ -2313,16 +2183,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             toast.error("حدث خطأ، حاول مرة أخرى")
             return { success: false, message: "حدث خطأ غير متوقع" }
         }
-    }
+    }, [])
 
-    const resolvePasswordRequest = async (id: string) => {
+    const resolvePasswordRequest = useCallback(async (id: string) => {
         try {
             await deleteDoc(doc(db, "password_requests", id))
             toast.success("تم إغلاق الطلب")
         } catch (error) {
             console.error("Resolve Error:", error)
         }
-    }
+    }, [])
 
 
 
