@@ -35,7 +35,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const snap = await getDocs(collection(db, "categories"))
+            const q = query(collection(db, "categories"), orderBy("order", "asc"), orderBy("nameAr", "asc"))
+            const snap = await getDocs(q)
             setCategories(snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
         }
         fetchCategories()

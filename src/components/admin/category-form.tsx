@@ -28,6 +28,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         image: "",
         icon: "📁",
         isHidden: false,
+        order: 0,
     })
 
     useEffect(() => {
@@ -41,6 +42,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     image: initialCategory.image || "",
                     icon: initialCategory.icon || "📁",
                     isHidden: initialCategory.isHidden || false,
+                    order: initialCategory.order || 0,
                 });
                 setVisualType(initialCategory.image ? "image" : "icon");
             } else {
@@ -50,6 +52,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     image: "",
                     icon: "📁",
                     isHidden: false,
+                    order: 0,
                 });
                 setVisualType("icon");
             }
@@ -91,6 +94,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
             image: formData.image,
             icon: formData.icon,
             isHidden: formData.isHidden,
+            order: Number(formData.order) || 0,
         }
 
         if (initialCategory) {
@@ -184,6 +188,17 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                         onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-400 text-xs pr-1 text-right block w-full">ترتيب الظهور (رقم أصغر يظهر أولاً)</Label>
+                                <Input
+                                    type="number"
+                                    placeholder="0"
+                                    className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white focus:ring-primary/50"
+                                    value={formData.order}
+                                    onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                                />
                             </div>
 
                             <div className="bg-black/20 p-1 rounded-2xl flex border border-white/10 h-14">

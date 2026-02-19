@@ -45,6 +45,7 @@ export type Category = {
     image?: string
     icon?: any
     isHidden?: boolean
+    order?: number
 }
 
 export interface Customer {
