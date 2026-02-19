@@ -1368,7 +1368,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف العميل وبيانات دخوله نهائياً")
     }
 
-    const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
+    const updateOrderStatus = useCallback(async (orderId: string, status: Order["status"]) => {
         const order = orders.find(o => o.id === orderId)
         if (!order) return
 
@@ -1417,7 +1417,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         toast.info(`تم تحديث الحالة: ${status}`)
         hapticFeedback('medium')
-    }
+    }, [orders, hapticFeedback, playSound, sanitizeData])
 
     const addBanner = async (banner: Omit<Banner, "id">) => {
         try {
@@ -1684,7 +1684,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    const loadMoreOrders = async () => {
+    const loadMoreOrders = useCallback(async () => {
         if (!lastOrderDoc || !hasMoreOrders || !currentUser) return
 
         try {
@@ -1725,9 +1725,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Load More Orders Error:", error)
             toast.error("فشل تحميل المزيد")
         }
-    }
+    }, [currentUser, lastOrderDoc, hasMoreOrders, toDate])
 
-    const searchOrders = async (term: string) => {
+    const searchOrders = useCallback(async (term: string) => {
         if (!term) return []
         setLoading(true)
         try {
@@ -1792,7 +1792,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setLoading(false)
         }
-    }
+    }, [toDate])
 
 
     const updateStaff = async (member: StaffMember) => {
@@ -2326,7 +2326,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
 
 
-    const markOrderAsRead = async (orderId: string) => {
+    const markOrderAsRead = useCallback(async (orderId: string) => {
         try {
             const orderRef = doc(db, "orders", orderId)
             await updateDoc(orderRef, { isRead: true })
@@ -2336,10 +2336,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error("Error marking order as read:", error)
         }
-    }
+    }, [])
 
 
-    const markSectionAsViewed = async (section: keyof AdminPreferences['lastViewed']) => {
+    const markSectionAsViewed = useCallback(async (section: keyof AdminPreferences['lastViewed']) => {
         try {
             const now = new Date()
             const newPrefs = {
@@ -2360,7 +2360,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error("Error marking section as viewed:", error)
         }
-    }
+    }, [adminPreferences])
 
 
 
@@ -2371,7 +2371,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }, [authInitialized, settingsLoaded])
 
-    const value = {
+    const value = React.useMemo(() => ({
         products: visibleProducts, orders, categories: visibleCategories, customers, banners, productRequests,
         cart,
         addToCart, removeFromCart, clearCart, createOrder, scanProduct,
@@ -2407,7 +2407,42 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         searchOrders,
         hasMoreProducts,
         addExistingUserAsStaff
-    }
+    }), [
+        visibleProducts, orders, visibleCategories, customers, banners, productRequests, cart,
+        addToCart, removeFromCart, clearCart, createOrder, scanProduct,
+        addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
+        addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+        addBanner, deleteBanner, toggleBanner, addProductRequest,
+        updateProductRequestStatus, loadMoreOrders, hasMoreOrders,
+        deleteProductRequest,
+        messages, sendMessage,
+        broadcastNotification,
+        markNotificationsAsRead,
+        currentUser,
+        login, logout,
+        updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
+        staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+        coupons, addCoupon, deleteCoupon, applyCoupon, notifications, sendNotification, markNotificationRead, sendNotificationToGroup, sendGlobalMessage,
+        updateAdminCredentials, authInitialized, resetPassword, loading, guestId, markAllNotificationsRead,
+        markMessagesRead,
+        markOrderAsRead,
+        playSound,
+        joinRequests,
+        addJoinRequest,
+        deleteJoinRequest,
+        cleanupOrphanedUsers,
+        passwordRequests,
+        resolvePasswordRequest,
+        requestPasswordResetPhone,
+        adminPreferences,
+        markSectionAsViewed,
+        fetchProducts,
+        loadMoreProducts,
+        searchProducts,
+        searchOrders,
+        hasMoreProducts,
+        addExistingUserAsStaff
+    ])
 
     return (
         <StoreContext.Provider value={value}>
