@@ -46,13 +46,24 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
         let ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(50))
         if (!isAdmin && customerId) {
-            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId), orderBy("createdAt", "desc"), limit(50))
+            // REMOVED orderBy and limit to avoid index requirement
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
         }
 
         const unsubOrders = onSnapshot(ordersQuery, (snap) => {
-            setOrders(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order)))
-            setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
-            setHasMoreOrders(snap.docs.length === 50)
+            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
+            if (!isAdmin && customerId) {
+                // Client-side sort
+                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                const limitedDocs = docs.slice(0, 50)
+                setOrders(limitedDocs)
+                setLastOrderDoc(limitedDocs[limitedDocs.length - 1] || null)
+                setHasMoreOrders(docs.length > 50) // Simplified hasMore for client-side
+            } else {
+                setOrders(docs)
+                setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
+                setHasMoreOrders(snap.docs.length === 50)
+            }
         })
         return () => { unsubCoupons(); unsubOrders() }
     }, [currentUser])

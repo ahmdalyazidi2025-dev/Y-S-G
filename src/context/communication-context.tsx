@@ -51,22 +51,35 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         // Messages Listener
         let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
         if (!isAdmin) {
-            // For customers/guests, only show messages related to them
-            msgQuery = query(collection(db, "messages"), where("userId", "==", userId), orderBy("createdAt", "desc"), limit(100))
+            // REMOVED orderBy and limit to avoid index requirement
+            msgQuery = query(collection(db, "messages"), where("userId", "==", userId))
         }
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
-            setMessages(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message)))
+            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            if (!isAdmin) {
+                // Client-side sort and limit
+                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                setMessages(docs.slice(0, 100))
+            } else {
+                setMessages(docs)
+            }
         })
 
         // Notifications Listener
         let notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50))
         if (!isAdmin) {
-            // For customers, show their personal notifications AND potentially global ones if type is broadcast
-            // However, the current system seems to send personal notifications with userId.
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"), limit(50))
+            // REMOVED orderBy and limit
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", userId))
         }
         const unsubNotifications = onSnapshot(notifQuery, (snap) => {
-            setNotifications(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification)))
+            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
+            if (!isAdmin) {
+                // Client-side sort and limit
+                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                setNotifications(docs.slice(0, 50))
+            } else {
+                setNotifications(docs)
+            }
         })
 
         const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap) => {
