@@ -35,7 +35,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(query(collection(db, "categories"), orderBy("order", "asc")), (snap) => {
+        const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
             const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
 
             // Sort in-memory: order asc, then nameAr asc (fallback)
