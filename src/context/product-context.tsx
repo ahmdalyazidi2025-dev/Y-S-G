@@ -170,14 +170,18 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
                 const catRef = doc(db, "categories", cat.id)
                 // Use update since the doc definitely exists
                 // index + 1 ensures 1-indexed order as requested
-                batch.update(catRef, { order: index + 1 })
+                // Added Timestamp.now() to ensure the doc is marked as modified for better sync
+                batch.update(catRef, {
+                    order: index + 1,
+                    lastUpdate: Timestamp.now()
+                })
             })
 
-            // 3. Robust Commit with Timeout (15s)
-            // This prevents the UI from "spinning forever" if the connection is partially dead
+            // 3. Robust Commit with Timeout (30s)
+            // Increased to 30s for slower connections
             const commitPromise = batch.commit()
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("نهاية وقت المحاولة - تحقق من اتصال الإنترنت")), 15000)
+                setTimeout(() => reject(new Error("نهاية وقت المحاولة - تأكد من جودة الإنترنت وحاول مرة أخرى")), 30000)
             )
 
             await Promise.race([commitPromise, timeoutPromise])
