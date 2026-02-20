@@ -524,11 +524,11 @@ export default function AdminOrdersPage() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-white hover:bg-white/10 gap-2 px-3 border border-white/5"
+                                    className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 gap-2 px-3 border border-orange-200 dark:border-orange-500/20 shadow-sm"
                                     onClick={() => setInvoicePreviewOrder(selectedOrder)}
                                 >
                                     <Eye className="w-4 h-4" />
-                                    <span className="text-xs">المعاينة</span>
+                                    <span className="text-xs font-bold">المعاينة</span>
                                 </Button>
                                 <Button
                                     variant="ghost"
