@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Message, Notification, ProductRequest, JoinRequest, PasswordRequest } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
 import { useCustomers } from "./customer-context"
+import { useAuth } from "./auth-context"
 
 interface CommunicationContextType {
     messages: Message[]
@@ -36,6 +37,7 @@ interface CommunicationContextType {
 const CommunicationContext = createContext<CommunicationContextType | undefined>(undefined)
 
 export function CommunicationProvider({ children }: { children: React.ReactNode }) {
+    const { currentUser } = useAuth()
     const [messages, setMessages] = useState<Message[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [productRequests, setProductRequests] = useState<ProductRequest[]>([])
@@ -43,12 +45,30 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
     const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
 
     useEffect(() => {
-        const unsubMessages = onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100)), (snap) => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        const userId = currentUser?.id || "guest"
+
+        // Messages Listener
+        let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
+        if (!isAdmin) {
+            // For customers/guests, only show messages related to them
+            msgQuery = query(collection(db, "messages"), where("userId", "==", userId), orderBy("createdAt", "desc"), limit(100))
+        }
+        const unsubMessages = onSnapshot(msgQuery, (snap) => {
             setMessages(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message)))
         })
-        const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50)), (snap) => {
+
+        // Notifications Listener
+        let notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50))
+        if (!isAdmin) {
+            // For customers, show their personal notifications AND potentially global ones if type is broadcast
+            // However, the current system seems to send personal notifications with userId.
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"), limit(50))
+        }
+        const unsubNotifications = onSnapshot(notifQuery, (snap) => {
             setNotifications(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification)))
         })
+
         const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap) => {
             setProductRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as ProductRequest)))
         })
@@ -62,7 +82,7 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         return () => {
             unsubMessages(); unsubNotifications(); unsubRequests(); unsubJoin(); unsubPassword()
         }
-    }, [])
+    }, [currentUser])
 
     const sendMessage = async (text: string, isAdmin: boolean, userId: string, userName: string = "عميل", link?: string, linkTitle?: string, image?: string, isSystemNotification?: boolean) => {
         await addDoc(collection(db, "messages"), sanitizeData({

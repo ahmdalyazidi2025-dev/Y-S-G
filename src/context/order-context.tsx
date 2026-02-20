@@ -8,6 +8,7 @@ import { Order, Coupon, CartItem, User } from "@/types/store"
 import { sanitizeData, toDate, hapticFeedback } from "@/lib/utils/store-helpers"
 import { useRouter } from "next/navigation"
 import { useCart } from "./cart-context"
+import { useAuth } from "./auth-context"
 
 interface OrderContextType {
     orders: Order[]
@@ -34,17 +35,27 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
     const { restoreCart } = useCart()
 
+    const { currentUser } = useAuth()
     useEffect(() => {
         const unsubCoupons = onSnapshot(collection(db, "coupons"), (snap) => {
             setCoupons(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Coupon)))
         })
-        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(50)), (snap) => {
+
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        const customerId = currentUser?.id || "guest"
+
+        let ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(50))
+        if (!isAdmin && customerId) {
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId), orderBy("createdAt", "desc"), limit(50))
+        }
+
+        const unsubOrders = onSnapshot(ordersQuery, (snap) => {
             setOrders(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order)))
             setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
             setHasMoreOrders(snap.docs.length === 50)
         })
         return () => { unsubCoupons(); unsubOrders() }
-    }, [])
+    }, [currentUser])
 
     const createOrder = async (currentUser: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }): Promise<boolean> => {
         if (!currentUser || !auth.currentUser) {
