@@ -35,6 +35,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     const [hasMoreProducts, setHasMoreProducts] = useState(true)
 
     useEffect(() => {
+        // We use a simple collection fetch to ensure all categories appear (even those missing 'order')
+        // In-memory sorting handles the visual rank.
         const unsubscribe = onSnapshot(collection(db, "categories"), (snap) => {
             const cats = snap.docs.map(doc => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
 
@@ -151,10 +153,19 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             return false
         }
 
-        const totalItems = orderedCategories.length
-        toast.info(`جاري تحديث ترتيب ${totalItems} قسم بشكل آمن...`, { id: "reorder-status" })
+        // 1. Identify which items actually changed to minimize writes
+        // This is crucial for slow connections
+        const itemsToUpdate = orderedCategories.filter((cat, index) => (index + 1) !== cat.order)
 
-        // 1. Optimistic Update (Immediate UI response)
+        if (itemsToUpdate.length === 0) {
+            toast.success("الترتيب الحالي محفوظ بالفعل")
+            return true
+        }
+
+        const totalToUpdate = itemsToUpdate.length
+        toast.info(`جاري تحديث ترتيب ${totalToUpdate} قسم...`, { id: "reorder-status" })
+
+        // 2. Optimistic Update (Immediate UI response)
         const previousCategories = [...categories]
         const optimisticCategories = orderedCategories.map((cat, index) => ({
             ...cat,
@@ -163,35 +174,31 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         setCategories(optimisticCategories)
 
         try {
-            // 2. Atomic Batch Update
-            const batch = writeBatch(db)
+            // 3. Sequential Updates with Progress
+            // We use a loop instead of batch to handle slow connections more gracefully
+            let successCount = 0
 
-            orderedCategories.forEach((cat, index) => {
+            for (const cat of itemsToUpdate) {
+                const newOrder = orderedCategories.findIndex(c => c.id === cat.id) + 1
                 const catRef = doc(db, "categories", cat.id)
-                // Use update since the doc definitely exists
-                // index + 1 ensures 1-indexed order as requested
-                // Added Timestamp.now() to ensure the doc is marked as modified for better sync
-                batch.update(catRef, {
-                    order: index + 1,
+
+                await updateDoc(catRef, {
+                    order: newOrder,
                     lastUpdate: Timestamp.now()
                 })
-            })
 
-            // 3. Robust Commit with Timeout (30s)
-            // Increased to 30s for slower connections
-            const commitPromise = batch.commit()
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("نهاية وقت المحاولة - تأكد من جودة الإنترنت وحاول مرة أخرى")), 30000)
-            )
+                successCount++
+                if (totalToUpdate > 1) {
+                    toast.loading(`جاري الحفظ: ${successCount} من ${totalToUpdate}...`, { id: "reorder-status" })
+                }
+            }
 
-            await Promise.race([commitPromise, timeoutPromise])
-
-            console.log("Reorder successful via writeBatch set/merge")
-            toast.success("تم تحديث ترتيب الأقسام بنجاح ✅", { id: "reorder-status" })
+            console.log("Reorder successful via sequential updates")
+            toast.success(`تم تحديث ترتيب ${totalToUpdate} أقسام بنجاح ✅`, { id: "reorder-status" })
             return true
         } catch (error: any) {
-            console.error("Reorder robust error:", error)
-            setCategories(previousCategories)
+            console.error("Reorder sequential error:", error)
+            setCategories(previousCategories) // Rollback
             const errorMsg = error.message || (error.code ? `[${error.code}] ${error.message}` : "فشل غير متوقع")
             toast.error(`فشل التحديث: ${errorMsg}`, { id: "reorder-status" })
             return false
