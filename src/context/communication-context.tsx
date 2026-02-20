@@ -26,7 +26,7 @@ interface CommunicationContextType {
     resolvePasswordRequest: (id: string) => Promise<void>
     requestPasswordReset: (phone: string) => Promise<{ success: boolean; message: string }>
     broadcastNotification: (text: string) => void
-    markMessagesRead: (userId?: string, isAdmin?: boolean) => Promise<void>
+    markMessagesRead: (userId?: string, isAdmin?: boolean, isSystem?: boolean) => Promise<void>
     broadcastToCategory: (category: string, text: string) => void
     markAllNotificationsRead: (userId: string) => Promise<void>
     sendNotificationToGroup: (groupId: string, title: string, body: string, link?: string) => Promise<void>
@@ -143,9 +143,23 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         toast.info(text, { duration: 5000, icon: "🔔" })
     }
 
-    const markMessagesRead = async (userId?: string, isAdminView = false) => {
+    const markMessagesRead = async (userId?: string, isAdminView = false, isSystem = false) => {
         if (!userId) return
-        const unread = messages.filter(m => (isAdminView ? (m.senderId === userId && !m.isAdmin) : (m.userId === userId && m.isAdmin)) && !m.read)
+        const unread = messages.filter(m => {
+            const isRead = m.read
+            if (isRead) return false
+
+            if (isAdminView) {
+                // Admin viewing a customer's chat: mark messages from that customer as read
+                return m.senderId === userId && !m.isAdmin
+            } else {
+                // Customer viewing their own chat: mark messages from admin to them as read
+                const isFromAdmin = m.isAdmin
+                const text = m.text || ""
+                const isForMe = text.includes(`(@${userId})`) || m.userId === userId
+                return isFromAdmin && isForMe && (isSystem ? m.isSystemNotification : !m.isSystemNotification)
+            }
+        })
         const batch = unread.map(m => updateDoc(doc(db, "messages", m.id), { read: true }))
         await Promise.all(batch)
     }

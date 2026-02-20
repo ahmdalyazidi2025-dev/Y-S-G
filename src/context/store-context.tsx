@@ -81,7 +81,7 @@ export interface StoreContextType {
     sendMessage: (text: string, isAdmin: boolean, userId: string, userName?: string, link?: string, linkTitle?: string, image?: string, isSystemNotification?: boolean) => Promise<void>
     markNotificationsRead: (userId: string) => Promise<void>
     markNotificationRead: (id: string) => Promise<void>
-    markMessagesRead: (userId?: string, isAdmin?: boolean) => Promise<void>
+    markMessagesRead: (userId?: string, isAdmin?: boolean, isSystem?: boolean) => Promise<void>
     broadcastNotification: (text: string) => void
     broadcastToCategory: (category: string, text: string) => void
     markAllNotificationsRead: (userId: string) => Promise<void>

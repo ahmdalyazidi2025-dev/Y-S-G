@@ -68,8 +68,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         return () => { unsubCoupons(); unsubOrders() }
     }, [currentUser])
 
-    const createOrder = async (currentUser: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }): Promise<boolean> => {
-        if (!currentUser || !auth.currentUser) {
+    const createOrder = async (currentUserArg: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }): Promise<boolean> => {
+        const user = currentUserArg || currentUser
+        if (!user) {
             toast.error("يجب تسجيل الدخول لإتمام الطلب")
             router.push("/auth/login")
             return false
@@ -77,10 +78,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         if (cart.length === 0) return false
 
         const orderData = {
-            customerName: additionalInfo?.name?.trim() || currentUser?.name || "عميل",
-            customerPhone: additionalInfo?.phone?.trim() || currentUser?.phone || "",
-            accountName: currentUser?.name || "زائر",
-            customerId: auth.currentUser.uid,
+            customerName: additionalInfo?.name?.trim() || user?.name || "عميل",
+            customerPhone: additionalInfo?.phone?.trim() || user?.phone || "",
+            accountName: user?.name || "زائر",
+            customerId: user.id,
             items: cart.map(item => ({ ...item })),
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
@@ -89,13 +90,19 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
-            const counterRef = doc(db, "counters", "orders")
-            const counterSnap = await getDoc(counterRef)
-            const newCounterValue = (counterSnap.exists() ? (counterSnap.data().current || 0) : 0) + 1
-            const orderId = newCounterValue.toString()
+            let orderId: string
+            try {
+                const counterRef = doc(db, "counters", "orders")
+                const counterSnap = await getDoc(counterRef)
+                const newCounterValue = (counterSnap.exists() ? (counterSnap.data().current || 0) : 0) + 1
+                orderId = newCounterValue.toString()
+                await setDoc(counterRef, { current: newCounterValue }, { merge: true })
+            } catch (counterError) {
+                console.warn("Counter logic failed, falling back to timestamp ID:", counterError)
+                orderId = Date.now().toString().slice(-8) // Fallback to last 8 digits of timestamp
+            }
 
             await setDoc(doc(db, "orders", orderId), sanitizeData({ ...orderData, id: orderId }))
-            await setDoc(counterRef, { current: newCounterValue }, { merge: true })
 
             toast.success(isDraft ? "تم حفظ المسودة" : "تم استلام طلبك بنجاح! 🚀")
             hapticFeedback('success')

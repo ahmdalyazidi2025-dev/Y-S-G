@@ -9,18 +9,19 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { messages, currentUser, guestId, markNotificationsAsRead } = useStore()
+    const { messages, currentUser, guestId, markNotificationsAsRead, markMessagesRead } = useStore()
+    const currentCustomerId = currentUser?.id || guestId
 
     // Clear notifications when opened
     useEffect(() => {
         if (isOpen) {
             markNotificationsAsRead('system')
+            markMessagesRead(currentCustomerId, false, true)
         }
-    }, [isOpen, markNotificationsAsRead])
+    }, [isOpen, markNotificationsAsRead, markMessagesRead, currentCustomerId])
 
     // Filter messages/notifications for this user
     // Assuming 'messages' are used for notifications as per previous context
-    const currentCustomerId = currentUser?.id || guestId
     const notifications = messages.filter(m => {
         const isFromAdmin = m.isAdmin
         // Logic: Message from Admin to Me OR Broadcast
