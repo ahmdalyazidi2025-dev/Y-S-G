@@ -82,7 +82,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
             customerPhone: additionalInfo?.phone?.trim() || user?.phone || "",
             accountName: user?.name || "زائر",
             customerId: user.id,
-            items: cart.map(item => ({ ...item })),
+            items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                selectedPrice: item.selectedPrice,
+                quantity: item.quantity,
+                selectedUnit: item.selectedUnit,
+                barcode: item.barcode,
+                category: item.category
+            })),
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
             status: isDraft ? "pending" : "processing",
             createdAt: Timestamp.now(),

@@ -16,6 +16,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null)
     const [couponError, setCouponError] = useState("")
     const [view, setView] = useState<'cart' | 'checkout'>('cart') // 'cart' or 'checkout'
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Reset view when closed
     if (!isOpen && view !== 'cart') {
@@ -71,14 +72,19 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             }
         }
 
-        const success = await createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
+        setIsSubmitting(true)
+        try {
+            const success = await createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
 
-        if (success) {
-            onClose()
-            setCustomerName("")
-            setCustomerPhone("")
-            setView('cart')
-            clearCart()
+            if (success) {
+                onClose()
+                setCustomerName("")
+                setCustomerPhone("")
+                setView('cart')
+                clearCart()
+            }
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -296,15 +302,17 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                             variant="secondary"
                                             className="flex-1 h-14 rounded-2xl gap-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5"
                                             onClick={() => handleCreateOrder(true)}
+                                            disabled={isSubmitting}
                                         >
                                             <FileText className="w-5 h-5" />
-                                            <span>مسودة</span>
+                                            <span>{isSubmitting ? "جاري الحفظ..." : "مسودة"}</span>
                                         </Button>
 
                                         {/* Submit Button (Right) */}
                                         <Button
                                             className="flex-[2] h-14 rounded-2xl gap-2 bg-primary text-white shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
                                             onClick={() => setView('checkout')}
+                                            disabled={isSubmitting}
                                         >
                                             <span>رفع الطلب</span>
                                             <Send className="w-5 h-5 rtl:-scale-x-100" />
@@ -325,9 +333,19 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                         <Button
                                             className="flex-1 h-14 rounded-2xl gap-2 bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/20"
                                             onClick={() => handleCreateOrder(false)}
+                                            disabled={isSubmitting}
                                         >
-                                            <Send className="w-5 h-5" />
-                                            <span>تأكيد وإرسال</span>
+                                            {isSubmitting ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    <span>جاري الإرسال...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Send className="w-5 h-5" />
+                                                    <span>تأكيد وإرسال</span>
+                                                </>
+                                            )}
                                         </Button>
                                     </>
                                 )}
