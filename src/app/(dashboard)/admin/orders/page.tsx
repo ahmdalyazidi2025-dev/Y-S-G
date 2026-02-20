@@ -597,7 +597,7 @@ export default function AdminOrdersPage() {
                                         <User className="w-2.5 h-2.5" />
                                         صاحب الحساب
                                     </p>
-                                    <p className="font-bold text-sm">{selectedOrder.accountName || "زائر / Guest"}</p>
+                                    <p className="font-bold text-sm">{(selectedOrder.accountName && selectedOrder.accountName !== 'زائر') ? selectedOrder.accountName : selectedOrder.customerName}</p>
                                 </div>
                                 <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-3">
                                     <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5">

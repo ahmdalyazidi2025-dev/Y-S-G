@@ -57,6 +57,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         const orderData = {
             customerName: additionalInfo?.name?.trim() || currentUser?.name || "عميل",
             customerPhone: additionalInfo?.phone?.trim() || currentUser?.phone || "",
+            accountName: currentUser?.name || "زائر",
             customerId: auth.currentUser.uid,
             items: cart.map(item => ({ ...item })),
             total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),

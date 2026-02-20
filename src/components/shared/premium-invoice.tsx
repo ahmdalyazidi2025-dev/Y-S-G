@@ -87,7 +87,7 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
                             {/* Account Section */}
                             <div className="space-y-1">
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">صاحب الحساب / Account</p>
-                                <p className="text-xl font-black text-slate-900">{order.accountName || "---"}</p>
+                                <p className="text-xl font-black text-slate-900">{order.accountName || order.customerName}</p>
                             </div>
 
                             {/* Recipient Section - ALWAYS visible for name and phone clarity */}
