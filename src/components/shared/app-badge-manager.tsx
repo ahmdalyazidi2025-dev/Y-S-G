@@ -10,7 +10,7 @@ const toDate = (d: any) => {
 }
 
 export function AppBadgeManager() {
-    const { messages, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId } = useStore()
+    const { messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId } = useStore()
     const [badgeCount, setBadgeCount] = useState(0)
 
     useEffect(() => {
@@ -20,7 +20,6 @@ export function AppBadgeManager() {
 
         if (currentUser?.role === 'admin' || currentUser?.role === 'staff') {
             // Admin: Smart Count using lastViewed
-            // ... (existing admin logic)
             const lastOrders = toDate(lastViewed.orders)
             count += orders.filter(o => o.status === 'pending' && toDate(o.createdAt) > lastOrders).length
 
@@ -28,23 +27,33 @@ export function AppBadgeManager() {
             count += productRequests.filter(r => r.status === 'pending' && toDate(r.createdAt) > lastRequests).length
 
             const lastChat = toDate(lastViewed.chat)
+            // Count messages FROM customers (isAdmin: false) that are unread AND newer than last viewed
             count += messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastChat).length
 
             const lastJoin = toDate(lastViewed.joinRequests)
             count += joinRequests.filter(r => toDate(r.createdAt) > lastJoin).length
         } else {
-            // Customer/Guest: Standard Unread Count
-            // Logic must match StoreLayout for consistency
-            count = messages.filter(m => {
+            // Customer/Guest: Standard Unread Count (Chat + System Notifications)
+            const chatUnread = messages.filter(m => {
                 const isFromAdmin = m.isAdmin || m.senderId === 'admin'
                 const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
-                return isFromAdmin && isForMe && !m.read
+                return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
             }).length
+
+            const systemUnread = messages.filter(m => {
+                const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+                const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
+                return isFromAdmin && isForMe && !m.read && m.isSystemNotification
+            }).length
+
+            const directNotifUnread = notifications.filter(n => n.userId === targetId && !n.read).length
+
+            count = chatUnread + systemUnread + directNotifUnread
         }
 
         setBadgeCount(count)
 
-    }, [messages, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId])
+    }, [messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId])
 
 
     // Update PWA Badge & Favicon

@@ -90,7 +90,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         try {
             const now = new Date()
             setAdminPreferences(prev => ({ ...prev, lastViewed: { ...prev.lastViewed, [section]: now } }))
-            await setDoc(doc(db, "settings", "admin_preferences"), { lastViewed: { [section]: Timestamp.fromDate(now) } }, { merge: true })
+            await setDoc(doc(db, "settings", "admin_preferences"), {
+                [`lastViewed.${section}`]: Timestamp.fromDate(now)
+            }, { merge: true })
         } catch (error) {
             console.error("Error marking section as viewed:", error)
         }

@@ -36,7 +36,7 @@ export default function AdminChatPage() {
 
     useEffect(() => {
         if (selectedCustomer) {
-            markMessagesRead(selectedCustomer)
+            markMessagesRead(selectedCustomer, true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedCustomer]) // Only run when customer selection changes, avoiding message update loop

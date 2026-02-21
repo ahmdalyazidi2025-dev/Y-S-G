@@ -33,7 +33,7 @@ export default function StoreLayout({
     const [isNotifyOpen, setIsNotifyOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout, storeSettings, messages, currentUser, guestId, markNotificationsAsRead, markMessagesRead } = useStore()
+    const { cart, logout, storeSettings, messages, notifications, currentUser, guestId, markNotificationsAsRead, markMessagesRead } = useStore()
 
     // Chat Logic
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
@@ -58,7 +58,7 @@ export default function StoreLayout({
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
         const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.read && m.isSystemNotification
-    }).length
+    }).length + (typeof notifications !== 'undefined' ? (notifications as any[]).filter((n: any) => n.userId === currentCustomerId && !n.read).length : 0)
 
     // --- Smart Camera Logic ---
     const [isSmartCameraOpen, setIsSmartCameraOpen] = useState(false)
