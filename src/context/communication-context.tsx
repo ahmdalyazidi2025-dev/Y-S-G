@@ -131,8 +131,17 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
     }
 
     const addJoinRequest = async (name: string, phone: string) => {
-        await addDoc(collection(db, "joinRequests"), sanitizeData({ name, phone, createdAt: Timestamp.now() }))
-        toast.success("تم إرسال طلب الانضمام")
+        try {
+            const { addJoinRequestAction } = await import("@/app/actions/auth-actions")
+            const result = await addJoinRequestAction(name, phone)
+            if (!result.success) {
+                toast.error(result.error || "حدث خطأ أثناء إرسال الطلب")
+                throw new Error(result.error || "Error")
+            }
+        } catch (error) {
+            console.error("Error sending join request:", error)
+            throw error // Let the UI handle the failure notification
+        }
     }
 
     const deleteJoinRequest = async (id: string) => {

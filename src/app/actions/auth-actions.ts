@@ -34,3 +34,19 @@ export async function requestPasswordResetAction(phone: string) {
         return { success: false, error: "حدث خطأ في الخادم" }
     }
 }
+
+export async function addJoinRequestAction(name: string, phone: string) {
+    if (!name || !phone) return { success: false, error: "الاسم ورقم الهاتف مطلوبان" }
+
+    try {
+        await adminDb.collection("joinRequests").add({
+            name,
+            phone,
+            createdAt: FieldValue.serverTimestamp()
+        })
+        return { success: true }
+    } catch (error) {
+        console.error("Add Join Request Error:", error)
+        return { success: false, error: "حدث خطأ أثناء إرسال الطلب" }
+    }
+}
