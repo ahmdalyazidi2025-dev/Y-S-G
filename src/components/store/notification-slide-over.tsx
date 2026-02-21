@@ -9,26 +9,30 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-    const { messages, currentUser, guestId, markNotificationsAsRead, markMessagesRead } = useStore()
+    const { messages, notifications, currentUser, guestId, markAllNotificationsRead, markMessagesRead } = useStore()
     const currentCustomerId = currentUser?.id || guestId
 
     // Clear notifications when opened
     useEffect(() => {
         if (isOpen) {
-            markNotificationsAsRead('system')
+            markAllNotificationsRead(currentCustomerId)
             markMessagesRead(currentCustomerId, false, true)
         }
-    }, [isOpen, markNotificationsAsRead, markMessagesRead, currentCustomerId])
+    }, [isOpen, markAllNotificationsRead, markMessagesRead, currentCustomerId])
 
     // Filter messages/notifications for this user
-    // Assuming 'messages' are used for notifications as per previous context
-    const notifications = messages.filter(m => {
+    // Combine system messages and direct notifications
+    const systemMessages = messages.filter(m => {
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
         const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && m.isSystemNotification
-    }).sort((a, b) => {
-        const timeA = (a.createdAt as any)?.seconds ? (a.createdAt as any).seconds * 1000 : 0
-        const timeB = (b.createdAt as any)?.seconds ? (b.createdAt as any).seconds * 1000 : 0
+    })
+
+    const directNotifications = notifications || []
+
+    const allNotifications = [...systemMessages, ...directNotifications].sort((a, b) => {
+        const timeA = (a.createdAt as any)?.seconds ? (a.createdAt as any).seconds * 1000 : ((a.createdAt instanceof Date) ? a.createdAt.getTime() : 0)
+        const timeB = (b.createdAt as any)?.seconds ? (b.createdAt as any).seconds * 1000 : ((b.createdAt instanceof Date) ? b.createdAt.getTime() : 0)
         return timeB - timeA
     })
 
@@ -59,7 +63,7 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
                                 <Bell className="w-5 h-5 text-primary" />
                                 <h2 className="font-bold text-lg">الإشعارات</h2>
                                 <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
-                                    {notifications.length}
+                                    {allNotifications.length}
                                 </span>
                             </div>
                             <button
@@ -72,13 +76,13 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
 
                         {/* Content */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                            {notifications.length === 0 ? (
+                            {allNotifications.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4 opacity-50">
                                     <Bell className="w-16 h-16" />
                                     <p>لا توجد إشعارات حالياً</p>
                                 </div>
                             ) : (
-                                notifications.map((notification) => (
+                                allNotifications.map((notification) => (
                                     <div
                                         key={notification.id}
                                         className={cn(
@@ -91,33 +95,35 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
                                         <div className="flex gap-3">
                                             <div className={cn(
                                                 "relative flex-shrink-0 overflow-hidden border border-border/50 shadow-sm",
-                                                notification.image ? "w-16 h-16 rounded-xl" : "w-10 h-10 rounded-full flex items-center justify-center bg-primary/10"
+                                                (notification as any).image ? "w-16 h-16 rounded-xl" : "w-10 h-10 rounded-full flex items-center justify-center bg-primary/10"
                                             )}>
-                                                {notification.image ? (
-                                                    <img src={notification.image} alt="" className="w-full h-full object-cover" />
+                                                {(notification as any).image ? (
+                                                    <img src={(notification as any).image} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <Info className="w-5 h-5 text-primary" />
                                                 )}
                                             </div>
                                             <div className="flex-1 space-y-1">
-                                                <p className="text-sm font-medium leading-snug">{notification.text}</p>
+                                                <p className="text-sm font-medium leading-snug">{(notification as any).text || (notification as any).title || (notification as any).body}</p>
                                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                     <Clock className="w-3 h-3" />
                                                     <span>
                                                         {(notification.createdAt as any)?.seconds
                                                             ? format(new Date((notification.createdAt as any).seconds * 1000), "d MMM - h:mm a", { locale: ar })
-                                                            : format(new Date(), "d MMM - h:mm a", { locale: ar })
+                                                            : (notification.createdAt instanceof Date
+                                                                ? format(notification.createdAt, "d MMM - h:mm a", { locale: ar })
+                                                                : format(new Date(), "d MMM - h:mm a", { locale: ar }))
                                                         }
                                                     </span>
                                                 </div>
 
-                                                {notification.actionLink && (
+                                                {(notification as any).actionLink && (
                                                     <a
-                                                        href={notification.actionLink}
+                                                        href={(notification as any).actionLink}
                                                         className="block mt-2 text-xs text-primary underline underline-offset-4"
                                                         onClick={() => onClose()}
                                                     >
-                                                        {notification.actionTitle || "عرض التفاصيل"}
+                                                        {(notification as any).actionTitle || "عرض التفاصيل"}
                                                     </a>
                                                 )}
                                             </div>

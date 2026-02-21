@@ -26,9 +26,8 @@ export function AppBadgeManager() {
             const lastRequests = toDate(lastViewed.requests)
             count += productRequests.filter(r => r.status === 'pending' && toDate(r.createdAt) > lastRequests).length
 
-            const lastChat = toDate(lastViewed.chat)
-            // Count messages FROM customers (isAdmin: false) that are unread AND newer than last viewed
-            count += messages.filter(m => !m.isAdmin && !m.read && toDate(m.createdAt) > lastChat).length
+            // Count messages FROM customers (isAdmin: false) that are unread
+            count += messages.filter(m => !m.isAdmin && !m.read).length
 
             const lastJoin = toDate(lastViewed.joinRequests)
             count += joinRequests.filter(r => toDate(r.createdAt) > lastJoin).length

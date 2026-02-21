@@ -211,9 +211,6 @@ export default function StoreLayout({
                                                 {storeSettings.enableAIChat !== false && (
                                                     <Link
                                                         href="/customer/chat"
-                                                        onClick={() => {
-                                                            markMessagesRead(currentCustomerId);
-                                                        }}
                                                         className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
                                                     >
                                                         <MessageSquare className="w-5 h-5" />

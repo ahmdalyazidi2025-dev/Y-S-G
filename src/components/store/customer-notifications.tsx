@@ -22,17 +22,17 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
         }
     }, [forceOpen])
 
-    useEffect(() => {
-        if (isOpen) {
-            // Small delay to ensure UI opens first
-            setTimeout(() => markAllNotificationsRead(currentUser?.id || ""), 500)
-        }
-    }, [isOpen, markAllNotificationsRead])
+    // useEffect(() => {
+    //     if (isOpen) {
+    //         // Small delay to ensure UI opens first
+    //         setTimeout(() => markAllNotificationsRead(currentUser?.id || ""), 500)
+    //     }
+    // }, [isOpen, markAllNotificationsRead])
 
     // Filter notifications for current user
-    const userNotifications = notifications.filter(n => n.userId === currentUser?.id).sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    })
+    const userNotifications = notifications
+        .filter(n => n.userId === currentUser?.id)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) // Oldest first, newest bottom
 
     const unreadCount = userNotifications.filter(n => !n.read).length
 

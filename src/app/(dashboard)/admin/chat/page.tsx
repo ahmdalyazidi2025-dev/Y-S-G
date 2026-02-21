@@ -29,10 +29,10 @@ export default function AdminChatPage() {
     const [isProductPickerOpen, setIsProductPickerOpen] = useState(false)
     const [productSearch, setProductSearch] = useState("")
     // Auto-mark messages as read when chat is opened
-    useEffect(() => {
-        markSectionAsViewed('chat')
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    // useEffect(() => {
+    //     markSectionAsViewed('chat')
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [])
 
     useEffect(() => {
         if (selectedCustomer) {
@@ -92,7 +92,11 @@ export default function AdminChatPage() {
     // ... existing activeChatMessages and handleSend ...
     const activeChatMessages = useMemo(() => {
         if (!selectedCustomer) return []
-        return messages.filter(m => m.senderId === selectedCustomer || (m.senderId === "admin" && m.text.includes(`@${selectedCustomer}`)))
+        // Messages are already sorted desc (newest first) from context. 
+        // We filter for this customer and reverse to show oldest at top, newest at bottom.
+        return messages
+            .filter(m => m.userId === selectedCustomer)
+            .reverse()
     }, [messages, selectedCustomer])
 
     const handleSend = async () => {

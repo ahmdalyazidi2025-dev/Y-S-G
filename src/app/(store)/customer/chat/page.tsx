@@ -26,10 +26,10 @@ export default function ChatPage() {
     // Mark messages as read when entering the chat
     useEffect(() => {
         markMessagesRead(currentCustomerId)
-    }, [currentCustomerId]) // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentCustomerId, markMessagesRead])
 
     const chatMessages = useMemo(() => {
-        return messages.filter(m => {
+        const filtered = messages.filter(m => {
             // 1. Messages sent BY me
             if (m.senderId === currentCustomerId) return true;
 
@@ -41,6 +41,8 @@ export default function ChatPage() {
 
             return isFromAdmin && isForMe && !m.isSystemNotification;
         })
+        // Reverse to show oldest at top, newest at bottom (WhatsApp style)
+        return [...filtered].reverse()
     }, [messages, currentCustomerId])
 
     const handleSend = () => {
