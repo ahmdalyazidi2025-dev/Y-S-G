@@ -49,8 +49,8 @@ function LoginForm() {
             return
         }
 
-        const success = await requestPasswordReset(recoveryPhone)
-        if (success) {
+        const result = await requestPasswordReset(recoveryPhone)
+        if (result.success) {
             setShowForgotPassword(false)
         }
         setIsLoading(false)
@@ -176,7 +176,7 @@ function LoginForm() {
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            className="w-full text-xs text-white/80 hover:text-white hover:bg-white/5 rounded-xl h-10"
+                                            className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl h-10"
                                             onClick={() => setShowForgotPassword(false)}
                                         >
                                             العودة لتسجيل الدخول
@@ -270,7 +270,7 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="text-white text-center">جاري التحميل...</div>}>
+        <Suspense fallback={<div className="text-foreground text-center">جاري التحميل...</div>}>
             <LoginForm />
         </Suspense>
     )

@@ -71,22 +71,22 @@ export default function CategoryPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => router.back()}
-                                className="rounded-full w-10 h-10 bg-white/5 hover:bg-white/10 text-white"
+                                className="rounded-full w-10 h-10 bg-secondary hover:bg-secondary/80 text-foreground"
                             >
                                 <ArrowRight className="w-5 h-5" />
                             </Button>
-                            <h1 className="text-xl font-bold text-white flex-1 truncate">
+                            <h1 className="text-xl font-bold text-foreground flex-1 truncate">
                                 {category?.nameAr || "القسم"}
                             </h1>
                         </div>
 
                         <div className="flex gap-3">
                             <div className="relative flex-1 group">
-                                <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 group-focus-within:border-primary/50 transition-all" />
-                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors z-10" />
+                                <div className="absolute inset-0 bg-secondary/50 backdrop-blur-sm rounded-2xl border border-border group-focus-within:border-primary/50 transition-all" />
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors z-10" />
                                 <Input
                                     placeholder={storeSettings.enableBarcodeScanner ? "بحث في القسم (اسم، باركود)..." : "بحث في القسم (اسم)..."}
-                                    className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-12 text-sm focus:ring-0 text-white placeholder:text-slate-500 relative z-10"
+                                    className="bg-transparent border-none shadow-none rounded-2xl pr-12 text-right h-12 text-sm focus:ring-0 text-foreground placeholder:text-muted-foreground relative z-10"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     autoFocus={false}
@@ -95,7 +95,7 @@ export default function CategoryPage() {
                             {storeSettings.enableBarcodeScanner && (
                                 <Button
                                     size="icon"
-                                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-primary hover:border-primary hover:text-white transition-all text-slate-400 shrink-0"
+                                    className="w-12 h-12 rounded-2xl bg-secondary border border-border hover:bg-primary hover:border-primary hover:text-white transition-all text-muted-foreground shrink-0"
                                     onClick={() => setIsScannerOpen(true)}
                                 >
                                     <ScanBarcode className="w-6 h-6" />

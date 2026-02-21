@@ -242,8 +242,8 @@ export default function CustomerHome() {
                                         <Search className="w-10 h-10 text-slate-600" />
                                     </div>
                                     <div>
-                                        <p className="text-slate-300 font-bold text-lg">عفواً، لا توجد منتجات مطابقة</p>
-                                        <p className="text-sm text-slate-500 mt-2">جرب البحث بكلمات أخرى أو تغيير التصنيف</p>
+                                        <p className="text-foreground font-bold text-lg">عفواً، لا توجد منتجات مطابقة</p>
+                                        <p className="text-sm text-muted-foreground mt-2">جرب البحث بكلمات أخرى أو تغيير التصنيف</p>
                                     </div>
                                 </div>
                             )}

@@ -247,7 +247,7 @@ function LandingContent() {
                             <div className="absolute inset-0 bg-white/5 blur-[40px] rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
                             <div className="relative w-28 h-28 rounded-[32px] bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 will-change-transform">
                               <div className="absolute inset-0 rounded-[32px] border border-t-white/40 border-b-transparent opacity-50" />
-                              <ShoppingBag className="w-12 h-12 text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]" />
+                              <ShoppingBag className="w-12 h-12 text-primary dark:text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]" />
                             </div>
                           </div>
 
@@ -276,7 +276,7 @@ function LandingContent() {
                         {/* Icon Container */}
                         <div className="relative z-10 shrink-0">
                           <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-500">
-                            <Users className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
+                            <Users className="w-7 h-7 text-primary dark:text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
                           </div>
                         </div>
 

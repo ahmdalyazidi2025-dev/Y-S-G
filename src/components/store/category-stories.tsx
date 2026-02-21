@@ -63,7 +63,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                         </div>
                         <span className={cn(
                             "text-[11px] font-bold transition-colors text-center w-full truncate px-1",
-                            isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+                            isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
                         )}>
                             {cat}
                         </span>

@@ -48,9 +48,16 @@ export const hapticFeedback = (type: 'light' | 'medium' | 'heavy' | 'success' | 
     }
 }
 
+import { playSound as playBase64Sound, playNewOrderSound } from "../sounds"
+
 export const playSound = (type: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => {
     if (typeof window !== 'undefined') {
-        const audio = new Audio(`/sounds/${type}.mp3`)
-        audio.play().catch(() => { }) // Ignore errors (e.g. no interaction)
+        if (type === 'newOrder') {
+            playNewOrderSound()
+        } else if (type === 'passwordRequest' || type === 'generalPush') {
+            playBase64Sound('alert')
+        } else {
+            playBase64Sound('notification')
+        }
     }
 }

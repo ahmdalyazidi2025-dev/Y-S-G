@@ -51,11 +51,8 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         // Messages Listener
         let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
         if (!isAdmin) {
-            // REMOVED orderBy and limit to avoid index requirement. 
-            // Also cannot easily combine IN query for [userId, "all"] without composite indexes or limit warnings yet.
-            // So we query by userId, but we must also separately query for "all" OR fetch all and filter client side.
-            // Given the lack of indexes, falling back to client filter for global messages.
-            msgQuery = query(collection(db, "messages")) // Reverted to fetch all for client side filter due to 'all' logic
+            // Using 'in' prevents permission denied, allowing query for global ('all') or personal (userId) messages simultaneously
+            msgQuery = query(collection(db, "messages"), where("userId", "in", [userId, "all"]))
         }
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
             const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
