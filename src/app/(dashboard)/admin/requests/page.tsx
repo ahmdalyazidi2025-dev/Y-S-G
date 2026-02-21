@@ -169,8 +169,8 @@ export default function AdminRequestsPage() {
                             <User className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">{selectedCustomer}</h2>
-                            <p className="text-slate-400 text-xs text-right">
+                            <h2 className="text-xl font-bold text-foreground">{selectedCustomer}</h2>
+                            <p className="text-muted-foreground text-xs text-right">
                                 {groupedRequests[selectedCustomer]?.length || 0} طلبات
                             </p>
                         </div>
@@ -312,7 +312,7 @@ export default function AdminRequestsPage() {
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="font-bold text-white text-sm">{request.customerName}</h3>
+                                            <h3 className="font-bold text-foreground text-sm">{request.customerName}</h3>
                                             <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
                                                 {status.label}
                                             </span>
