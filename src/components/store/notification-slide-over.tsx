@@ -23,11 +23,8 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
     // Filter messages/notifications for this user
     // Assuming 'messages' are used for notifications as per previous context
     const notifications = messages.filter(m => {
-        const isFromAdmin = m.isAdmin
-        // Logic: Message from Admin to Me OR Broadcast
-        // If m.userId is null/empty, it might be a broadcast if logic supports it, 
-        // but here we check if it targets the user explicitly or via @mention
-        const isForMe = m.userId === currentCustomerId || m.text.includes(`(@${currentCustomerId})`)
+        const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && m.isSystemNotification
     }).sort((a, b) => {
         const timeA = (a.createdAt as any)?.seconds ? (a.createdAt as any).seconds * 1000 : 0

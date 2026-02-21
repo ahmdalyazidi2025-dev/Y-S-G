@@ -49,17 +49,14 @@ export default function StoreLayout({
     // Chat Logic
     const currentCustomerId = currentUser?.id || guestId
     const unreadChatCount = messages.filter(m => {
-        const isFromAdmin = m.isAdmin
-        // Logic: Message from Admin to Me OR Broadcast
-        const text = m.text || ""
-        const isForMe = text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
+        const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
-        const isFromAdmin = m.isAdmin
-        const text = m.text || ""
-        const isForMe = text.includes(`(@${currentCustomerId})`) || m.userId === currentCustomerId
+        const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.read && m.isSystemNotification
     }).length
 
@@ -215,7 +212,6 @@ export default function StoreLayout({
                                                     <Link
                                                         href="/customer/chat"
                                                         onClick={() => {
-                                                            markNotificationsAsRead('chat');
                                                             markMessagesRead(currentCustomerId);
                                                         }}
                                                         className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"

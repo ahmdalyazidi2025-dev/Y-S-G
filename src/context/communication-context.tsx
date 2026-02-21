@@ -150,14 +150,16 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
             if (isRead) return false
 
             if (isAdminView) {
-                // Admin viewing a customer's chat: mark messages from that customer as read
-                return m.senderId === userId && !m.isAdmin
+                // Admin viewing a customer's chat: mark messages FROM that customer as read
+                // (Messages where isAdmin is false and userId matches)
+                return m.userId === userId && !m.isAdmin
             } else {
-                // Customer viewing their own chat: mark messages from admin to them as read
-                const isFromAdmin = m.isAdmin
-                const text = m.text || ""
-                const isForMe = text.includes(`(@${userId})`) || m.userId === userId
-                return isFromAdmin && isForMe && (isSystem ? m.isSystemNotification : !m.isSystemNotification)
+                // Customer viewing their own chat: mark messages FROM admin TO them as read
+                const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+                const isForMe = m.userId === userId || (m.text || "").includes(`(@${userId})`)
+                const matchesSystemType = isSystem ? m.isSystemNotification : !m.isSystemNotification
+
+                return isFromAdmin && isForMe && matchesSystemType
             }
         })
         const batch = unread.map(m => updateDoc(doc(db, "messages", m.id), { read: true }))

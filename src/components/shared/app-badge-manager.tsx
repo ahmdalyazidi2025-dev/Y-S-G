@@ -36,9 +36,8 @@ export function AppBadgeManager() {
             // Customer/Guest: Standard Unread Count
             // Logic must match StoreLayout for consistency
             count = messages.filter(m => {
-                const isFromAdmin = m.isAdmin
-                const text = m.text || ""
-                const isForMe = text.includes(`(@${targetId})`) || m.userId === targetId
+                const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+                const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
                 return isFromAdmin && isForMe && !m.read
             }).length
         }

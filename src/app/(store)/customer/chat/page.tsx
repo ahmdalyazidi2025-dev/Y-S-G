@@ -34,14 +34,10 @@ export default function ChatPage() {
             if (m.senderId === currentCustomerId) return true;
 
             // 2. Messages sent BY Admin TO me
-            // Check both isAdmin flag and senderId string for robustness
-            const isFromAdmin = m.isAdmin || (m.senderId === 'admin');
+            const isFromAdmin = m.isAdmin || m.senderId === 'admin';
 
             // Check if message is for me:
-            // - Explicit userId match (New logic)
-            // - Text mentions @MyID (Legacy logic)
-            // - userId matches "all" or "broadcast" logic if exists (future proof)
-            const isForMe = m.userId === currentCustomerId || m.text.includes(`(@${currentCustomerId})`);
+            const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`);
 
             return isFromAdmin && isForMe && !m.isSystemNotification;
         })
