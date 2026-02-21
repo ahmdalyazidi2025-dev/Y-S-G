@@ -54,7 +54,7 @@ function ObserverTrigger({ onIntersect, loading }: { onIntersect: () => void, lo
 }
 
 export default function CustomerHome() {
-    const { products, banners, categories, loading, storeSettings, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts } = useStore()
+    const { products, banners, categories, loading, storeSettings, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts, currentUser } = useStore()
     const searchParams = useSearchParams()
     // const [searchQuery, setSearchQuery] = useState("")  <-- Removed local state
     const searchQuery = searchParams.get('q') || "" // Use URL param
@@ -152,17 +152,10 @@ export default function CustomerHome() {
                         <div className="flex items-center justify-between">
                             <div className="text-foreground">
                                 <h1 className="text-2xl font-bold mb-1 flex items-center gap-2 drop-shadow-md">
-                                    مرحباً بك <span className="animate-wave origin-bottom-right inline-block">👋</span>
+                                    مرحباً {currentUser?.name || 'بك'} <span className="animate-wave origin-bottom-right inline-block">👋</span>
                                 </h1>
                                 <p className="text-xs text-muted-foreground font-medium opacity-90 drop-shadow-sm">لنبحث عن منتجاتك المفضلة</p>
                             </div>
-                            <Link href="/customer/profile">
-                                <div className="w-11 h-11 rounded-full bg-muted/50 hover:bg-muted backdrop-blur-md p-[2px] cursor-pointer transition-all border border-border shadow-lg">
-                                    <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden">
-                                        <User className="w-5 h-5 text-foreground" />
-                                    </div>
-                                </div>
-                            </Link>
                         </div>
 
                     </div>
