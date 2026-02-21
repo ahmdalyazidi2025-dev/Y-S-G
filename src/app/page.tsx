@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Users, ShoppingBag, Loader2 } from "lucide-react";
+import { Users, ShoppingBag, Loader2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -214,9 +214,15 @@ function LandingContent() {
               <div className="w-full flex flex-col gap-6">
                 <AnimatePresence mode="wait">
                   {isAssembling ? (
-                    <div key="skeleton" className="w-full h-56 glass-card border-border/50 relative overflow-hidden flex flex-col items-center justify-center gap-6">
-                      <div className="w-16 h-16 skeleton rounded-3xl" />
-                      <div className="w-40 h-8 skeleton" />
+                    <div key="skeleton" className="w-full space-y-6">
+                      <div className="w-full h-56 glass-card border-border/50 relative overflow-hidden flex flex-col items-center justify-center gap-6 rounded-[48px]">
+                        <div className="w-16 h-16 skeleton rounded-3xl" />
+                        <div className="w-40 h-8 skeleton" />
+                      </div>
+                      <div className="w-full h-32 glass-card border-border/50 relative overflow-hidden flex flex-col items-center justify-center gap-4 rounded-[40px]">
+                        <div className="w-10 h-10 skeleton rounded-2xl" />
+                        <div className="w-32 h-6 skeleton" />
+                      </div>
                     </div>
                   ) : (
                     <motion.div
@@ -224,6 +230,7 @@ function LandingContent() {
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", damping: 20 }}
+                      className="space-y-6"
                     >
                       <Link href="/login?role=customer" className="group block relative z-20 w-full max-w-sm mx-auto">
                         <div className="relative w-full aspect-square glass-card flex flex-col items-center justify-center gap-8 transition-all border border-border/50 group-active:scale-[0.98] cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:shadow-[0_0_80px_-20px_hsl(var(--primary)/0.6)] rounded-[48px]">
@@ -257,21 +264,43 @@ function LandingContent() {
                           </div>
                         </div>
                       </Link>
+
+                      {/* Join Request Box (NEW) */}
+                      <motion.button
+                        onClick={() => setShowJoinModal(true)}
+                        className="group relative w-full h-32 glass-card flex items-center justify-center gap-6 transition-all border border-border/50 active:scale-[0.98] cursor-pointer overflow-hidden hover:border-blue-500/50 hover:shadow-[0_0_50px_-10px_rgba(59,130,246,0.4)] rounded-[40px] px-8"
+                      >
+                        {/* Soft Ambient Background */}
+                        <div className="absolute inset-0 bg-gradient-to-l from-blue-500/10 via-transparent to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+
+                        {/* Icon Container */}
+                        <div className="relative z-10 shrink-0">
+                          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-500">
+                            <Users className="w-7 h-7 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-1 relative z-10 space-y-1">
+                          <h2 className="text-2xl font-black text-foreground tracking-tight group-hover:text-blue-400 transition-colors">
+                            طلب انضمام
+                          </h2>
+                          <p className="text-[11px] text-muted-foreground font-bold tracking-wide">
+                            كن شريكاً لنا في النجاح
+                          </p>
+                        </div>
+
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 rotate-[-90deg] opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                          <ArrowRight className="w-5 h-5 text-blue-500" />
+                        </div>
+                      </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <div className="flex justify-center mt-4 flex-col items-center gap-2">
-                  <button
-                    onClick={() => setShowJoinModal(true)}
-                    className="text-[10px] text-primary hover:text-primary/80 transition-colors font-bold tracking-widest uppercase opacity-80 hover:opacity-100"
-                  >
-                    تسجيل طلب انضمام جديد
-                  </button>
-
+                <div className="flex justify-center mt-2 flex-col items-center gap-1">
                   <Link
                     href="/login?role=admin"
-                    className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-50 hover:opacity-100"
+                    className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-40 hover:opacity-100 py-2"
                   >
                     دخول الإدارة والموظفين
                   </Link>
