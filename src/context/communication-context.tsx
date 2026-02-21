@@ -37,7 +37,7 @@ interface CommunicationContextType {
 const CommunicationContext = createContext<CommunicationContextType | undefined>(undefined)
 
 export function CommunicationProvider({ children }: { children: React.ReactNode }) {
-    const { currentUser } = useAuth()
+    const { currentUser, guestId } = useAuth()
     const [messages, setMessages] = useState<Message[]>([])
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [productRequests, setProductRequests] = useState<ProductRequest[]>([])
@@ -46,7 +46,7 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     useEffect(() => {
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
-        const userId = currentUser?.id || "guest"
+        const userId = currentUser?.id || guestId
 
         // Messages Listener
         let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
@@ -61,7 +61,7 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
                 const myDocs = docs.filter(doc => doc.userId === userId || doc.userId === "all")
                 // Client-side sort and limit
                 myDocs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                setMessages(myDocs.slice(0, 100))
+                setMessages(myDocs.slice(0, 500))
             } else {
                 setMessages(docs)
             }

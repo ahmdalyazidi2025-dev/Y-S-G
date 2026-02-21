@@ -149,13 +149,10 @@ function StoreContextWrapper({ children }: { children: React.ReactNode }) {
         ...comms,
         // Any specifically mapped or combined values
         loading: auth.loading || products.loading || !settings.settingsLoaded,
-        guestId: "guest", // Legacy fallback
         markNotificationsAsRead: settings.markSectionAsViewed,
         playSound,
         restoreDraftToCart: orders.restoreDraftToCart
     }), [auth, settings, products, cart, orders, customers, comms])
-
-
 
     return (
         <StoreContext.Provider value={value}>

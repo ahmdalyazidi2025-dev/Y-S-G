@@ -19,6 +19,9 @@ export default function ChatPage() {
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const [isCompressing, setIsCompressing] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const chatContainerRef = useRef<HTMLDivElement>(null)
+    const [visibleCount, setVisibleCount] = useState(10)
+    const [isAtBottom, setIsAtBottom] = useState(true)
 
     // Use logged in user or fallback to unique guest ID
     const currentCustomerId = currentUser?.id || guestId
@@ -41,9 +44,52 @@ export default function ChatPage() {
 
             return isFromAdmin && isForMe && !m.isSystemNotification;
         })
+
+        // Take the top newest messages based on visibleCount
+        const paginated = filtered.slice(0, visibleCount)
+
         // Reverse to show oldest at top, newest at bottom (WhatsApp style)
-        return [...filtered].reverse()
-    }, [messages, currentCustomerId])
+        return [...paginated].reverse()
+    }, [messages, currentCustomerId, visibleCount])
+
+    const scrollToBottom = () => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+        }
+    }
+
+    // Auto scroll to bottom on new message if already at bottom or initial load
+    useEffect(() => {
+        if (isAtBottom && chatMessages.length > 0) {
+            scrollToBottom()
+        }
+    }, [chatMessages.length])
+
+    const handleScroll = () => {
+        if (!chatContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+
+        // Infinite scroll: if scrolled to the top
+        if (scrollTop === 0) {
+            // Count total matching for this user
+            const totalForUser = messages.filter(m =>
+                m.senderId === currentCustomerId ||
+                ((m.isAdmin || m.senderId === 'admin') && (m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)) && !m.isSystemNotification)
+            ).length;
+
+            if (visibleCount < totalForUser) {
+                const scrollHeightBefore = scrollHeight;
+                setVisibleCount(prev => prev + 10);
+                setTimeout(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight - scrollHeightBefore;
+                    }
+                }, 0);
+            }
+        }
+
+        setIsAtBottom(scrollHeight - scrollTop - clientHeight < 20);
+    }
 
     const handleSend = () => {
         if (!msg.trim() && !previewImage) return
@@ -115,7 +161,10 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            <div className="flex-1 glass-card p-4 flex flex-col overflow-y-auto space-y-6 no-scrollbar relative rounded-3xl border border-border/50 shadow-inner bg-muted/5">
+            <div
+                ref={chatContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 glass-card p-4 flex flex-col overflow-y-auto space-y-6 no-scrollbar relative rounded-3xl border border-border/50 shadow-inner bg-muted/5">
                 <AnimatePresence initial={false}>
                     {chatMessages.length === 0 ? (
                         <motion.div

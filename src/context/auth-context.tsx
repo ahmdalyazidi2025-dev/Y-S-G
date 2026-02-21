@@ -17,6 +17,7 @@ import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
 
 interface AuthContextType {
     currentUser: User | null
+    guestId: string
     staff: StaffMember[]
     authInitialized: boolean
     login: (username: string, password: string, role: "admin" | "customer" | "staff") => Promise<boolean>
@@ -33,10 +34,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(null)
+    const [guestId, setGuestId] = useState<string>("guest")
     const [staff, setStaff] = useState<StaffMember[]>([])
     const [authInitialized, setAuthInitialized] = useState(false)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            let storedId = localStorage.getItem("store_guest_id")
+            if (!storedId) {
+                storedId = "guest_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+                localStorage.setItem("store_guest_id", storedId)
+            }
+            setGuestId(storedId)
+        }
+    }, [])
 
     useEffect(() => {
         const savedUser = localStorage.getItem("ysg_user")
@@ -221,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{
-            currentUser, staff, authInitialized, login, logout, addStaff, updateStaff, deleteStaff, addExistingUserAsStaff, resetPassword, loading
+            currentUser, guestId, staff, authInitialized, login, logout, addStaff, updateStaff, deleteStaff, addExistingUserAsStaff, resetPassword, loading
         }}>
             {children}
         </AuthContext.Provider>
