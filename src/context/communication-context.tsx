@@ -51,15 +51,20 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         // Messages Listener
         let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
         if (!isAdmin) {
-            // REMOVED orderBy and limit to avoid index requirement
-            msgQuery = query(collection(db, "messages"), where("userId", "==", userId))
+            // REMOVED orderBy and limit to avoid index requirement. 
+            // Also cannot easily combine IN query for [userId, "all"] without composite indexes or limit warnings yet.
+            // So we query by userId, but we must also separately query for "all" OR fetch all and filter client side.
+            // Given the lack of indexes, falling back to client filter for global messages.
+            msgQuery = query(collection(db, "messages")) // Reverted to fetch all for client side filter due to 'all' logic
         }
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
             const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
             if (!isAdmin) {
+                // Client-side filtering for 'all' or 'userId' to support global broadcast
+                const myDocs = docs.filter(doc => doc.userId === userId || doc.userId === "all")
                 // Client-side sort and limit
-                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                setMessages(docs.slice(0, 100))
+                myDocs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+                setMessages(myDocs.slice(0, 100))
             } else {
                 setMessages(docs)
             }
@@ -226,18 +231,15 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const sendGlobalMessage = async (text: string, link?: string, linkTitle?: string) => {
         try {
-            const batch = customers.map(async (c) => {
-                await addDoc(collection(db, "messages"), sanitizeData({
-                    senderId: "admin",
-                    senderName: "الإدارة",
-                    text: link ? `${text}\n\n[${linkTitle || 'عرض'}](${link})` : text,
-                    isAdmin: true,
-                    read: false,
-                    userId: c.id,
-                    createdAt: Timestamp.now()
-                }))
-            })
-            await Promise.all(batch)
+            await addDoc(collection(db, "messages"), sanitizeData({
+                senderId: "admin",
+                senderName: "الإدارة",
+                text: link ? `${text}\n\n[${linkTitle || 'عرض'}](${link})` : text,
+                isAdmin: true,
+                read: false,
+                userId: "all", // Unified target instead of duplicating for every user
+                createdAt: Timestamp.now()
+            }))
             toast.success("تم إرسال الرسالة للجميع")
         } catch (error) {
             toast.error("حدث خطأ أثناء الإرسال الجماعي")

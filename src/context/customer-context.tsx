@@ -21,7 +21,13 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     const [customers, setCustomers] = useState<Customer[]>([])
 
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "customers"), (snap) => {
+        // Limit to 100 recently created customers to prevent memory issues for 900+ users
+        const q = query(
+            collection(db, "customers"),
+            orderBy("createdAt", "desc"),
+            limit(100)
+        )
+        const unsub = onSnapshot(q, (snap) => {
             setCustomers(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Customer)))
         })
         return () => unsub()
