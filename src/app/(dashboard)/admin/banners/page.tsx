@@ -54,26 +54,26 @@ export default function AdminBannersPage() {
                                 />
                             </div>
 
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-4 right-4 flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
-                                    variant="glass"
+                                    variant="ghost"
                                     size="icon"
-                                    className="h-10 w-10 bg-black/60 border-none rounded-xl text-white hover:bg-primary"
+                                    className="h-10 w-10 bg-black/50 hover:bg-black/70 border border-white/10 rounded-xl text-white backdrop-blur-md"
                                     onClick={() => toggleBanner(banner.id)}
                                 >
-                                    {banner.active ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    {banner.active ? <EyeOff className="w-5 h-5 text-white" /> : <Eye className="w-5 h-5 text-white" />}
                                 </Button>
                                 <Button
-                                    variant="glass"
+                                    variant="ghost"
                                     size="icon"
-                                    className="h-10 w-10 bg-black/60 border-none rounded-xl text-white hover:bg-red-500"
+                                    className="h-10 w-10 bg-black/50 hover:bg-red-500 border border-white/10 rounded-xl text-white backdrop-blur-md"
                                     onClick={() => {
                                         if (confirm("هل أنت متأكد من حذف هذه الصورة؟")) {
                                             deleteBanner(banner.id)
                                         }
                                     }}
                                 >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-5 h-5 text-white" />
                                 </Button>
                             </div>
 

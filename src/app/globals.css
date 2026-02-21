@@ -123,7 +123,7 @@
 @layer utilities {
   /* Light Mode Glass - Crisp & Defined */
   .glass {
-    background: rgba(255, 255, 255, 0.95); /* Almost solid for readability */
+    background: rgba(255, 255, 255, 0.7); /* Increased transparency for better overlay contrast */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(0, 0, 0, 0.08); /* Clear border */
@@ -252,9 +252,15 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
