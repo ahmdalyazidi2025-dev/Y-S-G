@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { db } from "@/lib/firebase"
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs, where, limit } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs, where, limit, writeBatch } from "firebase/firestore"
 import { toast } from "sonner"
 import { Message, Notification, ProductRequest, JoinRequest, PasswordRequest } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
@@ -119,8 +119,11 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const markNotificationsRead = async (userId: string) => {
         const unread = notifications.filter(n => n.userId === userId && !n.read)
-        const batch = unread.map(n => updateDoc(doc(db, "notifications", n.id), { read: true }))
-        await Promise.all(batch)
+        const batch = writeBatch(db)
+        unread.forEach(n => {
+            batch.update(doc(db, "notifications", n.id), { read: true })
+        })
+        await batch.commit()
     }
 
     const addProductRequest = async (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => {
@@ -182,8 +185,11 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
                 return isFromAdmin && isForMe && matchesSystemType
             }
         })
-        const batch = unread.map(m => updateDoc(doc(db, "messages", m.id), { read: true }))
-        await Promise.all(batch)
+        const batch = writeBatch(db)
+        unread.forEach(m => {
+            batch.update(doc(db, "messages", m.id), { read: true })
+        })
+        await batch.commit()
     }
 
     const broadcastToCategory = (category: string, text: string) => {
@@ -192,8 +198,11 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const markAllNotificationsRead = async (userId: string) => {
         const unread = notifications.filter(n => n.userId === userId && !n.read)
-        const batch = unread.map(n => updateDoc(doc(db, "notifications", n.id), { read: true }))
-        await Promise.all(batch)
+        const batch = writeBatch(db)
+        unread.forEach(n => {
+            batch.update(doc(db, "notifications", n.id), { read: true })
+        })
+        await batch.commit()
     }
 
     const requestPasswordReset = async (phone: string) => {
