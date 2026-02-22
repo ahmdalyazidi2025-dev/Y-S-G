@@ -9,7 +9,7 @@ import {
     signOut as firebaseSignOut,
     sendPasswordResetEmail
 } from "firebase/auth"
-import { doc, getDoc, setDoc, onSnapshot, collection, query, QuerySnapshot, DocumentData, Timestamp, updateDoc, deleteDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, onSnapshot, collection, query, QuerySnapshot, DocumentData, Timestamp, updateDoc, deleteDoc, arrayRemove } from "firebase/firestore"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { User, StaffMember } from "@/types/store"
@@ -155,11 +155,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const logout = useCallback(async () => {
+        if (currentUser && currentUser.id) {
+            try {
+                const token = localStorage.getItem('fcm_token')
+                if (token) {
+                    const collectionName = currentUser.role === "admin" || currentUser.role === "staff" ? "staff" : "customers"
+                    const userRef = doc(db, collectionName, currentUser.id)
+                    await updateDoc(userRef, {
+                        fcmTokens: arrayRemove(token)
+                    })
+                    localStorage.removeItem('fcm_token')
+                }
+            } catch (error) {
+                console.error("Failed to remove FCM token on logout:", error)
+            }
+        }
         await firebaseSignOut(auth)
         setCurrentUser(null)
         localStorage.removeItem("ysg_user")
         router.push("/login")
-    }, [router])
+    }, [router, currentUser])
 
     const resetPassword = useCallback(async (email: string) => {
         try {
