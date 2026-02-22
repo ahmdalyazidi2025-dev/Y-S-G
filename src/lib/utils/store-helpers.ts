@@ -50,8 +50,19 @@ export const hapticFeedback = (type: 'light' | 'medium' | 'heavy' | 'success' | 
 
 import { playSound as playBase64Sound, playNewOrderSound } from "../sounds"
 
-export const playSound = (type: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest') => {
+export const playSound = (type: 'newOrder' | 'newMessage' | 'statusUpdate' | 'generalPush' | 'passwordRequest', customSounds?: Record<string, string>) => {
     if (typeof window !== 'undefined') {
+        try {
+            if (customSounds && customSounds[type]) {
+                const audio = new Audio(customSounds[type]);
+                audio.volume = 0.8;
+                audio.play().catch(e => console.error("Custom audio play failed", e));
+                return;
+            }
+        } catch (e) {
+            console.error("Failed to play custom sound, falling back to default", e);
+        }
+
         if (type === 'newOrder') {
             playNewOrderSound()
         } else if (type === 'passwordRequest' || type === 'generalPush') {

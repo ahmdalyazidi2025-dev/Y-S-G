@@ -150,7 +150,7 @@ function StoreContextWrapper({ children }: { children: React.ReactNode }) {
         // Any specifically mapped or combined values
         loading: auth.loading || products.loading || !settings.settingsLoaded,
         markNotificationsAsRead: settings.markSectionAsViewed,
-        playSound,
+        playSound: (type: Parameters<typeof playSound>[0]) => playSound(type, settings.storeSettings?.sounds),
         restoreDraftToCart: orders.restoreDraftToCart
     }), [auth, settings, products, cart, orders, customers, comms])
 

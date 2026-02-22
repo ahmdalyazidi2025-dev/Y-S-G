@@ -229,6 +229,19 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
             const { broadcastPushNotification } = await import("@/app/actions/notifications")
             if (groupId === "all") {
                 await broadcastPushNotification(title, body, link)
+                // Also save it as a system notification so it appears in the SlideOver
+                await addDoc(collection(db, "messages"), sanitizeData({
+                    senderId: "admin",
+                    senderName: "الإدارة",
+                    text: title ? `${title}\n${body}` : body,
+                    isAdmin: true,
+                    read: false,
+                    userId: "all",
+                    isSystemNotification: true,
+                    actionLink: link,
+                    actionTitle: "عرض",
+                    createdAt: Timestamp.now()
+                }))
             }
             toast.success("تم إرسال الإشعار بنجاح")
         } catch (error) {
