@@ -53,7 +53,8 @@ service cloud.firestore {
     match /messages/{msgId} {
       allow create: if true; // Both guests and customers can send
       allow read: if isAdmin() || resource.data.userId == 'all' || (request.auth != null && resource.data.userId == request.auth.uid) || (resource.data.userId == request.auth.uid) || true; // Let the where query handle it safely
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
     }
     
     match /notifications/{notifId} {

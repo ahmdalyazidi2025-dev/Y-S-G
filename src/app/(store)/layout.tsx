@@ -52,14 +52,14 @@ export default function StoreLayout({
         if (m.read) return false
         // Count messages sent by Admin TO the customer
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
+        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
         if (m.read) return false
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
+        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && m.isSystemNotification
     }).length + (typeof notifications !== 'undefined' ? (notifications as any[]).filter((n: any) => n.userId === currentCustomerId && !n.read).length : 0)
 
