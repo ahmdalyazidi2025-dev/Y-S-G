@@ -45,6 +45,9 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
     const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
 
     useEffect(() => {
+        // Wait until guestId is generated if not logged in
+        if (!currentUser && !guestId) return;
+
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
         const userId = currentUser?.id || guestId
 
@@ -84,20 +87,26 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
             }
         })
 
-        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap) => {
-            setProductRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as ProductRequest)))
-        })
-        const unsubJoin = onSnapshot(query(collection(db, "joinRequests"), orderBy("createdAt", "desc")), (snap) => {
-            setJoinRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as JoinRequest)))
-        })
-        const unsubPassword = onSnapshot(query(collection(db, "password_requests"), orderBy("createdAt", "desc")), (snap) => {
-            setPasswordRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as PasswordRequest)))
-        })
+        let unsubRequests = () => { };
+        let unsubJoin = () => { };
+        let unsubPassword = () => { };
+
+        if (isAdmin) {
+            unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap) => {
+                setProductRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as ProductRequest)))
+            })
+            unsubJoin = onSnapshot(query(collection(db, "joinRequests"), orderBy("createdAt", "desc")), (snap) => {
+                setJoinRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as JoinRequest)))
+            })
+            unsubPassword = onSnapshot(query(collection(db, "password_requests"), orderBy("createdAt", "desc")), (snap) => {
+                setPasswordRequests(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as PasswordRequest)))
+            })
+        }
 
         return () => {
             unsubMessages(); unsubNotifications(); unsubRequests(); unsubJoin(); unsubPassword()
         }
-    }, [currentUser])
+    }, [currentUser, guestId])
 
     const sendMessage = async (text: string, isAdmin: boolean, userId: string, userName: string = "عميل", link?: string, linkTitle?: string, image?: string, isSystemNotification?: boolean) => {
         await addDoc(collection(db, "messages"), sanitizeData({
