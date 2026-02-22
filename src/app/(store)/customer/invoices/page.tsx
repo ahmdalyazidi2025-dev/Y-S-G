@@ -109,8 +109,11 @@ export default function InvoicesPage() {
         setSelectedOrder(null)
     }
 
-    const baseOrders = searchResults || orders
-    const filteredOrders = baseOrders.filter(o => filter === "all" ? o.status !== "deleted" : o.status === filter)
+    const baseOrders = searchResults || orders || []
+    const filteredOrders = baseOrders.filter(o => {
+        if (!o) return false
+        return filter === "all" ? o.status !== "deleted" : o.status === filter
+    })
 
     return (
         <div className="space-y-6 pb-20">
@@ -197,7 +200,7 @@ export default function InvoicesPage() {
                 ) : (
                     <>
                         {filteredOrders.map((order) => {
-                            const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
+                            const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP] || STATUS_MAP.pending
                             return (
                                 <div
                                     key={order.id}
@@ -317,7 +320,7 @@ export default function InvoicesPage() {
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                                                 <span className="text-white font-medium">
-                                                                    {STATUS_MAP[h.status as keyof typeof STATUS_MAP]?.label || h.status}
+                                                                    {STATUS_MAP[h.status as keyof typeof STATUS_MAP]?.label || h.status || "نشاط"}
                                                                 </span>
                                                             </div>
                                                             <span className="text-slate-500">

@@ -180,12 +180,12 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         return snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
     }
 
-    const searchCustomerOrders = async (customerId: string, term: string) => {
+    const searchCustomerOrders = useCallback(async (customerId: string, term: string) => {
         // Search by exact ID is highly scalable even with millions of records
         const q = query(collection(db, "orders"), where("customerId", "==", customerId), where("id", "==", term))
         const snap = await getDocs(q)
         return snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
-    }
+    }, [])
 
     const markOrderAsRead = async (orderId: string) => {
         await updateDoc(doc(db, "orders", orderId), { isRead: true })

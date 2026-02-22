@@ -122,17 +122,21 @@ export function PremiumInvoice({ order, id = "invoice-preview", isPreview = fals
                             <div className="col-span-2 text-right">Total | الإجمالي</div>
                         </div>
                         <div className="space-y-3">
-                            {order.items.map((item, idx) => (
-                                <div key={idx} className="grid grid-cols-12 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 items-center">
-                                    <div className="col-span-6">
-                                        <p className="font-bold text-lg text-slate-900">{item.name}</p>
-                                        <p className="text-xs text-slate-500">{item.price} ر.س</p>
+                            {(order?.items || []).map((item, idx) => {
+                                const itemPrice = item.selectedPrice || item.price || 0
+                                const itemQty = item.quantity || 0
+                                return (
+                                    <div key={idx} className="grid grid-cols-12 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 items-center">
+                                        <div className="col-span-6">
+                                            <p className="font-bold text-lg text-slate-900">{item.name}</p>
+                                            <p className="text-xs text-slate-500">{itemPrice} ر.س</p>
+                                        </div>
+                                        <div className="col-span-2 text-center text-sm font-bold text-slate-600">{item.selectedUnit || item.unit || 'حبة'}</div>
+                                        <div className="col-span-2 text-center text-lg font-black text-slate-900">{itemQty}</div>
+                                        <div className="col-span-2 text-right text-lg font-black text-primary">{(itemQty * itemPrice).toFixed(2)}</div>
                                     </div>
-                                    <div className="col-span-2 text-center text-sm font-bold text-slate-600">{item.unit || 'حبة'}</div>
-                                    <div className="col-span-2 text-center text-lg font-black text-slate-900">{item.quantity}</div>
-                                    <div className="col-span-2 text-right text-lg font-black text-primary">{(item.quantity * item.price).toFixed(2)}</div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
 

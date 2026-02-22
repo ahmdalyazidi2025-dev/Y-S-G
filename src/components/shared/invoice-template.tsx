@@ -127,22 +127,23 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                         </tr>
                     </thead>
                     <tbody>
-                        {order.items.map((item, idx) => {
-                            const priceBeforeTax = item.price;
+                        {(order?.items || []).map((item, idx) => {
+                            const priceBeforeTax = item.selectedPrice || item.price || 0;
                             const taxAmount = priceBeforeTax * 0.15;
                             const priceWithTax = priceBeforeTax * 1.15;
-                            const totalBeforeTax = priceBeforeTax * item.quantity;
-                            const totalTax = taxAmount * item.quantity;
-                            const totalWithTax = priceWithTax * item.quantity;
+                            const itemQty = item.quantity || 0;
+                            const totalBeforeTax = priceBeforeTax * itemQty;
+                            const totalTax = taxAmount * itemQty;
+                            const totalWithTax = priceWithTax * itemQty;
 
                             return (
                                 <tr key={idx} className={`border-b-2 border-slate-300 bg-white`}>
                                     <td className="py-4 px-4">
                                         <p className="font-black text-base text-slate-900">{item.name}</p>
-                                        <p className="text-sm text-slate-600 font-bold">{item.unit}</p>
+                                        <p className="text-sm text-slate-600 font-bold">{item.selectedUnit || item.unit}</p>
                                     </td>
                                     <td className="py-4 px-3 text-center">
-                                        <span className="font-black text-lg text-slate-900">{item.quantity}</span>
+                                        <span className="font-black text-lg text-slate-900">{itemQty}</span>
                                     </td>
                                     <td className="py-4 px-3 text-center">
                                         <span className="font-bold text-base text-slate-700">{priceBeforeTax.toFixed(2)}</span>
