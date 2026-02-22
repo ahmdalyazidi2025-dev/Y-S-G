@@ -40,7 +40,7 @@ export default function ChatPage() {
             const isFromAdmin = m.isAdmin || m.senderId === 'admin';
 
             // Check if message is for me:
-            const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`);
+            const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`);
 
             return isFromAdmin && isForMe && !m.isSystemNotification;
         })
