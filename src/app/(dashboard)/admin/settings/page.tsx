@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
 }
 
 function AdminSettingsContent() {
-    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications } = useStore()
+    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications, fetchProducts, loading } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [hasInteracted, setHasInteracted] = useState(false)
@@ -60,6 +60,13 @@ function AdminSettingsContent() {
     // Security State
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [pin, setPin] = useState("")
+
+    // Ensure products are loaded for reports
+    useEffect(() => {
+        if (isAuthenticated && products.length === 0) {
+            fetchProducts()
+        }
+    }, [isAuthenticated, products.length, fetchProducts])
 
     const TABS = [
         { id: 'identity', label: 'هوية المتجر', icon: <ShoppingBag className="w-5 h-5" />, color: 'text-blue-400' },
@@ -778,10 +785,20 @@ function AdminSettingsContent() {
                                                     <Button
                                                         type="button"
                                                         onClick={handlePrintReport}
-                                                        className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-sm"
+                                                        disabled={loading && products.length === 0}
+                                                        className="w-full h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold gap-2 shadow-sm disabled:opacity-50"
                                                     >
-                                                        <Printer className="w-4 h-4" />
-                                                        طباعة التقرير
+                                                        {loading && products.length === 0 ? (
+                                                            <>
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                                <span>جاري تحميل البيانات...</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Printer className="w-4 h-4" />
+                                                                <span>طباعة التقرير</span>
+                                                            </>
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
