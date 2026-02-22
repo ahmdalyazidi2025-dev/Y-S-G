@@ -1,5 +1,20 @@
 
 import { Product } from "@/context/store-context";
+import { Timestamp } from "firebase/firestore";
+
+// Helper to handle Firestore Timestamps or Dates
+const toDate = (ts: any): Date | null => {
+    if (!ts) return null;
+    if (ts instanceof Date) return ts;
+    if (ts instanceof Timestamp) return ts.toDate();
+    if (typeof ts === 'object' && 'seconds' in ts) return new Timestamp(ts.seconds, ts.nanoseconds).toDate();
+    try {
+        const d = new Date(ts);
+        return isNaN(d.getTime()) ? null : d;
+    } catch {
+        return null;
+    }
+};
 
 const getPrintStyles = () => `
     <style>
@@ -75,22 +90,30 @@ const getPrintHTML = (products: Product[], title: string, filters?: string) => `
         </thead>
         <tbody>
             ${products.map((p, i) => {
-    const isOffer = p.discountEndDate && new Date(p.discountEndDate) > new Date();
-    const offerText = isOffer ? `عرض ساري حتى ${new Date(p.discountEndDate!).toLocaleDateString('ar-SA')}` : '';
-    const notes = p.notes || '';
-    const combinedNotes = [notes, offerText].filter(Boolean).join(' | ');
+    let combinedNotes = p.notes || '';
+    try {
+        const discountDate = toDate(p.discountEndDate);
+        const isOffer = discountDate && discountDate > new Date();
+        const offerText = isOffer ? `عرض ساري حتى ${discountDate!.toLocaleDateString('ar-SA')}` : '';
+        combinedNotes = [p.notes || '', offerText].filter(Boolean).join(' | ');
+    } catch (e) {
+        console.error("Error processing item date:", e);
+    }
+
+    const priceText = typeof p.pricePiece === 'number' ? p.pricePiece.toFixed(2) : (p.pricePiece || '0.00');
+    const costText = typeof p.costPrice === 'number' ? p.costPrice.toFixed(2) : (p.costPrice || '-');
 
     return `
                 <tr>
                     <td>${i + 1}</td>
                     <td style="font-weight: 600;">
-                        ${p.name}
+                        ${p.name || 'بدون اسم'}
                         ${p.unit ? `<span style="font-size: 10px; color: #666; display: block;">(${p.unit})</span>` : ''}
                     </td>
                     <td style="font-family: monospace;">${p.barcode || '-'}</td>
                     <td>${p.category || '-'}</td>
-                    <td style="font-weight: 600; color: #d9534f;">${p.costPrice ? p.costPrice.toFixed(2) : '-'}</td>
-                    <td style="font-weight: 600; color: #5cb85c;">${p.pricePiece.toFixed(2)}</td>
+                    <td style="font-weight: 600; color: #d9534f;">${costText}</td>
+                    <td style="font-weight: 600; color: #5cb85c;">${priceText}</td>
                     <td style="font-size: 10px;">${combinedNotes}</td>
                 </tr>
             `;
@@ -104,33 +127,42 @@ const getPrintHTML = (products: Product[], title: string, filters?: string) => `
 `;
 
 export const printProductList = (products: Product[], title: string = "قائمة المنتجات", filters?: string) => {
-    const html = `
-        <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>${title}</title>
-            ${getPrintStyles()}
-        </head>
-        <body>
-            ${getPrintHTML(products, title, filters)}
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(() => {
-                        window.close();
-                    }, 500);
-                }
-            </script>
-        </body>
-        </html>
-    `;
+    try {
+        const html = `
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>${title}</title>
+                ${getPrintStyles()}
+            </head>
+            <body>
+                ${getPrintHTML(products, title, filters)}
+                <script>
+                    window.onload = function() {
+                        try {
+                            window.print();
+                            setTimeout(() => {
+                                window.close();
+                            }, 500);
+                        } catch (e) {
+                            console.error("Print dialog failed", e);
+                        }
+                    }
+                </script>
+            </body>
+            </html>
+        `;
 
-    const printWindow = window.open('', '_blank', 'width=1000,height=900');
-    if (printWindow) {
-        printWindow.document.write(html);
-        printWindow.document.close();
-    } else {
-        alert("يرجى السماح بالنوافذ المنبثقة لطباعة التقرير");
+        const printWindow = window.open('', '_blank', 'width=1000,height=900');
+        if (printWindow) {
+            printWindow.document.write(html);
+            printWindow.document.close();
+        } else {
+            alert("يرجى السماح بالنوافذ المنبثقة لطباعة التقرير");
+        }
+    } catch (error) {
+        console.error("Critical printing error:", error);
+        alert("حدث خطأ تقني أثناء محاولة الطباعة. يرجى محاولة تحديث الصفحة.");
     }
 };

@@ -212,45 +212,50 @@ function AdminSettingsContent() {
     }
 
     const handlePrintReport = () => {
-        let filtered = [...products]
+        try {
+            let filtered = [...products]
 
-        // 1. Date Filter
-        if (reportStartDate) {
-            const start = new Date(reportStartDate)
-            start.setHours(0, 0, 0, 0)
-            filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) >= start)
+            // 1. Date Filter
+            if (reportStartDate) {
+                const start = new Date(reportStartDate)
+                start.setHours(0, 0, 0, 0)
+                filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) >= start)
+            }
+            if (reportEndDate) {
+                const end = new Date(reportEndDate)
+                end.setHours(23, 59, 59, 999)
+                filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) <= end)
+            }
+
+            // 2. Category Filter
+            if (reportCategory !== "all") {
+                filtered = filtered.filter(p => p.category === reportCategory)
+            }
+
+            // 3. Sort
+            filtered.sort((a, b) => {
+                if (reportSort === 'name') return a.name.localeCompare(b.name, "ar")
+                if (reportSort === 'price_high') return b.pricePiece - a.pricePiece
+                if (reportSort === 'price_low') return a.pricePiece - b.pricePiece
+                if (reportSort === 'oldest') return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0)
+                // newest
+                return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0)
+            })
+
+            if (filtered.length === 0) {
+                toast.error(`لا توجد منتجات تطابق الفلتر! (إجمالي المنتجات: ${products.length})`)
+                return
+            }
+
+            const filters = []
+            if (reportCategory !== 'all') filters.push(`القسم: ${reportCategory}`)
+            if (reportStartDate || reportEndDate) filters.push(`الفترة: ${reportStartDate} إلى ${reportEndDate}`)
+
+            printProductList(filtered, "تقرير المنتجات", filters.join(' | '))
+        } catch (error) {
+            console.error("HandlePrintReport Error:", error)
+            toast.error("فشل في معالجة بيانات التقرير للطباعة")
         }
-        if (reportEndDate) {
-            const end = new Date(reportEndDate)
-            end.setHours(23, 59, 59, 999)
-            filtered = filtered.filter(p => p.createdAt && new Date(p.createdAt) <= end)
-        }
-
-        // 2. Category Filter
-        if (reportCategory !== "all") {
-            filtered = filtered.filter(p => p.category === reportCategory)
-        }
-
-        // 3. Sort
-        filtered.sort((a, b) => {
-            if (reportSort === 'name') return a.name.localeCompare(b.name, "ar")
-            if (reportSort === 'price_high') return b.pricePiece - a.pricePiece
-            if (reportSort === 'price_low') return a.pricePiece - b.pricePiece
-            if (reportSort === 'oldest') return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0)
-            // newest
-            return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0)
-        })
-
-        if (filtered.length === 0) {
-            toast.error(`لا توجد منتجات تطابق الفلتر! (إجمالي المنتجات: ${products.length})`)
-            return
-        }
-
-        const filters = []
-        if (reportCategory !== 'all') filters.push(`القسم: ${reportCategory}`)
-        if (reportStartDate || reportEndDate) filters.push(`الفترة: ${reportStartDate} إلى ${reportEndDate}`)
-
-        printProductList(filtered, "تقرير المنتجات", filters.join(' | '))
     }
 
     if (!isAuthenticated) {
