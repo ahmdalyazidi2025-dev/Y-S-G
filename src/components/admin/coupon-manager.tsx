@@ -11,6 +11,7 @@ import { Trash2, Ticket, Sparkles, Copy, Calendar, Percent, RefreshCw } from "lu
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 export function CouponManager({ externalFormData, onExternalChange }: { externalFormData?: StoreSettings, onExternalChange?: (key: keyof StoreSettings, value: any) => void }) {
     const { coupons, addCoupon, deleteCoupon, categories, storeSettings, updateStoreSettings } = useStore()
@@ -283,7 +284,12 @@ export function CouponManager({ externalFormData, onExternalChange }: { external
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="bg-card glass-card p-4 border-border relative group overflow-hidden rounded-xl shadow-sm"
+                            className={cn(
+                                "bg-card glass-card p-4 border-border relative group overflow-hidden rounded-xl shadow-sm transition-all",
+                                ((coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) || (coupon.expiryDate && coupon.expiryDate.toMillis() < Date.now()))
+                                    ? "opacity-50 grayscale-[0.5] hover:opacity-80 transition-opacity"
+                                    : ""
+                            )}
                         >
                             <div className="absolute right-0 top-0 w-2 h-full bg-purple-500/20" />
 
@@ -297,10 +303,20 @@ export function CouponManager({ externalFormData, onExternalChange }: { external
                                     </div>
                                     <p className="text-xs text-purple-500 font-bold">{coupon.discount}% خصم</p>
                                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-2">
-                                        <span>استخدام: {coupon.usedCount}/{coupon.usageLimit}</span>
+                                        <span className={cn(coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit ? "text-red-400" : "")}>
+                                            استخدام: {coupon.usedCount}/{coupon.usageLimit}
+                                        </span>
                                         <span>•</span>
-                                        <span>ينتهي: {formatDate(coupon.expiryDate)}</span>
+                                        <span className={cn(coupon.expiryDate && coupon.expiryDate.toMillis() < Date.now() ? "text-red-400" : "")}>
+                                            ينتهي: {formatDate(coupon.expiryDate)}
+                                        </span>
                                     </div>
+                                    {(coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) && (
+                                        <p className="text-[10px] text-red-500 font-bold mt-1">وصل للحد الأقصى</p>
+                                    )}
+                                    {(coupon.expiryDate && coupon.expiryDate.toMillis() < Date.now()) && (
+                                        <p className="text-[10px] text-red-500 font-bold mt-1">منتهي الصلاحية</p>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-1">

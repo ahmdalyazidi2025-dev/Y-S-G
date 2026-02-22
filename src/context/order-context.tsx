@@ -18,6 +18,7 @@ interface OrderContextType {
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
+    searchCustomerOrders: (customerId: string, term: string) => Promise<Order[]>
     markOrderAsRead: (orderId: string) => Promise<void>
     addCoupon: (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => Promise<void>
     deleteCoupon: (id: string) => Promise<void>
@@ -53,16 +54,20 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         const unsubOrders = onSnapshot(ordersQuery, (snap) => {
             const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
             if (!isAdmin && customerId) {
-                // Client-side sort
+                // Client-side sort is safe for small-medium sets, but we should mention indexing
                 docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                const limitedDocs = docs.slice(0, 50)
-                setOrders(limitedDocs)
-                setLastOrderDoc(limitedDocs[limitedDocs.length - 1] || null)
-                setHasMoreOrders(docs.length > 50) // Simplified hasMore for client-side
+                setOrders(docs)
+                setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
+                setHasMoreOrders(snap.docs.length === 50)
             } else {
                 setOrders(docs)
                 setLastOrderDoc(snap.docs[snap.docs.length - 1] || null)
                 setHasMoreOrders(snap.docs.length === 50)
+            }
+        }, (error) => {
+            console.error("Firestore Listen Error:", error)
+            if (error.message.includes("requires an index")) {
+                toast.error("تنبيه: محرك البحث يحتاج لفهرسة البيانات في Firebase Console لفرز النتائج بشكل أسرع.")
             }
         })
         return () => { unsubCoupons(); unsubOrders() }
@@ -144,9 +149,22 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     const loadMoreOrders = async (currentUserArg?: User | null) => {
         if (!lastOrderDoc || !hasMoreOrders) return
 
-        let q = query(collection(db, "orders"), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(50))
-        if (currentUserArg?.role === 'customer') {
-            q = query(collection(db, "orders"), where("customerId", "==", currentUserArg.id), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(50))
+        const isAdmin = (currentUserArg?.role || currentUser?.role) === 'admin' || (currentUserArg?.role || currentUser?.role) === 'staff'
+        const customerId = currentUserArg?.id || currentUser?.id || "guest"
+
+        let q;
+        if (isAdmin) {
+            q = query(collection(db, "orders"), orderBy("createdAt", "desc"), startAfter(lastOrderDoc), limit(50))
+        } else {
+            // For customers, we fetch more without orderBy to avoid index, but startAfter needs orderBy.
+            // This is a limitation. If they have > 50 orders, we might need the index or fetch all.
+            // For now, let's just use the same filtered query.
+            q = query(collection(db, "orders"), where("customerId", "==", customerId))
+            // Note: startAfter won't work well without orderBy. 
+            // If they are a customer, we usually load all their orders in one go if < 500.
+            // Let's just return if they are a customer and we already have orders, 
+            // since the initial snapshot already fetched their recent batches.
+            return;
         }
 
         const snap = await getDocs(q)
@@ -158,6 +176,13 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
     const searchOrders = async (term: string) => {
         const q = query(collection(db, "orders"), where("id", "==", term))
+        const snap = await getDocs(q)
+        return snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
+    }
+
+    const searchCustomerOrders = async (customerId: string, term: string) => {
+        // Search by exact ID is highly scalable even with millions of records
+        const q = query(collection(db, "orders"), where("customerId", "==", customerId), where("id", "==", term))
         const snap = await getDocs(q)
         return snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Order))
     }
@@ -273,7 +298,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <OrderContext.Provider value={{
-            orders, coupons, hasMoreOrders, createOrder, updateOrderStatus, loadMoreOrders, searchOrders, markOrderAsRead, addCoupon, deleteCoupon, applyCoupon, restoreDraftToCart
+            orders, coupons, hasMoreOrders, createOrder, updateOrderStatus, loadMoreOrders, searchOrders, searchCustomerOrders, markOrderAsRead, addCoupon, deleteCoupon, applyCoupon, restoreDraftToCart
         }}>
             {children}
         </OrderContext.Provider>

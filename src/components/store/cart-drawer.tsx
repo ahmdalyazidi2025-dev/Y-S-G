@@ -222,7 +222,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                                     setCouponError("")
                                                 }}
                                                 disabled={!!appliedCoupon}
-                                                className={`h-10 text-right pr-4 bg-black/20 text-sm font-mono tracking-wider ${couponError ? "border-red-500/50" : "border-white/5"}`}
+                                                className={`h-10 text-right pr-4 bg-black/20 text-white text-sm font-mono tracking-wider ${couponError ? "border-red-500/50" : "border-white/5"}`}
                                             />
                                             {appliedCoupon ? (
                                                 <button onClick={removeCoupon} className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 hover:bg-red-400/10 p-1 rounded-full">

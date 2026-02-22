@@ -64,6 +64,7 @@ export interface StoreContextType {
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
+    searchCustomerOrders: (customerId: string, term: string) => Promise<Order[]>
     markOrderAsRead: (orderId: string) => Promise<void>
     addCoupon: (coupon: Omit<Coupon, "id" | "createdAt" | "usedCount">) => Promise<void>
     deleteCoupon: (id: string) => Promise<void>

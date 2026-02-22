@@ -2,10 +2,11 @@
 
 import { useStore, Order } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown, Eye } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown, Eye, Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react"
 import { cn } from "@/lib/utils"
 import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
@@ -26,11 +27,34 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart, addToCart, loadMoreOrders, hasMoreOrders } = useStore()
+    const { orders, restoreDraftToCart, addToCart, loadMoreOrders, hasMoreOrders, searchCustomerOrders, currentUser } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const [loadingMore, setLoadingMore] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [searchResults, setSearchResults] = useState<Order[] | null>(null)
+    const [isSearching, setIsSearching] = useState(false)
     const observerTarget = useRef<HTMLDivElement>(null)
+
+    // Search Effect
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.length > 0 && currentUser) {
+                setIsSearching(true)
+                try {
+                    const results = await searchCustomerOrders(currentUser.id, searchQuery)
+                    setSearchResults(results)
+                } catch (e) {
+                    console.error(e)
+                } finally {
+                    setIsSearching(false)
+                }
+            } else {
+                setSearchResults(null)
+            }
+        }, 600)
+        return () => clearTimeout(timer)
+    }, [searchQuery, searchCustomerOrders, currentUser])
 
     const handleLoadMore = useCallback(async () => {
         if (loadingMore || !hasMoreOrders) return
@@ -85,7 +109,8 @@ export default function InvoicesPage() {
         setSelectedOrder(null)
     }
 
-    const filteredOrders = orders.filter(o => filter === "all" ? o.status !== "deleted" : o.status === filter)
+    const baseOrders = searchResults || orders
+    const filteredOrders = baseOrders.filter(o => filter === "all" ? o.status !== "deleted" : o.status === filter)
 
     return (
         <div className="space-y-6 pb-20">
@@ -109,6 +134,22 @@ export default function InvoicesPage() {
                 </Button>
             </div>
 
+            {/* NEW: Search Bar for Scalability */}
+            <div className="relative px-1">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Input
+                    placeholder="ابحث برقم الطلب (مثلاً: 1234)..."
+                    className="bg-secondary/50 border-white/5 pr-10 text-right h-12 rounded-2xl text-sm"
+                    value={searchQuery}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                />
+                {isSearching && (
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
+            </div>
+
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
                 {["all", "pending", "processing", "shipped", "delivered", "canceled", "accepted", "deleted"].map((s) => (
                     <button
@@ -128,7 +169,12 @@ export default function InvoicesPage() {
             </div>
 
             <div className="space-y-4">
-                {filteredOrders.length === 0 ? (
+                {isSearching ? (
+                    <div className="py-20 text-center text-slate-500">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                        <p>جاري البحث عن الطلب...</p>
+                    </div>
+                ) : filteredOrders.length === 0 ? (
                     <div className="py-20 text-center text-slate-500">
                         <p className="mb-4">لا توجد طلبات في هذا القسم</p>
                         {hasMoreOrders && (
@@ -238,8 +284,8 @@ export default function InvoicesPage() {
             {/* Order Details Drawer */}
             <Drawer.Root open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
                 <Drawer.Portal>
-                    <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
-                    <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[96%] outline-none z-50 flex flex-col">
+                    <Drawer.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]" />
+                    <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[96%] outline-none z-[101] flex flex-col">
                         <div className="bg-[#1c2a36] rounded-t-[32px] p-6 border-t border-white/10 flex-1 overflow-y-auto">
                             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/10 mb-8" />
 
