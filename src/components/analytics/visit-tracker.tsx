@@ -10,16 +10,14 @@ export function VisitTracker() {
         if (initialized.current) return
         initialized.current = true
 
-        // Simple check to avoid counting every reload in dev, 
-        // or strictly one per session. 
-        // For "Daily Visits", usually 1 per session is good.
-        // Let's use logic: If not visited this session, increment.
+        // Use localStorage with the current date to track daily visits properly,
+        // even if the user keeps the tab open for multiple days.
+        const todayStr = new Date().toISOString().split('T')[0]
+        const lastVisitDate = localStorage.getItem("last_visit_date")
 
-        const hasVisited = sessionStorage.getItem("has_visited_today")
-
-        if (!hasVisited) {
+        if (lastVisitDate !== todayStr) {
             incrementVisit().then(() => {
-                sessionStorage.setItem("has_visited_today", "true")
+                localStorage.setItem("last_visit_date", todayStr)
             }).catch(console.error)
         }
     }, [])

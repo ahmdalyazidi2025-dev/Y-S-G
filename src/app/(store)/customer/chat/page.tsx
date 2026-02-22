@@ -123,7 +123,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-160px)]">
+        <div className="flex flex-col h-[calc(100dvh-175px)]">
             {/* Premium Header */}
             <div className="flex items-center justify-between mb-6 p-4 glass-card border border-border/50 rounded-2xl shadow-sm relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-50" />

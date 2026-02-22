@@ -31,39 +31,15 @@ export const incrementVisit = async () => {
         const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
         const docRef = doc(db, VISITS_COLLECTION, dateStr);
 
-        // Try to update existing doc
-        try {
-            await updateDoc(docRef, {
-                count: increment(1)
-            });
-        } catch (error: any) {
-            // If doc doesn't exist, create it (code: not-found is typical, but safe to check existence or just set)
-            if (error.code === 'not-found' || error.message.includes('No document to update')) {
-                // Double check existence to be safe or just set with merge
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
-                    await updateDoc(docRef, { count: increment(1) });
-                } else {
-                    await setDoc(docRef, {
-                        date: dateStr,
-                        timestamp: Timestamp.fromDate(today),
-                        count: 1
-                    });
-                }
-            } else {
-                // If it's another error, try setting it if it might be missing
-                const snap = await getDoc(docRef);
-                if (!snap.exists()) {
-                    await setDoc(docRef, {
-                        date: dateStr,
-                        timestamp: Timestamp.fromDate(today),
-                        count: 1
-                    });
-                } else {
-                    console.error("Error incrementing visit:", error);
-                }
-            }
-        }
+        // Try to update existing doc or create if it doesn't exist
+        // Using setDoc with merge: true avoids read permission issues for guests
+        await setDoc(docRef, {
+            date: dateStr,
+            count: increment(1),
+            // We use serverTimestamp or just keep the latest timestamp.
+            // If it's a new day, this will be the first timestamp. If it's an update, it'll update to latest visit time.
+            timestamp: Timestamp.fromDate(today)
+        }, { merge: true });
     } catch (error) {
         console.error("Failed to track visit:", error);
     }

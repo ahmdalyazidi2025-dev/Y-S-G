@@ -49,15 +49,18 @@ export default function StoreLayout({
     // Chat Logic
     const currentCustomerId = currentUser?.id || guestId
     const unreadChatCount = messages.filter(m => {
+        if (m.read) return false
+        // Count messages sent by Admin TO the customer
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
         const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
-        return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
+        return isFromAdmin && isForMe && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
+        if (m.read) return false
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
         const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
-        return isFromAdmin && isForMe && !m.read && m.isSystemNotification
+        return isFromAdmin && isForMe && m.isSystemNotification
     }).length + (typeof notifications !== 'undefined' ? (notifications as any[]).filter((n: any) => n.userId === currentCustomerId && !n.read).length : 0)
 
     // --- Smart Camera Logic ---
@@ -144,7 +147,7 @@ export default function StoreLayout({
 
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
                     <VisitTracker />
-                    <main className="flex-1 px-4 pt-6 w-full pb-32">
+                    <main className={cn("flex-1 px-4 pt-6 w-full", !pathname.includes("/customer/chat") && "pb-32")}>
                         {/* New Header Navigation (Stacked Fixed) */}
                         <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm dark:shadow-black/20 transition-all duration-300">
                             <div className="w-full max-w-7xl mx-auto px-4 pt-2 pb-3">
@@ -329,7 +332,7 @@ export default function StoreLayout({
                         {children}
                     </main>
 
-                    <Footer />
+                    {!pathname.includes("/customer/chat") && <Footer />}
                 </div>
 
                 {/* Floating Scanner Button (Isolated) - Only on Customer Pages & Enabled */}
