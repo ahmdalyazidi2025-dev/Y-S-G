@@ -35,13 +35,13 @@ export function AppBadgeManager() {
             // Customer/Guest: Standard Unread Count (Chat + System Notifications)
             const chatUnread = messages.filter(m => {
                 const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-                const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
+                const isForMe = m.userId === targetId || m.userId === 'all' || (m.text || "").includes(`(@${targetId})`)
                 return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
             }).length
 
             const systemUnread = messages.filter(m => {
                 const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-                const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
+                const isForMe = m.userId === targetId || m.userId === 'all' || (m.text || "").includes(`(@${targetId})`)
                 return isFromAdmin && isForMe && !m.read && m.isSystemNotification
             }).length
 

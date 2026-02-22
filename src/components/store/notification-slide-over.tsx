@@ -24,7 +24,7 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
     // Combine system messages and direct notifications
     const systemMessages = messages.filter(m => {
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
+        const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && m.isSystemNotification
     })
 

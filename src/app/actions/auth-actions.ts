@@ -7,21 +7,24 @@ export async function requestPasswordResetAction(phone: string) {
     if (!phone) return { success: false, error: "رقم الهاتف مطلوب" }
 
     try {
-        // 1. Find customer by phone
+        // 1. Find customer by phone (attempt)
         const customersRef = adminDb.collection("customers")
         const snapshot = await customersRef.where("phone", "==", phone).limit(1).get()
 
-        if (snapshot.empty) {
-            return { success: false, error: "رقم الهاتف غير مسجل لدينا" }
+        let customerId = "unknown"
+        let customerName = "عميل غير محدد (سيتم مطابقته من قبل الإدارة)"
+
+        if (!snapshot.empty) {
+            const customerDoc = snapshot.docs[0]
+            const customer = customerDoc.data()
+            customerId = customerDoc.id
+            customerName = customer.name || "Unknown"
         }
 
-        const customerDoc = snapshot.docs[0]
-        const customer = customerDoc.data()
-
-        // 2. Create Request
+        // 2. Create Request regardless of whether they were found exactly
         await adminDb.collection("password_requests").add({
-            customerId: customerDoc.id,
-            customerName: customer.name || "Unknown",
+            customerId: customerId,
+            customerName: customerName,
             phone: phone,
             status: "pending",
             createdAt: FieldValue.serverTimestamp()

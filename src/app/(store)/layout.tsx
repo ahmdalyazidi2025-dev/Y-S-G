@@ -50,13 +50,13 @@ export default function StoreLayout({
     const currentCustomerId = currentUser?.id || guestId
     const unreadChatCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
+        const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.read && !m.isSystemNotification
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
+        const isForMe = m.userId === currentCustomerId || m.userId === 'all' || (m.text || "").includes(`(@${currentCustomerId})`)
         return isFromAdmin && isForMe && !m.read && m.isSystemNotification
     }).length + (typeof notifications !== 'undefined' ? (notifications as any[]).filter((n: any) => n.userId === currentCustomerId && !n.read).length : 0)
 
