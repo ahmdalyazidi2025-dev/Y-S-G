@@ -40,9 +40,19 @@ export function AppBadgeManager() {
             }).length
 
             const systemUnread = messages.filter(m => {
+                const msgTime = m.createdAt instanceof Date ? m.createdAt.getTime() : (m.createdAt as any)?.seconds ? (m.createdAt as any).seconds * 1000 : 0
+                const savedTime = typeof window !== 'undefined' ? localStorage.getItem('last_viewed_notifications_ts') : null
+                const lastViewedNotifications = savedTime ? parseInt(savedTime, 10) : 0
+
                 const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-                const isForMe = m.userId === targetId || (m.text || "").includes(`(@${targetId})`)
-                return isFromAdmin && isForMe && !m.read && m.isSystemNotification
+
+                // Direct notifications
+                const directUnread = m.userId === targetId && !m.read && m.isSystemNotification
+
+                // Global notifications
+                const globalUnread = m.userId === 'all' && m.isSystemNotification && msgTime > lastViewedNotifications
+
+                return isFromAdmin && (directUnread || globalUnread)
             }).length
 
             const directNotifUnread = notifications.filter(n => n.userId === targetId && !n.read).length

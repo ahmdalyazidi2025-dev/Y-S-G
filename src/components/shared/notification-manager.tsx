@@ -65,11 +65,11 @@ export function NotificationManager() {
                     // 1. Hide Invoice ID Number from Title
                     title = title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")
 
-                    // 2. Privacy for Chat Messages
-                    if (payload.data?.link?.includes('/chat') || title.includes('رسالة')) {
-                        if (/[\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(body)) {
-                            body = "لديك رسالة جديدة من الإدارة 🔒"
-                        }
+                    // 2. Privacy & Formatting for Chat Messages
+                    // Check if it's a chat notification either by link, title, or if the body looks like a random Firestore ID (often 20 chars alphanumeric)
+                    if (payload.data?.link?.includes('/chat') || title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(body)) {
+                        title = "💬 رسالة جديدة"
+                        body = "قام أحد ممثلي الإدارة بالرد على استفسارك..."
                     }
 
                     let link = payload.data?.link

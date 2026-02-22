@@ -37,7 +37,16 @@ export default function StoreLayout({
 
     // Chat Logic
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+
+    // Global notification persistence tracking
+    const [lastViewedNotifications, setLastViewedNotifications] = useState<number>(0)
+
     useEffect(() => {
+        if (typeof window !== "undefined") {
+            const savedTime = localStorage.getItem('last_viewed_notifications_ts')
+            if (savedTime) setLastViewedNotifications(parseInt(savedTime, 10))
+        }
+
         if (searchParams?.get("request_invoice") === "true") {
             setIsRequestOpen(true)
             // Remove the param to avoid re-opening
@@ -57,11 +66,27 @@ export default function StoreLayout({
     }).length
 
     const unreadNotificationCount = messages.filter(m => {
-        if (m.read) return false
+        const msgTime = m.createdAt instanceof Date ? m.createdAt.getTime() : (m.createdAt as any)?.seconds ? (m.createdAt as any).seconds * 1000 : 0
         const isFromAdmin = m.isAdmin || m.senderId === 'admin'
-        const isForMe = m.userId === currentCustomerId || (m.text || "").includes(`(@${currentCustomerId})`)
-        return isFromAdmin && isForMe && m.isSystemNotification
+
+        // Include direct messages that are unread
+        const directUnread = m.userId === currentCustomerId && !m.read && m.isSystemNotification
+
+        // Include global broadcast messages created AFTER the user last opened the notifications panel
+        const globalUnread = m.userId === 'all' && m.isSystemNotification && msgTime > lastViewedNotifications
+
+        return isFromAdmin && (directUnread || globalUnread)
     }).length + (typeof notifications !== 'undefined' ? (notifications as any[]).filter((n: any) => n.userId === currentCustomerId && !n.read).length : 0)
+
+    // Handle opening notifications to clear the global badge
+    const handleOpenNotifications = () => {
+        setIsNotifyOpen(true)
+        const now = Date.now()
+        setLastViewedNotifications(now)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('last_viewed_notifications_ts', now.toString())
+        }
+    }
 
     // --- Smart Camera Logic ---
     const [isSmartCameraOpen, setIsSmartCameraOpen] = useState(false)
@@ -227,7 +252,7 @@ export default function StoreLayout({
                                                 )}
 
                                                 <button
-                                                    onClick={() => setIsNotifyOpen(true)}
+                                                    onClick={handleOpenNotifications}
                                                     className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 active:scale-95 transition-all border border-border"
                                                 >
                                                     <Bell className="w-5 h-5" />
@@ -389,7 +414,7 @@ export default function StoreLayout({
                 isOpen={isNotifyOpen}
                 onClose={() => setIsNotifyOpen(false)}
             />
-            <NotificationHandler onOpen={() => setIsNotifyOpen(true)} />
+            <NotificationHandler onOpen={handleOpenNotifications} />
         </ProtectedRoute>
 
     )
