@@ -14,7 +14,7 @@ interface OrderContextType {
     orders: Order[]
     coupons: Coupon[]
     hasMoreOrders: boolean
-    createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }) => Promise<boolean>
+    createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }, couponId?: string) => Promise<boolean>
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
@@ -68,7 +68,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         return () => { unsubCoupons(); unsubOrders() }
     }, [currentUser])
 
-    const createOrder = async (currentUserArg: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }): Promise<boolean> => {
+    const createOrder = async (currentUserArg: User | null, cart: CartItem[], isDraft = false, additionalInfo?: { name?: string, phone?: string }, couponId?: string): Promise<boolean> => {
         const user = currentUserArg || currentUser
         if (!user) {
             toast.error("يجب تسجيل الدخول لإتمام الطلب")
@@ -110,7 +110,21 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
                 orderId = Date.now().toString().slice(-8) // Fallback to last 8 digits of timestamp
             }
 
-            await setDoc(doc(db, "orders", orderId), sanitizeData({ ...orderData, id: orderId }))
+            await setDoc(doc(db, "orders", orderId), sanitizeData({ ...orderData, id: orderId, appliedCouponId: couponId || null }))
+
+            if (couponId && !isDraft) {
+                try {
+                    const couponRef = doc(db, "coupons", couponId)
+                    const couponSnap = await getDoc(couponRef)
+                    if (couponSnap.exists()) {
+                        await updateDoc(couponRef, {
+                            usedCount: (couponSnap.data().usedCount || 0) + 1
+                        })
+                    }
+                } catch (e) {
+                    console.error("Error updating coupon count:", e)
+                }
+            }
 
             toast.success(isDraft ? "تم حفظ المسودة" : "تم استلام طلبك بنجاح! 🚀")
             hapticFeedback('success')
@@ -169,10 +183,85 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
             toast.error("كود الخصم غير صحيح")
             return null
         }
-        if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
-            toast.error(`القيمة الأدنى لاستخدام الكوبون هي ${coupon.minOrderValue}`)
+
+        // 1. Check Usage Limit
+        if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) {
+            toast.error("عذراً، هذا الكوبون وصل للحد الأقصى من الاستخدام")
             return null
         }
+
+        // 2. Check Dates
+        const now = Timestamp.now().toMillis()
+        if (coupon.startDate && coupon.startDate.toMillis() > now) {
+            toast.error("هذا الكوبون لم يبدأ تفعيله بعد")
+            return null
+        }
+        if (coupon.expiryDate && coupon.expiryDate.toMillis() < now) {
+            toast.error("عذراً، هذا الكوبون منتهي الصلاحية")
+            return null
+        }
+
+        // 3. Check Minimum Order Value
+        if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
+            toast.error(`القيمة الأدنى لاستخدام الكوبون هي ${coupon.minOrderValue} ر.س`)
+            return null
+        }
+
+        // 4. Check Customer Types / Segments
+        if (coupon.allowedCustomerTypes && coupon.allowedCustomerTypes !== "all") {
+            if (!currentUser) {
+                toast.error("هذا الكوبون مخصص لفئات معينة من العملاء")
+                return null
+            }
+
+            // Calculate segments for the user
+            const userOrders = orders.filter(o => o.customerId === currentUser.id)
+            const totalSpent = userOrders.reduce((sum, o) => sum + o.total, 0)
+            const lastOrderDate = userOrders.length > 0
+                ? new Date(Math.max(...userOrders.map(o => new Date(o.createdAt).getTime())))
+                : null
+
+            const stats = { totalSpent, lastOrderDate, orderCount: userOrders.length }
+
+            const satisfiesSegmentation = (Array.isArray(coupon.allowedCustomerTypes) ? coupon.allowedCustomerTypes : [coupon.allowedCustomerTypes]).some(type => {
+                if (type === "vip") return stats.totalSpent > 5000
+                if (type === "active") {
+                    if (!stats.lastOrderDate) return false
+                    const days = (new Date().getTime() - stats.lastOrderDate.getTime()) / (1000 * 3600 * 24)
+                    return days <= 30
+                }
+                if (type === "semi_active") {
+                    if (!stats.lastOrderDate) return false
+                    const days = (new Date().getTime() - stats.lastOrderDate.getTime()) / (1000 * 3600 * 24)
+                    return days > 30 && days <= 90
+                }
+                if (type === "interactive") {
+                    const daysSinceActive = currentUser.lastActive ? (new Date().getTime() - new Date(currentUser.lastActive).getTime()) / (1000 * 3600 * 24) : Infinity
+                    return daysSinceActive <= 7 && stats.orderCount === 0
+                }
+                if (type === "dormant") {
+                    const daysSinceActive = currentUser.lastActive ? (new Date().getTime() - new Date(currentUser.lastActive).getTime()) / (1000 * 3600 * 24) : Infinity
+                    return daysSinceActive > 90
+                }
+                if (type === "wholesale") return false // Needs explicit wholesale check if available
+                return false
+            })
+
+            if (!satisfiesSegmentation) {
+                toast.error("هذا الكوبون غير متاح لفئة حسابك حالياً")
+                return null
+            }
+        }
+
+        // 5. Check Customer Usage Limit (already used by THIS user)
+        if (coupon.customerUsageLimit && currentUser) {
+            const count = orders.filter(o => o.customerId === currentUser.id && (o as any).appliedCouponId === coupon.id).length
+            if (count >= coupon.customerUsageLimit) {
+                toast.error(`لقد استنفدت حد استخدام هذا الكوبون (${coupon.customerUsageLimit} مرات)`)
+                return null
+            }
+        }
+
         return coupon
     }
 

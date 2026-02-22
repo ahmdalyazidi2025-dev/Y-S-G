@@ -13,7 +13,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
     const [couponCode, setCouponCode] = useState("")
-    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null)
+    const [appliedCoupon, setAppliedCoupon] = useState<{ id: string; code: string; discount: number; type: string } | null>(null)
     const [couponError, setCouponError] = useState("")
     const [view, setView] = useState<'cart' | 'checkout'>('cart') // 'cart' or 'checkout'
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,7 +47,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             return;
         }
 
-        setAppliedCoupon({ code: coupon.code, discount: coupon.discount, type: coupon.type })
+        setAppliedCoupon({ id: coupon.id, code: coupon.code, discount: coupon.discount, type: coupon.type })
         setCouponError("")
         toast.success(`تم تطبيق خصم ${coupon.discount}% بنجاح`)
     }
@@ -74,7 +74,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
         setIsSubmitting(true)
         try {
-            const success = await createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone })
+            const success = await createOrder(currentUser, cart, isDraft, { name: customerName, phone: customerPhone }, appliedCoupon?.id)
 
             if (success) {
                 onClose()

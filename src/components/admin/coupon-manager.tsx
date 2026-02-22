@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, Ticket, Sparkles, Copy, Calendar, Percent } from "lucide-react"
+import { Trash2, Ticket, Sparkles, Copy, Calendar, Percent, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { motion, AnimatePresence } from "framer-motion"
@@ -51,6 +51,36 @@ export function CouponManager({ externalFormData, onExternalChange }: { external
             result += chars.charAt(Math.floor(Math.random() * chars.length))
         }
         setCode("SALE" + result)
+        hapticFeedback('success')
+    }
+
+    const handleReuse = (coupon: any) => {
+        setCode(coupon.code)
+        setDiscount(coupon.discount.toString())
+        setUsageLimit((coupon.usageLimit || 100).toString())
+        setCustomerLimit((coupon.customerUsageLimit || 1).toString())
+        setMinOrderValue(coupon.minOrderValue?.toString() || "")
+        setSelectedCategory(coupon.categoryId || "")
+
+        // Handle types
+        if (coupon.allowedCustomerTypes === "all") {
+            setSelectedCustomerType("all")
+        } else if (Array.isArray(coupon.allowedCustomerTypes) && coupon.allowedCustomerTypes.length > 0) {
+            setSelectedCustomerType(coupon.allowedCustomerTypes[0])
+        }
+
+        // Handle dates
+        if (coupon.startDate) {
+            const date = coupon.startDate.toDate ? coupon.startDate.toDate() : new Date(coupon.startDate.seconds * 1000)
+            setStartDate(date.toISOString().split('T')[0])
+        }
+        if (coupon.expiryDate) {
+            const date = coupon.expiryDate.toDate ? coupon.expiryDate.toDate() : new Date(coupon.expiryDate.seconds * 1000)
+            setEndDate(date.toISOString().split('T')[0])
+        }
+
+        toast.info("تم نسخ بيانات الكوبون للنموذج")
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         hapticFeedback('success')
     }
 
@@ -231,6 +261,10 @@ export function CouponManager({ externalFormData, onExternalChange }: { external
                         >
                             <option value="all" className="bg-background text-foreground">جميع العملاء</option>
                             <option value="vip" className="bg-background text-foreground">كبار الشخصيات (VIP)</option>
+                            <option value="active" className="bg-background text-foreground">النشطين</option>
+                            <option value="semi_active" className="bg-background text-foreground">شبه نشطين</option>
+                            <option value="interactive" className="bg-background text-foreground">المتفاعلين</option>
+                            <option value="dormant" className="bg-background text-foreground">الخاملين</option>
                             <option value="wholesale" className="bg-background text-foreground">الجملة</option>
                         </select>
                     </div>
@@ -269,13 +303,23 @@ export function CouponManager({ externalFormData, onExternalChange }: { external
                                     </div>
                                 </div>
 
-                                <Button
-                                    onClick={() => deleteCoupon(coupon.id)}
-                                    variant="ghost"
-                                    className="text-red-400 hover:bg-red-400/10 hover:text-red-300 h-8 w-8 p-0 rounded-full"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
+                                <div className="flex gap-1">
+                                    <Button
+                                        onClick={() => handleReuse(coupon)}
+                                        variant="ghost"
+                                        className="text-primary hover:bg-primary/10 h-8 w-8 p-0 rounded-full"
+                                        title="إعادة استخدام الإعدادات"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        onClick={() => deleteCoupon(coupon.id)}
+                                        variant="ghost"
+                                        className="text-red-400 hover:bg-red-400/10 hover:text-red-300 h-8 w-8 p-0 rounded-full"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
