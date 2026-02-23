@@ -10,7 +10,6 @@ import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react"
 import { cn } from "@/lib/utils"
 import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
-import { InvoiceTemplate } from "@/components/shared/invoice-template"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { PremiumInvoice } from "@/components/shared/premium-invoice"
@@ -398,11 +397,11 @@ export default function InvoicesPage() {
                                                 <span>معاينة الفاتورة</span>
                                             </Button>
                                             <Button
-                                                className="h-14 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors gap-2"
+                                                className="h-14 rounded-2xl bg-slate-900 text-white shadow-lg hover:bg-slate-800 transition-colors gap-2"
                                                 onClick={() => window.print()}
                                             >
                                                 <Printer className="w-5 h-5" />
-                                                <span>طباعة</span>
+                                                <span>طباعة الفاتورة</span>
                                             </Button>
                                             <Button
                                                 className="h-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 gap-2"
@@ -423,7 +422,6 @@ export default function InvoicesPage() {
                 </Drawer.Portal>
             </Drawer.Root>
 
-            {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
             {selectedOrder && (
                 <PremiumInvoice
                     order={selectedOrder}

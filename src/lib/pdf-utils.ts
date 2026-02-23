@@ -19,7 +19,7 @@ export const generateOrderPDF = async (orderElementId: string, orderId: string) 
         const canvas = await html2canvas(element, {
             scale: 2,
             useCORS: true,
-            backgroundColor: '#080b12',
+            backgroundColor: '#ffffff',
             logging: false, // Turn off logging in production
             allowTaint: true, // Allow tainting if CORS fails (might help with mixed content)
             onclone: (clonedDoc) => {
