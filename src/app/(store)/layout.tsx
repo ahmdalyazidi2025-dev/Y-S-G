@@ -314,45 +314,50 @@ export default function StoreLayout({
                                 </div>
 
                                 {/* Row 2: Global Search Bar */}
-                                <div className="w-full">
-                                    <div className="relative group">
-                                        <div className="absolute inset-0 bg-secondary/30 rounded-xl pointer-events-none" />
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            placeholder={storeSettings.enableBarcodeScanner ? "ابحث عن منتج، قطعة، أو باركود..." : "ابحث عن منتج أو قطعة..."}
-                                            className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
-                                            id="global-search-input"
-                                            onChange={(e) => {
-                                                const params = new URLSearchParams(window.location.search);
-                                                if (e.target.value) {
-                                                    params.set("q", e.target.value);
-                                                } else {
-                                                    params.delete("q");
-                                                }
-                                                router.replace(`${pathname}?${params.toString()}`);
-                                            }}
-                                        />
-                                        <script dangerouslySetInnerHTML={{
-                                            __html: `
-                                                (function() {
-                                                    const q = new URLSearchParams(window.location.search).get('q');
-                                                    if (q) {
-                                                        const el = document.getElementById('global-search-input');
-                                                        if (el) el.value = q;
+                                {!storeSettings?.hiddenSections?.includes('search') && (
+                                    <div className="w-full">
+                                        <div className="relative group">
+                                            <div className="absolute inset-0 bg-secondary/30 rounded-xl pointer-events-none" />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder={storeSettings.enableBarcodeScanner ? "ابحث عن منتج، قطعة، أو باركود..." : "ابحث عن منتج أو قطعة..."}
+                                                className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
+                                                id="global-search-input"
+                                                onChange={(e) => {
+                                                    const params = new URLSearchParams(window.location.search);
+                                                    if (e.target.value) {
+                                                        params.set("q", e.target.value);
+                                                    } else {
+                                                        params.delete("q");
                                                     }
-                                                })()
-                                            `
-                                        }} />
+                                                    router.replace(`${pathname}?${params.toString()}`);
+                                                }}
+                                            />
+                                            <script dangerouslySetInnerHTML={{
+                                                __html: `
+                                                    (function() {
+                                                        const q = new URLSearchParams(window.location.search).get('q');
+                                                        if (q) {
+                                                            const el = document.getElementById('global-search-input');
+                                                            if (el) el.value = q;
+                                                        }
+                                                    })()
+                                                `
+                                            }} />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Spacer for Fixed Header (~140px) */}
-                        <div className="h-[140px]" />
+                        {/* Spacer for Fixed Header (Adjusted based on search visibility) */}
+                        <div className={cn(
+                            "transition-all duration-300",
+                            storeSettings?.hiddenSections?.includes('search') ? "h-[85px]" : "h-[140px]"
+                        )} />
 
                         {children}
                     </main>
