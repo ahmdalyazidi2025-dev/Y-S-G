@@ -39,7 +39,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                         className="flex flex-col items-center gap-2 flex-shrink-0 group"
                     >
                         <div className={cn(
-                            "w-14 h-14 rounded-full p-[2px] transition-all duration-300 relative",
+                            "w-20 h-20 rounded-full p-[2px] transition-all duration-300 relative",
                             isActive
                                 ? "bg-gradient-to-tr from-primary via-purple-500 to-amber-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.5)]"
                                 : "bg-white/10 group-hover:bg-white/20"
@@ -50,19 +50,19 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                                         src={dbCat.image}
                                         alt={cat}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        width={72}
-                                        height={72}
+                                        width={80}
+                                        height={80}
                                         unoptimized
                                     />
                                 ) : (
-                                    <span className={cn("text-xl transition-transform group-hover:scale-125", isActive ? "grayscale-0" : "grayscale opacity-70")}>
+                                    <span className={cn("text-3xl transition-transform group-hover:scale-125", isActive ? "grayscale-0" : "grayscale opacity-70")}>
                                         {cat === "الكل" ? "🏠" : "✨"}
                                     </span>
                                 )}
                             </div>
                         </div>
                         <span className={cn(
-                            "text-[11px] font-bold transition-colors text-center w-full truncate px-1",
+                            "text-xs font-bold transition-colors text-center w-full truncate px-1",
                             isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
                         )}>
                             {cat}
