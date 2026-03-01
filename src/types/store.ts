@@ -215,6 +215,7 @@ export type StoreSettings = {
         passwordRequest?: string;
     }
     hiddenSections?: ("products" | "offers" | "categories" | "search")[]
+    allCategoryImage?: string
 }
 
 export type AdminPreferences = {

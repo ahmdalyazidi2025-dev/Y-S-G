@@ -36,7 +36,8 @@ const MOCK_SETTINGS: StoreSettings = {
     enableAIChat: true,
     enableProductRequests: true,
     enableBarcodeScanner: false,
-    sounds: {}
+    sounds: {},
+    allCategoryImage: ""
 }
 
 interface SettingsContextType {

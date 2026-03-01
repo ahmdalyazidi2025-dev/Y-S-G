@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation"
 import { InteractiveMarquee } from "@/components/shared/interactive-marquee"
 
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
-    const { categories } = useStore()
+    const { categories, storeSettings } = useStore()
     const router = useRouter()
 
-    const activeCategories = categories.filter(c => !c.isHidden)
+    const activeCategories = categories.filter(c => !c.isHidden && c.id !== "all-category" && c.nameAr !== "الكل")
     const allCategories = ["الكل", ...activeCategories.map(c => c.nameAr)]
 
     const handleCategoryClick = (cat: string) => {
@@ -27,6 +27,7 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
             {allCategories.map((cat, idx) => {
                 const isActive = selectedCategory === cat
                 const dbCat = categories.find(c => c.nameAr === cat)
+                const imageToUse = cat === "الكل" ? storeSettings?.allCategoryImage : dbCat?.image;
 
                 return (
                     <motion.button
@@ -45,9 +46,9 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                                 : "bg-white/10 group-hover:bg-white/20"
                         )}>
                             <div className="w-full h-full rounded-full bg-black border-[3px] border-black overflow-hidden flex items-center justify-center relative z-10">
-                                {dbCat?.image ? (
+                                {imageToUse ? (
                                     <Image
-                                        src={dbCat.image}
+                                        src={imageToUse}
                                         alt={cat}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         width={80}
