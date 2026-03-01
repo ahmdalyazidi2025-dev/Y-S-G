@@ -58,9 +58,10 @@ service cloud.firestore {
     }
     
     match /notifications/{notifId} {
-       allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+       allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
        allow create: if isAdmin() || request.auth != null; // Allow system triggers
        allow update: if request.auth != null && resource.data.userId == request.auth.uid; // For mark as read
+       allow delete: if isAdmin();
     }
 
     match /password_requests/{reqId} {
