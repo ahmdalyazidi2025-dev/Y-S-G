@@ -66,7 +66,8 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             setLastProductDoc(snap.docs[snap.docs.length - 1] || null)
             setHasMoreProducts(snap.docs.length === 50)
         } catch (e) {
-            toast.error("فشل تحميل المنتجات")
+            console.error("fetchProducts error:", e)
+            // We intentionally do not show error toast here since it's disruptive for customers
         } finally {
             setLoading(false)
         }
