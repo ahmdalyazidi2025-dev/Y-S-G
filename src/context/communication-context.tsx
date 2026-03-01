@@ -63,24 +63,24 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
                 const cutoffDate = new Date();
                 cutoffDate.setDate(cutoffDate.getDate() - duration);
                 const cutoffTimestamp = Timestamp.fromDate(cutoffDate);
-                const batch = writeBatch(db);
-
                 // Delete Messages
                 const msgsQuery = query(collection(db, "messages"), where("createdAt", "<", cutoffTimestamp), limit(500));
                 const msgsSnap = await getDocs(msgsQuery);
-                msgsSnap.forEach(d => {
-                    batch.delete(d.ref);
-                });
 
                 // Delete Notifications
                 const notifsQuery = query(collection(db, "notifications"), where("createdAt", "<", cutoffTimestamp), limit(500));
                 const notifsSnap = await getDocs(notifsQuery);
-                notifsSnap.forEach(d => {
-                    batch.delete(d.ref);
-                });
 
-                if (msgsSnap.size > 0 || notifsSnap.size > 0) {
-                    await batch.commit();
+                const allDocs = [...msgsSnap.docs, ...notifsSnap.docs];
+
+                if (allDocs.length > 0) {
+                    const chunkSize = 400;
+                    for (let i = 0; i < allDocs.length; i += chunkSize) {
+                        const chunk = allDocs.slice(i, i + chunkSize);
+                        const batch = writeBatch(db);
+                        chunk.forEach(d => batch.delete(d.ref));
+                        await batch.commit();
+                    }
                     console.log(`Auto Delete: Cleared ${msgsSnap.size} messages and ${notifsSnap.size} notifications.`);
                 }
 
@@ -340,14 +340,18 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const deleteAllChatsAndNotifications = async () => {
         try {
-            const batch = writeBatch(db);
             const msgsSnap = await getDocs(collection(db, "messages"));
-            msgsSnap.forEach(d => batch.delete(d.ref));
-
             const notifsSnap = await getDocs(collection(db, "notifications"));
-            notifsSnap.forEach(d => batch.delete(d.ref));
 
-            await batch.commit();
+            const allDocs = [...msgsSnap.docs, ...notifsSnap.docs];
+
+            const chunkSize = 400;
+            for (let i = 0; i < allDocs.length; i += chunkSize) {
+                const chunk = allDocs.slice(i, i + chunkSize);
+                const batch = writeBatch(db);
+                chunk.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
             toast.success("تم حذف جميع السجلات بنجاح!");
         } catch (error) {
             console.error("Delete All Error:", error);
