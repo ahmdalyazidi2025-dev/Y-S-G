@@ -106,36 +106,22 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
         if (!isAdmin) {
             // Using 'in' prevents permission denied, allowing query for global ('all') or personal (userId) messages simultaneously
-            msgQuery = query(collection(db, "messages"), where("userId", "in", [userId, "all"]))
+            // MUST combine with limit to prevent fetching huge amounts of data on the client.
+            msgQuery = query(collection(db, "messages"), where("userId", "in", [userId, "all"]), orderBy("createdAt", "desc"), limit(200))
         }
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
             const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
-            if (!isAdmin) {
-                // Client-side filtering for 'all' or 'userId' to support global broadcast
-                const myDocs = docs.filter(doc => doc.userId === userId || doc.userId === "all")
-                // Client-side sort and limit
-                myDocs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                setMessages(myDocs.slice(0, 500))
-            } else {
-                setMessages(docs)
-            }
+            setMessages(docs)
         })
 
         // Notifications Listener
         let notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(50))
         if (!isAdmin) {
-            // REMOVED orderBy and limit
-            notifQuery = query(collection(db, "notifications"), where("userId", "==", userId))
+            notifQuery = query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"), limit(50))
         }
         const unsubNotifications = onSnapshot(notifQuery, (snap) => {
             const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
-            if (!isAdmin) {
-                // Client-side sort and limit
-                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-                setNotifications(docs.slice(0, 50))
-            } else {
-                setNotifications(docs)
-            }
+            setNotifications(docs)
         })
 
         let unsubRequests = () => { };
