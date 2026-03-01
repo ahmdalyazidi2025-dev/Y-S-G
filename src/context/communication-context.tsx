@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { db } from "@/lib/firebase"
-import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs, where, limit, writeBatch } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, getDocs, where, limit, writeBatch, getCountFromServer } from "firebase/firestore"
 import { toast } from "sonner"
 import { Message, Notification, ProductRequest, JoinRequest, PasswordRequest } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
@@ -33,7 +33,7 @@ interface CommunicationContextType {
     sendNotificationToGroup: (groupId: string, title: string, body: string, link?: string) => Promise<void>
     sendGlobalMessage: (text: string, link?: string, linkTitle?: string) => Promise<void>
     sendNotification: (params: { userId: string, title: string, body: string, link?: string, type?: string }) => Promise<void>
-    deleteAllChatsAndNotifications: () => Promise<void>
+    deleteAllChatsAndNotifications: (onProgress?: (progress: number, status: string) => void) => Promise<void>
 }
 
 const CommunicationContext = createContext<CommunicationContextType | undefined>(undefined)
@@ -338,13 +338,29 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         await updateDoc(doc(db, "notifications", id), { read: true })
     }
 
-    const deleteAllChatsAndNotifications = async () => {
+    const deleteAllChatsAndNotifications = async (onProgress?: (progress: number, status: string) => void) => {
         try {
-            // Helper function to delete collections in batches
-            const deleteCollectionInBatches = async (colName: string) => {
+            const msgsCol = collection(db, "messages");
+            const notifsCol = collection(db, "notifications");
+
+            onProgress?.(5, "جاري حساب السجلات...");
+            const msgsCountSnap = await getCountFromServer(msgsCol);
+            const notifsCountSnap = await getCountFromServer(notifsCol);
+
+            const totalDocs = msgsCountSnap.data().count + notifsCountSnap.data().count;
+
+            if (totalDocs === 0) {
+                onProgress?.(100, "لا توجد سجلات للحذف");
+                toast.success("قاعدة البيانات فارغة بالفعل!");
+                return;
+            }
+
+            let deletedCount = 0;
+
+            const deleteCollectionInBatches = async (colRef: any, name: string) => {
                 let hasMore = true;
                 while (hasMore) {
-                    const q = query(collection(db, colName), limit(400));
+                    const q = query(colRef, limit(200));
                     const snap = await getDocs(q);
 
                     if (snap.empty) {
@@ -355,16 +371,22 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
                     const batch = writeBatch(db);
                     snap.docs.forEach(d => batch.delete(d.ref));
                     await batch.commit();
+
+                    deletedCount += snap.size;
+                    const percent = Math.min(Math.round((deletedCount / totalDocs) * 100), 100);
+                    onProgress?.(percent, `جاري تنظيف ${name}... (${percent}%)`);
                 }
             };
 
-            await deleteCollectionInBatches("messages");
-            await deleteCollectionInBatches("notifications");
+            await deleteCollectionInBatches(msgsCol, "الرسائل");
+            await deleteCollectionInBatches(notifsCol, "الإشعارات");
 
+            onProgress?.(100, "اكتمل الحذف بنجاح!");
             toast.success("تم حذف جميع السجلات بنجاح!");
         } catch (error) {
             console.error("Delete All Error:", error);
             toast.error("حدث خطأ أثناء محاولة حذف السجلات");
+            onProgress?.(0, "فشلت العملية");
         }
     }
 

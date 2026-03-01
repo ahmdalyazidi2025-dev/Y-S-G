@@ -61,6 +61,11 @@ function AdminSettingsContent() {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [pin, setPin] = useState("")
 
+    // Delete Flow State
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteProgress, setDeleteProgress] = useState(0)
+    const [deleteStatus, setDeleteStatus] = useState("")
+
     // Ensure products are loaded for reports
     useEffect(() => {
         if (isAuthenticated && products.length === 0) {
@@ -697,20 +702,54 @@ function AdminSettingsContent() {
                                                     </div>
                                                 )}
 
-                                                <div className="pt-4 border-t border-border/50 mt-4">
-                                                    <Button
-                                                        variant="destructive"
-                                                        className="w-full font-bold gap-2 bg-rose-500 hover:bg-rose-600 shadow-sm"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            if (confirm("هل أنت متأكد من حذف جميع الدردشات والإشعارات بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.")) {
-                                                                deleteAllChatsAndNotifications();
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Database className="w-4 h-4" />
-                                                        حذف الكل الآن
-                                                    </Button>
+                                                <div className="pt-4 border-t border-border/50 mt-4 relative">
+                                                    {isDeleting ? (
+                                                        <div className="flex flex-col items-center justify-center p-4 bg-rose-500/5 rounded-2xl border border-rose-500/20">
+                                                            {/* Circular Progress */}
+                                                            <div className="relative w-20 h-20 mb-3">
+                                                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                                    <circle className="text-rose-500/20 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent" />
+                                                                    <circle
+                                                                        className="text-rose-500 stroke-current transition-all duration-300 ease-out"
+                                                                        strokeWidth="8"
+                                                                        strokeLinecap="round"
+                                                                        cx="50" cy="50" r="40"
+                                                                        fill="transparent"
+                                                                        strokeDasharray="251.2"
+                                                                        strokeDashoffset={251.2 - (251.2 * deleteProgress) / 100}
+                                                                    />
+                                                                </svg>
+                                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                                    <span className="text-sm font-bold text-rose-600 dark:text-rose-400">{deleteProgress}%</span>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium animate-pulse">{deleteStatus}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            variant="destructive"
+                                                            className="w-full font-bold gap-2 bg-rose-500 hover:bg-rose-600 shadow-sm transition-all"
+                                                            onClick={async (e) => {
+                                                                e.preventDefault();
+                                                                if (confirm("هل أنت متأكد من حذف جميع الدردشات والإشعارات بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.")) {
+                                                                    setIsDeleting(true);
+                                                                    setDeleteProgress(0);
+                                                                    setDeleteStatus("جاري تحضير السجلات...");
+                                                                    try {
+                                                                        await deleteAllChatsAndNotifications((progress, status) => {
+                                                                            setDeleteProgress(progress);
+                                                                            setDeleteStatus(status);
+                                                                        });
+                                                                    } finally {
+                                                                        setTimeout(() => setIsDeleting(false), 2000); // keep it showing "Complete" briefly
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Database className="w-4 h-4" />
+                                                            حذف الكل الآن
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

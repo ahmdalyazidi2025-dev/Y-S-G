@@ -97,7 +97,7 @@ export interface StoreContextType {
     sendNotificationToGroup: (groupId: string, title: string, body: string, link?: string) => Promise<void>
     sendGlobalMessage: (text: string, link?: string, linkTitle?: string) => Promise<void>
     sendNotification: (params: { userId: string, title: string, body: string, link?: string, type?: string }) => Promise<void>
-    deleteAllChatsAndNotifications: () => Promise<void>
+    deleteAllChatsAndNotifications: (onProgress?: (progress: number, status: string) => void) => Promise<void>
     guestId: string
 
     markNotificationsAsRead: (section: keyof AdminPreferences['lastViewed']) => Promise<void>
