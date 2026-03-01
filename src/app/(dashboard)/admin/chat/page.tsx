@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo, useEffect, Fragment } from "react"
+import { useState, useMemo, useEffect, Fragment, useRef } from "react"
 import { differenceInDays, isSameDay } from "date-fns" // Ensure this is available or use native JS
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft, Search } from "lucide-react"
@@ -21,6 +21,7 @@ export default function AdminChatPage() {
     const [mode, setMode] = useState<"direct" | "broadcast" | "global_chat">("direct")
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+    const messagesEndRef = useRef<HTMLDivElement>(null)
 
     // Link & Product Picker State
     const [link, setLink] = useState("")
@@ -98,6 +99,12 @@ export default function AdminChatPage() {
             .filter(m => m.userId === selectedCustomer)
             .reverse()
     }, [messages, selectedCustomer])
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+        }
+    }, [activeChatMessages])
 
     const handleSend = async () => {
         if (!msg.trim() && !link.trim()) return
@@ -276,6 +283,7 @@ export default function AdminChatPage() {
                                 });
                             })()
                         )}
+                        <div ref={messagesEndRef} />
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col">
