@@ -91,7 +91,40 @@ export function SystemNotifications() {
                     }
 
                     playSound(sound)
-                    toast(msg, { icon })
+
+                    toast.custom((t) => (
+                        <div className="p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full flex flex-col gap-3 border-emerald-500/80 ring-1 ring-emerald-500/20">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-full bg-emerald-500/10">
+                                        {icon}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-foreground">تحديث حالة الطلب</h4>
+                                    </div>
+                                </div>
+                                <button onClick={() => toast.dismiss(t)} className="text-muted-foreground hover:text-foreground">
+                                    X
+                                </button>
+                            </div>
+
+                            <p className="text-sm text-foreground/90 font-medium">
+                                {msg}
+                            </p>
+
+                            <div className="flex justify-end pt-2 border-t border-border/50">
+                                <button
+                                    onClick={() => {
+                                        toast.dismiss(t)
+                                        window.location.href = `/customer/orders/${order.id}`
+                                    }}
+                                    className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
+                                >
+                                    عرض الطلب
+                                </button>
+                            </div>
+                        </div>
+                    ), { duration: 6000 })
                 }
                 prevOrderStatuses.current[order.id] = order.status
             })
@@ -134,13 +167,46 @@ export function SystemNotifications() {
                 // Determine relevance
                 if (isAdminUser || latestMsg.userId === currentUser?.id || latestMsg.text.includes(`@${currentUser?.id}`)) {
                     playSound('newMessage')
-                    toast.message(latestMsg.senderName, {
-                        description: latestMsg.text,
-                        icon: <MessageSquare className="w-5 h-5 text-indigo-500" />,
-                        action: {
-                            label: latestMsg.actionTitle || (latestMsg.actionLink ? "عرض" : "رد"),
-                            onClick: () => window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
-                        }
+
+                    const isGlobal = latestMsg.userId === 'all'
+
+                    toast.custom((t) => (
+                        <div className={`p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full flex flex-col gap-3
+                            ${isGlobal ? 'border-primary/80 ring-1 ring-primary/20' : 'border-blue-500/80 ring-1 ring-blue-500/20'}`}>
+
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-full ${isGlobal ? 'bg-primary/10 text-primary' : 'bg-blue-500/10 text-blue-500'}`}>
+                                        <MessageSquare className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-foreground">{latestMsg.senderName}</h4>
+                                        <p className="text-xs text-muted-foreground">{isGlobal ? 'إشعار عام' : 'رسالة جديدة'}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => toast.dismiss(t)} className="text-muted-foreground hover:text-foreground">
+                                    X
+                                </button>
+                            </div>
+
+                            <p className="text-sm text-foreground/90 leading-relaxed font-medium line-clamp-3 overflow-hidden text-ellipsis">
+                                {latestMsg.text.replace(/\[بواسطة الآدمن\]/g, '')}
+                            </p>
+
+                            <div className="flex justify-end pt-2 border-t border-border/50">
+                                <button
+                                    onClick={() => {
+                                        toast.dismiss(t)
+                                        window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
+                                    }}
+                                    className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
+                                >
+                                    {latestMsg.actionTitle || (latestMsg.actionLink ? "عرض" : "رد")}
+                                </button>
+                            </div>
+                        </div>
+                    ), {
+                        duration: 6000,
                     })
                 }
             }
