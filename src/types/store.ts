@@ -216,6 +216,8 @@ export type StoreSettings = {
     }
     hiddenSections?: ("products" | "offers" | "categories" | "search")[]
     allCategoryImage?: string
+    autoDeleteChats?: boolean
+    autoDeleteChatsDuration?: number
 }
 
 export type AdminPreferences = {

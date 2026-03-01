@@ -644,6 +644,65 @@ function AdminSettingsContent() {
                             </Section>
                         )}
 
+                        {activeTab === 'entity' && (
+                            <div className="space-y-6">
+                                <Section icon={<Shield className="w-5 h-5" />} title="إدارة فريق العمل">
+                                    <div className="bg-card border border-border rounded-xl shadow-sm p-4">
+                                        <StaffManager />
+                                    </div>
+                                </Section>
+
+                                <Section icon={<Database className="w-5 h-5" />} title="إدارة مساحة التخزين الخاصة بالدردشة">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                            <div className="absolute top-0 right-0 w-2 h-full bg-rose-500/20 group-hover:bg-rose-500 transition-colors" />
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="p-2.5 bg-rose-500/10 rounded-xl text-rose-600 dark:text-rose-400">
+                                                    <Database className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-foreground">الحذف التلقائي</h4>
+                                                    <p className="text-[10px] text-muted-foreground">حذف المحادثات والإشعارات المقروءة لتوفير مساحة</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <Label className="text-sm font-bold cursor-pointer" onClick={() => handleChange('autoDeleteChats', !formData.autoDeleteChats)}>
+                                                            تفعيل التنظيف التلقائي
+                                                        </Label>
+                                                        <span className="text-[10px] text-muted-foreground">يعمل عند فتحك للوحة الإدارة تلقائياً</span>
+                                                    </div>
+                                                    <Switch
+                                                        checked={!!formData.autoDeleteChats}
+                                                        onCheckedChange={(checked) => handleChange('autoDeleteChats', checked)}
+                                                        className="data-[state=checked]:bg-rose-500"
+                                                    />
+                                                </div>
+
+                                                {formData.autoDeleteChats && (
+                                                    <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                                                        <Label className="text-xs font-bold text-foreground mb-1 block">حذف الرسائل والأشعارات القديمة والتي مر عليها:</Label>
+                                                        <select
+                                                            value={formData.autoDeleteChatsDuration || 30}
+                                                            onChange={(e) => handleChange('autoDeleteChatsDuration', Number(e.target.value))}
+                                                            className="w-full bg-background border border-border rounded-lg h-10 text-sm text-foreground px-3 outline-none focus:ring-1 focus:ring-rose-500 transition-shadow"
+                                                        >
+                                                            <option value={7}>أسبوع واحد (7 أيام)</option>
+                                                            <option value={30}>شهر واحد (30 يوم)</option>
+                                                            <option value={90}>3 أشهر (90 يوم)</option>
+                                                            <option value={180}>6 أشهر (180 يوم)</option>
+                                                        </select>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Section>
+                            </div>
+                        )}
+
                         {activeTab === 'coupons' && (
                             <div className="glass-card p-2 rounded-3xl overflow-hidden">
                                 <CouponManager externalFormData={formData} onExternalChange={handleChange} />

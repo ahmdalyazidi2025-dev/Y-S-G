@@ -37,7 +37,9 @@ const MOCK_SETTINGS: StoreSettings = {
     enableProductRequests: true,
     enableBarcodeScanner: false,
     sounds: {},
-    allCategoryImage: ""
+    allCategoryImage: "",
+    autoDeleteChats: false,
+    autoDeleteChatsDuration: 30
 }
 
 interface SettingsContextType {

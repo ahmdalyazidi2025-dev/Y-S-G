@@ -8,6 +8,7 @@ import { Message, Notification, ProductRequest, JoinRequest, PasswordRequest } f
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
 import { useCustomers } from "./customer-context"
 import { useAuth } from "./auth-context"
+import { useSettings } from "./settings-context"
 
 interface CommunicationContextType {
     messages: Message[]
@@ -43,6 +44,55 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
     const [productRequests, setProductRequests] = useState<ProductRequest[]>([])
     const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
     const [passwordRequests, setPasswordRequests] = useState<PasswordRequest[]>([])
+    const { storeSettings } = useSettings()
+
+    // Auto Delete Background Job
+    useEffect(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        if (!isAdmin || !storeSettings?.autoDeleteChats) return;
+
+        const runCleanup = async () => {
+            const LAST_CLEANUP_KEY = "lastAutoCleanup";
+            const lastCleanup = localStorage.getItem(LAST_CLEANUP_KEY);
+            // Run at most once a day
+            if (lastCleanup && new Date().getTime() - Number(lastCleanup) < 24 * 60 * 60 * 1000) return;
+
+            try {
+                const duration = storeSettings.autoDeleteChatsDuration || 30;
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - duration);
+                const cutoffTimestamp = Timestamp.fromDate(cutoffDate);
+                const batch = writeBatch(db);
+
+                // Delete Messages
+                const msgsQuery = query(collection(db, "messages"), where("createdAt", "<", cutoffTimestamp), limit(500));
+                const msgsSnap = await getDocs(msgsQuery);
+                msgsSnap.forEach(d => {
+                    batch.delete(d.ref);
+                });
+
+                // Delete Notifications
+                const notifsQuery = query(collection(db, "notifications"), where("createdAt", "<", cutoffTimestamp), limit(500));
+                const notifsSnap = await getDocs(notifsQuery);
+                notifsSnap.forEach(d => {
+                    batch.delete(d.ref);
+                });
+
+                if (msgsSnap.size > 0 || notifsSnap.size > 0) {
+                    await batch.commit();
+                    console.log(`Auto Delete: Cleared ${msgsSnap.size} messages and ${notifsSnap.size} notifications.`);
+                }
+
+                localStorage.setItem(LAST_CLEANUP_KEY, new Date().getTime().toString());
+            } catch (error) {
+                console.error("Auto Cleanup Failed:", error);
+            }
+        };
+
+        // Delay it by 5 seconds so it doesn't block initial load
+        const timer = setTimeout(runCleanup, 5000);
+        return () => clearTimeout(timer);
+    }, [currentUser?.role, storeSettings?.autoDeleteChats, storeSettings?.autoDeleteChatsDuration]);
 
     useEffect(() => {
         // Wait until guestId is generated if not logged in
