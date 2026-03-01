@@ -33,6 +33,7 @@ interface CommunicationContextType {
     sendNotificationToGroup: (groupId: string, title: string, body: string, link?: string) => Promise<void>
     sendGlobalMessage: (text: string, link?: string, linkTitle?: string) => Promise<void>
     sendNotification: (params: { userId: string, title: string, body: string, link?: string, type?: string }) => Promise<void>
+    deleteAllChatsAndNotifications: () => Promise<void>
 }
 
 const CommunicationContext = createContext<CommunicationContextType | undefined>(undefined)
@@ -337,11 +338,28 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         await updateDoc(doc(db, "notifications", id), { read: true })
     }
 
+    const deleteAllChatsAndNotifications = async () => {
+        try {
+            const batch = writeBatch(db);
+            const msgsSnap = await getDocs(collection(db, "messages"));
+            msgsSnap.forEach(d => batch.delete(d.ref));
+
+            const notifsSnap = await getDocs(collection(db, "notifications"));
+            notifsSnap.forEach(d => batch.delete(d.ref));
+
+            await batch.commit();
+            toast.success("تم حذف جميع السجلات بنجاح!");
+        } catch (error) {
+            console.error("Delete All Error:", error);
+            toast.error("حدث خطأ أثناء محاولة حذف السجلات");
+        }
+    }
+
     return (
         <CommunicationContext.Provider value={{
             messages, notifications, productRequests, joinRequests, passwordRequests,
             sendMessage, markNotificationsRead, markNotificationRead, addProductRequest, updateProductRequestStatus, deleteProductRequest, addJoinRequest, deleteJoinRequest, resolvePasswordRequest, requestPasswordReset,
-            broadcastNotification, markMessagesRead, broadcastToCategory, markAllNotificationsRead, sendNotificationToGroup, sendGlobalMessage, sendNotification
+            broadcastNotification, markMessagesRead, broadcastToCategory, markAllNotificationsRead, sendNotificationToGroup, sendGlobalMessage, sendNotification, deleteAllChatsAndNotifications
         }}>
             {children}
         </CommunicationContext.Provider>

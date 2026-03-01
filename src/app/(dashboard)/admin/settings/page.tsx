@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
 }
 
 function AdminSettingsContent() {
-    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications, fetchProducts, loading } = useStore()
+    const { storeSettings, updateStoreSettings, orders, customers, products, categories, staff, currentUser, coupons, banners, productRequests, messages, notifications, fetchProducts, loading, deleteAllChatsAndNotifications } = useStore()
     const { fcmToken, notificationPermissionStatus } = useFcmToken()
     const [formData, setFormData] = useState<StoreSettings>(storeSettings)
     const [hasInteracted, setHasInteracted] = useState(false)
@@ -696,6 +696,22 @@ function AdminSettingsContent() {
                                                         </select>
                                                     </div>
                                                 )}
+
+                                                <div className="pt-4 border-t border-border/50 mt-4">
+                                                    <Button
+                                                        variant="destructive"
+                                                        className="w-full font-bold gap-2 bg-rose-500 hover:bg-rose-600 shadow-sm"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            if (confirm("هل أنت متأكد من حذف جميع الدردشات والإشعارات بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.")) {
+                                                                deleteAllChatsAndNotifications();
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Database className="w-4 h-4" />
+                                                        حذف الكل الآن
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
