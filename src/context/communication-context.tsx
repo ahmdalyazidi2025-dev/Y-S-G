@@ -340,18 +340,27 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const deleteAllChatsAndNotifications = async () => {
         try {
-            const msgsSnap = await getDocs(collection(db, "messages"));
-            const notifsSnap = await getDocs(collection(db, "notifications"));
+            // Helper function to delete collections in batches
+            const deleteCollectionInBatches = async (colName: string) => {
+                let hasMore = true;
+                while (hasMore) {
+                    const q = query(collection(db, colName), limit(400));
+                    const snap = await getDocs(q);
 
-            const allDocs = [...msgsSnap.docs, ...notifsSnap.docs];
+                    if (snap.empty) {
+                        hasMore = false;
+                        break;
+                    }
 
-            const chunkSize = 400;
-            for (let i = 0; i < allDocs.length; i += chunkSize) {
-                const chunk = allDocs.slice(i, i + chunkSize);
-                const batch = writeBatch(db);
-                chunk.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-            }
+                    const batch = writeBatch(db);
+                    snap.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                }
+            };
+
+            await deleteCollectionInBatches("messages");
+            await deleteCollectionInBatches("notifications");
+
             toast.success("تم حذف جميع السجلات بنجاح!");
         } catch (error) {
             console.error("Delete All Error:", error);
