@@ -168,46 +168,52 @@ export function SystemNotifications() {
                 if (isAdminUser || latestMsg.userId === currentUser?.id || latestMsg.text.includes(`@${currentUser?.id}`)) {
                     playSound('newMessage')
 
-                    const isGlobal = latestMsg.userId === 'all'
+                    // Do not show toast if user is already on the chat page
+                    const isCustomerOnChat = !isAdminUser && pathname === '/customer/chat'
+                    const isAdminOnChat = isAdminUser && pathname === '/admin/chat'
 
-                    toast.custom((t) => (
-                        <div className={`p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full max-w-[95vw] sm:max-w-[400px] flex flex-col gap-3
+                    if (!isCustomerOnChat && !isAdminOnChat) {
+                        const isGlobal = latestMsg.userId === 'all'
+
+                        toast.custom((t) => (
+                            <div className={`p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full max-w-[95vw] sm:max-w-[400px] flex flex-col gap-3
                             ${isGlobal ? 'border-primary/80 ring-1 ring-primary/20' : 'border-blue-500/80 ring-1 ring-blue-500/20'}`}>
 
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-full ${isGlobal ? 'bg-primary/10 text-primary' : 'bg-blue-500/10 text-blue-500'}`}>
-                                        <MessageSquare className="w-5 h-5" />
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-full ${isGlobal ? 'bg-primary/10 text-primary' : 'bg-blue-500/10 text-blue-500'}`}>
+                                            <MessageSquare className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm text-foreground">{latestMsg.senderName}</h4>
+                                            <p className="text-xs text-muted-foreground">{isGlobal ? 'إشعار عام' : 'رسالة جديدة'}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-sm text-foreground">{latestMsg.senderName}</h4>
-                                        <p className="text-xs text-muted-foreground">{isGlobal ? 'إشعار عام' : 'رسالة جديدة'}</p>
-                                    </div>
+                                    <button onClick={() => toast.dismiss(t)} className="text-muted-foreground hover:text-foreground">
+                                        X
+                                    </button>
                                 </div>
-                                <button onClick={() => toast.dismiss(t)} className="text-muted-foreground hover:text-foreground">
-                                    X
-                                </button>
-                            </div>
 
-                            <p className="text-sm text-foreground/90 leading-relaxed font-medium line-clamp-3 overflow-hidden text-ellipsis">
-                                {latestMsg.text.replace(/\[بواسطة الآدمن\]/g, '').replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
-                            </p>
+                                <p className="text-sm text-foreground/90 leading-relaxed font-medium line-clamp-3 overflow-hidden text-ellipsis">
+                                    {latestMsg.text.replace(/\[بواسطة الآدمن\]/g, '').replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
+                                </p>
 
-                            <div className="flex justify-end pt-2 border-t border-border/50">
-                                <button
-                                    onClick={() => {
-                                        toast.dismiss(t)
-                                        window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
-                                    }}
-                                    className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
-                                >
-                                    {latestMsg.actionTitle || (latestMsg.actionLink ? "عرض" : "رد")}
-                                </button>
+                                <div className="flex justify-end pt-2 border-t border-border/50">
+                                    <button
+                                        onClick={() => {
+                                            toast.dismiss(t)
+                                            window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
+                                        }}
+                                        className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
+                                    >
+                                        {latestMsg.actionTitle || (latestMsg.actionLink ? "عرض" : "رد")}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ), {
-                        duration: 6000,
-                    })
+                        ), {
+                            duration: 6000,
+                        })
+                    }
                 }
             }
         }
