@@ -93,7 +93,7 @@ export function SystemNotifications() {
                     playSound(sound)
 
                     toast.custom((t) => (
-                        <div className="p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full flex flex-col gap-3 border-emerald-500/80 ring-1 ring-emerald-500/20">
+                        <div className="p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full max-w-[95vw] sm:max-w-[400px] flex flex-col gap-3 border-emerald-500/80 ring-1 ring-emerald-500/20">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-full bg-emerald-500/10">
@@ -108,7 +108,7 @@ export function SystemNotifications() {
                                 </button>
                             </div>
 
-                            <p className="text-sm text-foreground/90 font-medium">
+                            <p className="text-sm text-foreground/90 font-medium leading-relaxed">
                                 {msg}
                             </p>
 
@@ -171,7 +171,7 @@ export function SystemNotifications() {
                     const isGlobal = latestMsg.userId === 'all'
 
                     toast.custom((t) => (
-                        <div className={`p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full flex flex-col gap-3
+                        <div className={`p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full max-w-[95vw] sm:max-w-[400px] flex flex-col gap-3
                             ${isGlobal ? 'border-primary/80 ring-1 ring-primary/20' : 'border-blue-500/80 ring-1 ring-blue-500/20'}`}>
 
                             <div className="flex items-start justify-between">
@@ -190,7 +190,7 @@ export function SystemNotifications() {
                             </div>
 
                             <p className="text-sm text-foreground/90 leading-relaxed font-medium line-clamp-3 overflow-hidden text-ellipsis">
-                                {latestMsg.text.replace(/\[بواسطة الآدمن\]/g, '')}
+                                {latestMsg.text.replace(/\[بواسطة الآدمن\]/g, '').replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
                             </p>
 
                             <div className="flex justify-end pt-2 border-t border-border/50">

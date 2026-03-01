@@ -126,7 +126,7 @@ export default function AdminChatPage() {
             setLinkTitle("")
             setShowLinkInput(false)
         } else if (selectedCustomer) {
-            sendMessage(`${msg} (@${selectedCustomer})`, true, selectedCustomer, currentCustomerName, link, linkTitle)
+            sendMessage(msg, true, selectedCustomer, currentCustomerName, link, linkTitle)
             setMsg("")
             setLink("")
             setLinkTitle("")

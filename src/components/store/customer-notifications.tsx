@@ -85,14 +85,14 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             {/* Format title for chat */}
                                             {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                 ? "💬 رسالة جديدة"
-                                                : notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1")}
+                                                : notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1").replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
                                             {notification.link && <ExternalLink className="w-3 h-3 opacity-50" />}
                                         </h4>
                                         <p className="text-xs text-slate-300 leading-relaxed">
                                             {/* Format body for chat */}
                                             {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                 ? "قام أحد ممثلي الإدارة بالرد على استفسارك..."
-                                                : notification.body}
+                                                : notification.body.replace(/\[بواسطة الآدمن\]/g, '').replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
                                         </p>
                                         <span className="text-[10px] text-slate-500 block pt-2">
                                             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ar })}
