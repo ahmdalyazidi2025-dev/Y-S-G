@@ -6,6 +6,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, doc, updateDoc, deleteD
 import { toast } from "sonner"
 import { Customer } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
+import { useAuth } from "./auth-context"
 
 interface CustomerContextType {
     customers: Customer[]
@@ -19,8 +20,14 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
     const [customers, setCustomers] = useState<Customer[]>([])
+    const { currentUser } = useAuth()
 
     useEffect(() => {
+        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
+            setCustomers([]);
+            return;
+        }
+
         // Limit to 100 recently created customers to prevent memory issues for 900+ users
         const q = query(
             collection(db, "customers"),
@@ -31,10 +38,11 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
             setCustomers(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Customer)))
         }, (error) => {
             console.error("Customers List Error:", error);
+            // Optionally suppress toast here or keep it. It's safe since only admins reach this block now.
             toast.error("فشل في تحميل قائمة العملاء (تأكد من الصلاحيات)");
         })
         return () => unsub()
-    }, [])
+    }, [currentUser])
 
     const addCustomer = async (data: Omit<Customer, "id" | "createdAt">) => {
         await addDoc(collection(db, "customers"), sanitizeData({ ...data, createdAt: Timestamp.now() }))
