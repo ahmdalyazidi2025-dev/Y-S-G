@@ -145,7 +145,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (usernameDoc.exists()) finalEmail = usernameDoc.data().email
                 else finalEmail = `${finalEmail.toLowerCase().trim()}@ysg.local`
             }
-            await signInWithEmailAndPassword(auth, finalEmail, password)
+            const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password)
+
+            // Validate Role
+            const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
+            let actualRole = "customer"
+            if (userDoc.exists()) {
+                actualRole = userDoc.data().role || "customer"
+            }
+
+            if ((role === "admin" || role === "staff") && actualRole === "customer") {
+                await firebaseSignOut(auth)
+                toast.error("هذا الحساب مخصص للعملاء، يرجى الدخول من واجهة العملاء")
+                return false
+            }
+
+            if (role === "customer" && (actualRole === "admin" || actualRole === "staff")) {
+                await firebaseSignOut(auth)
+                toast.error("هذا الحساب مخصص للإدارة، يرجى الدخول من لوحة التحكم")
+                return false
+            }
+
             return true
         } catch (error) {
             console.error("Login Error:", error)
