@@ -14,8 +14,9 @@ import { useStore } from "@/context/store-context"
 function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const baseRole = (searchParams.get("role") as "admin" | "staff" | "customer") || "customer"
-    const [loginType, setLoginType] = useState<"admin" | "staff" | "customer">(baseRole)
+    // Treat staff and admin as the same unified login portal ("admin")
+    const baseRole = (searchParams.get("role") === "admin" || searchParams.get("role") === "staff") ? "admin" : "customer"
+    const [loginType, setLoginType] = useState<"admin" | "customer">(baseRole)
     const [isLoading, setIsLoading] = useState(false)
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -31,7 +32,7 @@ function LoginForm() {
         const success = await login(username, password, loginType)
 
         if (success) {
-            if (loginType === "admin" || loginType === "staff") {
+            if (loginType === "admin") {
                 router.push("/admin")
             } else {
                 router.push("/customer")
@@ -83,55 +84,15 @@ function LoginForm() {
 
                     <div className="space-y-1">
                         <CardTitle className="text-3xl font-black tracking-tight text-foreground">
-                            {loginType === 'admin' ? 'مدير النظام' : loginType === 'staff' ? 'دخول الموظفين' : 'مرحباً بك'}
+                            {loginType === 'admin' ? 'دخول الإدارة' : 'مرحباً بك'}
                         </CardTitle>
                         <CardDescription className="text-muted-foreground font-medium">
-                            {loginType === 'customer' ? 'سجل دخولك للتسوق ومتابعة طلباتك' : 'لوحة التحكم والإدارة'}
+                            {loginType === 'customer' ? 'سجل دخولك للتسوق ومتابعة طلباتك' : 'تسجيل الدخول للمدراء والموظفين'}
                         </CardDescription>
                     </div>
 
                     {/* ONLY show role switcher if explicitly requested via URL (e.g. /login?role=admin) */}
-                    {(baseRole === 'admin' || baseRole === 'staff') && (
-                        <div className="grid grid-cols-2 gap-3 mt-6">
-                            <button
-                                type="button"
-                                onClick={() => setLoginType("staff")}
-                                className={`
-                                    relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
-                                    ${loginType === 'staff'
-                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.2)]'
-                                        : 'bg-secondary/50 border-transparent hover:bg-secondary opacity-60 hover:opacity-100'}
-                                `}
-                            >
-                                <div className={`p-2 rounded-full ${loginType === 'staff' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
-                                    <User className="w-5 h-5" />
-                                </div>
-                                <span className={`text-xs font-bold ${loginType === 'staff' ? 'text-primary' : 'text-muted-foreground'}`}>موظف</span>
-                                {loginType === 'staff' && (
-                                    <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
-                                )}
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setLoginType("admin")}
-                                className={`
-                                    relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all duration-300
-                                    ${loginType === 'admin'
-                                        ? 'bg-primary/10 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.2)]'
-                                        : 'bg-secondary/50 border-transparent hover:bg-secondary opacity-60 hover:opacity-100'}
-                                `}
-                            >
-                                <div className={`p-2 rounded-full ${loginType === 'admin' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
-                                    <Lock className="w-5 h-5" />
-                                </div>
-                                <span className={`text-xs font-bold ${loginType === 'admin' ? 'text-primary' : 'text-muted-foreground'}`}>مدير النظام</span>
-                                {loginType === 'admin' && (
-                                    <motion.div layoutId="active-ring" className="absolute inset-0 border-2 border-primary rounded-2xl" transition={{ duration: 0.2 }} />
-                                )}
-                            </button>
-                        </div>
-                    )}
+                    {/* Role switcher has been removed for a unified admin login interface */}
                 </CardHeader>
 
                 <form onSubmit={showForgotPassword ? handleResetPassword : handleLogin}>
