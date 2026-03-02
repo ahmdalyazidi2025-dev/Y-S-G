@@ -8,7 +8,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "YSG Sales Management",
   description: "Sales Management System for YSG Group",
-  manifest: "/manifest.json",
   icons: {
     icon: "/logo.png",
     apple: "/app-icon-v2.png", // PNG for better iOS support
@@ -33,6 +32,7 @@ import { NotificationManager } from "@/components/shared/notification-manager";
 import { SystemNotifications } from "@/components/shared/system-notifications";
 import { PushNotificationManager } from "@/components/shared/push-notification-manager";
 import { AppBadgeManager } from "@/components/shared/app-badge-manager";
+import { PwaManifestManager } from "@/components/shared/pwa-manifest-manager";
 
 export default function RootLayout({
   children,
@@ -41,6 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <PwaManifestManager />
+      </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 overflow-x-hidden relative`}>
 
         {/* --- DUAL-LAYER BACKGROUND SYSTEM --- */}

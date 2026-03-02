@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Share, PlusSquare } from "lucide-react"
@@ -19,6 +20,8 @@ interface BeforeInstallPromptEvent extends Event {
 
 // Component to handle PWA installation
 export function PwaInstallPrompt() {
+    const pathname = usePathname()
+    const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/login')
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
     const [showPrompt, setShowPrompt] = useState(false)
     const [isIOS, setIsIOS] = useState(false)
@@ -116,14 +119,14 @@ export function PwaInstallPrompt() {
                         <div className="flex flex-col items-center text-center gap-6">
                             <div className="w-28 h-28 bg-[#080b12] rounded-full flex items-center justify-center flex-shrink-0 shadow-2xl overflow-hidden border-4 border-white/5 p-0 relative transition-transform group-hover:scale-105 duration-500">
                                 <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                                <Image src="/logo.png" alt="YSG" className="w-full h-full object-cover" width={112} height={112} />
+                                <Image src={isAdmin ? "/admin-logo.png" : "/logo.png"} alt="YSG" className="w-full h-full object-cover" width={112} height={112} />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="font-black text-white text-2xl tracking-tight flex items-center justify-center gap-2">
-                                    تثبيت <span className="text-primary">Y S G</span> 📱
+                                    تثبيت <span className="text-primary">{isAdmin ? "إدارة YSG" : "Y S G"}</span> 📱
                                 </h3>
                                 <p className="text-slate-400 text-xs leading-relaxed max-w-[250px] mx-auto font-medium">
-                                    حوّل المتجر إلى تطبيق على هاتفك الآن للوصول السريع والآمن بضغطة واحدة.
+                                    {isAdmin ? "حوّل لوحة الإدارة إلى تطبيق على هاتفك للوصول السريع والآمن." : "حوّل المتجر إلى تطبيق على هاتفك الآن للوصول السريع والآمن بضغطة واحدة."}
                                 </p>
                             </div>
                         </div>
