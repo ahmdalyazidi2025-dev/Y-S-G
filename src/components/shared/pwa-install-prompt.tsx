@@ -22,6 +22,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function PwaInstallPrompt() {
     const pathname = usePathname()
     const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/login')
+    const storageKey = isAdmin ? 'pwa-admin-prompt-seen' : 'pwa-customer-prompt-seen'
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
     const [showPrompt, setShowPrompt] = useState(false)
     const [isIOS, setIsIOS] = useState(false)
@@ -45,7 +46,7 @@ export function PwaInstallPrompt() {
             setDeferredPrompt(ev)
             if (!isStandaloneMode) {
                 setTimeout(() => {
-                    const hasSeenPrompt = sessionStorage.getItem('pwa-prompt-seen')
+                    const hasSeenPrompt = sessionStorage.getItem(storageKey)
                     if (!hasSeenPrompt) setShowPrompt(true)
                 }, 3000) // Show after 3 seconds if not seen in session
             }
@@ -56,7 +57,7 @@ export function PwaInstallPrompt() {
         // Fallback for Android/Desktop Chrome if event doesn't fire quickly
         const fallbackTimer = setTimeout(() => {
             if (!isStandaloneMode && !ios && !deferredPrompt) {
-                const hasSeenPrompt = sessionStorage.getItem('pwa-prompt-seen')
+                const hasSeenPrompt = sessionStorage.getItem(storageKey)
                 if (!hasSeenPrompt) {
                     setShowPrompt(true)
                 }
@@ -65,7 +66,7 @@ export function PwaInstallPrompt() {
 
         // For iOS, show prompt manually if not standalone
         if (ios && !isStandaloneMode) {
-            const hasSeenPrompt = sessionStorage.getItem('pwa-prompt-seen')
+            const hasSeenPrompt = sessionStorage.getItem(storageKey)
             if (!hasSeenPrompt) {
                 setTimeout(() => setShowPrompt(true), 5000)
             }
@@ -91,7 +92,7 @@ export function PwaInstallPrompt() {
 
     const closePrompt = () => {
         setShowPrompt(false)
-        sessionStorage.setItem('pwa-prompt-seen', 'true')
+        sessionStorage.setItem(storageKey, 'true')
         hapticFeedback('light')
     }
 
