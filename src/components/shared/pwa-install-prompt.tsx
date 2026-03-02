@@ -1,5 +1,11 @@
 "use client"
 import React, { useState, useEffect } from "react"
+
+declare global {
+    interface Window {
+        deferredPWAInstallPrompt?: any;
+    }
+}
 import { usePathname } from "next/navigation"
 
 import { motion, AnimatePresence } from "framer-motion"
@@ -39,6 +45,17 @@ export function PwaInstallPrompt() {
         const userAgent = window.navigator.userAgent.toLowerCase()
         const ios = /iphone|ipad|ipod/.test(userAgent)
         if (ios !== isIOS) setIsIOS(ios)
+
+        // Consume globally captured event if available
+        if (window.deferredPWAInstallPrompt && !deferredPrompt) {
+            setDeferredPrompt(window.deferredPWAInstallPrompt)
+            if (!isStandaloneMode) {
+                setTimeout(() => {
+                    const hasSeenPrompt = sessionStorage.getItem(storageKey)
+                    if (!hasSeenPrompt) setShowPrompt(true)
+                }, 500)
+            }
+        }
 
         // Listen for beforeinstallprompt (Android/Chrome)
         const handleBeforeInstallPrompt = (e: Event) => {

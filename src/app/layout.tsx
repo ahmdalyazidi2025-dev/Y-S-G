@@ -43,6 +43,16 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
         <PwaManifestManager />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+               window.addEventListener('beforeinstallprompt', (e) => {
+                 e.preventDefault();
+                 window.deferredPWAInstallPrompt = e;
+               });
+             `,
+          }}
+        />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 overflow-x-hidden relative`}>
 
