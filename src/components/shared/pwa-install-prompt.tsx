@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Share, PlusSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { hapticFeedback } from "@/lib/haptics"
+import { toast } from "sonner"
 
 import Image from "next/image"
 
@@ -56,7 +57,9 @@ export function PwaInstallPrompt() {
 
         // Fallback for Android/Desktop Chrome if event doesn't fire quickly
         const fallbackTimer = setTimeout(() => {
-            if (!isStandaloneMode && !ios && !deferredPrompt) {
+            if (!isStandaloneMode && !ios) {
+                // If deferredPrompt is missing, it might mean the browser already handled it or doesn't support it well,
+                // but we still show the UI. We'll handle the click gracefully later.
                 const hasSeenPrompt = sessionStorage.getItem(storageKey)
                 if (!hasSeenPrompt) {
                     setShowPrompt(true)
@@ -87,6 +90,11 @@ export function PwaInstallPrompt() {
                 setShowPrompt(false)
             }
             hapticFeedback('success')
+        } else {
+            // Fallback if the browser doesn't provide the deferred prompt natively anymore
+            // Instruct user or just close it gracefully if the API is restricted
+            toast.info(isIOS ? "يرجى استخدام قائمة المشاركة لاختيار إضافة إلى الشاشة الرئيسية." : "يرجى تثبيت التطبيق من قائمة المتصفح لديك (أعلى الشاشة).");
+            closePrompt();
         }
     }
 
@@ -157,19 +165,19 @@ export function PwaInstallPrompt() {
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="flex gap-2">
-                                    <Button
-                                        onClick={handleInstallClick}
-                                        className="flex-1 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 text-xs py-2"
-                                    >
-                                        تثبيت الآن
-                                    </Button>
+                                <div className="flex gap-3">
                                     <Button
                                         onClick={closePrompt}
                                         variant="glass"
-                                        className="rounded-xl text-[10px] py-2"
+                                        className="rounded-2xl text-[12px] font-medium py-6 px-6 flex-shrink-0 bg-white/5 hover:bg-white/10"
                                     >
                                         لاحقاً
+                                    </Button>
+                                    <Button
+                                        onClick={handleInstallClick}
+                                        className="flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 text-[14px] font-bold py-6 transition-all active:scale-[0.98]"
+                                    >
+                                        تثبيت الآن
                                     </Button>
                                 </div>
                             )}
