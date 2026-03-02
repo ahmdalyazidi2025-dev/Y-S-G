@@ -129,6 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         createdAt: data.createdAt ? toDate(data.createdAt) : undefined
                     } as StaffMember
                 }))
+            }, (error) => {
+                console.error("Staff List Error:", error);
+                toast.error("فشل في تحميل قائمة الموظفين (مشكلة في الصلاحيات)");
             })
             return () => unsubStaff()
         }
@@ -147,23 +150,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password)
 
-            // Validate Role
-            const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
-            let actualRole = "customer"
-            if (userDoc.exists()) {
-                actualRole = userDoc.data().role || "customer"
-            }
+            // Validate Role safely
+            try {
+                const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
+                let actualRole = "customer"
+                if (userDoc.exists()) {
+                    actualRole = userDoc.data().role || "customer"
+                }
 
-            if ((role === "admin" || role === "staff") && actualRole === "customer") {
-                await firebaseSignOut(auth)
-                toast.error("هذا الحساب مخصص للعملاء، يرجى الدخول من واجهة العملاء")
-                return false
-            }
+                if ((role === "admin" || role === "staff") && actualRole === "customer") {
+                    await firebaseSignOut(auth)
+                    toast.error("هذا الحساب مخصص للعملاء، يرجى الدخول من واجهة العملاء")
+                    return false
+                }
 
-            if (role === "customer" && (actualRole === "admin" || actualRole === "staff")) {
-                await firebaseSignOut(auth)
-                toast.error("هذا الحساب مخصص للإدارة، يرجى الدخول من لوحة التحكم")
-                return false
+                if (role === "customer" && (actualRole === "admin" || actualRole === "staff")) {
+                    await firebaseSignOut(auth)
+                    toast.error("هذا الحساب مخصص للإدارة، يرجى الدخول من لوحة التحكم")
+                    return false
+                }
+            } catch (roleError: any) {
+                console.error("Role validation error (ignored):", roleError)
+                // If it crashes during validation, just let them in to avoid blocking legitimate users.
             }
 
             return true

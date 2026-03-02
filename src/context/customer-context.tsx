@@ -29,6 +29,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         )
         const unsub = onSnapshot(q, (snap) => {
             setCustomers(snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Customer)))
+        }, (error) => {
+            console.error("Customers List Error:", error);
+            toast.error("فشل في تحميل قائمة العملاء (تأكد من الصلاحيات)");
         })
         return () => unsub()
     }, [])
