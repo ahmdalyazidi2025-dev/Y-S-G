@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { User, StaffMember } from "@/types/store"
 import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
+import { adminCreateOrUpdateUserAction, adminDeleteUserAction } from "@/app/actions/auth-actions"
 
 interface AuthContextType {
     currentUser: User | null
@@ -220,16 +221,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!member.phone) throw new Error("رقم الهاتف مطلوب")
             const normalizedUsername = (member as any).username?.toLowerCase().trim() || member.name.replace(/\s/g, '').toLowerCase()
             const generatedEmail = `${normalizedUsername}@staff.ysg.local`
-            const secondaryAuth = getSecondaryAuth()
-            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, generatedEmail, member.password || "123456")
-            const uid = userCredential.user.uid
+
+            const result = await adminCreateOrUpdateUserAction(generatedEmail, member.password || "123456", member.name);
+            if (!result.success || !result.uid) {
+                throw new Error(result.error || "فشل إنشاء حساب المشرف في الخادم");
+            }
+            const uid = result.uid;
+
             await setDoc(doc(db, "users", uid), {
                 id: uid, name: member.name, role: member.role, email: generatedEmail, username: normalizedUsername, phone: member.phone,
                 permissions: member.role === "admin" ? ["all"] : member.permissions
             })
             await setDoc(doc(db, "usernames", normalizedUsername), { email: generatedEmail, uid })
             await setDoc(doc(db, "staff", uid), sanitizeData({ ...member, id: uid, email: generatedEmail, createdAt: Timestamp.now() }))
-            await firebaseSignOut(secondaryAuth)
+
             toast.success("تم إضافة الموظف بنجاح ✅")
         } catch (error: any) {
             toast.error("فشل إضافة الموظف: " + error.message)
@@ -253,6 +258,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const deleteStaff = useCallback(async (memberId: string) => {
         try {
             const member = staff.find(s => s.id === memberId)
+
+            // Delete from Auth securely via Admin SDK Server Action
+            const result = await adminDeleteUserAction(memberId);
+            if (!result.success) {
+                console.error("Admin Auth delete warning:", result.error);
+                // We proceed anyway to ensure clean Firestore, as auth might already be deleted.
+            }
+
             await deleteDoc(doc(db, "staff", memberId))
             await deleteDoc(doc(db, "users", memberId))
             if (member?.username) await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))

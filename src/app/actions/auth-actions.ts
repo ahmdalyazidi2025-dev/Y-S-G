@@ -1,6 +1,6 @@
 "use server"
 
-import { adminDb } from "@/lib/firebase-admin"
+import { adminDb, adminAuth } from "@/lib/firebase-admin"
 import { FieldValue } from "firebase-admin/firestore"
 
 export async function requestPasswordResetAction(phone: string) {
@@ -51,5 +51,55 @@ export async function addJoinRequestAction(name: string, phone: string) {
     } catch (error) {
         console.error("Add Join Request Error:", error)
         return { success: false, error: "حدث خطأ أثناء إرسال الطلب" }
+    }
+}
+
+export async function adminCreateOrUpdateUserAction(email: string, password?: string, displayName?: string) {
+    if (!email) return { success: false, error: "البريد الإلكتروني مطلوب" };
+
+    try {
+        let userRecord;
+        try {
+            // Check if user exists
+            userRecord = await adminAuth.getUserByEmail(email);
+            // User exists, update password if provided
+            if (password) {
+                userRecord = await adminAuth.updateUser(userRecord.uid, {
+                    password: password,
+                    displayName: displayName || userRecord.displayName
+                });
+            }
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                // User does not exist, create them
+                userRecord = await adminAuth.createUser({
+                    email: email,
+                    password: password || "123456",
+                    displayName: displayName
+                });
+            } else {
+                throw error;
+            }
+        }
+
+        return { success: true, uid: userRecord.uid };
+    } catch (error: any) {
+        console.error("Create/Update Admin User Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function adminDeleteUserAction(uid: string) {
+    if (!uid) return { success: false, error: "معرف المستخدم مطلوب" };
+    try {
+        await adminAuth.deleteUser(uid);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Delete Admin User Error:", error);
+        // Do not fail entirely if user not found, they might have been deleted already.
+        if (error.code !== 'auth/user-not-found') {
+            return { success: false, error: error.message };
+        }
+        return { success: true };
     }
 }
