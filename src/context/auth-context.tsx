@@ -241,9 +241,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [])
 
-    const updateStaff = useCallback(async (member: StaffMember) => {
+    const updateStaff = useCallback(async (member: StaffMember & { password?: string }) => {
         try {
-            const { id, ...data } = member
+            const { id, password, ...data } = member
+
+            // Update Auth if password changed
+            if (password) {
+                const result = await adminCreateOrUpdateUserAction(member.email, password, member.name);
+                if (!result.success) {
+                    console.error("Admin Auth update warning:", result.error);
+                    throw new Error(result.error || "فشل تحديث كلمة المرور في الخادم");
+                }
+            }
+
             await updateDoc(doc(db, "staff", id), sanitizeData(data))
             await setDoc(doc(db, "users", id), {
                 id, name: member.name, role: member.role, email: member.email, phone: member.phone,

@@ -45,8 +45,9 @@ export function StaffManager() {
                     role: newStaff.role,
                     permissions: newStaff.role === "admin" ? [] : newStaff.permissions,
                     phone: newStaff.phone, // Update phone
-                    email: staffMember.email // Keep original email
-                })
+                    email: staffMember.email, // Keep original email
+                    password: newStaff.password || undefined // Pass password if they entered one
+                } as StaffMember & { password?: string })
             }
             resetForm()
         } else {
@@ -270,18 +271,17 @@ export function StaffManager() {
                         />
                         <p className="text-[9px] text-muted-foreground">يستخدم لاستعادة كلمة المرور</p>
                     </div>
-                    {!editingId && (
-                        <div className="space-y-1">
-                            <Label className="text-[10px]">كلمة المرور</Label>
-                            <PasswordInput
-                                placeholder="••••••••"
-                                value={newStaff.password}
-                                onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                                className="bg-background h-10 text-xs text-right border-border"
-                                autoComplete="new-password"
-                            />
-                        </div>
-                    )}
+                    <div className="space-y-1">
+                        <Label className="text-[10px]">كلمة المرور</Label>
+                        <PasswordInput
+                            placeholder={editingId ? "اتركه فارغاً للاحتفاظ بكلمة المرور الحالية" : "••••••••"}
+                            value={newStaff.password}
+                            onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
+                            className="bg-background h-10 text-xs text-right border-border"
+                            autoComplete="new-password"
+                        />
+                        {editingId && <p className="text-[9px] text-muted-foreground">عند كتابة كلمة مرور جديدة، سيتم تغييرها فوراً للموظف.</p>}
+                    </div>
 
                     <div className="space-y-2">
                         <Label className="text-[10px]">نوع الحساب</Label>
