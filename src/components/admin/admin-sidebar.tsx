@@ -172,14 +172,15 @@ export function AdminSidebar() {
                     <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border relative group">
                         <p className="text-[10px] text-muted-foreground">Logged in as:</p>
                         <p className="text-xs font-bold text-foreground truncate pr-6">{currentUser.name}</p>
-                        <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
                             <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
                             <button
                                 onClick={copyAdminLink}
-                                className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 active:scale-95"
+                                className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-md transition-colors active:scale-95"
                                 title="نسخ رابط الإدارة"
                             >
-                                <LinkIcon className="w-4 h-4" />
+                                <LinkIcon className="w-3 h-3" />
+                                <span className="text-[10px] font-bold">نسخ الرابط</span>
                             </button>
                         </div>
                     </div>

@@ -139,9 +139,9 @@ export function StaffManager() {
             <div className="flex items-center justify-between pb-2 border-b border-border/50">
                 <h3 className="text-sm font-bold text-foreground">قائمة الموظفين والمشرفين</h3>
                 <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
-                    className="h-8 gap-2 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border-primary/20"
+                    className="h-8 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                     onClick={() => {
                         const link = `${window.location.origin}/login?role=admin`
                         navigator.clipboard.writeText(link)
