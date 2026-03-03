@@ -45,6 +45,28 @@ export default function AdminOrdersPage() {
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
     const [isDeletingBulk, setIsDeletingBulk] = useState(false)
 
+    // Long Press Refs
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressRef = useRef<boolean>(false);
+
+    const handlePointerDown = (orderId: string) => {
+        // Only allow long press if we are not already in bulk mode AND we are viewing canceled/deleted
+        if (isBulkSelectionMode) return;
+        if (filter !== "canceled" && filter !== "deleted") return;
+
+        isLongPressRef.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            hapticFeedback('heavy');
+            setIsBulkSelectionMode(true);
+            setSelectedOrderIds(prev => prev.includes(orderId) ? prev : [...prev, orderId]);
+        }, 500); // 500ms long press
+    };
+
+    const handlePointerUpOrLeave = () => {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+
     const toggleOrderSelection = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         setSelectedOrderIds(prev =>
@@ -426,38 +448,41 @@ export default function AdminOrdersPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-3">
-                                {/* Bulk Selection Toggle Bar */}
-                                {(filter === "deleted" || filter === "canceled") && (
-                                    <div className="flex items-center justify-between mb-2">
+                                {/* Bulk Selection Bar (Only shows when mode is active) */}
+                                {isBulkSelectionMode && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-center justify-between mb-2 bg-primary/5 p-2 px-4 rounded-xl border border-primary/20"
+                                    >
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
-                                                setIsBulkSelectionMode(!isBulkSelectionMode);
-                                                if (isBulkSelectionMode) setSelectedOrderIds([]);
+                                                if (selectedOrderIds.length === displayedOrders.length) {
+                                                    setSelectedOrderIds([]);
+                                                } else {
+                                                    setSelectedOrderIds(displayedOrders.map(o => o.id));
+                                                }
                                             }}
-                                            className={cn("text-xs font-bold rounded-xl border", isBulkSelectionMode ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border")}
+                                            className="text-xs text-primary hover:bg-primary/10 font-black h-8"
                                         >
-                                            {isBulkSelectionMode ? "إلغاء التحديد" : "تحديد متعدد"}
+                                            <CheckCircle2 className="w-4 h-4 ml-1.5" />
+                                            {selectedOrderIds.length === displayedOrders.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
                                         </Button>
 
-                                        {isBulkSelectionMode && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                    if (selectedOrderIds.length === displayedOrders.length) {
-                                                        setSelectedOrderIds([]);
-                                                    } else {
-                                                        setSelectedOrderIds(displayedOrders.map(o => o.id));
-                                                    }
-                                                }}
-                                                className="text-xs text-muted-foreground hover:text-foreground font-bold"
-                                            >
-                                                {selectedOrderIds.length === displayedOrders.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
-                                            </Button>
-                                        )}
-                                    </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setIsBulkSelectionMode(false);
+                                                setSelectedOrderIds([]);
+                                            }}
+                                            className="text-xs font-bold text-muted-foreground hover:bg-muted h-8"
+                                        >
+                                            إلغاء التحديد
+                                        </Button>
+                                    </motion.div>
                                 )}
 
                                 {displayedOrders.map((order: Order) => {
@@ -466,12 +491,26 @@ export default function AdminOrdersPage() {
                                         <div
                                             key={order.id}
                                             className={cn(
-                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border group relative overflow-hidden",
+                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border group relative overflow-hidden select-none",
                                                 order.status === "deleted" && filter !== "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
                                                 !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]",
-                                                selectedOrderIds.includes(order.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
+                                                selectedOrderIds.includes(order.id) ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border"
                                             )}
+                                            onPointerDown={() => handlePointerDown(order.id)}
+                                            onPointerUp={handlePointerUpOrLeave}
+                                            onPointerLeave={handlePointerUpOrLeave}
+                                            onPointerCancel={handlePointerUpOrLeave}
+                                            onContextMenu={(e) => {
+                                                // Prevent default context menu on mobile to allow long press
+                                                if (filter === "deleted" || filter === "canceled") {
+                                                    e.preventDefault();
+                                                }
+                                            }}
                                             onClick={(e) => {
+                                                if (isLongPressRef.current) {
+                                                    isLongPressRef.current = false;
+                                                    return;
+                                                }
                                                 if (isBulkSelectionMode) {
                                                     toggleOrderSelection(order.id, e);
                                                 } else {
