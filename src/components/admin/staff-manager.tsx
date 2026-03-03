@@ -7,7 +7,7 @@ import { hapticFeedback } from "@/lib/haptics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, CheckCircle, Circle, PlusSquare, Lock, ShieldCheck } from "lucide-react"
+import { Trash2, CheckCircle, Circle, PlusSquare, Lock, ShieldCheck, Link as LinkIcon } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
 
 export function StaffManager() {
@@ -135,6 +135,24 @@ export function StaffManager() {
 
     return (
         <div className="space-y-4">
+            {/* Quick Actions Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                <h3 className="text-sm font-bold text-foreground">قائمة الموظفين والمشرفين</h3>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary border-primary/20"
+                    onClick={() => {
+                        const link = `${window.location.origin}/login?role=admin`
+                        navigator.clipboard.writeText(link)
+                        toast.success("تم نسخ الرابط", { description: "رابط الدخول للإدارة جاهز للمشاركة" })
+                    }}
+                >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span className="text-xs">نسخ رابط الدخول</span>
+                </Button>
+            </div>
+
             {/* Add Current User Shortcut */}
             {currentUser && !staff.some(s => s.id === currentUser.id) && (
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center justify-between">

@@ -1,7 +1,8 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag, UserPlus, KeyRound } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Shield, Activity, Tag, UserPlus, KeyRound, Link as LinkIcon } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -41,6 +42,14 @@ export function AdminSidebar() {
     const handleLogout = () => {
         logout()
         router.push("/?logout=true")
+    }
+
+    const copyAdminLink = () => {
+        const link = `${window.location.origin}/login?role=admin`
+        navigator.clipboard.writeText(link)
+        toast.success("تم نسخ رابط دخول الإدارة بنجاح", {
+            description: "يمكنك الآن إرساله للموظفين الجدد."
+        })
     }
 
     const canAccess = (item: typeof NAV_ITEMS[0]) => {
@@ -160,10 +169,19 @@ export function AdminSidebar() {
             {/* Bottom Section */}
             <div className="pt-6 border-t border-border space-y-2">
                 {currentUser && (
-                    <div className="px-4 py-2 bg-muted/50 rounded-xl border border-border">
+                    <div className="px-4 py-3 bg-muted/50 rounded-xl border border-border relative group">
                         <p className="text-[10px] text-muted-foreground">Logged in as:</p>
-                        <p className="text-xs font-bold text-foreground truncate">{currentUser.name}</p>
-                        <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
+                        <p className="text-xs font-bold text-foreground truncate pr-6">{currentUser.name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                            <p className="text-[10px] text-primary font-mono">{currentUser.role || "No Role"}</p>
+                            <button
+                                onClick={copyAdminLink}
+                                className="text-muted-foreground hover:text-primary transition-colors hover:scale-110 active:scale-95"
+                                title="نسخ رابط الإدارة"
+                            >
+                                <LinkIcon className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 )}
                 <button
