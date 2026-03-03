@@ -298,12 +298,7 @@ function LandingContent() {
                 </AnimatePresence>
 
                 <div className="flex justify-center mt-2 flex-col items-center gap-1">
-                  <Link
-                    href="/login?role=admin"
-                    className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-bold tracking-widest uppercase opacity-40 hover:opacity-100 py-2"
-                  >
-                    دخول الإدارة والموظفين
-                  </Link>
+                  {/* Admin link removed for better customer experience */}
                 </div>
               </div>
             </div>
