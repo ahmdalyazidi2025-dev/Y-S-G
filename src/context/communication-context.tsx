@@ -22,6 +22,7 @@ interface CommunicationContextType {
     addProductRequest: (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => Promise<void>
     updateProductRequestStatus: (id: string, status: ProductRequest["status"]) => Promise<void>
     deleteProductRequest: (id: string) => Promise<void>
+    deleteProductRequests: (ids: string[]) => Promise<void>
     addJoinRequest: (name: string, phone: string) => Promise<void>
     deleteJoinRequest: (id: string) => Promise<void>
     resolvePasswordRequest: (id: string) => Promise<void>
@@ -174,6 +175,19 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const deleteProductRequest = async (id: string) => {
         await deleteDoc(doc(db, "requests", id))
+    }
+
+    const deleteProductRequests = async (ids: string[]) => {
+        try {
+            // Delete sequentially to keep it simple, or use a batch here if needed
+            // Since it might be multiple, doing sequentially or small batches is fine
+            for (const id of ids) {
+                await deleteDoc(doc(db, "requests", id))
+            }
+        } catch (error) {
+            console.error("Error bulk deleting product requests:", error)
+            toast.error("حدث خطأ أثناء حذف بعض الطلبات")
+        }
     }
 
     const addJoinRequest = async (name: string, phone: string) => {
@@ -379,7 +393,7 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
     return (
         <CommunicationContext.Provider value={{
             messages, notifications, productRequests, joinRequests, passwordRequests,
-            sendMessage, markNotificationsRead, markNotificationRead, addProductRequest, updateProductRequestStatus, deleteProductRequest, addJoinRequest, deleteJoinRequest, resolvePasswordRequest, requestPasswordReset,
+            sendMessage, markNotificationsRead, markNotificationRead, addProductRequest, updateProductRequestStatus, deleteProductRequest, deleteProductRequests, addJoinRequest, deleteJoinRequest, resolvePasswordRequest, requestPasswordReset,
             broadcastNotification, markMessagesRead, broadcastToCategory, markAllNotificationsRead, sendNotificationToGroup, sendGlobalMessage, sendNotification, deleteAllChatsAndNotifications
         }}>
             {children}

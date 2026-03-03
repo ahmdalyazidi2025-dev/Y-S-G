@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder, Bell, Send } from "lucide-react"
+import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, Trash2, Folder, Bell, Send, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useCommunication, useSettings, useProducts, ProductRequest } from "@/context/store-context"
@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronsUpDown } from "lucide-react"
+import { hapticFeedback } from "@/lib/haptics"
 
 const REQUEST_STATUS = {
     pending: { label: "قيد المراجعة", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
@@ -22,7 +23,7 @@ const REQUEST_STATUS = {
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus, deleteProductRequest, sendMessage } = useCommunication()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest, deleteProductRequests, sendMessage } = useCommunication()
     const { storeSettings, updateStoreSettings, markSectionAsViewed } = useSettings()
     const { products } = useProducts()
     const [filter, setFilter] = useState("all")
@@ -41,6 +42,59 @@ export default function AdminRequestsPage() {
     const [notifyLink, setNotifyLink] = useState("")
     const [openProductSelect, setOpenProductSelect] = useState(false)
     const [productSearch, setProductSearch] = useState("")
+
+    // NEW: Bulk Selection State
+    const [isBulkSelectionMode, setIsBulkSelectionMode] = useState(false)
+    const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([])
+    const [isDeletingBulk, setIsDeletingBulk] = useState(false)
+
+    // Long Press Refs
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressRef = useRef<boolean>(false);
+
+    const handlePointerDown = (requestId: string, status: string) => {
+        // Only allow long press if we are not already in bulk mode AND we are viewing fullfilled/rejected
+        if (isBulkSelectionMode) return;
+        if (status !== "fulfilled" && status !== "rejected") return;
+
+        isLongPressRef.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            hapticFeedback('heavy');
+            setIsBulkSelectionMode(true);
+            setSelectedRequestIds(prev => prev.includes(requestId) ? prev : [...prev, requestId]);
+        }, 500); // 500ms long press
+    };
+
+    const handlePointerUpOrLeave = () => {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    };
+
+    const toggleRequestSelection = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedRequestIds(prev =>
+            prev.includes(id) ? prev.filter(reqId => reqId !== id) : [...prev, id]
+        );
+        hapticFeedback('light');
+    }
+
+    const handleBulkDelete = async () => {
+        if (selectedRequestIds.length === 0) return;
+        const confirmDelete = window.confirm(`هل أنت متأكد من حذف ${selectedRequestIds.length} طلب/طلبات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`);
+        if (!confirmDelete) return;
+
+        setIsDeletingBulk(true);
+        try {
+            await deleteProductRequests(selectedRequestIds);
+            setSelectedRequestIds([]);
+            setIsBulkSelectionMode(false);
+            toast.success("تم الحذف بنجاح");
+        } catch (error) {
+            console.error("Failed to bulk delete:", error);
+        } finally {
+            setIsDeletingBulk(false);
+        }
+    };
 
     const handleNotify = async () => {
         if (!selectedRequest || !selectedRequest.customerId) {
@@ -106,11 +160,15 @@ export default function AdminRequestsPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5">
+            <div className="flex gap-2 p-1 bg-white/5 rounded-2xl w-fit border border-white/5 relative z-10">
                 {(['pending', 'fulfilled', 'rejected'] as const).map((status) => (
                     <button
                         key={status}
-                        onClick={() => setStatusFilter(status)}
+                        onClick={() => {
+                            setStatusFilter(status);
+                            setIsBulkSelectionMode(false);
+                            setSelectedRequestIds([]);
+                        }}
                         className={cn(
                             "px-6 py-2 rounded-xl text-xs font-bold transition-all",
                             statusFilter === status
@@ -129,7 +187,7 @@ export default function AdminRequestsPage() {
             {/* View Toggle & Content */}
             <div className="flex items-center gap-2 mb-4">
                 <button
-                    onClick={() => { setViewMode('all'); setSelectedCustomer(null); }}
+                    onClick={() => { setViewMode('all'); setSelectedCustomer(null); setIsBulkSelectionMode(false); setSelectedRequestIds([]); }}
                     className={cn(
                         "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
                         viewMode === 'all' && !selectedCustomer
@@ -141,7 +199,7 @@ export default function AdminRequestsPage() {
                     الكل
                 </button>
                 <button
-                    onClick={() => { setViewMode('folders'); setSelectedCustomer(null); }}
+                    onClick={() => { setViewMode('folders'); setSelectedCustomer(null); setIsBulkSelectionMode(false); setSelectedRequestIds([]); }}
                     className={cn(
                         "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
                         viewMode === 'folders' || selectedCustomer
@@ -177,6 +235,43 @@ export default function AdminRequestsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Bulk Selection Bar */}
+                        {isBulkSelectionMode && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="col-span-full flex items-center justify-between mb-2 bg-primary/5 p-2 px-4 rounded-xl border border-primary/20"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        const currentDisplayed = productRequests.filter(r => r.customerName === selectedCustomer && (r.status === 'fulfilled' || r.status === 'rejected'));
+                                        if (selectedRequestIds.length === currentDisplayed.length) {
+                                            setSelectedRequestIds([]);
+                                        } else {
+                                            setSelectedRequestIds(currentDisplayed.map(o => o.id));
+                                        }
+                                    }}
+                                    className="text-xs text-primary hover:bg-primary/10 font-black h-8"
+                                >
+                                    <CheckCircle2 className="w-4 h-4 ml-1.5" />
+                                    تحديد الكل
+                                </Button>
+
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setIsBulkSelectionMode(false);
+                                        setSelectedRequestIds([]);
+                                    }}
+                                    className="text-xs font-bold text-muted-foreground hover:bg-muted h-8"
+                                >
+                                    إلغاء التحديد
+                                </Button>
+                            </motion.div>
+                        )}
                         {productRequests
                             .filter(r => r.customerName === selectedCustomer)
                             .map((request) => {
@@ -184,8 +279,32 @@ export default function AdminRequestsPage() {
                                 return (
                                     <div
                                         key={request.id}
-                                        className="glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
-                                        onClick={() => setSelectedRequest(request)}
+                                        className={cn(
+                                            "glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group select-none overflow-hidden relative border",
+                                            selectedRequestIds.includes(request.id) ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-transparent"
+                                        )}
+                                        onPointerDown={() => handlePointerDown(request.id, request.status)}
+                                        onPointerUp={handlePointerUpOrLeave}
+                                        onPointerLeave={handlePointerUpOrLeave}
+                                        onPointerCancel={handlePointerUpOrLeave}
+                                        onContextMenu={(e) => {
+                                            if (request.status === "fulfilled" || request.status === "rejected") {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        onClick={(e) => {
+                                            if (isLongPressRef.current) {
+                                                isLongPressRef.current = false;
+                                                return;
+                                            }
+                                            if (isBulkSelectionMode) {
+                                                if (request.status === "fulfilled" || request.status === "rejected") {
+                                                    toggleRequestSelection(request.id, e);
+                                                }
+                                            } else {
+                                                setSelectedRequest(request)
+                                            }
+                                        }}
                                     >
                                         <div className="w-20 h-20 bg-black/40 rounded-xl overflow-hidden flex-shrink-0 relative">
                                             {request.image ? (
@@ -199,6 +318,16 @@ export default function AdminRequestsPage() {
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-white/5">
                                                     <Camera className="w-8 h-8 text-slate-700" />
+                                                </div>
+                                            )}
+                                            {isBulkSelectionMode && (request.status === "fulfilled" || request.status === "rejected") && (
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                    <div className={cn(
+                                                        "w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all",
+                                                        selectedRequestIds.includes(request.id) ? "bg-primary border-primary" : "bg-black/50 border-white/50"
+                                                    )}>
+                                                        {selectedRequestIds.includes(request.id) && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -281,6 +410,42 @@ export default function AdminRequestsPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {/* Bulk Selection Bar */}
+                    {isBulkSelectionMode && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="col-span-full flex items-center justify-between mb-2 bg-primary/5 p-2 px-4 rounded-xl border border-primary/20"
+                        >
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    if (selectedRequestIds.length === filteredRequests.length) {
+                                        setSelectedRequestIds([]);
+                                    } else {
+                                        setSelectedRequestIds(filteredRequests.map(o => o.id));
+                                    }
+                                }}
+                                className="text-xs text-primary hover:bg-primary/10 font-black h-8"
+                            >
+                                <CheckCircle2 className="w-4 h-4 ml-1.5" />
+                                تحديد الكل
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setIsBulkSelectionMode(false);
+                                    setSelectedRequestIds([]);
+                                }}
+                                className="text-xs font-bold text-muted-foreground hover:bg-muted h-8"
+                            >
+                                إلغاء التحديد
+                            </Button>
+                        </motion.div>
+                    )}
                     {filteredRequests.length === 0 ? (
                         <div className="col-span-full p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
                             <Camera className="w-12 h-12 mx-auto mb-4 opacity-10" />
@@ -292,8 +457,32 @@ export default function AdminRequestsPage() {
                             return (
                                 <div
                                     key={request.id}
-                                    className="glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
-                                    onClick={() => setSelectedRequest(request)}
+                                    className={cn(
+                                        "glass-card p-4 flex gap-4 cursor-pointer hover:bg-white/5 transition-colors group select-none overflow-hidden relative border",
+                                        selectedRequestIds.includes(request.id) ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-transparent"
+                                    )}
+                                    onPointerDown={() => handlePointerDown(request.id, request.status)}
+                                    onPointerUp={handlePointerUpOrLeave}
+                                    onPointerLeave={handlePointerUpOrLeave}
+                                    onPointerCancel={handlePointerUpOrLeave}
+                                    onContextMenu={(e) => {
+                                        if (request.status === "fulfilled" || request.status === "rejected") {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        if (isLongPressRef.current) {
+                                            isLongPressRef.current = false;
+                                            return;
+                                        }
+                                        if (isBulkSelectionMode) {
+                                            if (request.status === "fulfilled" || request.status === "rejected") {
+                                                toggleRequestSelection(request.id, e);
+                                            }
+                                        } else {
+                                            setSelectedRequest(request)
+                                        }
+                                    }}
                                 >
                                     <div className="w-20 h-20 bg-black/40 rounded-xl overflow-hidden flex-shrink-0 relative">
                                         {request.image ? (
@@ -307,6 +496,16 @@ export default function AdminRequestsPage() {
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-white/5">
                                                 <Camera className="w-8 h-8 text-slate-700" />
+                                            </div>
+                                        )}
+                                        {isBulkSelectionMode && (request.status === "fulfilled" || request.status === "rejected") && (
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                <div className={cn(
+                                                    "w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all",
+                                                    selectedRequestIds.includes(request.id) ? "bg-primary border-primary" : "bg-black/50 border-white/50"
+                                                )}>
+                                                    {selectedRequestIds.includes(request.id) && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -332,6 +531,32 @@ export default function AdminRequestsPage() {
 
             {/* Request Details Modal */}
             <AnimatePresence>
+                {/* Floating Bulk Actions Bar */}
+                {isBulkSelectionMode && selectedRequestIds.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-24 sm:bottom-8 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-40 flex items-center justify-between"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                <span className="font-black text-primary text-lg">{selectedRequestIds.length}</span>
+                            </div>
+                            <span className="text-sm font-bold text-white">عنصر محدد</span>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            onClick={handleBulkDelete}
+                            disabled={isDeletingBulk}
+                            className="bg-red-500 hover:bg-red-600 text-white gap-2 font-bold px-6 h-10 rounded-xl transition-all"
+                        >
+                            {isDeletingBulk ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            حذف نهائي
+                        </Button>
+                    </motion.div>
+                )}
+
                 {selectedRequest && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <motion.div
