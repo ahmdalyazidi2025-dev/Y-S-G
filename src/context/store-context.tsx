@@ -62,6 +62,7 @@ export interface StoreContextType {
     hasMoreOrders: boolean
     createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }, couponId?: string) => Promise<boolean>
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
+    deleteOrders: (orderIds: string[]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
     searchCustomerOrders: (customerId: string, term: string) => Promise<Order[]>

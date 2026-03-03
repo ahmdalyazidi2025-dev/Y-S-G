@@ -16,6 +16,7 @@ interface OrderContextType {
     hasMoreOrders: boolean
     createOrder: (currentUser: User | null, cart: CartItem[], isDraft?: boolean, additionalInfo?: { name?: string, phone?: string }, couponId?: string) => Promise<boolean>
     updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>
+    deleteOrders: (orderIds: string[]) => Promise<void>
     loadMoreOrders: (currentUser?: User | null) => Promise<void>
     searchOrders: (term: string) => Promise<Order[]>
     searchCustomerOrders: (customerId: string, term: string) => Promise<Order[]>
@@ -144,6 +145,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
         await updateDoc(doc(db, "orders", orderId), { status })
         toast.info(`تم تحديث الحالة إلى: ${status}`)
+    }
+
+    const deleteOrders = async (orderIds: string[]) => {
+        try {
+            await Promise.all(orderIds.map(id => deleteDoc(doc(db, "orders", id))))
+            toast.success(`تم حذف ${orderIds.length} طلب/طلبات نهائياً`)
+        } catch (e) {
+            console.error("Error deleting orders:", e)
+            toast.error("حدث خطأ أثناء حذف الطلبات")
+        }
     }
 
     const loadMoreOrders = async (currentUserArg?: User | null) => {
@@ -298,7 +309,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <OrderContext.Provider value={{
-            orders, coupons, hasMoreOrders, createOrder, updateOrderStatus, loadMoreOrders, searchOrders, searchCustomerOrders, markOrderAsRead, addCoupon, deleteCoupon, applyCoupon, restoreDraftToCart
+            orders, coupons, hasMoreOrders, createOrder, updateOrderStatus, deleteOrders, loadMoreOrders, searchOrders, searchCustomerOrders, markOrderAsRead, addCoupon, deleteCoupon, applyCoupon, restoreDraftToCart
         }}>
             {children}
         </OrderContext.Provider>

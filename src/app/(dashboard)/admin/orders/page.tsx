@@ -27,7 +27,7 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, loadMoreOrders, hasMoreOrders, searchOrders, markOrderAsRead } = useOrders()
+    const { orders, updateOrderStatus, deleteOrders, loadMoreOrders, hasMoreOrders, searchOrders, markOrderAsRead } = useOrders()
     const { customers } = useCustomers()
     const { storeSettings, settingsLoaded } = useSettings()
     const loading = !settingsLoaded // Simplified loading for this page
@@ -39,6 +39,34 @@ export default function AdminOrdersPage() {
     const [selectedCustomer, setSelectedCustomer] = useState("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+
+    // NEW: Bulk Selection State
+    const [isBulkSelectionMode, setIsBulkSelectionMode] = useState(false)
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
+    const [isDeletingBulk, setIsDeletingBulk] = useState(false)
+
+    const toggleOrderSelection = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedOrderIds(prev =>
+            prev.includes(id) ? prev.filter(orderId => orderId !== id) : [...prev, id]
+        );
+        hapticFeedback('light');
+    }
+
+    const handleBulkDelete = async () => {
+        if (selectedOrderIds.length === 0) return;
+        const confirmDelete = window.confirm(`هل أنت متأكد من حذف ${selectedOrderIds.length} طلب/طلبات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`);
+        if (!confirmDelete) return;
+
+        setIsDeletingBulk(true);
+        try {
+            await deleteOrders(selectedOrderIds);
+            setSelectedOrderIds([]);
+            setIsBulkSelectionMode(false);
+        } finally {
+            setIsDeletingBulk(false);
+        }
+    }
 
     // Server Search State
     const [serverSearchResults, setServerSearchResults] = useState<Order[] | null>(null)
@@ -217,7 +245,7 @@ export default function AdminOrdersPage() {
             {/* View Mode Toggle */}
             <div className="flex bg-muted p-1 rounded-2xl border border-border">
                 <button
-                    onClick={() => { setViewMode("all"); setFilter("all"); setSelectedCustomerForGroup(null); hapticFeedback('light') }}
+                    onClick={() => { setViewMode("all"); setFilter("all"); setSelectedCustomerForGroup(null); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
                     className={cn(
                         "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
                         viewMode === "all" && filter !== "deleted" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
@@ -227,7 +255,7 @@ export default function AdminOrdersPage() {
                     الكل
                 </button>
                 <button
-                    onClick={() => { setViewMode("by-customer"); setFilter("all"); hapticFeedback('light') }}
+                    onClick={() => { setViewMode("by-customer"); setFilter("all"); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
                     className={cn(
                         "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
                         viewMode === "by-customer" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
@@ -237,7 +265,7 @@ export default function AdminOrdersPage() {
                     حسب العميل
                 </button>
                 <button
-                    onClick={() => { setViewMode("all"); setFilter("deleted"); setSelectedCustomerForGroup(null); hapticFeedback('light') }}
+                    onClick={() => { setViewMode("all"); setFilter("deleted"); setSelectedCustomerForGroup(null); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
                     className={cn(
                         "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
                         filter === "deleted" ? "bg-red-500/10 text-red-500 shadow-sm" : "text-muted-foreground hover:text-foreground"
@@ -398,19 +426,58 @@ export default function AdminOrdersPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-3">
+                                {/* Bulk Selection Toggle Bar */}
+                                {(filter === "deleted" || filter === "canceled") && (
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setIsBulkSelectionMode(!isBulkSelectionMode);
+                                                if (isBulkSelectionMode) setSelectedOrderIds([]);
+                                            }}
+                                            className={cn("text-xs font-bold rounded-xl border", isBulkSelectionMode ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border")}
+                                        >
+                                            {isBulkSelectionMode ? "إلغاء التحديد" : "تحديد متعدد"}
+                                        </Button>
+
+                                        {isBulkSelectionMode && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    if (selectedOrderIds.length === displayedOrders.length) {
+                                                        setSelectedOrderIds([]);
+                                                    } else {
+                                                        setSelectedOrderIds(displayedOrders.map(o => o.id));
+                                                    }
+                                                }}
+                                                className="text-xs text-muted-foreground hover:text-foreground font-bold"
+                                            >
+                                                {selectedOrderIds.length === displayedOrders.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+
                                 {displayedOrders.map((order: Order) => {
                                     const status = STATUS_CONFIG[order.status]
                                     return (
                                         <div
                                             key={order.id}
                                             className={cn(
-                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border border-border group relative overflow-hidden",
+                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border group relative overflow-hidden",
                                                 order.status === "deleted" && filter !== "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
-                                                !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+                                                !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]",
+                                                selectedOrderIds.includes(order.id) ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"
                                             )}
-                                            onClick={() => {
-                                                setSelectedOrder(order)
-                                                if (!order.isRead) markOrderAsRead(order.id)
+                                            onClick={(e) => {
+                                                if (isBulkSelectionMode) {
+                                                    toggleOrderSelection(order.id, e);
+                                                } else {
+                                                    setSelectedOrder(order)
+                                                    if (!order.isRead) markOrderAsRead(order.id)
+                                                }
                                             }}
                                         >
                                             {/* New Badge Pulse Indicator */}
@@ -424,6 +491,15 @@ export default function AdminOrdersPage() {
                                             )}
 
                                             <div className="flex items-center gap-4">
+                                                {isBulkSelectionMode && (
+                                                    <div className={cn(
+                                                        "w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all",
+                                                        selectedOrderIds.includes(order.id) ? "bg-primary border-primary" : "bg-muted border-muted-foreground/30"
+                                                    )}>
+                                                        {selectedOrderIds.includes(order.id) && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                                                    </div>
+                                                )}
+
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-full flex items-center justify-center transition-all",
                                                     status.bg,
@@ -662,6 +738,32 @@ export default function AdminOrdersPage() {
                             )}
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* Floating Bulk Actions Bar */}
+            <AnimatePresence>
+                {isBulkSelectionMode && selectedOrderIds.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-[90%] md:max-w-md px-4 py-3 bg-red-50 dark:bg-red-500/10 border-2 border-red-500/50 rounded-2xl shadow-2xl flex items-center justify-between backdrop-blur-xl"
+                    >
+                        <div className="flex flex-col">
+                            <span className="text-red-600 dark:text-red-400 font-black text-sm">{selectedOrderIds.length} طلبات محددة</span>
+                            <span className="text-[10px] text-red-500/70 font-bold tracking-widest uppercase">جاهزة للحذف النهائي</span>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            className="rounded-xl shadow-lg gap-2 font-black"
+                            onClick={handleBulkDelete}
+                            disabled={isDeletingBulk}
+                        >
+                            {isDeletingBulk ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            <span>حذف نهائي</span>
+                        </Button>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
