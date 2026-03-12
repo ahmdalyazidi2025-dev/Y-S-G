@@ -99,18 +99,37 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
         // Basic normalization for Arabic text to ignore variations
         const normalize = (str: string) => str.replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ـ/g, '')
+        // Strip out non-alphanumeric chars to match things like 041152-37010 without the dash
+        const stripChars = (str: string) => str.replace(/[-_/\.,\s]/g, '')
+
         const normalizedTerm = normalize(lowerTerm)
+
+        // Split the search query into multiple words to allow matching "ورق كورلا 370"
+        const searchWords = normalizedTerm.split(/\s+/).filter(word => word.length > 0)
 
         const allProducts = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Product))
 
         const results = allProducts.filter(product => {
             if (product.isDraft) return false;
+
             const name = normalize((product.name || "").toLowerCase())
             const barcode = (product.barcode || "").toLowerCase()
             const desc = normalize((product.description || "").toLowerCase())
 
-            // Allow matching anywhere in the name, barcode, or description
-            return name.includes(normalizedTerm) || barcode.includes(normalizedTerm) || desc.includes(normalizedTerm)
+            const strippedName = stripChars(name)
+            const strippedBarcode = stripChars(barcode)
+
+            // For the product to match, EVERY word in the search query must be found
+            return searchWords.every(word => {
+                const strippedWord = stripChars(word)
+
+                // Match the original normalized word (for precision) 
+                const matchesNormal = name.includes(word) || barcode.includes(word) || desc.includes(word)
+                // OR the stripped version (to ignore dashes/spaces like matching "370" in "04115237010")
+                const matchesStripped = strippedWord.length > 0 && (strippedName.includes(strippedWord) || strippedBarcode.includes(strippedWord))
+
+                return matchesNormal || matchesStripped
+            })
         })
 
         // Sort results to prioritize better matches
@@ -118,17 +137,13 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             const aName = normalize((a.name || "").toLowerCase())
             const bName = normalize((b.name || "").toLowerCase())
 
-            // 1. Exact match
-            const aExact = aName === normalizedTerm
-            const bExact = bName === normalizedTerm
-            if (aExact && !bExact) return -1
-            if (!aExact && bExact) return 1
+            // Prioritize exactly matching the whole search query
+            if (aName === normalizedTerm && bName !== normalizedTerm) return -1
+            if (aName !== normalizedTerm && bName === normalizedTerm) return 1
 
-            // 2. Starts with match
-            const aStartsWith = aName.startsWith(normalizedTerm)
-            const bStartsWith = bName.startsWith(normalizedTerm)
-            if (aStartsWith && !bStartsWith) return -1
-            if (!aStartsWith && bStartsWith) return 1
+            // Prioritize if it starts with the whole search query
+            if (aName.startsWith(normalizedTerm) && !bName.startsWith(normalizedTerm)) return -1
+            if (!aName.startsWith(normalizedTerm) && bName.startsWith(normalizedTerm)) return 1
 
             return 0
         })
