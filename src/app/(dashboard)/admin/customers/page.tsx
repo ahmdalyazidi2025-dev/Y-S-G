@@ -30,6 +30,14 @@ export default function AdminCustomersPage() {
     const [broadcastMsg, setBroadcastMsg] = useState("")
     const [targetCategory, setTargetCategory] = useState<string>("vip")
     const [searchQuery, setSearchQuery] = useState("")
+    const [inputValue, setInputValue] = useState("")
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setSearchQuery(inputValue)
+        }, 300)
+        return () => clearTimeout(timeoutId)
+    }, [inputValue])
 
     // Notification State
     const [isNotifyOpen, setIsNotifyOpen] = useState(false)
@@ -157,8 +165,8 @@ export default function AdminCustomersPage() {
                         <Input
                             className="bg-white/5 border-white/10 rounded-full pr-10 text-right h-10 w-full focus:bg-white/10 transition-colors text-foreground placeholder:text-muted-foreground"
                             placeholder="بحث باسم، جوال، أو بريد العميل..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
                         />
                     </div>
 

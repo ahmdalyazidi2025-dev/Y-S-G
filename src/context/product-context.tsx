@@ -88,9 +88,52 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
     const searchProducts = useCallback(async (term: string) => {
         if (!term) return []
-        const q = query(collection(db, "products"), orderBy("name"), startAt(term), endAt(term + '\uf8ff'), limit(20))
+
+        // Since Firebase doesn't support substring or middle word matching natively, 
+        // we fetch a larger pool of products and filter them on the client side.
+        // We order by createdAt desc to get the most recent products in case of huge catalog.
+        const q = query(collection(db, "products"), orderBy("createdAt", "desc"), limit(2000))
         const snap = await getDocs(q)
-        return snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Product))
+
+        const lowerTerm = term.toLowerCase().trim()
+
+        // Basic normalization for Arabic text to ignore variations
+        const normalize = (str: string) => str.replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ـ/g, '')
+        const normalizedTerm = normalize(lowerTerm)
+
+        const allProducts = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Product))
+
+        const results = allProducts.filter(product => {
+            if (product.isDraft) return false;
+            const name = normalize((product.name || "").toLowerCase())
+            const barcode = (product.barcode || "").toLowerCase()
+            const desc = normalize((product.description || "").toLowerCase())
+
+            // Allow matching anywhere in the name, barcode, or description
+            return name.includes(normalizedTerm) || barcode.includes(normalizedTerm) || desc.includes(normalizedTerm)
+        })
+
+        // Sort results to prioritize better matches
+        results.sort((a, b) => {
+            const aName = normalize((a.name || "").toLowerCase())
+            const bName = normalize((b.name || "").toLowerCase())
+
+            // 1. Exact match
+            const aExact = aName === normalizedTerm
+            const bExact = bName === normalizedTerm
+            if (aExact && !bExact) return -1
+            if (!aExact && bExact) return 1
+
+            // 2. Starts with match
+            const aStartsWith = aName.startsWith(normalizedTerm)
+            const bStartsWith = bName.startsWith(normalizedTerm)
+            if (aStartsWith && !bStartsWith) return -1
+            if (!aStartsWith && bStartsWith) return 1
+
+            return 0
+        })
+
+        return results.slice(0, 50) // Return top 50 matches for performance
     }, [])
 
     const scanProduct = useCallback(async (barcode: string) => {

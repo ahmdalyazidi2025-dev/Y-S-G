@@ -327,13 +327,19 @@ export default function StoreLayout({
                                                 className="w-full h-11 pr-10 pl-4 rounded-xl bg-secondary/50 border border-border focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-right text-sm outline-none transition-all placeholder:text-muted-foreground/70 font-medium relative z-10"
                                                 id="global-search-input"
                                                 onChange={(e) => {
-                                                    const params = new URLSearchParams(window.location.search);
-                                                    if (e.target.value) {
-                                                        params.set("q", e.target.value);
-                                                    } else {
-                                                        params.delete("q");
+                                                    const val = e.target.value;
+                                                    if ((window as any).globalSearchTimeout) {
+                                                        clearTimeout((window as any).globalSearchTimeout);
                                                     }
-                                                    router.replace(`${pathname}?${params.toString()}`);
+                                                    (window as any).globalSearchTimeout = setTimeout(() => {
+                                                        const params = new URLSearchParams(window.location.search);
+                                                        if (val) {
+                                                            params.set("q", val);
+                                                        } else {
+                                                            params.delete("q");
+                                                        }
+                                                        router.replace(`${pathname}?${params.toString()}`);
+                                                    }, 300);
                                                 }}
                                             />
                                             <script dangerouslySetInnerHTML={{
