@@ -160,6 +160,44 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         }
     }, [currentUser, guestId])
 
+    // Update PWA App Badge for installed apps automatically
+    useEffect(() => {
+        try {
+            if (typeof navigator !== "undefined" && "setAppBadge" in navigator) {
+                const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+                const userId = currentUser?.id || guestId
+                let unreadCount = 0
+
+                if (isAdmin) {
+                    const unreadMessages = messages.filter(m => !m.read && !m.isAdmin).length
+                    const pendingProductReqs = productRequests.filter(r => r.status === 'pending').length
+                    const unreadJoins = joinRequests.length
+                    const unreadPasswords = passwordRequests.length
+                    unreadCount = unreadMessages + pendingProductReqs + unreadJoins + unreadPasswords
+                } else {
+                    const unreadMessages = messages.filter(m => {
+                        const isFromAdmin = m.isAdmin || m.senderId === 'admin'
+                        const isForMe = m.userId === userId || m.userId === 'all'
+                        return isFromAdmin && isForMe && !m.read
+                    }).length
+                    
+                    const unreadNotifs = notifications.filter(n => !n.read && (n.userId === userId || n.userId === 'all')).length
+                    unreadCount = unreadMessages + unreadNotifs
+                }
+
+                if (unreadCount > 0) {
+                    // @ts-ignore
+                    navigator.setAppBadge(unreadCount).catch((e: any) => console.log("Badge warning:", e))
+                } else {
+                    // @ts-ignore
+                    navigator.clearAppBadge().catch((e: any) => console.log("Badge clear warning:", e))
+                }
+            }
+        } catch (error) {
+            console.error("App Badging not supported or failed:", error)
+        }
+    }, [messages, notifications, productRequests, joinRequests, passwordRequests, currentUser, guestId])
+
     const sendMessage = async (text: string, isAdmin: boolean, userId: string, userName: string = "عميل", link?: string, linkTitle?: string, image?: string, isSystemNotification?: boolean) => {
         await addDoc(collection(db, "messages"), sanitizeData({
             senderId: isAdmin ? "admin" : userId,
