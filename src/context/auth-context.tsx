@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const normalizedUsername = (member as any).username?.toLowerCase().trim() || member.name.replace(/\s/g, '').toLowerCase()
             const generatedEmail = `${normalizedUsername}@staff.ysg.local`
 
-            const result = await adminCreateOrUpdateUserAction(generatedEmail, member.password || "123456", member.name);
+            const result = await adminCreateOrUpdateUserAction(generatedEmail, member.password || "Ysg@2025", member.name, currentUser?.id);
             if (!result.success || !result.uid) {
                 throw new Error(result.error || "فشل إنشاء حساب المشرف في الخادم");
             }
@@ -247,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Update Auth if password changed
             if (password) {
-                const result = await adminCreateOrUpdateUserAction(member.email, password, member.name);
+                const result = await adminCreateOrUpdateUserAction(member.email, password, member.name, currentUser?.id);
                 if (!result.success) {
                     console.error("Admin Auth update warning:", result.error);
                     throw new Error(result.error || "فشل تحديث كلمة المرور في الخادم");
@@ -270,7 +270,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const member = staff.find(s => s.id === memberId)
 
             // Delete from Auth securely via Admin SDK Server Action
-            const result = await adminDeleteUserAction(memberId);
+            const result = await adminDeleteUserAction(memberId, currentUser?.id);
             if (!result.success) {
                 console.error("Admin Auth delete warning:", result.error);
                 // We proceed anyway to ensure clean Firestore, as auth might already be deleted.

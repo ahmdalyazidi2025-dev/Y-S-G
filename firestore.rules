@@ -52,8 +52,8 @@ service cloud.firestore {
 
     // Messages & Notifications
     match /messages/{msgId} {
-      allow create: if true; // Both guests and customers can send
-      allow read: if isAdmin() || resource.data.userId == 'all' || (request.auth != null && resource.data.userId == request.auth.uid) || (resource.data.userId == request.auth.uid) || true; // Let the where query handle it safely
+      allow create: if request.auth != null; // Only authenticated users can send
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId == 'all';
       allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
     }
@@ -78,7 +78,9 @@ service cloud.firestore {
     // Allow access to counters for order ID generation
     match /counters/{docId} {
       allow read: if true; 
-      allow write: if request.auth != null;
+      allow update: if request.auth != null;
+      allow create: if isAdmin();
+      allow delete: if false;
     }
 
     // Analytics: Visitors tracking
