@@ -115,9 +115,9 @@ export function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
         <div id={id} className="w-full max-w-[800px] bg-white p-4 sm:p-10 text-black font-sans mx-auto shadow-sm border border-slate-200" dir="rtl">
             {/* Header */}
             <div className="flex flex-col items-center mb-8 text-center border-b-2 border-black pb-6">
-                {storeSettings?.logoUrl && (
+                {(storeSettings?.logoUrl || "/logo.jpg") && (
                     <Image
-                        src={storeSettings.logoUrl}
+                        src={storeSettings?.logoUrl || "/logo.jpg"}
                         alt="Logo"
                         width={80}
                         height={80}

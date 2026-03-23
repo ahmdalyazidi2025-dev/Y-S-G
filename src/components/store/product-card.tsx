@@ -83,10 +83,10 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 loading="lazy"
                                 className="object-contain"
                             />
-                        ) : storeSettings?.logoUrl ? (
+                        ) : (storeSettings?.logoUrl || "/logo.jpg") ? (
                             <div className="w-[70%] h-[70%] relative opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
                                 <Image
-                                    src={storeSettings.logoUrl}
+                                    src={storeSettings?.logoUrl || "/logo.jpg"}
                                     alt="Store Logo"
                                     fill
                                     className="object-contain"
