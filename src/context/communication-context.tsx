@@ -104,36 +104,44 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         const userId = currentUser?.id || guestId
 
         // Messages Listener
-        // To bypass Firebase Composite Index requirements (where + orderBy on different fields),
-        // we fetch the most recent messages globally and filter them in memory for the customer.
-        let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
+        // Refactored to be compatible with security rules by filtering for the user's ID
+        let msgQuery;
+        if (isAdmin) {
+            msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
+        } else {
+            // For customers/guests: We filter specifically for their ID or global messages
+            // Using separate logic or 'in' filter to comply with rules
+            // NOTE: Using "where" on userId and "orderBy" on createdAt requires a composite index
+            msgQuery = query(
+                collection(db, "messages"), 
+                where("userId", "in", [userId, "all"]), 
+                orderBy("createdAt", "desc"), 
+                limit(100)
+            )
+        }
         
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
-            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
-            
-            // Client-side filtering for non-admins to avoid complex index requirements
-            if (!isAdmin) {
-                docs = docs.filter(m => m.userId === userId || m.userId === "all" || m.senderId === userId)
-            }
-            
+            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
             setMessages(docs)
         }, (error) => {
             console.error("Messages sync error:", error)
         })
 
         // Notifications Listener
-        // Similar to messages, we bypass Firebase Composite Index requirements by fetching the 
-        // most recent notifications globally and filtering them in-memory for the customer.
-        let notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100))
+        let notifQuery;
+        if (isAdmin) {
+            notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100))
+        } else {
+            notifQuery = query(
+                collection(db, "notifications"), 
+                where("userId", "in", [userId, "all"]), 
+                orderBy("createdAt", "desc"), 
+                limit(50)
+            )
+        }
         
         const unsubNotifications = onSnapshot(notifQuery, (snap) => {
-            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
-            
-            // Client-side filtering for non-admins to avoid index requirements
-            if (!isAdmin) {
-                docs = docs.filter(n => n.userId === userId || n.userId === "all")
-            }
-            
+            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
             setNotifications(docs)
         }, (error) => {
             console.error("Notifications sync error:", error)
