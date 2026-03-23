@@ -68,12 +68,14 @@ self.addEventListener('notificationclick', function (event) {
 });
 
 // --- Existing PWA logic below ---
-const CACHE_NAME = 'ysg-sales-v10'; // Forced update for haptics reinforcement
+const CACHE_NAME = 'ysg-sales-v11'; // Forced update for dual-manifest fix
 const ASSETS = [
     '/',
     '/manifest.json',
+    '/manifest-admin.json',
     '/logo.png',
     '/app-icon-v2.png',
+    '/admin-logo.png',
     '/offline.html', // Optional: You might want to create this
 ];
 

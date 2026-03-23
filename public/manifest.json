@@ -1,9 +1,11 @@
 {
+  "id": "/customer-app",
   "name": "Y S G",
   "short_name": "Y S G",
   "description": "نظام توزيع المبيعات المتكامل لمجموعة YSG",
   "gcm_sender_id": "163311897960",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#080b12",
   "theme_color": "#080b12",

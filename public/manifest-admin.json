@@ -1,8 +1,10 @@
 {
+    "id": "/admin-app",
     "name": "YSG Admin",
     "short_name": "YSG Admin",
     "description": "نظام الإدارة المتكامل لمجموعة YSG",
     "start_url": "/admin",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#080b12",
     "theme_color": "#080b12",
