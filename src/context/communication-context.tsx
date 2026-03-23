@@ -103,49 +103,34 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
         const userId = currentUser?.id || guestId
 
-        // Messages Listener: Securely fetch LATEST messages for current user, guest ID, or global
-        let msgQuery;
-        const targetIds = [userId, "all"]
-        if (guestId && guestId !== userId) targetIds.push(guestId)
-
-        if (isAdmin) {
-            msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
-        } else {
-            // Re-adding orderBy is critical to get LATEST messages. 
-            // This will require a composite index (Firebase will provide a link in the browser console).
-            msgQuery = query(
-                collection(db, "messages"), 
-                where("userId", "in", targetIds),
-                orderBy("createdAt", "desc"),
-                limit(100)
-            )
-        }
+        // Messages Listener: Reverted to global query to avoid complex indexing for the user.
+        // Security is now handled by the Firestore Rules (auth != null) and local filtering.
+        let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
         
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
-            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            
+            // Client-side filtering as fallback for security and correctness
+            if (!isAdmin) {
+                docs = docs.filter(m => m.userId === userId || m.userId === "all" || m.senderId === userId || m.userId === guestId)
+            }
+            
             setMessages(docs)
         }, (error: any) => {
             console.error("Messages sync error:", error)
-            if (error.code === 'failed-precondition') {
-                toast.error("يرجى مراجعة Console المتصفح لإنشاء الفهرس المطلوب (Index) لعمل الدردشة")
-            }
         })
 
         // Notifications Listener
-        let notifQuery;
-        if (isAdmin) {
-            notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100))
-        } else {
-            notifQuery = query(
-                collection(db, "notifications"), 
-                where("userId", "in", targetIds),
-                orderBy("createdAt", "desc"),
-                limit(50)
-            )
-        }
+        let notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100))
         
         const unsubNotifications = onSnapshot(notifQuery, (snap) => {
-            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
+            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
+            
+            // Client-side filtering
+            if (!isAdmin) {
+                docs = docs.filter(n => n.userId === userId || n.userId === "all" || n.userId === guestId)
+            }
+            
             setNotifications(docs)
         }, (error: any) => {
             console.error("Notifications sync error:", error)

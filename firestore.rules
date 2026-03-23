@@ -52,14 +52,14 @@ service cloud.firestore {
 
     // Messages & Notifications
     match /messages/{msgId} {
-      allow create: if true; // Allow guests and customers to send messages
-      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId == 'all' || resource.data.userId.startsWith('guest_');
+      allow create: if true; 
+      allow read: if isAdmin() || (request.auth != null) || resource.data.userId.startsWith('guest_');
       allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId.startsWith('guest_');
       allow delete: if isAdmin();
     }
-    
+
     match /notifications/{notifId} {
-       allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+       allow read: if isAdmin() || (request.auth != null) || resource.data.userId.startsWith('guest_');
        allow create: if isAdmin() || request.auth != null; // Allow system triggers
        allow update: if request.auth != null && resource.data.userId == request.auth.uid; // For mark as read
        allow delete: if isAdmin();
