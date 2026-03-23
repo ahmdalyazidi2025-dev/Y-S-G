@@ -357,6 +357,7 @@ export default function StoreLayout({
                                 )}
                             </div>
                         </div>
+                    )}
 
                         {/* Spacer for Fixed Header (Adjusted based on search visibility) */}
                         {!pathname.includes("/customer/chat") && (
