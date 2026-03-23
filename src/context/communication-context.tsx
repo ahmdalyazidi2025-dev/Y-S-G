@@ -104,15 +104,21 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         const userId = currentUser?.id || guestId
 
         // Messages Listener
-        let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(100))
-        if (!isAdmin) {
-            // Using 'in' prevents permission denied, allowing query for global ('all') or personal (userId) messages simultaneously
-            // MUST combine with limit to prevent fetching huge amounts of data on the client.
-            msgQuery = query(collection(db, "messages"), where("userId", "in", [userId, "all"]), orderBy("createdAt", "desc"), limit(200))
-        }
+        // To bypass Firebase Composite Index requirements (where + orderBy on different fields),
+        // we fetch the most recent messages globally and filter them in memory for the customer.
+        let msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
+        
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
-            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            
+            // Client-side filtering for non-admins to avoid complex index requirements
+            if (!isAdmin) {
+                docs = docs.filter(m => m.userId === userId || m.userId === "all" || m.senderId === userId)
+            }
+            
             setMessages(docs)
+        }, (error) => {
+            console.error("Messages sync error:", error)
         })
 
         // Notifications Listener
