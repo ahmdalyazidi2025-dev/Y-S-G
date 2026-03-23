@@ -15,7 +15,7 @@ interface ProductDetailsModalProps {
 }
 
 export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetailsModalProps) {
-    const { addToCart } = useStore()
+    const { addToCart, storeSettings } = useStore()
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [selectedUnit, setSelectedUnit] = useState<string>("حبة")
 
@@ -91,6 +91,14 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                     alt={product.name}
                                     className="w-full h-full object-cover"
                                 />
+                            ) : storeSettings?.logoUrl ? (
+                                <div className="w-full h-full bg-muted flex items-center justify-center relative opacity-30 grayscale saturate-0 hover:grayscale-0 hover:opacity-100 hover:saturate-100 transition-all duration-500">
+                                    <img
+                                        src={storeSettings.logoUrl}
+                                        alt="Store Logo"
+                                        className="w-[50%] h-[50%] object-contain"
+                                    />
+                                </div>
                             ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center text-6xl">
                                     {product.name.includes("زيت") ? "🛢️" : "📦"}

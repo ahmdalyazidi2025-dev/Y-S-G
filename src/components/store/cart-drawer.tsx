@@ -127,6 +127,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                                             alt={item.name}
                                                             className="w-full h-full object-cover"
                                                         />
+                                                    ) : storeSettings?.logoUrl ? (
+                                                        <img
+                                                            src={storeSettings.logoUrl}
+                                                            alt="Store Logo"
+                                                            className="w-full h-full object-contain p-2 opacity-30 grayscale"
+                                                        />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600 font-bold bg-white/5">
                                                             {item.name.charAt(0)}

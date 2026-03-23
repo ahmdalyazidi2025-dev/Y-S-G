@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 export const ProductCard = memo(function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: (item: Product) => void, index?: number }) {
-    const { addToCart, cart, updateCartQuantity, removeFromCart } = useStore()
+    const { addToCart, cart, updateCartQuantity, removeFromCart, storeSettings } = useStore()
 
     // --- Smart Price Logic ---
     const isExpired = item.discountEndDate && new Date(item.discountEndDate).getTime() < new Date().getTime()
@@ -83,6 +83,16 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                                 loading="lazy"
                                 className="object-contain"
                             />
+                        ) : storeSettings?.logoUrl ? (
+                            <div className="w-[70%] h-[70%] relative opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+                                <Image
+                                    src={storeSettings.logoUrl}
+                                    alt="Store Logo"
+                                    fill
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            </div>
                         ) : (
                             <div className="text-7xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">
                                 {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}

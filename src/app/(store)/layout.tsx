@@ -236,20 +236,18 @@ export default function StoreLayout({
                                                     </button>
                                                 )}
 
-                                                {storeSettings.enableAIChat !== false && (
-                                                    <Link
-                                                        href="/customer/chat"
-                                                        className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
-                                                    >
-                                                        <MessageSquare className="w-5 h-5" />
-                                                        <span className="text-[9px] font-bold">محادثة</span>
-                                                        {unreadChatCount > 0 && (
-                                                            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
-                                                                {unreadChatCount}
-                                                            </span>
-                                                        )}
-                                                    </Link>
-                                                )}
+                                                <Link
+                                                    href="/customer/chat"
+                                                    className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-violet-500/10 text-violet-500 hover:bg-violet-500/20 active:scale-95 transition-all border border-border"
+                                                >
+                                                    <MessageSquare className="w-5 h-5" />
+                                                    <span className="text-[9px] font-bold">محادثة</span>
+                                                    {unreadChatCount > 0 && (
+                                                        <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full border-2 border-[#0f111a] font-bold">
+                                                            {unreadChatCount}
+                                                        </span>
+                                                    )}
+                                                </Link>
 
                                                 <button
                                                     onClick={handleOpenNotifications}
