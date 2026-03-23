@@ -110,7 +110,7 @@ export function ReceiptInvoice({ order, id = "receipt-invoice-target", isPreview
     )
 }
 
-function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
+export function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
     return (
         <div id={id} className="w-full max-w-[800px] bg-white p-4 sm:p-10 text-black font-sans mx-auto shadow-sm border border-slate-200" dir="rtl">
             {/* Header */}

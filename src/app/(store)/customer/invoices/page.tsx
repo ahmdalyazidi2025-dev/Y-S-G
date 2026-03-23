@@ -12,7 +12,7 @@ import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
-import { ReceiptInvoice } from "@/components/shared/receipt-invoice"
+import { ReceiptInvoice, InvoicePaper } from "@/components/shared/receipt-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
@@ -26,7 +26,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart, addToCart, loadMoreOrders, hasMoreOrders, searchCustomerOrders, currentUser } = useStore()
+    const { orders, restoreDraftToCart, addToCart, loadMoreOrders, hasMoreOrders, searchCustomerOrders, currentUser, storeSettings } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const [loadingMore, setLoadingMore] = useState(false)
@@ -288,131 +288,89 @@ export default function InvoicesPage() {
                 <Drawer.Portal>
                     <Drawer.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]" />
                     <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[96%] outline-none z-[101] flex flex-col">
-                        <div className="bg-[#1c2a36] rounded-t-[32px] p-6 border-t border-white/10 flex-1 overflow-y-auto">
-                            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/10 mb-8" />
+                        <div className="bg-slate-100 rounded-t-[32px] p-2 sm:p-6 border-t border-slate-200 flex-1 overflow-y-auto overflow-x-hidden" dir="rtl">
+                            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-slate-300 mb-6" />
 
                             {selectedOrder && (
-                                <div className="space-y-8">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-1">تفاصيل الفاتورة</h2>
-                                            <p className="text-slate-400 text-sm">رقم الطلب: #{selectedOrder.id}</p>
-                                        </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white/5 rounded-full text-slate-400">
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-
-                                    {/* Detailed Status Stepper */}
-                                    <div className="space-y-4">
-                                        <div className="glass-card p-4 bg-white/5 border-white/5">
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-4">تتبع حالة الطلب</p>
-                                            <OrderStatusProgress status={selectedOrder.status} />
-                                        </div>
-
-                                        {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
-                                            <div className="glass-card p-4 bg-white/5 border-white/5 space-y-3">
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">تاريخ التحديثات</p>
-                                                <div className="space-y-3">
-                                                    {selectedOrder.statusHistory.map((h, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between text-[11px]">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                                <span className="text-white font-medium">
-                                                                    {STATUS_MAP[h.status as keyof typeof STATUS_MAP]?.label || h.status || "نشاط"}
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-slate-500">
-                                                                {new Date(h.timestamp).toLocaleString('ar-SA', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <p className="text-sm font-bold text-slate-300 px-1">المنتجات المختارة</p>
-                                        <div className="space-y-3">
-                                            {selectedOrder.items.map((item, idx: number) => (
-                                                <div key={idx} className="glass-card p-4 flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center text-xs overflow-hidden relative">
-                                                        {item.image ? (
-                                                            <Image
-                                                                src={item.image}
-                                                                alt=""
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
-                                                            />
-                                                        ) : item.name.charAt(0)}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="font-bold text-sm text-white">{item.name}</p>
-                                                        <p className="text-[10px] text-slate-500">{item.quantity} {item.selectedUnit} × {item.selectedPrice} ر.س</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-bold text-sm text-primary">{(item.quantity * item.selectedPrice).toFixed(2)}</p>
-                                                        <p className="text-[10px] text-slate-500">ر.س</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 pt-4 border-t border-white/5">
-                                        <div className="flex justify-between items-center px-1">
-                                            <span className="text-slate-400">الإجمالي النهائي</span>
-                                            <span className="text-2xl font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</span>
-                                        </div>
-                                        {selectedOrder.status === "pending" && (
+                                <div className="space-y-4 max-w-[800px] mx-auto pb-8">
+                                    {/* Action Header pinned nicely at top */}
+                                    <div className="flex items-center justify-between bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200">
+                                        <div className="flex gap-2 w-full sm:w-auto">
                                             <Button
-                                                className="w-full h-14 rounded-2xl bg-orange-500/10 text-orange-400 gap-2 shadow-lg shadow-orange-500/5 border border-orange-500/20"
-                                                onClick={() => {
-                                                    restoreDraftToCart(selectedOrder.id)
-                                                    setSelectedOrder(null)
-                                                    toast.success("تم استرجاع المسودة للسلة للتعديل")
-                                                }}
-                                            >
-                                                <Plus className="w-5 h-5" />
-                                                <span>استكمال الطلب (تعديل المسودة)</span>
-                                            </Button>
-                                        )}
-                                        {selectedOrder.status !== "pending" && (
-                                            <Button
-                                                className="w-full h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 gap-2 shadow-lg shadow-emerald-500/5 border border-emerald-500/20"
-                                                onClick={() => handleReorder(selectedOrder)}
-                                            >
-                                                <Plus className="w-5 h-5" />
-                                                <span>إعادة طلب نفس المنتجات</span>
-                                            </Button>
-                                        )}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                className="h-14 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-colors gap-2"
-                                                onClick={() => setIsPreviewOpen(true)}
-                                            >
-                                                <Eye className="w-5 h-5" />
-                                                <span>معاينة الفاتورة</span>
-                                            </Button>
-                                            <Button
-                                                className="h-14 rounded-2xl bg-slate-900 text-white shadow-lg hover:bg-slate-800 transition-colors gap-2"
                                                 onClick={() => window.print()}
+                                                className="bg-black text-white hover:bg-slate-800 font-bold h-10 px-4 rounded-xl flex-1 sm:flex-none"
+                                                size="sm"
                                             >
-                                                <Printer className="w-5 h-5" />
+                                                <Printer className="w-4 h-4 ml-1.5" />
                                                 <span>طباعة الفاتورة</span>
                                             </Button>
                                             <Button
-                                                className="h-14 rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 gap-2"
-                                                onClick={() => handleDownloadPDF(selectedOrder)}
+                                                onClick={() => generateOrderPDF("receipt-invoice-target", selectedOrder.id)}
+                                                variant="outline"
+                                                className="border-slate-300 hover:bg-slate-50 text-slate-700 font-bold h-10 px-4 rounded-xl flex-1 sm:flex-none"
+                                                size="sm"
                                             >
-                                                <FileDown className="w-5 h-5" />
-                                                <span>تحميل PDF</span>
+                                                <FileDown className="w-4 h-4 ml-1.5" />
+                                                <span>تحميل <span className="hidden sm:inline">PDF</span></span>
                                             </Button>
-                                            <Button className="h-14 rounded-2xl bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-colors col-span-2" onClick={() => setSelectedOrder(null)}>
-                                                إغلاق
-                                            </Button>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-sm sm:text-base font-black text-slate-800 hidden sm:block">خيارات الفاتورة</h2>
+                                            <button onClick={() => setSelectedOrder(null)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* The Authentic Invoice Paper Container */}
+                                    <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative">
+                                        {/* Corner cutouts effect */}
+                                        <div className="absolute -left-2 top-10 w-4 h-4 rounded-full bg-slate-100 shadow-inner z-10 hidden sm:block" />
+                                        <div className="absolute -right-2 top-10 w-4 h-4 rounded-full bg-slate-100 shadow-inner z-10 hidden sm:block" />
+                                        <div className="border-b-2 border-dashed border-slate-200 w-full absolute top-[48px] left-0 z-0 hidden sm:block" />
+                                        
+                                        {/* The Invoice Content itself */}
+                                        <div className="relative z-1 p-2 sm:p-4">
+                                            <InvoicePaper 
+                                                id="drawer-invoice-paper" 
+                                                order={selectedOrder} 
+                                                subtotal={selectedOrder.total / 1.15} 
+                                                tax={selectedOrder.total - (selectedOrder.total / 1.15)} 
+                                                storeSettings={storeSettings} 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Tracking & Extra Actions underneath the receipt */}
+                                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black text-center">تتبع حالة الطلب والتحديثات</p>
+                                            <OrderStatusProgress status={selectedOrder.status} />
+                                        </div>
+
+                                        <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
+                                            {selectedOrder.status === "pending" && (
+                                                <Button
+                                                    className="w-full h-12 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 font-black shadow-sm"
+                                                    onClick={() => {
+                                                        restoreDraftToCart(selectedOrder.id)
+                                                        setSelectedOrder(null)
+                                                        toast.success("تم استرجاع المسودة للسلة للتعديل")
+                                                    }}
+                                                >
+                                                    <Plus className="w-5 h-5 ml-2" />
+                                                    استكمال الطلب (تعديل المسودة)
+                                                </Button>
+                                            )}
+                                            {selectedOrder.status !== "pending" && (
+                                                <Button
+                                                    className="w-full h-12 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 font-black shadow-sm"
+                                                    onClick={() => handleReorder(selectedOrder)}
+                                                >
+                                                    <Plus className="w-5 h-5 ml-2" />
+                                                    إعادة طلب الأغراض الموجودة في الفاتورة
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
