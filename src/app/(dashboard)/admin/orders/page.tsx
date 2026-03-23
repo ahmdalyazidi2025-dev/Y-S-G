@@ -12,7 +12,7 @@ import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endO
 import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { toast } from "sonner"
-import { PremiumInvoice } from "@/components/shared/premium-invoice"
+import { ReceiptInvoice } from "@/components/shared/receipt-invoice"
 import { WheelPicker } from "@/components/shared/wheel-picker"
 
 
@@ -808,7 +808,7 @@ export default function AdminOrdersPage() {
 
             {/* Print Preview */}
             {invoicePreviewOrder && (
-                <PremiumInvoice
+                <ReceiptInvoice
                     order={invoicePreviewOrder}
                     isPreview={true}
                     onClose={() => setInvoicePreviewOrder(null)}

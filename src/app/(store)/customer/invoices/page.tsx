@@ -12,7 +12,7 @@ import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
-import { PremiumInvoice } from "@/components/shared/premium-invoice"
+import { ReceiptInvoice } from "@/components/shared/receipt-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
@@ -423,9 +423,9 @@ export default function InvoicesPage() {
             </Drawer.Root>
 
             {selectedOrder && (
-                <PremiumInvoice
+                <ReceiptInvoice
                     order={selectedOrder}
-                    id="premium-invoice-target"
+                    id="receipt-invoice-target"
                     isPreview={isPreviewOpen}
                     onClose={() => setIsPreviewOpen(false)}
                 />
