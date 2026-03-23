@@ -115,7 +115,7 @@ export function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
         <div id={id} className="w-full max-w-[800px] bg-white p-4 sm:p-10 text-black font-sans mx-auto shadow-sm border border-slate-200" dir="rtl">
             {/* Header */}
             <div className="flex flex-col items-center mb-8 text-center border-b-2 border-black pb-6">
-                {storeSettings.logoUrl ? (
+                {storeSettings?.logoUrl && (
                     <Image
                         src={storeSettings.logoUrl}
                         alt="Logo"
@@ -124,10 +124,6 @@ export function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
                         className="object-contain mb-4 rounded-lg"
                         unoptimized
                     />
-                ) : (
-                    <div className="w-20 h-20 bg-slate-100 rounded-full mb-4 flex items-center justify-center">
-                        <span className="text-2xl font-black object-contain text-slate-400">شعار</span>
-                    </div>
                 )}
                 <h1 className="text-2xl sm:text-3xl font-black text-black mb-2">{storeSettings.aboutTitle || "متجرك"}</h1>
                 {storeSettings.contactAddress && <p className="text-slate-700 font-bold text-xs sm:text-sm mb-1">{storeSettings.contactAddress}</p>}
