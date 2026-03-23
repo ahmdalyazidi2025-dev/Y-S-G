@@ -52,9 +52,9 @@ service cloud.firestore {
 
     // Messages & Notifications
     match /messages/{msgId} {
-      allow create: if request.auth != null; // Only authenticated users can send
-      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId == 'all';
-      allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if true; // Allow guests and customers to send messages
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId == 'all' || resource.data.userId.startsWith('guest_');
+      allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId.startsWith('guest_');
       allow delete: if isAdmin();
     }
     

@@ -103,25 +103,34 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
         const userId = currentUser?.id || guestId
 
-        // Messages Listener
-        // Refactored to be compatible with security rules by filtering for the user's ID
+        // Messages Listener: Securely fetch messages for current user, guest ID, or global
         let msgQuery;
         if (isAdmin) {
             msgQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(200))
         } else {
-            // For customers/guests: We filter specifically for their ID or global messages
-            // Using separate logic or 'in' filter to comply with rules
-            // NOTE: Using "where" on userId and "orderBy" on createdAt requires a composite index
+            // We combine current ID and guest ID to ensure no history is lost after login
+            const targetIds = [userId, "all"]
+            if (guestId && guestId !== userId) targetIds.push(guestId)
+            
+            // We remove 'orderBy' to avoid the need for a composite index, 
+            // making the app work immediately without manual configuration.
             msgQuery = query(
                 collection(db, "messages"), 
-                where("userId", "in", [userId, "all"]), 
-                orderBy("createdAt", "desc"), 
-                limit(100)
+                where("userId", "in", targetIds),
+                limit(150)
             )
         }
         
         const unsubMessages = onSnapshot(msgQuery, (snap) => {
-            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Message))
+            
+            // Sort in memory since we removed it from the query to avoid index requirement
+            docs.sort((a, b) => {
+                const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+                const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+                return timeB - timeA // Newest first
+            })
+            
             setMessages(docs)
         }, (error) => {
             console.error("Messages sync error:", error)
@@ -132,16 +141,26 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         if (isAdmin) {
             notifQuery = query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(100))
         } else {
+            const targetIds = [userId, "all"]
+            if (guestId && guestId !== userId) targetIds.push(guestId)
+
             notifQuery = query(
                 collection(db, "notifications"), 
-                where("userId", "in", [userId, "all"]), 
-                orderBy("createdAt", "desc"), 
+                where("userId", "in", targetIds),
                 limit(50)
             )
         }
         
         const unsubNotifications = onSnapshot(notifQuery, (snap) => {
-            const docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
+            let docs = snap.docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Notification))
+            
+            // Sort in memory
+            docs.sort((a, b) => {
+                const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0
+                const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0
+                return timeB - timeA
+            })
+            
             setNotifications(docs)
         }, (error) => {
             console.error("Notifications sync error:", error)
