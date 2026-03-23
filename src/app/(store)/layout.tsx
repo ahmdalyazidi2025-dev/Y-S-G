@@ -174,8 +174,9 @@ export default function StoreLayout({
                     <VisitTracker />
                     <main className={cn("flex-1 px-4 pt-6 w-full", !pathname.includes("/customer/chat") && "pb-32")}>
                         {/* New Header Navigation (Stacked Fixed) */}
-                        <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm dark:shadow-black/20 transition-all duration-300">
-                            <div className="w-full max-w-7xl mx-auto px-4 pt-2 pb-3">
+                        {!pathname.includes("/customer/chat") && (
+                            <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm dark:shadow-black/20 transition-all duration-300">
+                                <div className="w-full max-w-7xl mx-auto px-4 pt-2 pb-3">
                                 {/* Row 1: Logo & Nav Actions */}
                                 <div className="flex justify-between items-center mb-2">
                                     {/* Left Side: Logo & Main Actions */}
@@ -358,10 +359,12 @@ export default function StoreLayout({
                         </div>
 
                         {/* Spacer for Fixed Header (Adjusted based on search visibility) */}
-                        <div className={cn(
-                            "transition-all duration-300",
-                            storeSettings?.hiddenSections?.includes('search') ? "h-[85px]" : "h-[140px]"
-                        )} />
+                        {!pathname.includes("/customer/chat") && (
+                            <div className={cn(
+                                "transition-all duration-300",
+                                storeSettings?.hiddenSections?.includes('search') ? "h-[85px]" : "h-[140px]"
+                            )} />
+                        )}
 
                         {children}
                     </main>
@@ -370,7 +373,7 @@ export default function StoreLayout({
                 </div>
 
                 {/* Floating Scanner Button (Isolated) - Only on Customer Pages & Enabled */}
-                {storeSettings.enableBarcodeScanner && (
+                {storeSettings.enableBarcodeScanner && !pathname.includes("/customer/chat") && (
                     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50]">
                         <button
                             // Mobile Touch Events
