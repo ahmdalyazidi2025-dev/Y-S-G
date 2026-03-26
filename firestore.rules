@@ -66,8 +66,8 @@ service cloud.firestore {
     }
 
     match /password_requests/{reqId} {
-       allow create: if true; // Allowed via Server Action/Client
        allow read, update, delete: if isAdmin();
+       allow create: if false; // Block client-side creation, force Server Action
     }
 
     match /coupons/{code} {

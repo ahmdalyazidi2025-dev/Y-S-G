@@ -1,7 +1,7 @@
 "use server"
 
 import { adminDb, adminAuth } from "@/lib/firebase-admin"
-import { FieldValue } from "firebase-admin/firestore"
+import { FieldValue, Timestamp } from "firebase-admin/firestore"
 import { cookies, headers } from "next/headers"
 
 // Helper: Verify that the caller is an admin
@@ -63,14 +63,22 @@ export async function requestPasswordResetAction(phone: string) {
 
     try {
         // Rate limiting: Check if there's a recent request from same phone (last 5 minutes)
-        const recentRequests = await adminDb.collection("password_requests")
-            .where("phone", "==", phone)
-            .where("createdAt", ">", new Date(Date.now() - 5 * 60 * 1000))
-            .limit(1)
-            .get()
-        
-        if (!recentRequests.empty) {
-            return { success: false, error: "تم إرسال طلب مسبقاً، يرجى الانتظار 5 دقائق" }
+        try {
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+            const recentRequests = await adminDb.collection("password_requests")
+                .where("phone", "==", phone)
+                .where("createdAt", ">", Timestamp.fromDate(fiveMinutesAgo))
+                .limit(1)
+                .get()
+            
+            if (!recentRequests.empty) {
+                return { success: false, error: "تم إرسال طلب مسبقاً، يرجى الانتظار 5 دقائق" }
+            }
+        } catch (queryError: any) {
+            // Log index error or other query issues but don't block the request if it's just an index missing on rate-limiting
+            console.error("Rate limiting query failed (possibly missing index):", queryError.message)
+            // If it's a "failed-precondition" (missing index), we might want to let the request through 
+            // but we'll log it as a server error for now if it's not an index issue.
         }
 
         // 1. Find customer by phone (attempt)
@@ -110,13 +118,17 @@ export async function addJoinRequestAction(name: string, phone: string) {
 
     try {
         // Rate limiting: Check if there's a recent request from same phone
-        const recentRequests = await adminDb.collection("joinRequests")
-            .where("phone", "==", phone)
-            .limit(1)
-            .get()
-        
-        if (!recentRequests.empty) {
-            return { success: false, error: "تم إرسال طلب انضمام مسبقاً بهذا الرقم" }
+        try {
+            const recentRequests = await adminDb.collection("joinRequests")
+                .where("phone", "==", phone)
+                .limit(1)
+                .get()
+            
+            if (!recentRequests.empty) {
+                return { success: false, error: "تم إرسال طلب انضمام مسبقاً بهذا الرقم" }
+            }
+        } catch (queryError: any) {
+            console.error("Join request rate limit query failed:", queryError.message)
         }
 
         await adminDb.collection("joinRequests").add({

@@ -9,6 +9,7 @@ import { sanitizeData, toDate } from "@/lib/utils/store-helpers"
 import { useCustomers } from "./customer-context"
 import { useAuth } from "./auth-context"
 import { useSettings } from "./settings-context"
+import { addJoinRequestAction, requestPasswordResetAction } from "@/app/actions/auth-actions"
 
 interface CommunicationContextType {
     messages: Message[]
@@ -241,7 +242,6 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const addJoinRequest = async (name: string, phone: string) => {
         try {
-            const { addJoinRequestAction } = await import("@/app/actions/auth-actions")
             const result = await addJoinRequestAction(name, phone)
             if (!result.success) {
                 toast.error(result.error || "حدث خطأ أثناء إرسال الطلب")
@@ -307,7 +307,6 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
 
     const requestPasswordReset = async (phone: string) => {
         try {
-            const { requestPasswordResetAction } = await import("@/app/actions/auth-actions")
             const result = await requestPasswordResetAction(phone)
             if (!result.success) {
                 const msg = result.error || "حدث خطأ، حاول مرة أخرى"
