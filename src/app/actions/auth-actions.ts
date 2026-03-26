@@ -62,9 +62,11 @@ export async function requestPasswordResetAction(phone: string) {
     if (!phone) return { success: false, error: "رقم الهاتف مطلوب" }
 
     try {
+        console.log("Password Reset Request for phone:", phone)
         // Rate limiting: Check if there's a recent request from same phone (last 5 minutes)
         try {
             const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
+            console.log("Checking rate limit since:", fiveMinutesAgo.toISOString())
             const recentRequests = await adminDb.collection("password_requests")
                 .where("phone", "==", phone)
                 .where("createdAt", ">", Timestamp.fromDate(fiveMinutesAgo))
@@ -72,16 +74,15 @@ export async function requestPasswordResetAction(phone: string) {
                 .get()
             
             if (!recentRequests.empty) {
+                console.log("Rate limit hit for phone:", phone)
                 return { success: false, error: "تم إرسال طلب مسبقاً، يرجى الانتظار 5 دقائق" }
             }
         } catch (queryError: any) {
-            // Log index error or other query issues but don't block the request if it's just an index missing on rate-limiting
-            console.error("Rate limiting query failed (possibly missing index):", queryError.message)
-            // If it's a "failed-precondition" (missing index), we might want to let the request through 
-            // but we'll log it as a server error for now if it's not an index issue.
+            console.error("Rate limiting query failed:", queryError.message)
         }
 
         // 1. Find customer by phone (attempt)
+        console.log("Searching for customer with phone:", phone)
         const customersRef = adminDb.collection("customers")
         const snapshot = await customersRef.where("phone", "==", phone).limit(1).get()
 
@@ -93,9 +94,13 @@ export async function requestPasswordResetAction(phone: string) {
             const customer = customerDoc.data()
             customerId = customerDoc.id
             customerName = customer.name || "Unknown"
+            console.log("Found customer:", customerName, "(", customerId, ")")
+        } else {
+            console.log("Customer not found exactly for phone:", phone)
         }
 
         // 2. Create Request regardless of whether they were found exactly
+        console.log("Adding document to password_requests...")
         await adminDb.collection("password_requests").add({
             customerId: customerId,
             customerName: customerName,
@@ -103,12 +108,13 @@ export async function requestPasswordResetAction(phone: string) {
             status: "pending",
             createdAt: FieldValue.serverTimestamp()
         })
+        console.log("Password request created successfully")
 
         return { success: true }
 
-    } catch (error) {
-        console.error("Password Request Action Error:", error)
-        return { success: false, error: "حدث خطأ في الخادم" }
+    } catch (error: any) {
+        console.error("Password Request Action Error (Main Catch):", error.message)
+        return { success: false, error: `حدث خطأ في الخادم: ${error.message}` }
     }
 }
 
