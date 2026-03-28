@@ -25,11 +25,18 @@ function initializeAdmin() {
         // Alternative: Use individual environment variables if JSON is missing or invalid
         if (!serviceAccount && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
             console.log("Using individual FIREBASE_* environment variables for Admin initialization.");
+            
+            // Format the private key cleanly (remove accidental quotes from copy-pasting, fix newlines)
+            let formattedKey = process.env.FIREBASE_PRIVATE_KEY;
+            if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+                formattedKey = formattedKey.slice(1, -1);
+            }
+            formattedKey = formattedKey.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+
             serviceAccount = {
                 project_id: process.env.FIREBASE_PROJECT_ID,
                 client_email: process.env.FIREBASE_CLIENT_EMAIL,
-                // Handle escaped newlines in the private key as well
-                private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+                private_key: formattedKey
             };
             useEnvVars = true;
         }
