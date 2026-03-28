@@ -178,15 +178,15 @@ export default function AdminCustomersPage() {
                                     <span>بث</span>
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="glass-card border-white/5 text-white max-w-md">
+                            <DialogContent className="sm:max-w-md bg-background border-border text-foreground">
                                 <DialogHeader>
                                     <DialogTitle className="text-right">إرسال إشعار لمجموعة</DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
-                                        <Label className="block text-right">الفئة المستهدفة</Label>
+                                        <Label className="block text-right font-medium">الفئة المستهدفة</Label>
                                         <select
-                                            className="w-full bg-black/20 border-white/10 rounded-xl h-10 px-3 text-right text-sm text-white"
+                                            className="w-full bg-background border border-input focus:border-primary focus:ring-1 focus:ring-primary rounded-xl h-10 px-3 text-right text-sm text-foreground outline-none"
                                             value={targetCategory}
                                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetCategory(e.target.value)}
                                         >
@@ -199,18 +199,18 @@ export default function AdminCustomersPage() {
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="block text-right">عنوان الإشعار</Label>
+                                        <Label className="block text-right font-medium">عنوان الإشعار</Label>
                                         <Input
-                                            className="bg-black/20 border-white/10 rounded-xl text-right"
+                                            className="bg-background border-input rounded-xl text-right placeholder:text-muted-foreground focus-visible:ring-primary"
                                             placeholder="مثال: خصم خاص لك!"
                                             value={notifyTitle}
                                             onChange={(e) => setNotifyTitle(e.target.value)}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="block text-right">نص الإشعار</Label>
+                                        <Label className="block text-right font-medium">نص الإشعار</Label>
                                         <Textarea
-                                            className="bg-black/20 border-white/10 rounded-xl text-right h-32"
+                                            className="bg-background border-input rounded-xl text-right h-32 placeholder:text-muted-foreground focus-visible:ring-primary"
                                             placeholder="اكتب تفاصيل العرض هنا..."
                                             value={broadcastMsg}
                                             onChange={(e) => setBroadcastMsg(e.target.value)}
@@ -354,24 +354,24 @@ export default function AdminCustomersPage() {
 
             {/* Notify Modal */}
             <Dialog open={isNotifyOpen} onOpenChange={setIsNotifyOpen}>
-                <DialogContent className="glass-card border-white/5 text-white max-w-md">
+                <DialogContent className="sm:max-w-md bg-background border-border text-foreground">
                     <DialogHeader>
                         <DialogTitle className="text-right">إرسال إشعار للعميل</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label className="block text-right">عنوان الإشعار</Label>
+                            <Label className="block text-right font-medium">عنوان الإشعار</Label>
                             <Input
-                                className="bg-black/20 border-white/10 rounded-xl text-right"
+                                className="bg-background border-input rounded-xl text-right placeholder:text-muted-foreground focus-visible:ring-primary"
                                 placeholder="مثال: عرض خاص لك!"
                                 value={notifyTitle}
                                 onChange={(e) => setNotifyTitle(e.target.value)}
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label className="block text-right">نص الإشعار</Label>
+                            <Label className="block text-right font-medium">نص الإشعار</Label>
                             <Textarea
-                                className="bg-black/20 border-white/10 rounded-xl text-right h-32"
+                                className="bg-background border-input rounded-xl text-right h-32 placeholder:text-muted-foreground focus-visible:ring-primary"
                                 placeholder="اكتب نص الإشعار هنا..."
                                 value={notifyBody}
                                 onChange={(e) => setNotifyBody(e.target.value)}
