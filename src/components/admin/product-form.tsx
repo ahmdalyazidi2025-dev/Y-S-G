@@ -48,13 +48,23 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         isFeatured: false,
     })
 
-    const [showCountdown, setShowCountdown] = useState(false)
+    const [hasDiscount, setHasDiscount] = useState(false)
+    const [hasTimer, setHasTimer] = useState(false)
 
     useEffect(() => {
         if (!isOpen) return;
 
         const timer = setTimeout(() => {
+            const formatLocalDatetime = (d: Date | string) => {
+                const date = new Date(d);
+                if (isNaN(date.getTime())) return "";
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            };
+
             if (initialProduct) {
+                const isDiscounted = (initialProduct.oldPricePiece && initialProduct.oldPricePiece > 0) || (initialProduct.oldPriceDozen && initialProduct.oldPriceDozen > 0);
+                
                 setFormData({
                     name: initialProduct.name,
                     unit: initialProduct.unit,
@@ -67,12 +77,13 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     priceDozen: initialProduct.priceDozen?.toString() || "",
                     oldPriceDozen: initialProduct.oldPriceDozen?.toString() || "",
                     description: initialProduct.description || "",
-                    discountEndDate: initialProduct.discountEndDate ? new Date(initialProduct.discountEndDate).toISOString().slice(0, 16) : "",
+                    discountEndDate: initialProduct.discountEndDate ? formatLocalDatetime(initialProduct.discountEndDate) : "",
                     costPrice: initialProduct.costPrice?.toString() || "",
                     notes: initialProduct.notes || "",
                     isFeatured: initialProduct.isFeatured || false,
                 })
-                setShowCountdown(!!initialProduct.discountEndDate)
+                setHasDiscount(!!isDiscounted)
+                setHasTimer(!!initialProduct.discountEndDate)
             } else {
                 setFormData({
                     name: "",
@@ -91,7 +102,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     notes: "",
                     isFeatured: false,
                 })
-                setShowCountdown(false)
+                setHasDiscount(false)
+                setHasTimer(false)
             }
         }, 0);
 
@@ -202,16 +214,16 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             name: formData.name,
             price: Number(formData.pricePiece) || 0,
             pricePiece: Number(formData.pricePiece) || 0,
-            oldPricePiece: showCountdown && formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
+            oldPricePiece: hasDiscount && formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
             priceDozen: formData.priceDozen ? Number(formData.priceDozen) : 0,
-            oldPriceDozen: showCountdown && formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
+            oldPriceDozen: hasDiscount && formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
             unit: formData.unit,
             barcode: formData.barcode,
             image: formData.images[0] || formData.image || "", // Prefer first image in array
             images: formData.images,
             category: formData.category,
             description: formData.description,
-            discountEndDate: showCountdown && formData.discountEndDate ? new Date(formData.discountEndDate) : null,
+            discountEndDate: (hasDiscount && hasTimer && formData.discountEndDate) ? new Date(formData.discountEndDate) : null,
             costPrice: formData.costPrice ? Number(formData.costPrice) : 0,
             notes: formData.notes,
             isDraft: isDraft,
@@ -311,83 +323,109 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
-                            {/* Offer Mode Toggle */}
-                            <div className="space-y-4 bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-xl transition-colors ${showCountdown ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
-                                            <Tag className="w-5 h-5" />
-                                        </div>
-                                        <div className="flex flex-col items-start">
-                                            <span className="text-sm font-bold text-white">هذا المنتج "عرض خاص"؟</span>
-                                            <span className="text-[10px] text-slate-400">تفعيل الخصومات والمؤقت</span>
-                                        </div>
+                            {/* Master Discount Toggle */}
+                            <div className="flex items-center justify-between bg-black/10 p-4 rounded-3xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-xl transition-colors ${hasDiscount ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-slate-400'}`}>
+                                        <Tag className="w-5 h-5" />
                                     </div>
-                                    <div
-                                        onClick={() => setShowCountdown(!showCountdown)}
-                                        className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${showCountdown ? 'bg-orange-500' : 'bg-white/10'}`}
-                                    >
-                                        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${showCountdown ? 'left-1' : 'left-6'}`} />
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-sm font-bold text-white">تفعيل التخفيض</span>
+                                        <span className="text-[10px] text-slate-400">إضافة سعر قديم مشطوب وعرض سعر جديد</span>
                                     </div>
                                 </div>
-
-                                <AnimatePresence>
-                                    {showCountdown && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: "auto", opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="pt-4 border-t border-white/5 space-y-4 overflow-hidden"
-                                        >
-                                            {/* Quick Duration Buttons */}
-                                            <div className="grid grid-cols-4 gap-2">
-                                                {[
-                                                    { label: "24 ساعة", hours: 24 },
-                                                    { label: "3 أيام", hours: 72 },
-                                                    { label: "أسبوع", hours: 168 },
-                                                    { label: "شهر", hours: 720 },
-                                                ].map((duration) => (
-                                                    <button
-                                                        key={duration.hours}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const date = new Date();
-                                                            date.setHours(date.getHours() + duration.hours);
-                                                            // Format for datetime-local: YYYY-MM-DDTHH:mm
-                                                            const formatted = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                                                            setFormData({ ...formData, discountEndDate: formatted });
-                                                        }}
-                                                        className="bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 border border-white/5 hover:border-orange-500/30 rounded-xl py-2 text-[10px] font-bold text-slate-400 transition-all active:scale-95"
-                                                    >
-                                                        {duration.label}
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 rounded-xl p-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-3 text-orange-400">
-                                                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                                                        <Clock className="w-4 h-4" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-xs font-bold text-slate-300">ينتهي العرض في:</span>
-                                                        <span className="text-[10px] text-orange-400/80">اختر مدة أو حدد تاريخاً:</span>
-                                                        <input
-                                                            type="datetime-local"
-                                                            className="bg-black/20 border-white/5 rounded-lg text-white text-[10px] mt-1 p-1 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                                            value={formData.discountEndDate}
-                                                            onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="text-sm font-bold text-white font-mono bg-black/20 px-3 py-1.5 rounded-lg border border-white/5">
-                                                    {formData.discountEndDate ? new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '---'}
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                <div
+                                    onClick={() => setHasDiscount(!hasDiscount)}
+                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${hasDiscount ? 'bg-red-500' : 'bg-white/10'}`}
+                                >
+                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${hasDiscount ? 'left-1' : 'left-6'}`} />
+                                </div>
                             </div>
+
+                            <AnimatePresence>
+                                {hasDiscount && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden space-y-4"
+                                    >
+                                        <div className="bg-red-500/5 p-4 rounded-3xl border border-red-500/10 mb-6 mt-2 mx-1">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-xl transition-colors ${hasTimer ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
+                                                        <Clock className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="flex flex-col items-start">
+                                                        <span className="text-sm font-bold text-white">مؤقت للعرض (اختياري)</span>
+                                                        <span className="text-[10px] text-slate-400">بدون اختياره الخصم دائم</span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    onClick={() => setHasTimer(!hasTimer)}
+                                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${hasTimer ? 'bg-orange-500' : 'bg-white/10'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${hasTimer ? 'left-1' : 'left-6'}`} />
+                                                </div>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {hasTimer && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: "auto", opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="space-y-4 overflow-hidden pt-4 mt-4 border-t border-red-500/10"
+                                                    >
+                                                        {/* Quick Duration Buttons */}
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            {[
+                                                                { label: "24 ساعة", hours: 24 },
+                                                                { label: "3 أيام", hours: 72 },
+                                                                { label: "أسبوع", hours: 168 },
+                                                                { label: "شهر", hours: 720 },
+                                                            ].map((duration) => (
+                                                                <button
+                                                                    key={duration.hours}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const date = new Date();
+                                                                        date.setHours(date.getHours() + duration.hours);
+                                                                        const pad = (n: number) => n.toString().padStart(2, '0');
+                                                                        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                                                                        setFormData({ ...formData, discountEndDate: formatted });
+                                                                    }}
+                                                                    className="bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 border border-white/5 hover:border-orange-500/30 rounded-xl py-2 text-[10px] font-bold text-slate-400 transition-all active:scale-95"
+                                                                >
+                                                                    {duration.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Date Input Box */}
+                                                        <div className="bg-black/20 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                                                            <div className="flex justify-between items-center px-1">
+                                                                <span className="text-[10px] text-orange-400/80">تاريخ انتهاء الخصم:</span>
+                                                                {formData.discountEndDate && (
+                                                                    <span className="text-[10px] font-bold text-slate-300">
+                                                                        {new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <input
+                                                                type="datetime-local"
+                                                                className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-xs p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
+                                                                value={formData.discountEndDate}
+                                                                onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
+                                                            />
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* Image Inputs (Grid) */}
                             <div
@@ -517,33 +555,32 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Piece Pricing */}
-                            <div className={`space-y-3 p-4 rounded-3xl border transition-colors ${showCountdown ? 'bg-orange-500/5 border-orange-500/10' : 'bg-black/10 border-white/5'}`}>
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">
-                                    {showCountdown ? "تسعير العرض (للحبة)" : "سعر البيع (للحبة)"}
-                                </h3>
-                                <div className={showCountdown ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
+                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير المنتج (للحبة)</h3>
+                                <div className={hasDiscount ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
                                     <div className="space-y-1">
-                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${showCountdown ? 'text-green-500' : 'text-slate-400'}`}>
-                                            {showCountdown ? "السعر الجديد (بعد الخصم)" : "السعر"}
+                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${hasDiscount ? 'text-green-400' : 'text-slate-300'}`}>
+                                            {hasDiscount ? "سعر البيع (بعد الخصم)" : "سعر البيع الافتراضي"}
                                         </Label>
                                         <Input
                                             required
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className={`h-12 rounded-xl text-center font-bold ${showCountdown ? 'bg-green-500/10 border-green-500/20 text-green-500 focus:ring-green-500/50' : 'bg-white/5 border-white/10 text-white focus:ring-primary/50'}`}
+                                            className={`h-12 rounded-xl text-center font-bold text-white focus:ring-primary/50 text-lg ${hasDiscount ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
                                             value={formData.pricePiece}
                                             onChange={(e) => setFormData({ ...formData, pricePiece: e.target.value })}
                                         />
                                     </div>
-                                    {showCountdown && (
+                                    {hasDiscount && (
                                         <div className="space-y-1">
-                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر القديم (مشطوب)</Label>
+                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأساسي (لشطبه)</Label>
                                             <Input
+                                                required
                                                 type="number"
                                                 step="0.01"
                                                 placeholder="0.00"
-                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-400 font-bold focus:ring-red-500/50 text-lg"
                                                 value={formData.oldPricePiece}
                                                 onChange={(e) => setFormData({ ...formData, oldPricePiece: e.target.value })}
                                             />
@@ -569,32 +606,30 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Dozen Pricing */}
-                            <div className={`space-y-3 p-4 rounded-3xl border transition-colors ${showCountdown ? 'bg-orange-500/5 border-orange-500/10' : 'bg-black/10 border-white/5'}`}>
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">
-                                    {showCountdown ? "تسعير العرض (للدرزن - اختياري)" : "سعر البيع (للدرزن - اختياري)"}
-                                </h3>
-                                <div className={showCountdown ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
+                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الجملة (للدرزن - اختياري)</h3>
+                                <div className={hasDiscount ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
                                     <div className="space-y-1">
-                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${showCountdown ? 'text-green-500' : 'text-slate-400'}`}>
-                                            {showCountdown ? "السعر الجديد (بعد الخصم)" : "السعر"}
+                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${hasDiscount ? 'text-green-400' : 'text-slate-300'}`}>
+                                            {hasDiscount ? "سعر الدرزن (بعد الخصم)" : "سعر الدرزن الافتراضي"}
                                         </Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className={`h-12 rounded-xl text-center font-bold ${showCountdown ? 'bg-green-500/10 border-green-500/20 text-green-500 focus:ring-green-500/50' : 'bg-white/5 border-white/10 text-white focus:ring-primary/50'}`}
+                                            className={`h-12 rounded-xl text-center font-bold text-white focus:ring-primary/50 text-lg ${hasDiscount ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
                                             value={formData.priceDozen}
                                             onChange={(e) => setFormData({ ...formData, priceDozen: e.target.value })}
                                         />
                                     </div>
-                                    {showCountdown && (
+                                    {hasDiscount && (
                                         <div className="space-y-1">
-                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر القديم (مشطوب)</Label>
+                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">سعر الدرزن الأساسي (لشطبه)</Label>
                                             <Input
                                                 type="number"
                                                 step="0.01"
                                                 placeholder="0.00"
-                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-400 font-bold focus:ring-red-500/50 text-lg"
                                                 value={formData.oldPriceDozen}
                                                 onChange={(e) => setFormData({ ...formData, oldPriceDozen: e.target.value })}
                                             />
