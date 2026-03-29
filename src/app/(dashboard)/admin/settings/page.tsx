@@ -1123,29 +1123,37 @@ function AdminSettingsContent() {
                                         <SecuritySettingsPorted formData={formData} handleChange={handleChange} />
                                     </Section>
 
-                                    <Section icon={<Layers className="w-5 h-5" />} title="تحكم الظهور (إخفاء أقسام)">
+                                    <Section icon={<Layers className="w-5 h-5" />} title="إظهار الأقسام في المتجر">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {[
                                                 { id: 'search', label: 'شريط البحث' },
                                                 { id: 'offers', label: 'بانر العروض (الأعلى)' },
                                                 { id: 'categories', label: 'شريط الأقسام' },
                                                 { id: 'products', label: 'قائمة المنتجات' }
-                                            ].map((item) => (
+                                            ].map((item) => {
+                                                const isVisible = !(formData.hiddenSections?.includes(item.id as any) || false);
+                                                return (
                                                 <div key={item.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                                                    <Label className="text-foreground font-bold cursor-pointer">{item.label}</Label>
+                                                    <Label className="text-foreground font-bold cursor-pointer" onClick={() => {
+                                                        const current = formData.hiddenSections || []
+                                                        const updated = isVisible
+                                                            ? [...current, item.id] // Currently shown, so click hides it
+                                                            : current.filter(id => id !== item.id) // Currently hidden, so click shows it
+                                                        handleChange("hiddenSections", updated)
+                                                    }}>{item.label}</Label>
                                                     <Switch
-                                                        checked={formData.hiddenSections?.includes(item.id as any) || false}
+                                                        checked={isVisible}
                                                         onCheckedChange={(checked) => {
                                                             const current = formData.hiddenSections || []
-                                                            const updated = checked
-                                                                ? [...current, item.id]
-                                                                : current.filter(id => id !== item.id)
+                                                            const updated = !checked
+                                                                ? [...current, item.id] // Turn off -> hide it
+                                                                : current.filter(id => id !== item.id) // Turn on -> show it
                                                             handleChange("hiddenSections", updated)
                                                         }}
-                                                        className="data-[state=checked]:bg-red-500"
+                                                        className="data-[state=checked]:bg-primary"
                                                     />
                                                 </div>
-                                            ))}
+                                            )})}
                                         </div>
                                     </Section>
 
