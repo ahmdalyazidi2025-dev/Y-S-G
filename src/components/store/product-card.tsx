@@ -35,6 +35,12 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
     // Offer Active Logic
     const hasActiveOffer = item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && !isExpired
 
+    const discountPercent = displayOldPricePiece && effectivePricePiece 
+        ? Math.round(((displayOldPricePiece - effectivePricePiece) / displayOldPricePiece) * 100) 
+        : 0;
+    
+    const showDiscountBadge = hasActiveOffer || (displayOldPricePiece && displayOldPricePiece > effectivePricePiece);
+
     // Smart Cart Logic (Piece)
     const cartItemPiece = cart.find(i => i.id === item.id && i.selectedUnit === "حبة")
     const quantityPiece = cartItemPiece ? cartItemPiece.quantity : 0
@@ -52,11 +58,11 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                 <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10 border border-black/5 dark:border-white/5 shadow-sm">
 
                     {/* Offer Badges */}
-                    <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
-                        {hasActiveOffer && (
-                            <div className="flex items-center gap-1 bg-yellow-400 text-black text-[10px] px-2.5 py-1 rounded-full font-black shadow-sm">
-                                <span>🔥</span>
-                                <span>عرض</span>
+                    <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5 rtl:right-3 ltr:left-3">
+                        {showDiscountBadge && (
+                            <div className="flex items-center gap-1 bg-red-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md border border-red-700">
+                                <span className="text-[10px]">🔥</span>
+                                <span>{discountPercent > 0 ? `خصم ${discountPercent}%` : 'تخفيض'}</span>
                             </div>
                         )}
                     </div>
@@ -153,11 +159,13 @@ export const ProductCard = memo(function ProductCard({ item, onViewDetails, inde
                         </h3>
 
                         {/* Price Section (Moved Below Name) */}
-                        <div className="flex items-baseline gap-1 mt-1">
-                            <span className="font-black text-xl text-foreground">{effectivePricePiece}</span>
-                            <span className="text-sm font-bold text-primary">ر.س</span>
+                        <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                            <div className="flex items-baseline gap-1">
+                                <span className="font-black text-xl text-foreground">{effectivePricePiece}</span>
+                                <span className="text-sm font-bold text-primary">ر.س</span>
+                            </div>
                             {displayOldPricePiece && (
-                                <span className="text-[10px] text-red-400 line-through mr-1">{displayOldPricePiece}</span>
+                                <span className="text-sm font-bold text-red-500 line-through opacity-90 decoration-2">{displayOldPricePiece} ر.س</span>
                             )}
                         </div>
                     </div>

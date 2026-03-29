@@ -35,9 +35,13 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
         ? product.oldPricePiece
         : product.pricePiece
 
+    const displayOldPricePiece = (!isExpired && product.oldPricePiece && product.oldPricePiece > 0) ? product.oldPricePiece : null
+
     const effectivePriceDozen = isExpired && product.oldPriceDozen
         ? product.oldPriceDozen
         : (product.priceDozen || 0)
+
+    const displayOldPriceDozen = (!isExpired && product.oldPriceDozen && product.oldPriceDozen > 0) ? product.oldPriceDozen : null
 
     const currentPrice = selectedUnit === "حبة" ? effectivePricePiece : effectivePriceDozen
     // -------------------------
@@ -223,9 +227,14 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                                 "text-xs font-bold block mb-1",
                                                 selectedUnit === "حبة" ? "text-primary" : "text-muted-foreground"
                                             )}>بالحبة</span>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-xl font-black text-foreground">{effectivePricePiece}</span>
-                                                <span className="text-xs text-muted-foreground">ر.س</span>
+                                            <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-xl font-black text-foreground">{effectivePricePiece}</span>
+                                                    <span className="text-xs text-muted-foreground">ر.س</span>
+                                                </div>
+                                                {displayOldPricePiece && (
+                                                    <span className="text-sm font-bold text-red-500 line-through opacity-90 decoration-2">{displayOldPricePiece} ر.س</span>
+                                                )}
                                             </div>
                                         </div>
                                         {selectedUnit === "حبة" && (
@@ -248,9 +257,14 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                                     "text-xs font-bold block mb-1",
                                                     selectedUnit === "كرتون" ? "text-primary" : "text-muted-foreground"
                                                 )}>بالكرتون</span>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black text-foreground">{effectivePriceDozen}</span>
-                                                    <span className="text-xs text-muted-foreground">ر.س</span>
+                                                <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-xl font-black text-foreground">{effectivePriceDozen}</span>
+                                                        <span className="text-xs text-muted-foreground">ر.س</span>
+                                                    </div>
+                                                    {displayOldPriceDozen && (
+                                                        <span className="text-sm font-bold text-red-500 line-through opacity-90 decoration-2">{displayOldPriceDozen} ر.س</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             {selectedUnit === "كرتون" && (
