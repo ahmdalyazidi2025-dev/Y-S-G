@@ -10,10 +10,12 @@ import { hapticFeedback } from "@/lib/haptics"
 export default function ExpiredProductsPage() {
     const { products, updateProduct, deleteProduct } = useStore()
 
+    const isDiscounted = (p: Product) => (p.oldPricePiece && p.oldPricePiece > 0) || (p.oldPriceDozen && p.oldPriceDozen > 0);
+
     // Filter products that have a discountEndDate in the past
     const expiredProducts = products.filter(p => {
-        if (!p.discountEndDate) return false
-        return new Date(p.discountEndDate) < new Date()
+        if (!p.isDraft && isDiscounted(p) && p.discountEndDate && new Date(p.discountEndDate).getTime() <= new Date().getTime()) return true;
+        return false;
     })
 
     const handleRepublish = (product: Product, withNewTimer: boolean) => {

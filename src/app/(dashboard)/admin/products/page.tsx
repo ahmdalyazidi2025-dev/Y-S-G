@@ -28,8 +28,14 @@ export default function ProductsPage() {
 
     // Derived State
     const allProducts = products
-    const activeOffers = products.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) > new Date())
-    const expiredOffers = products.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) < new Date())
+    
+    // Extracted logic to match Product Form decoupled discount updates
+    const isDiscounted = (p: Product) => (p.oldPricePiece && p.oldPricePiece > 0) || (p.oldPriceDozen && p.oldPriceDozen > 0);
+    const hasActiveTimer = (p: Product) => p.discountEndDate && new Date(p.discountEndDate).getTime() > new Date().getTime();
+    const hasExpiredTimer = (p: Product) => p.discountEndDate && new Date(p.discountEndDate).getTime() <= new Date().getTime();
+
+    const activeOffers = products.filter(p => !p.isDraft && isDiscounted(p) && (!p.discountEndDate || hasActiveTimer(p)))
+    const expiredOffers = products.filter(p => !p.isDraft && isDiscounted(p) && hasExpiredTimer(p))
     const draftProducts = products.filter(p => p.isDraft)
 
     // Server Side Search State
@@ -84,9 +90,9 @@ export default function ProductsPage() {
     const filteredProducts = serverSearchResults || products.filter((p: Product) => {
         // 1. Tab Filtering (Local on loaded buffer)
         if (activeTab === 'offers') {
-            if (p.isDraft || !p.discountEndDate || new Date(p.discountEndDate) < new Date()) return false
+            if (p.isDraft || !isDiscounted(p) || (p.discountEndDate && hasExpiredTimer(p))) return false
         } else if (activeTab === 'frozen') {
-            if (p.isDraft || !p.discountEndDate || new Date(p.discountEndDate) >= new Date()) return false
+            if (p.isDraft || !isDiscounted(p) || !hasExpiredTimer(p)) return false
         } else if (activeTab === 'drafts') {
             if (!p.isDraft) return false
         } else {
@@ -317,7 +323,7 @@ export default function ProductsPage() {
                             <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-muted/50 transition-colors relative overflow-hidden text-foreground">
                                 {/* Badges */}
                                 {product.isDraft && <div className="absolute top-2 left-2 bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full font-bold">مسودة</div>}
-                                {product.discountEndDate && new Date(product.discountEndDate) > new Date() && !product.isDraft && (
+                                {isDiscounted(product) && (!product.discountEndDate || hasActiveTimer(product)) && !product.isDraft && (
                                     <div className="absolute top-2 left-2 bg-green-500/20 text-green-400 text-[9px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                                         <Zap className="w-3 h-3" /> عرض ساري
                                     </div>
