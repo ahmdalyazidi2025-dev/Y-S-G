@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
@@ -57,6 +57,8 @@ function AdminSettingsContent() {
     const [reportCategory, setReportCategory] = useState("all")
     const [reportSort, setReportSort] = useState<"newest" | "oldest" | "price_high" | "price_low" | "name">("newest")
     const [selectedCustomerIdForReport, setSelectedCustomerIdForReport] = useState("all")
+    const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false)
+    const [customerSearchTerm, setCustomerSearchTerm] = useState("")
 
     // Security State
     const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -932,15 +934,65 @@ function AdminSettingsContent() {
                                                         <p className="text-[10px] text-muted-foreground">العملاء والطلبات والتفاصيل</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col gap-2">
-                                                    <select
-                                                        value={selectedCustomerIdForReport}
-                                                        onChange={(e) => setSelectedCustomerIdForReport(e.target.value)}
-                                                        className="bg-background border border-border rounded-lg text-xs px-2 py-2 outline-none text-foreground"
+                                                <div className="flex flex-col gap-2 relative">
+                                                    <div 
+                                                        onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+                                                        className="bg-background border border-border rounded-lg text-xs px-2 py-2 text-foreground flex items-center justify-between cursor-pointer"
                                                     >
-                                                        <option value="all">كل العملاء</option>
-                                                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                    </select>
+                                                        <span className="truncate pr-2">
+                                                            {selectedCustomerIdForReport === 'all' 
+                                                                ? 'كل العملاء' 
+                                                                : customers.find(c => c.id === selectedCustomerIdForReport)?.name || 'كل العملاء'
+                                                            }
+                                                        </span>
+                                                        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+                                                    </div>
+
+                                                    <AnimatePresence>
+                                                        {isCustomerDropdownOpen && (
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                                                                className="absolute top-[42px] left-0 right-0 z-50 bg-background border border-border rounded-lg shadow-lg overflow-hidden flex flex-col max-h-48"
+                                                            >
+                                                                <div className="p-2 border-b border-border sticky top-0 bg-background flex items-center gap-2">
+                                                                    <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                                                                    <input 
+                                                                        type="text" 
+                                                                        placeholder="ابحث بالاسم..." 
+                                                                        value={customerSearchTerm}
+                                                                        onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="w-full bg-transparent border-none text-xs focus:outline-none placeholder:text-foreground"
+                                                                        autoFocus
+                                                                    />
+                                                                </div>
+                                                                <div className="overflow-y-auto">
+                                                                    <div 
+                                                                        onClick={() => { setSelectedCustomerIdForReport('all'); setIsCustomerDropdownOpen(false); setCustomerSearchTerm(''); }}
+                                                                        className="px-3 py-2 text-xs hover:bg-muted cursor-pointer"
+                                                                    >
+                                                                        كل العملاء
+                                                                    </div>
+                                                                    {customers
+                                                                        .filter(c => c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()))
+                                                                        .map(c => (
+                                                                            <div 
+                                                                                key={c.id}
+                                                                                onClick={() => { setSelectedCustomerIdForReport(c.id); setIsCustomerDropdownOpen(false); setCustomerSearchTerm(''); }}
+                                                                                className="px-3 py-2 text-xs hover:bg-muted cursor-pointer truncate"
+                                                                            >
+                                                                                {c.name}
+                                                                            </div>
+                                                                        ))
+                                                                    }
+                                                                    {customers.filter(c => c.name.toLowerCase().includes(customerSearchTerm.toLowerCase())).length === 0 && (
+                                                                        <div className="px-3 py-4 text-xs text-center text-muted-foreground">لا توجد نتائج</div>
+                                                                    )}
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
