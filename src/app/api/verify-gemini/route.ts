@@ -8,12 +8,20 @@ export async function POST(req: Request) {
 
         const genAI = new GoogleGenerativeAI(key);
         
-        // Let's try the common models first
-        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+        // Let's try every possible standard model name in 2026
+        const modelsToTry = [
+            "gemini-1.5-flash", 
+            "gemini-1.5-pro", 
+            "gemini-2.0-flash", 
+            "gemini-2.0-pro", 
+            "gemini-flash-latest",
+            "gemini-pro"
+        ];
         let lastError = "";
 
         for (const modelName of modelsToTry) {
             try {
+                // Try with both v1 and default
                 const model = genAI.getGenerativeModel({ model: modelName });
                 await model.generateContent("test");
                 return NextResponse.json({ valid: true, workingModel: modelName });
