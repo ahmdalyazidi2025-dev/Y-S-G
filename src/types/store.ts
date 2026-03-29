@@ -202,6 +202,7 @@ export type StoreSettings = {
     aiApiKeys?: { key: string, status: "valid" | "invalid" | "unchecked" }[]
     logoUrl?: string
     geminiApiKey?: string
+    groqApiKey?: string
     geminiCustomPrompt?: string
     geminiReferenceImageUrl?: string
     enableMaintenance: boolean

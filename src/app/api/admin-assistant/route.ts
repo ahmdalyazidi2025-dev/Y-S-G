@@ -2,39 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { adminDb as db } from "@/lib/firebase-admin";
 
-export async function POST(req: Request) {
-    try {
-        const { message, history } = await req.json();
-
-        // 1. Get Settings from Firestore (Server Side)
-        const settingsDoc = await db.collection("settings").doc("store").get();
-        const settings = settingsDoc.data();
-        const apiKey = settings?.geminiApiKey;
-
-        if (!apiKey) {
-            return NextResponse.json({ 
-                error: "لم يتم تكوين مفتاح Gemini API في الإعدادات. يرجى إضافته أولاً." 
-            }, { status: 400 });
-        }
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-        
-        const modelsToTry = [
-            "gemini-1.5-flash", 
-            "gemini-1.5-pro", 
-            "gemini-2.0-flash", 
-            "gemini-2.0-pro", 
-            "gemini-flash-latest",
-            "gemini-pro"
-        ];
-        let model: any = null;
-        let lastError = "";
-
-        for (const modelName of modelsToTry) {
-            try {
-                model = genAI.getGenerativeModel({ 
-                    model: modelName,
-                    systemInstruction: `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
+const SYSTEM_INSTRUCTION = `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
 
 إليك تفاصيل النظام التي يجب أن تعرفها جيداً:
 1. **المنتجات**: يمكن إضافة منتج باسم، سعر مفرد، سعر دزينة، وتصنيف. يوجد "سعر التكلفة" (مخفي عن العملاء). يمكن تحويل المنتج لمسودة (Draft).
@@ -48,28 +16,88 @@ export async function POST(req: Request) {
 قواعد الرد:
 - رد باللغة العربية دائماً بأسلوب مهني وودي.
 - وجّه الموظف للمكان الصحيح في لوحة التحكم (مثلاً: "اذهب إلى الإعدادات ثم تبويب إدارة الكيان").
-- إذا سأل الموظف عن شيء خارج مهام النظام، اعتذر بلباقة وأخبره أنك مخصص لمساعدة موظفي Y-S-G فقط.`
+- إذا سأل الموظف عن شيء خارج مهام النظام، اعتذر بلباقة وأخبره أنك مخصص لمساعدة موظفي Y-S-G فقط.`;
+
+export async function POST(req: Request) {
+    try {
+        const { message, history } = await req.json();
+
+        // 1. Get Settings from Firestore (Server Side)
+        const settingsDoc = await db.collection("settings").doc("global").get();
+        const settings = settingsDoc.data();
+        const geminiApiKey = settings?.geminiApiKey;
+        const groqApiKey = settings?.groqApiKey;
+
+        if (!geminiApiKey && !groqApiKey) {
+            return NextResponse.json({ 
+                error: "لم يتم تكوين أي مفتاح ذكاء اصطناعي (Gemini أو Groq) في الإعدادات." 
+            }, { status: 400 });
+        }
+
+        // --- TRY GROQ FIRST OR IF GEMINI IS MISSING ---
+        if (groqApiKey) {
+            try {
+                // Convert Gemini history format to OpenAI/Groq format
+                const groqMessages = [
+                    { role: "system", content: SYSTEM_INSTRUCTION },
+                    ...(history || []).map((h: any) => ({
+                        role: h.role === "user" ? "user" : "assistant",
+                        content: h.parts?.[0]?.text || h.content || ""
+                    })),
+                    { role: "user", content: message }
+                ];
+
+                const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${groqApiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: groqMessages,
+                        temperature: 0.7,
+                        max_tokens: 1024
+                    })
                 });
-                // Test if this model name is even valid/findable by starting a chat
-                // (This is a lightweight way to check before sending a full message)
-                break; 
-            } catch (e: any) {
-                lastError = e.message;
-                continue;
+
+                if (groqResponse.ok) {
+                    const data = await groqResponse.json();
+                    return NextResponse.json({ text: data.choices[0].message.content });
+                }
+                
+                console.error("Groq API failed, falling back to Gemini if available...");
+            } catch (e) {
+                console.error("Groq Error:", e);
+                if (!geminiApiKey) throw e;
             }
         }
 
-        if (!model) throw new Error(`لم نجد أي موديل متاح لهذا المفتاح: ${lastError}`);
+        // --- FALLBACK TO GEMINI ---
+        if (geminiApiKey) {
+            const genAI = new GoogleGenerativeAI(geminiApiKey);
+            const modelsToTry = [
+                "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash", 
+                "gemini-2.0-pro", "gemini-flash-latest", "gemini-pro"
+            ];
+            
+            let lastError = "";
+            for (const modelName of modelsToTry) {
+                try {
+                    const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: SYSTEM_INSTRUCTION });
+                    const chat = model.startChat({ history: history || [] });
+                    const result = await chat.sendMessage(message);
+                    const response = await result.response;
+                    return NextResponse.json({ text: response.text() });
+                } catch (e: any) {
+                    lastError = e.message;
+                    continue;
+                }
+            }
+            throw new Error(`Gemini failed: ${lastError}`);
+        }
 
-        const chat = model.startChat({
-            history: history || [],
-        });
-
-        const result = await chat.sendMessage(message);
-        const response = await result.response;
-        const text = response.text();
-
-        return NextResponse.json({ text });
+        throw new Error("لم نتمكن من الاتصال بمزودات الذكاء الاصطناعي");
     } catch (error: any) {
         console.error("AI Assistant Error:", error);
         return NextResponse.json({ error: error.message || "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي" }, { status: 500 });

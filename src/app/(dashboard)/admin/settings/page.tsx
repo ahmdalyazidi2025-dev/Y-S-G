@@ -1148,6 +1148,48 @@ function AdminSettingsContent() {
                                                 </Button>
                                             </div>
                                         </div>
+
+                                        <div className="space-y-2 pt-4 border-t border-white/5">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Zap className="w-4 h-4 text-emerald-400" />
+                                                <Label className="text-xs font-bold text-slate-400">Groq API Key (البديل السريع)</Label>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="password"
+                                                    placeholder="gsk_..."
+                                                    value={formData.groqApiKey || ""}
+                                                    onChange={(e) => handleChange("groqApiKey", e.target.value)}
+                                                    className="bg-background border-border h-11 text-foreground flex-1 font-mono"
+                                                />
+                                                <Button 
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        if (!formData.groqApiKey) return toast.error("يرجى إدخال مفتاح Groq أولاً");
+                                                        toast.promise(
+                                                            fetch("/api/verify-groq", {
+                                                                method: "POST",
+                                                                body: JSON.stringify({ key: formData.groqApiKey })
+                                                            }).then(res => res.json()).then(data => {
+                                                                if (data.valid) return true;
+                                                                throw new Error(data.error);
+                                                            }),
+                                                            {
+                                                                loading: "جاري التحقق من مفتاح Groq...",
+                                                                success: "مفتاح Groq يعمل بسرعة فائقة! ⚡️✅",
+                                                                error: (err) => `فشل التحقق: ${err.message}`
+                                                            }
+                                                        );
+                                                    }}
+                                                    className="h-11 px-4 border-white/10"
+                                                >
+                                                    فحص
+                                                </Button>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground">احصل عليه مجاناً من console.groq.com (أسرع استجابة)</p>
+                                        </div>
                                     </div>
                                 </Section>
                             </div>
