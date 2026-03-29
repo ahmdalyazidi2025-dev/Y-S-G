@@ -29,8 +29,9 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     // NEW: Visual Editor State
     const [showTextOverlay, setShowTextOverlay] = useState(true)
     const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile")
+    const [showColorPicker, setShowColorPicker] = useState(false)
 
-    const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#60a5fa", "#34d399"];
+    const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#3b82f6", "#10b981", "#8b5cf6", "#ec4899", "#f97316", "#06b6d4"];
     const PRESET_FONTS = [
         { id: "Cairo", name: "رسمي" },
         { id: "Tajawal", name: "عصري" },
@@ -303,23 +304,77 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                     {/* Color Picker */}
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold text-slate-400">لون النص</label>
-                                                        <div className="relative w-full h-12 rounded-xl overflow-hidden shadow-sm border border-white/10 hover:border-primary/50 transition-all flex items-center justify-center bg-black/20 group cursor-pointer" title="اختر لون النص">
-                                                            {/* Gradient glow effect behind */}
-                                                            <div className="absolute inset-0 bg-gradient-to-tr from-rose-400/20 via-fuchsia-400/20 to-indigo-400/20 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity" />
-                                                            
-                                                            <div className="flex items-center gap-3 z-10 font-mono">
-                                                                <Palette className="w-5 h-5 drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }} />
-                                                                <span className="text-sm font-bold tracking-wider drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }}>
-                                                                    {textColor.toUpperCase()}
-                                                                </span>
+                                                        <div className="relative">
+                                                            <div 
+                                                                onClick={() => setShowColorPicker(!showColorPicker)}
+                                                                className="relative w-full h-12 rounded-xl overflow-hidden shadow-sm border border-white/10 hover:border-primary/50 transition-all flex items-center justify-center bg-black/20 group cursor-pointer" 
+                                                                title="اختر لون النص"
+                                                            >
+                                                                {/* Gradient glow effect behind */}
+                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400/20 via-fuchsia-400/20 to-indigo-400/20 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity" />
+                                                                
+                                                                <div className="flex items-center gap-3 z-10 font-mono">
+                                                                    <Palette className="w-5 h-5 drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }} />
+                                                                    <span className="text-sm font-bold tracking-wider drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }}>
+                                                                        {textColor.toUpperCase()}
+                                                                    </span>
+                                                                </div>
                                                             </div>
 
-                                                            <input
-                                                                type="color"
-                                                                value={textColor}
-                                                                onChange={(e) => setTextColor(e.target.value)}
-                                                                className="absolute inset-0 w-full h-[200%] -top-4 cursor-pointer opacity-0"
-                                                            />
+                                                            <AnimatePresence>
+                                                                {showColorPicker && (
+                                                                    <>
+                                                                        <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                                            className="absolute z-50 bottom-full mb-3 right-0 bg-[#15202b] border border-white/10 p-4 rounded-2xl shadow-2xl w-full"
+                                                                        >
+                                                                            <h4 className="text-xs text-slate-400 mb-3 font-bold">الألوان الأساسية</h4>
+                                                                            <div className="flex justify-between gap-2 mb-4">
+                                                                                {PRESET_COLORS.slice(0, 5).map(c => (
+                                                                                    <button
+                                                                                        key={c}
+                                                                                        type="button"
+                                                                                        onClick={() => { setTextColor(c); setShowColorPicker(false); }}
+                                                                                        className={`w-7 h-7 rounded-full transition-all shadow-sm ${textColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-[#15202b] scale-110' : 'hover:scale-110 border border-white/10'}`}
+                                                                                        style={{ backgroundColor: c }}
+                                                                                    />
+                                                                                ))}
+                                                                            </div>
+                                                                            <div className="flex justify-between gap-2 mb-4">
+                                                                                {PRESET_COLORS.slice(5, 10).map(c => (
+                                                                                    <button
+                                                                                        key={c}
+                                                                                        type="button"
+                                                                                        onClick={() => { setTextColor(c); setShowColorPicker(false); }}
+                                                                                        className={`w-7 h-7 rounded-full transition-all shadow-sm ${textColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-[#15202b] scale-110' : 'hover:scale-110 border border-white/10'}`}
+                                                                                        style={{ backgroundColor: c }}
+                                                                                    />
+                                                                                ))}
+                                                                            </div>
+                                                                            
+                                                                            <div className="h-[1px] w-full bg-white/10 my-3" />
+                                                                            
+                                                                            <h4 className="text-xs text-slate-400 mb-2 font-bold">لون مخصص عبر مربع الألوان</h4>
+                                                                            <div className="relative w-full h-10 rounded-xl overflow-hidden flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors cursor-pointer bg-white/5 group">
+                                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 via-fuchsia-400 to-indigo-400 opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity" />
+                                                                                <span className="text-xs font-bold text-white z-10 flex items-center gap-2">
+                                                                                    <Palette className="w-4 h-4" />
+                                                                                    فتح مربع الألوان
+                                                                                </span>
+                                                                                <input
+                                                                                    type="color"
+                                                                                    value={textColor}
+                                                                                    onChange={(e) => setTextColor(e.target.value)}
+                                                                                    className="absolute inset-0 w-[200%] h-[200%] -top-4 -left-4 cursor-pointer opacity-0"
+                                                                                />
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    </>
+                                                                )}
+                                                            </AnimatePresence>
                                                         </div>
                                                     </div>
                                                 </div>
