@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Bot, Send, X, User, Sparkles, Minimize2, Terminal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useStore } from "@/context/store-context"
 
 export function AdminAiAssistant() {
+    const { currentUser } = useStore()
     const [isOpen, setIsOpen] = useState(false)
-    const [messages, setMessages] = useState<{ role: "user" | "model", text: string }[]>([
-        { role: "model", text: "أهلاً بك في نظام Y-S-G! أنا مساعدك الذكي لمساعدتك في إدارة الموقع. كيف يمكنني مساعدتك اليوم؟" }
+    const [messages, setMessages] = useState<{ role: "user" | "model", text: string, timestamp: Date }[]>([
+        { role: "model", text: "أهلاً بك في نظام Y-S-G! أنا مساعدك الذكي لمساعدتك في إدارة الموقع. كيف يمكنني مساعدتك اليوم؟", timestamp: new Date() }
     ])
     const [input, setInput] = useState("")
     const [isLoading, setIsLoading] = useState(false)
@@ -27,7 +29,8 @@ export function AdminAiAssistant() {
         if (!input.trim() || isLoading) return
 
         const userMessage = input.trim()
-        setMessages(prev => [...prev, { role: "user", text: userMessage }])
+        const now = new Date()
+        setMessages(prev => [...prev, { role: "user", text: userMessage, timestamp: now }])
         setInput("")
         setIsLoading(true)
 
@@ -36,6 +39,11 @@ export function AdminAiAssistant() {
                 method: "POST",
                 body: JSON.stringify({ 
                     message: userMessage,
+                    user: {
+                        name: currentUser?.name || "زميل",
+                        role: currentUser?.role || "staff",
+                        permissions: currentUser?.permissions || []
+                    },
                     history: messages.map(m => ({ 
                         role: m.role === "user" ? "user" : "model", 
                         parts: [{ text: m.text }] 
@@ -46,16 +54,16 @@ export function AdminAiAssistant() {
             const data = await res.json()
             if (data.error) throw new Error(data.error)
 
-            setMessages(prev => [...prev, { role: "model", text: data.text }])
+            setMessages(prev => [...prev, { role: "model", text: data.text, timestamp: new Date() }])
         } catch (error: any) {
-            setMessages(prev => [...prev, { role: "model", text: `عذراً، حدث خطأ: ${error.message}` }])
+            setMessages(prev => [...prev, { role: "model", text: `عذراً، حدث خطأ: ${error.message}`, timestamp: new Date() }])
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <div className="fixed bottom-6 right-6 z-[60]">
+        <div className="fixed bottom-6 left-6 z-[60]">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -63,7 +71,7 @@ export function AdminAiAssistant() {
                         animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                         exit={{ opacity: 0, scale: 0.9, y: 40, filter: "blur(10px)" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="absolute bottom-20 right-0 w-[360px] sm:w-[420px] h-[580px] bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden ring-1 ring-white/5"
+                        className="absolute bottom-20 left-0 w-[360px] sm:w-[420px] h-[580px] bg-slate-900/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden ring-1 ring-white/5"
                     >
                         {/* Header */}
                         <div className="p-6 bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-between text-white relative">
@@ -123,7 +131,15 @@ export function AdminAiAssistant() {
                                             ? "bg-primary text-white rounded-2xl rounded-tr-none" 
                                             : "bg-white/5 backdrop-blur-md text-slate-100 border border-white/5 rounded-2xl rounded-tl-none"
                                     )}>
-                                        {m.text}
+                                        <div className="flex flex-col gap-1">
+                                            <div>{m.text}</div>
+                                            <div className={cn(
+                                                "text-[9px] opacity-40 text-left mt-1",
+                                                m.role === "user" ? "text-white" : "text-slate-400"
+                                            )}>
+                                                {m.timestamp.toLocaleTimeString("ar-SA", { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}

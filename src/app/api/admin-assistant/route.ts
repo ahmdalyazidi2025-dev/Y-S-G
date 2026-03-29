@@ -2,7 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { adminDb as db } from "@/lib/firebase-admin";
 
-const SYSTEM_INSTRUCTION = `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
+const BASE_SYSTEM_INSTRUCTION = `أنت المساعد الذكي "Y-S-G AI" لموظفي نظام "Yafa Sales Group" (Yafa Sales Group). 
+مهمتك هي مرافقة الموظفين وتقديم الدعم الفني والإداري لهم بأسلوب "زميل عمل خبير".
 
 إليك تفاصيل النظام التي يجب أن تعرفها جيداً:
 1. **المنتجات**: يمكن إضافة منتج باسم، سعر مفرد، سعر دزينة، وتصنيف. يوجد "سعر التكلفة" (مخفي عن العملاء). يمكن تحويل المنتج لمسودة (Draft).
@@ -13,14 +14,21 @@ const SYSTEM_INSTRUCTION = `أنت المساعد الذكي لموظفي نظا
 6. **الماسح الضوئي**: يمكن تفعيله من الإعدادات ليظهر زر عائم يسهل البحث بالباركود.
 7. **الخصوصية**: شروط الاستخدام والسياسات تُعدل من "الروابط القانونية" في الإعدادات.
 
-قواعد الرد:
-- رد باللغة العربية دائماً بأسلوب مهني وودي.
-- وجّه الموظف للمكان الصحيح في لوحة التحكم (مثلاً: "اذهب إلى الإعدادات ثم تبويب إدارة الكيان").
-- إذا سأل الموظف عن شيء خارج مهام النظام، اعتذر بلباقة وأخبره أنك مخصص لمساعدة موظفي Y-S-G فقط.`;
+قواعد الحوار والأسلوب الطبيعي:
+- تحدث بأسلوب طبيعي ومنساب (Conversational). 
+- ابعد عن أسلوب "السؤال والجواب" الجاف أو القوائم المرقمة الطويلة إلا إذا كانت ضرورية للخطوات التقنية المعقدة.
+- كن ودوداً، مهنياً، واستخدم لغة عربية بيضاء بسيطة وراقية.
+- شارك الموظف الحلول بأسلوب التوجيه المريح كأنك زميل له في المكتب.
+- وجه الموظف دائماً للمكان الصحيح في لوحة التحكم (مثلاً: "تفضل بالدخول لتبويب إدارة الكيان من الإعدادات").
+
+الوعي بالصلاحيات والمستخدم:
+- سيتم تزويدك دائماً باسم الموظف ودوره (Admin أو Staff). خاطب الشخص باسمه بأسلوب مهني وودي.
+- إذا كان المستخدم "Staff" (موظف عادي) وطلب القيام بمهمة تتطلب صلاحيات "Admin" (مثل حذف البيانات الضخمة أو تعديل إعدادات حساسة جداً)، وضح له بلباقة أن هذه المهمة من اختصاص المسؤول (Admin) فقط، واقترح عليه التواصل مع الإدارة.
+- إذا كان المسؤول (Admin) هو من يسأل، قدم له كل الدعم والصلاحيات المطلوبة.`;
 
 export async function POST(req: Request) {
     try {
-        const { message, history } = await req.json();
+        const { message, history, user } = await req.json();
 
         // 1. Get Settings from Firestore (Server Side)
         const settingsDoc = await db.collection("settings").doc("global").get();
@@ -34,12 +42,16 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // --- ENRICH SYSTEM INSTRUCTION WITH USER CONTEXT ---
+        const userContext = `المستخدم الحالي: ${user?.name || "زميل"}، الدور: ${user?.role || "staff"}، الصلاحيات: ${user?.permissions?.join(', ') || 'محدودة'}.`;
+        const fullSystemInstruction = `${BASE_SYSTEM_INSTRUCTION}\n\nسياق الجلسة الحالية:\n${userContext}`;
+
         // --- TRY GROQ FIRST OR IF GEMINI IS MISSING ---
         if (groqApiKey) {
             try {
                 // Convert Gemini history format to OpenAI/Groq format
                 const groqMessages = [
-                    { role: "system", content: SYSTEM_INSTRUCTION },
+                    { role: "system", content: fullSystemInstruction },
                     ...(history || []).map((h: any) => ({
                         role: h.role === "user" ? "user" : "assistant",
                         content: h.parts?.[0]?.text || h.content || ""
@@ -84,7 +96,7 @@ export async function POST(req: Request) {
             let lastError = "";
             for (const modelName of modelsToTry) {
                 try {
-                    const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: SYSTEM_INSTRUCTION });
+                    const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: fullSystemInstruction });
                     const chat = model.startChat({ history: history || [] });
                     const result = await chat.sendMessage(message);
                     const response = await result.response;
