@@ -131,121 +131,129 @@ export default function ProductsPage() {
         }
     }
 
-    // Tab Button Component
-    const TabButton = ({ id, label, icon: Icon, count, color }: any) => (
-        <button
-            onClick={() => { setActiveTab(id); setSelectedCategory("الكل") }}
-            className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl transition-all border",
-                activeTab === id
-                    ? `bg-${color}-500/10 text-${color}-400 border-${color}-500/50`
-                    : "bg-muted/50 border-transparent text-muted-foreground hover:bg-muted"
-            )}
-        >
-            <Icon className="w-4 h-4" />
-            <span className="text-xs font-bold">{label}</span>
-            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full bg-white/10", activeTab === id && `bg-${color}-500/20 text-white`)}>
-                {count}
-            </span>
-        </button>
-    )
-
     return (
         <div className="space-y-6 pb-20">
-            {/* Header & Actions */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
-                <div className="flex items-center gap-4 w-full sm:w-auto">
+            {/* Header, Search & Actions */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 justify-between bg-background z-10 sticky top-0 py-4 -my-4 mb-2">
+                <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-background shrink-0 text-foreground">
                             <ArrowRight className="w-5 h-5 text-foreground" />
                         </Button>
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold">إدارة الأصناف</h1>
-                        <p className="text-muted-foreground text-xs">مركز التحكم الموحد بالمنتجات والعروض</p>
+                        <p className="text-muted-foreground text-[10px] md:text-xs font-semibold">تصفح وإدارة المنتجات والعروض</p>
                     </div>
                 </div>
 
-                <Button
-                    className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-6 shadow-lg shadow-primary/20"
-                    onClick={handleAddNew}
-                >
-                    <PackagePlus className="w-5 h-5" />
-                    <span>إضافة جديد</span>
-                </Button>
+                <div className="flex items-center gap-3 w-full md:w-auto flex-1 md:max-w-md md:ml-auto">
+                    <div className="relative flex-1">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="بحث بالاسم أو الباركود..."
+                            className="bg-muted/50 border-transparent focus:bg-background focus:border-primary pr-10 text-right h-10 rounded-full transition-all"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                    <Button
+                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4 md:px-6 shadow-lg shadow-primary/20 shrink-0"
+                        onClick={handleAddNew}
+                    >
+                        <PackagePlus className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="hidden md:inline">إضافة منتج</span>
+                        <span className="md:hidden">إضافة</span>
+                    </Button>
+                </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid acting as Tabs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-blue-500">
+                <div 
+                    onClick={() => { setActiveTab('all'); setSelectedCategory('الكل') }}
+                    className={cn(
+                        "glass-card p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all border-l-4 border-l-blue-500",
+                        activeTab === 'all' 
+                        ? "ring-2 ring-blue-500/50 ring-offset-2 ring-offset-background bg-blue-500/5 scale-[1.02] shadow-lg shadow-blue-500/10" 
+                        : "hover:bg-muted/50 border-transparent hover:border-blue-500/30 opacity-70 hover:opacity-100"
+                    )}
+                >
                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">إجمالي المنتجات</p>
+                        <p className={cn("text-[10px] font-bold uppercase transition-colors", activeTab==='all' ? "text-blue-500" :"text-muted-foreground")}>الكل</p>
                         <p className="text-2xl font-black text-foreground">{allProducts.filter(p => !p.isDraft).length}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
                         <Package className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-green-500">
+                <div 
+                    onClick={() => { setActiveTab('offers'); setSelectedCategory('الكل') }}
+                    className={cn(
+                        "glass-card p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all border-l-4 border-l-green-500",
+                        activeTab === 'offers' 
+                        ? "ring-2 ring-green-500/50 ring-offset-2 ring-offset-background bg-green-500/5 scale-[1.02] shadow-lg shadow-green-500/10" 
+                        : "hover:bg-muted/50 border-transparent hover:border-green-500/30 opacity-70 hover:opacity-100"
+                    )}
+                >
                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">العروض النشطة</p>
-                        <p className="text-2xl font-black text-green-400">{activeOffers.length}</p>
+                        <p className={cn("text-[10px] font-bold uppercase transition-colors", activeTab==='offers' ? "text-green-500" :"text-muted-foreground")}>العروض النشطة</p>
+                        <p className="text-2xl font-black text-green-500">{activeOffers.length}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-400">
+                    <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
                         <Zap className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-orange-500">
+                <div 
+                    onClick={() => { setActiveTab('frozen'); setSelectedCategory('الكل') }}
+                    className={cn(
+                        "glass-card p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all border-l-4 border-l-orange-500",
+                        activeTab === 'frozen' 
+                        ? "ring-2 ring-orange-500/50 ring-offset-2 ring-offset-background bg-orange-500/5 scale-[1.02] shadow-lg shadow-orange-500/10" 
+                        : "hover:bg-muted/50 border-transparent hover:border-orange-500/30 opacity-70 hover:opacity-100"
+                    )}
+                >
                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">عروض منتهية</p>
-                        <p className="text-2xl font-black text-orange-400">{expiredOffers.length}</p>
+                        <p className={cn("text-[10px] font-bold uppercase transition-colors", activeTab==='frozen' ? "text-orange-500" :"text-muted-foreground")}>عروض منتهية</p>
+                        <p className="text-2xl font-black text-orange-500">{expiredOffers.length}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500">
                         <History className="w-5 h-5" />
                     </div>
                 </div>
-                <div className="glass-card p-4 rounded-2xl flex items-center justify-between border-l-4 border-l-purple-500">
+                <div 
+                    onClick={() => { setActiveTab('drafts'); setSelectedCategory('الكل') }}
+                    className={cn(
+                        "glass-card p-4 rounded-3xl flex items-center justify-between cursor-pointer transition-all border-l-4 border-l-purple-500",
+                        activeTab === 'drafts' 
+                        ? "ring-2 ring-purple-500/50 ring-offset-2 ring-offset-background bg-purple-500/5 scale-[1.02] shadow-lg shadow-purple-500/10" 
+                        : "hover:bg-muted/50 border-transparent hover:border-purple-500/30 opacity-70 hover:opacity-100"
+                    )}
+                >
                     <div>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase">المسودة</p>
-                        <p className="text-2xl font-black text-purple-400">{draftProducts.length}</p>
+                        <p className={cn("text-[10px] font-bold uppercase transition-colors", activeTab==='drafts' ? "text-purple-500" :"text-muted-foreground")}>المسودة</p>
+                        <p className="text-2xl font-black text-purple-500">{draftProducts.length}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
                         <FileEdit className="w-5 h-5" />
                     </div>
                 </div>
             </div>
 
-            {/* Smart Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-border">
-                <TabButton id="all" label="الكل" icon={Package} count={allProducts.filter(p => !p.isDraft).length} color="blue" />
-                <TabButton id="offers" label="العروض النشطة" icon={Zap} count={activeOffers.length} color="green" />
-                <TabButton id="frozen" label="عروض منتهية" icon={History} count={expiredOffers.length} color="orange" />
-                <TabButton id="drafts" label="المسودة" icon={FileEdit} count={draftProducts.length} color="purple" />
-            </div>
-
-            {/* Search & Filter */}
-            <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
-                <Input
-                    placeholder="بحث بالاسم أو الباركود..."
-                    className="bg-background border-border pr-10 text-right h-12 rounded-xl"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
-
-            {/* Category Filter */}
+            {/* Category Filter - Scrollable Pills */}
             {activeTab === 'all' && (
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-2 no-scrollbar scroll-smooth">
                     <button
                         onClick={() => setSelectedCategory("الكل")}
                         className={cn(
-                            "aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border relative overflow-hidden group",
-                            selectedCategory === "الكل" ? "bg-primary text-white border-primary" : "bg-muted/50 border-border text-muted-foreground"
+                            "px-5 py-2 rounded-full flex items-center gap-2 transition-all shrink-0 border text-sm font-bold shadow-sm",
+                            selectedCategory === "الكل" 
+                                ? "bg-primary text-white border-primary shadow-primary/20 brightness-110" 
+                                : "bg-muted/30 border-border text-muted-foreground hover:bg-muted"
                         )}
                     >
-                        <Package className="w-5 h-5" />
-                        <span className="text-xs font-bold">الكل</span>
+                        <Package className="w-4 h-4" />
+                        <span>الكل</span>
                     </button>
 
                     {categories.map((category) => (
@@ -253,11 +261,13 @@ export default function ProductsPage() {
                             key={category.nameAr}
                             onClick={() => setSelectedCategory(category.nameAr)}
                             className={cn(
-                                "aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border relative overflow-hidden group p-2",
-                                selectedCategory === category.nameAr ? "bg-primary text-white border-primary" : "bg-muted/50 border-border text-muted-foreground"
+                                "px-5 py-2 rounded-full flex items-center transition-all shrink-0 border text-sm font-bold shadow-sm",
+                                selectedCategory === category.nameAr 
+                                    ? "bg-primary text-white border-primary shadow-primary/20 brightness-110" 
+                                    : "bg-muted/30 border-border text-muted-foreground hover:bg-muted"
                             )}
                         >
-                            <span className="text-xs font-bold relative z-10 truncate w-full px-1">{category.nameAr}</span>
+                            <span>{category.nameAr}</span>
                         </button>
                     ))}
                 </div>
@@ -320,7 +330,7 @@ export default function ProductsPage() {
                         </div>
                     ) : (
                         filteredProducts.map((product: Product) => (
-                            <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-muted/50 transition-colors relative overflow-hidden text-foreground">
+                            <div key={product.id} className="glass-card p-4 flex items-center gap-3 sm:gap-4 group hover:bg-muted/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden text-foreground rounded-3xl border border-border">
                                 {/* Badges */}
                                 {product.isDraft && <div className="absolute top-2 left-2 bg-purple-500/20 text-purple-400 text-[9px] px-2 py-0.5 rounded-full font-bold">مسودة</div>}
                                 {isDiscounted(product) && (!product.discountEndDate || hasActiveTimer(product)) && !product.isDraft && (
