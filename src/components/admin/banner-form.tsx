@@ -250,9 +250,9 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                         </div>
                                         <div
                                             onClick={() => setShowTextOverlay(!showTextOverlay)}
-                                            className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${showTextOverlay ? 'bg-primary' : 'bg-slate-700'}`}
+                                            className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors flex items-center shadow-inner ${showTextOverlay ? 'bg-primary justify-end' : 'bg-slate-700 justify-start'}`}
                                         >
-                                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${showTextOverlay ? 'translate-x-full' : ''}`} />
+                                            <motion.div layout className="w-4 h-4 bg-white rounded-full shadow-md" />
                                         </div>
                                     </div>
 
