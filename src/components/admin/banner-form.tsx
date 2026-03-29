@@ -303,27 +303,23 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                     {/* Color Picker */}
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold text-slate-400">لون النص</label>
-                                                        <div className="flex items-center gap-1.5 h-12 bg-black/20 border border-white/10 rounded-xl px-3 overflow-x-auto hide-scrollbar">
-                                                            {PRESET_COLORS.map(c => (
-                                                                <button
-                                                                    key={c}
-                                                                    type="button"
-                                                                    onClick={() => setTextColor(c)}
-                                                                    className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm flex-shrink-0 ${textColor === c ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-transparent hover:scale-110'}`}
-                                                                    style={{ backgroundColor: c }}
-                                                                    title={c}
-                                                                />
-                                                            ))}
-                                                            <div className="w-[1px] h-6 bg-white/10 mx-1 flex-shrink-0" />
-                                                            <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-white/20 hover:scale-105 transition-transform flex items-center justify-center bg-white/5" title="لون مخصص">
-                                                                <Palette className="w-4 h-4 text-slate-300 absolute pointer-events-none" z-index="0" />
-                                                                <input
-                                                                    type="color"
-                                                                    value={textColor}
-                                                                    onChange={(e) => setTextColor(e.target.value)}
-                                                                    className="absolute inset-0 w-full h-full cursor-pointer opacity-0 mix-blend-overlay"
-                                                                />
+                                                        <div className="relative w-full h-12 rounded-xl overflow-hidden shadow-sm border border-white/10 hover:border-primary/50 transition-all flex items-center justify-center bg-black/20 group cursor-pointer" title="اختر لون النص">
+                                                            {/* Gradient glow effect behind */}
+                                                            <div className="absolute inset-0 bg-gradient-to-tr from-rose-400/20 via-fuchsia-400/20 to-indigo-400/20 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity" />
+                                                            
+                                                            <div className="flex items-center gap-3 z-10 font-mono">
+                                                                <Palette className="w-5 h-5 drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }} />
+                                                                <span className="text-sm font-bold tracking-wider drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }}>
+                                                                    {textColor.toUpperCase()}
+                                                                </span>
                                                             </div>
+
+                                                            <input
+                                                                type="color"
+                                                                value={textColor}
+                                                                onChange={(e) => setTextColor(e.target.value)}
+                                                                className="absolute inset-0 w-full h-[200%] -top-4 cursor-pointer opacity-0"
+                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
