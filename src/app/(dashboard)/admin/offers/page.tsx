@@ -47,20 +47,29 @@ export default function OffersPage() {
     }
 
     // --- Logic & Filtering ---
-    const allOffers = products.filter(p => {
+    const allProductsFiltered = products.filter(p => {
         // Search Filter
         const normalize = (s: string) => s.toLowerCase().replace(/[-\s]/g, "")
         const normalizedQuery = normalize(searchQuery)
         const matchesSearch =
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            normalize(p.barcode || "").includes(normalizedQuery);
+            (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (p.barcode && normalize(p.barcode).includes(normalizedQuery));
 
         return matchesSearch
     })
 
-    const activeOffers = allOffers.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) > new Date())
-    const expiredOffers = allOffers.filter(p => !p.isDraft && p.discountEndDate && new Date(p.discountEndDate) <= new Date())
-    const drafts = allOffers.filter(p => p.isDraft)
+    const isDiscounted = (p: Product) => (p.oldPricePiece && p.oldPricePiece > 0) || (p.oldPriceDozen && p.oldPriceDozen > 0);
+    const hasActiveTimer = (p: Product) => p.discountEndDate && new Date(p.discountEndDate).getTime() > new Date().getTime();
+    const hasExpiredTimer = (p: Product) => p.discountEndDate && new Date(p.discountEndDate).getTime() <= new Date().getTime();
+
+    // Active: Not draft + Has Discount + (No Timer OR Timer not expired)
+    const activeOffers = allProductsFiltered.filter(p => !p.isDraft && isDiscounted(p) && (!p.discountEndDate || hasActiveTimer(p)))
+    
+    // Expired: Not draft + Has Discount + Has expired timer
+    const expiredOffers = allProductsFiltered.filter(p => !p.isDraft && isDiscounted(p) && hasExpiredTimer(p))
+    
+    // Drafts: All drafts (whether they have discounts or not)
+    const drafts = allProductsFiltered.filter(p => p.isDraft)
 
     // --- Actions ---
     const handlePublish = async (id: string) => {
@@ -190,7 +199,7 @@ export default function OffersPage() {
                                             <div className="absolute top-4 left-4 bg-amber-500/10 border border-amber-500/20 rounded-full px-3 py-1 flex items-center gap-2">
                                                 <Timer className="w-3 h-3 text-amber-400" />
                                                 <span className="text-xs font-bold text-amber-300">
-                                                    <CountdownTimer date={product.discountEndDate!} />
+                                                    {product.discountEndDate ? <CountdownTimer date={product.discountEndDate} /> : "عرض دائم"}
                                                 </span>
                                             </div>
 
