@@ -40,60 +40,100 @@ export function exportToCSV(data: any[], filename: string) {
 
 import { Customer, Order, StaffMember } from "@/context/store-context";
 
-export function exportComprehensiveReport(customers: Customer[], orders: Order[]) {
-    // 1. Prepare Data structure: Flat Table (Customer + Order details per row)
-    // "Customer Name", "Phone", "Email", "Order ID", "Date", "Total", "Status", "Items"
-
-    // Sort customers by name
+export function exportComprehensiveReportWord(customers: Customer[], orders: Order[]) {
     const sortedCustomers = [...customers].sort((a, b) => a.name.localeCompare(b.name));
 
-    const reportData = [];
+    let rows = "";
 
     for (const customer of sortedCustomers) {
-        // Find customer's orders
         const customerOrders = orders.filter(o => o.customerId === customer.id)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         if (customerOrders.length === 0) {
-            // Include customer even if no orders (Sales leads?)
-            reportData.push({
-                "اسم العميل": customer.name,
-                "رقم الجوال": customer.phone || "-",
-                "البريد الإلكتروني": customer.email,
-                "العنوان": customer.location || "-",
-                "رقم الطلب": "-",
-                "تاريخ الطلب": "-",
-                "المبلغ الإجمالي": "-",
-                "حالة الطلب": "لا يوجد طلبات",
-                "ملخص المنتجات": "-"
-            });
+            rows += `
+                <tr>
+                    <td style="padding:10px; border:1px solid #000; font-weight:bold;">${customer.name}</td>
+                    <td style="padding:10px; border:1px solid #000; direction:ltr; text-align:right;">${customer.phone || "-"}</td>
+                    <td style="padding:10px; border:1px solid #000;">${customer.email}</td>
+                    <td style="padding:10px; border:1px solid #000;">${customer.location || "-"}</td>
+                    <td style="padding:10px; border:1px solid #000;">-</td>
+                    <td style="padding:10px; border:1px solid #000;">-</td>
+                    <td style="padding:10px; border:1px solid #000;">-</td>
+                    <td style="padding:10px; border:1px solid #000; color:gray;">لا يوجد طلبات</td>
+                    <td style="padding:10px; border:1px solid #000;">-</td>
+                </tr>
+            `;
         } else {
             for (const order of customerOrders) {
-                // Format Date
                 let dateStr = "";
                 if (order.createdAt) {
                     dateStr = new Date(order.createdAt).toLocaleDateString('ar-EG');
                 }
-
-                // Format Items
                 const itemsSummary = order.items.map((i) => `${i.name} (x${i.quantity})`).join(" | ");
 
-                reportData.push({
-                    "اسم العميل": customer.name,
-                    "رقم الجوال": customer.phone || "-",
-                    "البريد الإلكتروني": customer.email,
-                    "العنوان": customer.location || "-", // Assuming location is a string address, if object needs parsing
-                    "رقم الطلب": order.id, // Or simplified ID if exists
-                    "تاريخ الطلب": dateStr,
-                    "المبلغ الإجمالي": order.total,
-                    "حالة الطلب": order.status,
-                    "ملخص المنتجات": itemsSummary
-                });
+                rows += `
+                    <tr>
+                        <td style="padding:10px; border:1px solid #000; font-weight:bold;">${customer.name}</td>
+                        <td style="padding:10px; border:1px solid #000; direction:ltr; text-align:right;">${customer.phone || "-"}</td>
+                        <td style="padding:10px; border:1px solid #000;">${customer.email}</td>
+                        <td style="padding:10px; border:1px solid #000;">${customer.location || "-"}</td>
+                        <td style="padding:10px; border:1px solid #000; font-family:monospace;">${order.id || "-"}</td>
+                        <td style="padding:10px; border:1px solid #000;">${dateStr}</td>
+                        <td style="padding:10px; border:1px solid #000; font-weight:bold; color:green;">${order.total} ر.س</td>
+                        <td style="padding:10px; border:1px solid #000;">${order.status}</td>
+                        <td style="padding:10px; border:1px solid #000; font-size:12px;">${itemsSummary}</td>
+                    </tr>
+                `;
             }
         }
     }
 
-    exportToCSV(reportData, "التقرير_الشامل_للمتجر");
+    const htmlContent = `
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: 'Arial', sans-serif; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                th { background-color: #f8f9fa; font-weight: bold; padding: 12px; border: 1px solid #000; color: #333; }
+                td { padding: 8px; border: 1px solid #000; }
+                h1 { text-align: center; color: #111; margin-bottom: 5px; }
+                .meta { text-align: center; margin-bottom: 20px; color: #666; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <h1>التقرير الشامل (العملاء والطلبات)</h1>
+            <div class="meta">تاريخ الاستخراج: ${new Date().toLocaleDateString('ar-EG')} | إجمالي العملاء المعروضين: ${sortedCustomers.length}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم العميل</th>
+                        <th>رقم الجوال</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>العنوان</th>
+                        <th>رقم الطلب</th>
+                        <th>تاريخ الطلب</th>
+                        <th>المبلغ الإجمالي</th>
+                        <th>حالة الطلب</th>
+                        <th>ملخص المنتجات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `تقرير_شامل_${new Date().toISOString().split('T')[0]}.doc`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
-import { exportToCSV, exportComprehensiveReport, exportFullSystemBackup, exportCustomersToWord, exportStaffToWord } from "@/lib/export-utils"
+import { exportToCSV, exportComprehensiveReportWord, exportFullSystemBackup, exportCustomersToWord, exportStaffToWord } from "@/lib/export-utils"
 import { hapticFeedback } from "@/lib/haptics"
 // import { sendPushNotification, broadcastPushNotification, getRegisteredTokensCount } from "@/app/actions/notifications"
 import { useFcmToken } from "@/hooks/use-fcm-token"
@@ -56,6 +56,7 @@ function AdminSettingsContent() {
     const [reportEndDate, setReportEndDate] = useState("")
     const [reportCategory, setReportCategory] = useState("all")
     const [reportSort, setReportSort] = useState<"newest" | "oldest" | "price_high" | "price_low" | "name">("newest")
+    const [selectedCustomerIdForReport, setSelectedCustomerIdForReport] = useState("all")
 
     // Security State
     const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -921,24 +922,39 @@ function AdminSettingsContent() {
                                         {/* Quick Actions Grid */}
                                         <div className="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Comprehensive Report */}
-                                            <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-emerald-500/30 transition-all">
+                                            <div className="bg-card border border-border rounded-2xl p-4 flex flex-col justify-between shadow-sm group hover:border-emerald-500/30 transition-all gap-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
-                                                        <Download className="w-5 h-5" />
+                                                        <FileText className="w-5 h-5" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-bold text-sm text-foreground">Excel شامل</h4>
+                                                        <h4 className="font-bold text-sm text-foreground">تقرير شامل (Word)</h4>
                                                         <p className="text-[10px] text-muted-foreground">العملاء والطلبات والتفاصيل</p>
                                                     </div>
                                                 </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => exportComprehensiveReport(customers, orders)}
-                                                    className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
-                                                >
-                                                    تحميل
-                                                </Button>
+                                                <div className="flex flex-col gap-2">
+                                                    <select
+                                                        value={selectedCustomerIdForReport}
+                                                        onChange={(e) => setSelectedCustomerIdForReport(e.target.value)}
+                                                        className="bg-background border border-border rounded-lg text-xs px-2 py-2 outline-none text-foreground"
+                                                    >
+                                                        <option value="all">كل العملاء</option>
+                                                        {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                    </select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            const filteredCustomers = selectedCustomerIdForReport === 'all' 
+                                                                ? customers 
+                                                                : customers.filter(c => c.id === selectedCustomerIdForReport);
+                                                            exportComprehensiveReportWord(filteredCustomers, orders);
+                                                        }}
+                                                        className="h-8 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-900/20"
+                                                    >
+                                                        تحميل
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             {/* Customers Word */}
