@@ -7,7 +7,7 @@ export async function POST(req: Request) {
         if (!key) return NextResponse.json({ valid: false, error: "Missing key" }, { status: 400 });
 
         const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
         
         // Simple test call to verify key
         await model.generateContent("test");
