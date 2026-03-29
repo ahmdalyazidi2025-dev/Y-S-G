@@ -55,3 +55,7 @@ export function DialogTitle({ children, className }: { children: React.ReactNode
 export function DialogTrigger({ children }: { children: React.ReactNode }) {
     return <>{children}</>
 }
+
+export function DialogDescription({ children, className }: { children: React.ReactNode, className?: string }) {
+    return <div className={className}>{children}</div>
+}
