@@ -329,46 +329,41 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                                                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                                            className="absolute z-50 bottom-full mb-3 right-0 bg-[#15202b] border border-white/10 p-4 rounded-2xl shadow-2xl w-full"
+                                                                            className="absolute z-50 bottom-full mb-3 right-0 bg-[#1c2a36] border border-white/10 p-5 rounded-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] w-[320px]"
+                                                                            onClick={(e) => e.stopPropagation()}
                                                                         >
-                                                                            <h4 className="text-xs text-slate-400 mb-3 font-bold">الألوان الأساسية</h4>
-                                                                            <div className="flex justify-between gap-2 mb-4">
-                                                                                {PRESET_COLORS.slice(0, 5).map(c => (
+                                                                            <h4 className="text-sm text-slate-300 mb-4 font-bold flex items-center gap-2">
+                                                                                <Palette className="w-4 h-4 text-primary" />
+                                                                                الألوان الأساسية السريعة
+                                                                            </h4>
+                                                                            
+                                                                            <div className="grid grid-cols-5 gap-3 mb-5">
+                                                                                {PRESET_COLORS.map(c => (
                                                                                     <button
                                                                                         key={c}
                                                                                         type="button"
                                                                                         onClick={() => { setTextColor(c); setShowColorPicker(false); }}
-                                                                                        className={`w-7 h-7 rounded-full transition-all shadow-sm ${textColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-[#15202b] scale-110' : 'hover:scale-110 border border-white/10'}`}
+                                                                                        className={`w-10 h-10 rounded-full transition-all shadow-md ${textColor === c ? 'ring-2 ring-primary ring-offset-4 ring-offset-[#1c2a36] scale-110' : 'hover:scale-110 hover:shadow-lg border border-white/10'}`}
                                                                                         style={{ backgroundColor: c }}
-                                                                                    />
-                                                                                ))}
-                                                                            </div>
-                                                                            <div className="flex justify-between gap-2 mb-4">
-                                                                                {PRESET_COLORS.slice(5, 10).map(c => (
-                                                                                    <button
-                                                                                        key={c}
-                                                                                        type="button"
-                                                                                        onClick={() => { setTextColor(c); setShowColorPicker(false); }}
-                                                                                        className={`w-7 h-7 rounded-full transition-all shadow-sm ${textColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-[#15202b] scale-110' : 'hover:scale-110 border border-white/10'}`}
-                                                                                        style={{ backgroundColor: c }}
+                                                                                        title={c}
                                                                                     />
                                                                                 ))}
                                                                             </div>
                                                                             
-                                                                            <div className="h-[1px] w-full bg-white/10 my-3" />
+                                                                            <div className="h-[1px] w-full bg-white/10 my-4" />
                                                                             
-                                                                            <h4 className="text-xs text-slate-400 mb-2 font-bold">لون مخصص عبر مربع الألوان</h4>
-                                                                            <div className="relative w-full h-10 rounded-xl overflow-hidden flex items-center justify-center border border-white/10 hover:border-white/30 transition-colors cursor-pointer bg-white/5 group">
-                                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 via-fuchsia-400 to-indigo-400 opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity" />
-                                                                                <span className="text-xs font-bold text-white z-10 flex items-center gap-2">
-                                                                                    <Palette className="w-4 h-4" />
-                                                                                    فتح مربع الألوان
+                                                                            <h4 className="text-sm text-slate-300 mb-3 font-bold">تخصيص لون مختلف</h4>
+                                                                            <div className="relative w-full h-14 rounded-xl overflow-hidden flex items-center justify-center border border-white/10 hover:border-white/30 transition-all shadow-lg cursor-pointer bg-black/40 group">
+                                                                                <div className="absolute inset-0 bg-gradient-to-r from-rose-400/20 via-purple-400/20 to-blue-400/20 pointer-events-none group-hover:opacity-100 transition-opacity" />
+                                                                                <span className="text-sm font-bold text-white z-10 flex items-center gap-2 group-hover:scale-105 transition-transform drop-shadow-md">
+                                                                                    <svg className="w-5 h-5 object-cover rounded-full bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500" viewBox="0 0 24 24" />
+                                                                                    انقر لاختيار لون حر
                                                                                 </span>
                                                                                 <input
                                                                                     type="color"
                                                                                     value={textColor}
                                                                                     onChange={(e) => setTextColor(e.target.value)}
-                                                                                    className="absolute inset-0 w-[200%] h-[200%] -top-4 -left-4 cursor-pointer opacity-0"
+                                                                                    className="absolute inset-0 w-[200%] h-[200%] -top-4 -left-4 cursor-pointer opacity-0 mix-blend-overlay"
                                                                                 />
                                                                             </div>
                                                                         </motion.div>
