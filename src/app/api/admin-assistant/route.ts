@@ -18,7 +18,8 @@ export async function POST(req: Request) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
+        let model: any;
+        const modelOptions = { 
             model: "gemini-1.5-flash",
             systemInstruction: `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
 
@@ -35,7 +36,14 @@ export async function POST(req: Request) {
 - رد باللغة العربية دائماً بأسلوب مهني وودي.
 - وجّه الموظف للمكان الصحيح في لوحة التحكم (مثلاً: "اذهب إلى الإعدادات ثم تبويب إدارة الكيان").
 - إذا سأل الموظف عن شيء خارج مهام النظام، اعتذر بلباقة وأخبره أنك مخصص لمساعدة موظفي Y-S-G فقط.`
-        }, { apiVersion: "v1" });
+        };
+
+        try {
+            model = genAI.getGenerativeModel(modelOptions);
+        } catch (e) {
+            console.log("Model 1.5-flash not supported, falling back to gemini-pro");
+            model = genAI.getGenerativeModel({ ...modelOptions, model: "gemini-pro" });
+        }
 
         const chat = model.startChat({
             history: history || [],

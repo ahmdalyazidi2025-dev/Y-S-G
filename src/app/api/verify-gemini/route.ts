@@ -7,10 +7,15 @@ export async function POST(req: Request) {
         if (!key) return NextResponse.json({ valid: false, error: "Missing key" }, { status: 400 });
 
         const genAI = new GoogleGenerativeAI(key);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
+        let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
-        // Simple test call to verify key
-        await model.generateContent("test");
+        try {
+            await model.generateContent("test");
+        } catch (e: any) {
+            console.log("Gemini 1.5-Flash failed, trying Gemini-Pro:", e.message);
+            model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            await model.generateContent("test");
+        }
         
         return NextResponse.json({ valid: true });
     } catch (error: any) {
