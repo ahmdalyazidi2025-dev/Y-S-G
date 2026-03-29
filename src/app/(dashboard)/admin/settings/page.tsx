@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown, Sparkles
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown, Sparkles, Zap
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
