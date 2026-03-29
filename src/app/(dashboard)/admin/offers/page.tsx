@@ -79,11 +79,16 @@ export default function OffersPage() {
         }
     }
 
-    const handleStopOffer = async (id: string) => {
+    const handleStopOffer = async (product: Product) => {
         if (confirm("هل تريد إيقاف هذا العرض؟ سيعود السعر للسعر الأصلي.")) {
-            // Remove discount date and revert prices if needed 
-            // (Here we just remove the date so it stops being an "Offer")
-            await updateProduct(id, { discountEndDate: null as any })
+            // Remove discount date and revert prices
+            const originalPrice = product.oldPricePiece || product.pricePiece;
+            await updateProduct(product.id, { 
+                discountEndDate: undefined as any,
+                pricePiece: originalPrice,
+                oldPricePiece: 0,
+                oldPriceDozen: 0
+            })
         }
     }
 
@@ -239,7 +244,7 @@ export default function OffersPage() {
                                                     <Button
                                                         size="sm"
                                                         className="h-8 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 ml-auto"
-                                                        onClick={() => handleStopOffer(product.id)}
+                                                        onClick={() => handleStopOffer(product)}
                                                     >
                                                         <StopCircle className="w-3 h-3 ml-2" /> إيقاف
                                                     </Button>

@@ -162,17 +162,21 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const addProduct = async (product: Omit<Product, "id">) => {
-        await addDoc(collection(db, "products"), sanitizeData({ ...product, createdAt: Timestamp.now() }))
+        const docRef = await addDoc(collection(db, "products"), sanitizeData({ ...product, createdAt: Timestamp.now() }))
+        const newProduct = { ...product, id: docRef.id, createdAt: new Date() } as Product
+        setProducts(prev => [newProduct, ...prev])
         toast.success("تم إضافة المنتج")
     }
 
     const updateProduct = async (id: string, data: Partial<Product>) => {
         await updateDoc(doc(db, "products", id), sanitizeData(data))
+        setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
         toast.success("تم تحديث المنتج")
     }
 
     const deleteProduct = async (productId: string) => {
         await deleteDoc(doc(db, "products", productId))
+        setProducts(prev => prev.filter(p => p.id !== productId))
         toast.error("تم حذف المنتج")
     }
 
