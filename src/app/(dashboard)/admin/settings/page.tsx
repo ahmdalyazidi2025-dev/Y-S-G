@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
-    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown
+    Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown, Sparkles
 } from "lucide-react"
 import Link from "next/link"
 // import { useSounds, SoundEvent } from "@/hooks/use-sounds" // Missing hook, using store version
@@ -1094,6 +1094,59 @@ function AdminSettingsContent() {
                                               ... Wait, I'll just remove the block entirely to keep the code clean. The logic handleRepairAdmin still exists if needed later.
                                             */}
 
+                                        </div>
+                                    </div>
+                                </Section>
+
+                                <Section icon={<Sparkles className="w-5 h-5" />} title="إعدادات الذكاء الاصطناعي (Gemini)">
+                                    <div className="space-y-4">
+                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
+                                                    <Info className="w-4 h-4" />
+                                                </div>
+                                                <p className="text-xs text-blue-400 leading-relaxed font-medium">
+                                                    استخدم مفتاح Gemini API لتفعيل المساعد الذكي للموظفين. يمكنك الحصول عليه مجاناً من Google AI Studio.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold text-slate-400">Gemini API Key</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="password"
+                                                    placeholder="أدخل مفتاح الـ API هنا..."
+                                                    value={formData.geminiApiKey || ""}
+                                                    onChange={(e) => handleChange("geminiApiKey", e.target.value)}
+                                                    className="bg-background border-border h-11 text-foreground flex-1 font-mono"
+                                                />
+                                                <Button 
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        if (!formData.geminiApiKey) return toast.error("يرجى إدخال المفتاح أولاً");
+                                                        toast.promise(
+                                                            fetch("/api/verify-gemini", {
+                                                                method: "POST",
+                                                                body: JSON.stringify({ key: formData.geminiApiKey })
+                                                            }).then(res => res.json()).then(data => {
+                                                                if (data.valid) return true;
+                                                                throw new Error(data.error);
+                                                            }),
+                                                            {
+                                                                loading: "جاري التحقق من المفتاح...",
+                                                                success: "المفتاح صالح ويعمل بنجاح! ✅",
+                                                                error: (err) => `فشل التحقق: ${err.message}`
+                                                            }
+                                                        );
+                                                    }}
+                                                    className="h-11 px-4 border-white/10"
+                                                >
+                                                    فحص
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                 </Section>

@@ -1,5 +1,6 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminSidebar, AdminMobileNav } from "@/components/admin/admin-sidebar"
+import { AdminAiAssistant } from "@/components/admin/admin-ai-assistant"
 import Image from "next/image"
 
 export default function AdminLayout({
@@ -29,6 +30,9 @@ export default function AdminLayout({
                 <main className="flex-1 w-full p-4 lg:pr-72 pb-24 lg:pb-4 relative z-10 overflow-x-hidden">
                     {children}
                 </main>
+
+                {/* AI Assistant */}
+                <AdminAiAssistant />
             </div>
         </ProtectedRoute>
     )
