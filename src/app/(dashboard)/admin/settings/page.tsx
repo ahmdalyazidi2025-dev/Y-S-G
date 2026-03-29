@@ -6,6 +6,7 @@ import { CouponManager } from "@/components/admin/coupon-manager"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
     Save, ArrowRight, Truck, Info, Phone, FileText, Download, BarChart3, ShoppingBag, Music, Volume2, RotateCcw, Upload, Layers, Printer, Scan, Play, Database, Search, ChevronDown
@@ -460,26 +461,29 @@ function AdminSettingsContent() {
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label>شروط الاستخدام</Label>
-                                            <Input
+                                            <Textarea
                                                 value={formData.footerTerms}
                                                 onChange={(e) => handleChange("footerTerms", e.target.value)}
-                                                className="bg-background border-border h-11 text-foreground"
+                                                className="bg-background border-border min-h-[100px] text-foreground"
+                                                placeholder="اكتب تفاصيل شروط الاستخدام هنا..."
                                             />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>الشروط والأحكام</Label>
-                                            <Input
+                                            <Textarea
                                                 value={formData.footerPrivacy}
                                                 onChange={(e) => handleChange("footerPrivacy", e.target.value)}
-                                                className="bg-background border-border h-11 text-foreground"
+                                                className="bg-background border-border min-h-[100px] text-foreground"
+                                                placeholder="اكتب تفاصيل الشروط والأحكام هنا..."
                                             />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>سياسة الاسترجاع</Label>
-                                            <Input
+                                            <Textarea
                                                 value={formData.footerReturns}
                                                 onChange={(e) => handleChange("footerReturns", e.target.value)}
-                                                className="bg-background border-border h-11 text-foreground"
+                                                className="bg-background border-border min-h-[100px] text-foreground"
+                                                placeholder="اكتب تفاصيل سياسة الاسترجاع هنا..."
                                             />
                                         </div>
                                     </div>

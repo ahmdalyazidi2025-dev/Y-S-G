@@ -8,16 +8,22 @@ import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 export function Footer() {
     const { storeSettings } = useStore()
     const [email, setEmail] = useState("")
+    const [policyModal, setPolicyModal] = useState<{ isOpen: boolean, title: string, content: string }>({ isOpen: false, title: "", content: "" })
 
     const handleSubscribe = (e: React.FormEvent) => {
         e.preventDefault()
         if (!email) return
         toast.success("شكراً لاشتراكك في النشرة الإخبارية!")
         setEmail("")
+    }
+
+    const openPolicy = (title: string, content: string) => {
+        setPolicyModal({ isOpen: true, title, content })
     }
 
     return (
@@ -62,11 +68,11 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div className="lg:col-span-3 lg:pr-12 space-y-6">
-                        <h3 className="text-foreground font-bold text-lg border-r-4 border-blue-500 pr-4">روابط مهمة</h3>
+                        <h3 className="text-foreground font-bold text-lg border-r-4 border-blue-500 pr-4">روابط قانونية</h3>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerTerms}</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerPrivacy}</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerReturns}</Link></li>
+                            <li><button onClick={() => openPolicy("شروط الاستخدام", storeSettings.footerTerms || "لا توجد شروط استخدام محددة حتى الآن.")} className="hover:text-primary transition-colors text-right w-full">شروط الاستخدام</button></li>
+                            <li><button onClick={() => openPolicy("الشروط والأحكام", storeSettings.footerPrivacy || "لا توجد شروط وأحكام محددة حتى الآن.")} className="hover:text-primary transition-colors text-right w-full">الشروط والأحكام</button></li>
+                            <li><button onClick={() => openPolicy("سياسة الاسترجاع", storeSettings.footerReturns || "لا توجد سياسة استرجاع محددة حتى الآن.")} className="hover:text-primary transition-colors text-right w-full">سياسة الاسترجاع</button></li>
                         </ul>
                     </div>
 
@@ -148,6 +154,18 @@ export function Footer() {
                     </div>
                 </div>
             </div>
+
+            {/* Policy Modal */}
+            <Dialog open={policyModal.isOpen} onOpenChange={(open) => setPolicyModal(prev => ({ ...prev, isOpen: open }))}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-primary mb-4">{policyModal.title}</DialogTitle>
+                    </DialogHeader>
+                    <DialogDescription className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                        {policyModal.content}
+                    </DialogDescription>
+                </DialogContent>
+            </Dialog>
         </footer>
     )
 }
