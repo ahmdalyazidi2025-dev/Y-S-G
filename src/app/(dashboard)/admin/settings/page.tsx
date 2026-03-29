@@ -1085,26 +1085,10 @@ function AdminSettingsContent() {
                                                 </Button>
                                             </div>
 
-                                            {/* Repair Permissions */}
-                                            <div className="bg-card border border-rose-500/20 rounded-2xl p-4 flex items-center justify-between shadow-sm group hover:border-rose-500/50 transition-all bg-rose-500/5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2.5 bg-rose-500/10 text-rose-600 rounded-xl group-hover:scale-110 transition-transform">
-                                                        <Shield className="w-5 h-5" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-sm text-rose-700 dark:text-rose-400">إصلاح الصلاحيات</h4>
-                                                        <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70">اضغط هنا إذا واجهت مشاكل</p>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={handleRepairAdmin}
-                                                    className="h-8 border-rose-200 text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-900/30"
-                                                >
-                                                    إصلاح
-                                                </Button>
-                                            </div>
+                                            {/* 
+                                              Repair Permissions (Hidden as per request)
+                                              ... Wait, I'll just remove the block entirely to keep the code clean. The logic handleRepairAdmin still exists if needed later.
+                                            */}
 
                                         </div>
                                     </div>
