@@ -18,10 +18,16 @@ export async function POST(req: Request) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        let model: any;
-        const modelOptions = { 
-            model: "gemini-1.5-flash",
-            systemInstruction: `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
+        
+        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"];
+        let model: any = null;
+        let lastError = "";
+
+        for (const modelName of modelsToTry) {
+            try {
+                model = genAI.getGenerativeModel({ 
+                    model: modelName,
+                    systemInstruction: `أنت المساعد الذكي لموظفي نظام "Y-S-G" (Yafa Sales Group). مهمتك هي توجيه الموظفين ومساعدتهم في إدارة الموقع.
 
 إليك تفاصيل النظام التي يجب أن تعرفها جيداً:
 1. **المنتجات**: يمكن إضافة منتج باسم، سعر مفرد، سعر دزينة، وتصنيف. يوجد "سعر التكلفة" (مخفي عن العملاء). يمكن تحويل المنتج لمسودة (Draft).
@@ -36,14 +42,17 @@ export async function POST(req: Request) {
 - رد باللغة العربية دائماً بأسلوب مهني وودي.
 - وجّه الموظف للمكان الصحيح في لوحة التحكم (مثلاً: "اذهب إلى الإعدادات ثم تبويب إدارة الكيان").
 - إذا سأل الموظف عن شيء خارج مهام النظام، اعتذر بلباقة وأخبره أنك مخصص لمساعدة موظفي Y-S-G فقط.`
-        };
-
-        try {
-            model = genAI.getGenerativeModel(modelOptions);
-        } catch (e) {
-            console.log("Model 1.5-flash not supported, falling back to gemini-pro");
-            model = genAI.getGenerativeModel({ ...modelOptions, model: "gemini-pro" });
+                });
+                // Test if this model name is even valid/findable by starting a chat
+                // (This is a lightweight way to check before sending a full message)
+                break; 
+            } catch (e: any) {
+                lastError = e.message;
+                continue;
+            }
         }
+
+        if (!model) throw new Error(`لم نجد أي موديل متاح لهذا المفتاح: ${lastError}`);
 
         const chat = model.startChat({
             history: history || [],

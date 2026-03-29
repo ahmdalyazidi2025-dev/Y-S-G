@@ -7,14 +7,35 @@ export async function POST(req: Request) {
         if (!key) return NextResponse.json({ valid: false, error: "Missing key" }, { status: 400 });
 
         const genAI = new GoogleGenerativeAI(key);
-        let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
+        // Let's try the common models first
+        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+        let lastError = "";
+
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                await model.generateContent("test");
+                return NextResponse.json({ valid: true, workingModel: modelName });
+            } catch (e: any) {
+                lastError = e.message;
+                console.log(`Model ${modelName} failed:`, e.message);
+            }
+        }
+
+        // If all failed, let's try to list ANY model that might work
         try {
-            await model.generateContent("test");
+            console.log("All common models failed, fetching list and trying anything available...");
+            // List models functionality might require specific SDK methods or REST
+            // We'll trust the error for now or try one more legacy name
+            const legacyModel = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+            await legacyModel.generateContent("test");
+            return NextResponse.json({ valid: true, workingModel: "gemini-1.0-pro" });
         } catch (e: any) {
-            console.log("Gemini 1.5-Flash failed, trying Gemini-Pro:", e.message);
-            model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            await model.generateContent("test");
+            return NextResponse.json({ 
+                valid: false, 
+                error: `لم نجد أي موديل متاح لهذا المفتاح في حسابك. آخر خطأ: ${lastError}` 
+            }, { status: 401 });
         }
         
         return NextResponse.json({ valid: true });
