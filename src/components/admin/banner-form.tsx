@@ -30,7 +30,13 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile")
 
     const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#60a5fa", "#34d399"];
-    const PRESET_FONTS = ["Cairo", "Tajawal", "Readex Pro", "Amiri", "Changa"];
+    const PRESET_FONTS = [
+        { id: "Cairo", name: "كايرو (رسمي)" },
+        { id: "Tajawal", name: "تجوال (عصري)" },
+        { id: "Readex Pro", name: "ريدكس (تقني)" },
+        { id: "Amiri", name: "أميري (كلاسيكي)" },
+        { id: "Changa", name: "تشانجا (عريض)" }
+    ];
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -285,10 +291,10 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                         <select
                                                             value={fontFamily}
                                                             onChange={(e) => setFontFamily(e.target.value)}
-                                                            className={`w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all appearance-none ${getFontClass(fontFamily)}`}
+                                                            className={`w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all appearance-none cursor-pointer ${getFontClass(fontFamily)}`}
                                                         >
                                                             {PRESET_FONTS.map(f => (
-                                                                <option key={f} value={f} className={`bg-[#1c2a36] ${getFontClass(f)}`}>{f}</option>
+                                                                <option key={f.id} value={f.id} className={`bg-[#1c2a36] ${getFontClass(f.id)}`}>{f.name}</option>
                                                             ))}
                                                         </select>
                                                     </div>
@@ -296,23 +302,27 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                     {/* Color Picker */}
                                                     <div className="space-y-2">
                                                         <label className="text-xs font-bold text-slate-400">لون النص</label>
-                                                        <div className="flex items-center gap-2 h-12 bg-black/20 border border-white/10 rounded-xl px-2">
+                                                        <div className="flex items-center gap-1.5 h-12 bg-black/20 border border-white/10 rounded-xl px-3 overflow-x-auto hide-scrollbar">
                                                             {PRESET_COLORS.map(c => (
                                                                 <button
                                                                     key={c}
                                                                     type="button"
                                                                     onClick={() => setTextColor(c)}
-                                                                    className={`w-6 h-6 rounded-full border-2 transition-all ${textColor === c ? 'border-primary scale-110' : 'border-transparent hover:scale-110'}`}
+                                                                    className={`w-6 h-6 rounded-full border-2 transition-all shadow-sm flex-shrink-0 ${textColor === c ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-transparent hover:scale-110'}`}
                                                                     style={{ backgroundColor: c }}
+                                                                    title={c}
                                                                 />
                                                             ))}
-                                                            <div className="w-[1px] h-6 bg-white/10 mx-1" />
-                                                            <input
-                                                                type="color"
-                                                                value={textColor}
-                                                                onChange={(e) => setTextColor(e.target.value)}
-                                                                className="w-8 h-8 rounded cursor-pointer bg-transparent border-none p-0"
-                                                            />
+                                                            <div className="w-[1px] h-6 bg-white/10 mx-1 flex-shrink-0" />
+                                                            <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-white/20 hover:scale-105 transition-transform" title="لون مخصص">
+                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 via-fuchsia-400 to-indigo-400 pointer-events-none" />
+                                                                <input
+                                                                    type="color"
+                                                                    value={textColor}
+                                                                    onChange={(e) => setTextColor(e.target.value)}
+                                                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 cursor-pointer opacity-0"
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
