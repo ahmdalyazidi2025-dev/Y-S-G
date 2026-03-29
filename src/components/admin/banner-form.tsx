@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { compressImage } from "@/lib/image-utils"
 import { toast } from "sonner"
+import { getFontClass } from "@/lib/fonts"
 
 interface BannerFormProps {
     isOpen: boolean
@@ -20,11 +21,16 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const [image, setImage] = useState("")
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
+    const [textColor, setTextColor] = useState("#ffffff")
+    const [fontFamily, setFontFamily] = useState("Cairo")
     const [isLoading, setIsLoading] = useState(false)
 
     // NEW: Visual Editor State
     const [showTextOverlay, setShowTextOverlay] = useState(true)
     const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile")
+
+    const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#60a5fa", "#34d399"];
+    const PRESET_FONTS = ["Cairo", "Tajawal", "Readex Pro", "Amiri", "Changa"];
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -71,7 +77,9 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                 image,
                 active: true,
                 title: showTextOverlay ? title || "" : "",
-                description: showTextOverlay ? description || "" : ""
+                description: showTextOverlay ? description || "" : "",
+                textColor: showTextOverlay ? textColor : undefined,
+                fontFamily: showTextOverlay ? fontFamily : undefined,
             })
             // Reset
             setImage("")
@@ -159,9 +167,12 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
 
                                             {/* TEXT OVERLAY */}
                                             {showTextOverlay && (image || title) && (
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 text-white">
-                                                    <h3 className="font-bold text-lg leading-tight mb-1">{title || "عنوان البانر"}</h3>
-                                                    <p className="text-xs text-white/80 line-clamp-2">{description || "وصف البانر يظهر هنا..."}</p>
+                                                <div 
+                                                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 ${getFontClass(fontFamily)}`}
+                                                    style={{ color: textColor }}
+                                                >
+                                                    <h3 className="font-bold text-lg leading-tight mb-1" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{title || "عنوان البانر"}</h3>
+                                                    <p className="text-xs line-clamp-2 opacity-90" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{description || "وصف البانر يظهر هنا..."}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -265,6 +276,45 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                         className="w-full h-20 pt-3 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all resize-none"
                                                         maxLength={100}
                                                     />
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                                    {/* Font Selector */}
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold text-slate-400">نوع الخط</label>
+                                                        <select
+                                                            value={fontFamily}
+                                                            onChange={(e) => setFontFamily(e.target.value)}
+                                                            className={`w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all appearance-none ${getFontClass(fontFamily)}`}
+                                                        >
+                                                            {PRESET_FONTS.map(f => (
+                                                                <option key={f} value={f} className={`bg-[#1c2a36] ${getFontClass(f)}`}>{f}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Color Picker */}
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold text-slate-400">لون النص</label>
+                                                        <div className="flex items-center gap-2 h-12 bg-black/20 border border-white/10 rounded-xl px-2">
+                                                            {PRESET_COLORS.map(c => (
+                                                                <button
+                                                                    key={c}
+                                                                    type="button"
+                                                                    onClick={() => setTextColor(c)}
+                                                                    className={`w-6 h-6 rounded-full border-2 transition-all ${textColor === c ? 'border-primary scale-110' : 'border-transparent hover:scale-110'}`}
+                                                                    style={{ backgroundColor: c }}
+                                                                />
+                                                            ))}
+                                                            <div className="w-[1px] h-6 bg-white/10 mx-1" />
+                                                            <input
+                                                                type="color"
+                                                                value={textColor}
+                                                                onChange={(e) => setTextColor(e.target.value)}
+                                                                className="w-8 h-8 rounded cursor-pointer bg-transparent border-none p-0"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         )}

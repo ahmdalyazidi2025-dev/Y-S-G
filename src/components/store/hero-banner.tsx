@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { ChevronRight, ChevronLeft } from "lucide-react"
+import { getFontClass } from "@/lib/fonts"
 
 export function HeroBanner() {
     const { banners } = useStore()
@@ -110,10 +111,16 @@ export function HeroBanner() {
                                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                     عروض حصرية 🔥
                                 </div>
-                                <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white drop-shadow-2xl mb-4 leading-tight tracking-tight">
+                                <h2 
+                                    className={cn("text-4xl sm:text-5xl md:text-6xl font-black drop-shadow-2xl mb-4 leading-tight tracking-tight", getFontClass(activeBanners[current].fontFamily))}
+                                    style={{ color: activeBanners[current].textColor || 'white', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 4px 8px rgba(0,0,0,0.3), 0 2px 4px rgba(255,255,255,0.4)' : '0 4px 12px rgba(0,0,0,0.6)' }}
+                                >
                                     {activeBanners[current].title || "تخفيضات الموسم"}
                                 </h2>
-                                <p className="text-base sm:text-lg text-slate-200 font-medium max-w-xl opacity-90 leading-relaxed drop-shadow-lg line-clamp-2">
+                                <p 
+                                    className={cn("text-base sm:text-lg font-medium max-w-xl leading-relaxed drop-shadow-lg line-clamp-2", getFontClass(activeBanners[current].fontFamily))}
+                                    style={{ color: activeBanners[current].textColor || 'rgb(226, 232, 240)', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.5)' : '0 2px 8px rgba(0,0,0,0.8)' }}
+                                >
                                     {activeBanners[current].description || "استفد من خصومات حصرية لفترة محدودة على جميع المنتجات الجديدة"}
                                 </p>
                             </motion.div>

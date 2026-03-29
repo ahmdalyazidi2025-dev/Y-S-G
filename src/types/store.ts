@@ -8,6 +8,7 @@ export type Banner = {
     description: string
     link?: string
     textColor?: string
+    fontFamily?: string
 }
 
 export type Product = {
