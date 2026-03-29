@@ -9,6 +9,7 @@ import { useStore } from "@/context/store-context"
 import { compressImage } from "@/lib/image-utils"
 import { toast } from "sonner"
 import { getFontClass } from "@/lib/fonts"
+import { Palette } from "lucide-react"
 
 interface BannerFormProps {
     isOpen: boolean
@@ -31,11 +32,11 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
 
     const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#60a5fa", "#34d399"];
     const PRESET_FONTS = [
-        { id: "Cairo", name: "كايرو (رسمي)" },
-        { id: "Tajawal", name: "تجوال (عصري)" },
-        { id: "Readex Pro", name: "ريدكس (تقني)" },
-        { id: "Amiri", name: "أميري (كلاسيكي)" },
-        { id: "Changa", name: "تشانجا (عريض)" }
+        { id: "Cairo", name: "رسمي" },
+        { id: "Tajawal", name: "عصري" },
+        { id: "Readex Pro", name: "تقني" },
+        { id: "Amiri", name: "كلاسيكي" },
+        { id: "Changa", name: "عريض" }
     ];
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -314,13 +315,13 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                                                 />
                                                             ))}
                                                             <div className="w-[1px] h-6 bg-white/10 mx-1 flex-shrink-0" />
-                                                            <div className="relative w-7 h-7 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-white/20 hover:scale-105 transition-transform" title="لون مخصص">
-                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 via-fuchsia-400 to-indigo-400 pointer-events-none" />
+                                                            <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-white/20 hover:scale-105 transition-transform flex items-center justify-center bg-white/5" title="لون مخصص">
+                                                                <Palette className="w-4 h-4 text-slate-300 absolute pointer-events-none" z-index="0" />
                                                                 <input
                                                                     type="color"
                                                                     value={textColor}
                                                                     onChange={(e) => setTextColor(e.target.value)}
-                                                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 cursor-pointer opacity-0"
+                                                                    className="absolute inset-0 w-full h-full cursor-pointer opacity-0 mix-blend-overlay"
                                                                 />
                                                             </div>
                                                         </div>
