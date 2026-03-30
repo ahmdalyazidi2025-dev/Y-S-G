@@ -355,16 +355,14 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
 
                             {/* Check if keys are missing and show Contact Admin Hint if messages length > 1 (meaning user tried to talk) */}
                             {(!storeSettings?.groqApiKey && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
-                                <div className="p-3 mb-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] text-center font-bold">
-                                    تنبيه: لم يتم ضبط مفتاح Groq API في الإعدادات بعد.
-                                </div>
-                            )}
-                            {(!storeSettings?.groqApiKey && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="flex justify-center"
+                                    className="flex flex-col items-center gap-3"
                                 >
+                                    <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] text-center font-bold w-full">
+                                        تنبيه: لم يتم ضبط مفتاح Groq API في الإعدادات بعد.
+                                    </div>
                                     <Link href="/customer/chat">
                                         <Button variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 gap-2">
                                             <MessageCircle className="w-4 h-4" />
