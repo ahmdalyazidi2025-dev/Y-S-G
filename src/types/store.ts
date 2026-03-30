@@ -199,7 +199,6 @@ export type StoreSettings = {
     footerPrivacy: string
     footerReturns: string
     requireCustomerInfoOnCheckout: boolean
-    aiApiKeys?: { key: string, status: "valid" | "invalid" | "unchecked" }[]
     logoUrl?: string
     groqApiKey?: string
     enableMaintenance: boolean

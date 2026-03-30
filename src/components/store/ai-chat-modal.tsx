@@ -187,7 +187,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             setMessages(prev => [...prev, aiMessage])
             hapticFeedback('success')
         } catch (error) {
-            console.error("Gemini Error:", error)
+            console.error("Groq Error:", error)
             // Generic friendly error
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
@@ -236,7 +236,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white text-lg">المساعد الذكي</h3>
-                                    <p className="text-[10px] text-slate-300 font-medium">متصل (Gemini AI)</p>
+                                    <p className="text-[10px] text-slate-300 font-medium">متصل (Groq AI)</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
@@ -272,7 +272,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                         {msg.role === "user" ? <User className="w-5 h-5 text-white" /> : <Sparkles className="w-5 h-5 text-white" />}
                                     </div>
                                     <div className={`flex flex-col gap-1 max-w-[85%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                                        {msg.role === "ai" && <span className="text-[10px] text-slate-400 px-2">Gemini AI</span>}
+                                        {msg.role === "ai" && <span className="text-[10px] text-slate-400 px-2">Groq AI</span>}
                                         <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${msg.role === "user"
                                             ? "bg-primary text-black rounded-tr-sm font-bold"
                                             : "bg-white/10 text-slate-100 rounded-tl-sm border border-white/5"
@@ -354,7 +354,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                             ))}
 
                             {/* Check if keys are missing and show Contact Admin Hint if messages length > 1 (meaning user tried to talk) */}
-                            {((!storeSettings.aiApiKeys || storeSettings.aiApiKeys.filter(k => k.status === 'valid').length === 0) && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
+                            {(!storeSettings.groqApiKey && messages.length > 1 && messages[messages.length - 1].role === 'ai' && messages[messages.length - 1].content.includes("غير مفعلة")) && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}

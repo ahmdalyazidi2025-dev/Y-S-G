@@ -127,23 +127,22 @@ export default function SmartCameraModal({ isOpen, onClose }: SmartCameraModalPr
         setIsAnalyzing(true)
         setAnalysisResult(null) // Reset previous result
 
-        // Check if API Keys exist
-        const validKeys = storeSettings.aiApiKeys?.filter(k => k.key && k.status !== "invalid") || []
-        if (validKeys.length === 0) {
-            console.warn("No valid AI API Keys found in store settings");
+        // Check if Groq API Key exists
+        if (!storeSettings.groqApiKey) {
+            console.warn("No Groq API Key found in store settings");
             setTimeout(() => {
                 setIsAnalyzing(false)
                 setAnalysisResult("NO_KEY")
-                toast.error("مفاتيح الذكاء الاصطناعي مفقودة أو غير صالحة! يرجى إضافتها في الإعدادات")
+                toast.error("مفتاح الذكاء الاصطناعي (Groq) مفقود! يرجى إضافته في الإعدادات")
             }, 500)
             return
         }
 
         try {
-            const prompt = `You are an expert automotive parts specialist. Analyze this image. If it is a CAR, identify Make, Model, Year. If it is a PART, identify Name and Part Number. If NEITHER, return "UNKNOWN". ${storeSettings.geminiCustomPrompt || ""}`
+            const prompt = `You are an expert automotive parts specialist. Analyze this image. If it is a CAR, identify Make, Model, Year. If it is a PART, identify Name and Part Number. If NEITHER, return "UNKNOWN".`
 
             const result = await analyzeImageAI(
-                storeSettings.aiApiKeys || [],
+                storeSettings.groqApiKey,
                 imageBase64,
                 prompt
             )
