@@ -66,7 +66,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const unsubGlobal = onSnapshot(doc(db, "settings", "global"), (snap) => {
-            if (snap.exists()) setStoreSettings(snap.data() as StoreSettings)
+            if (snap.exists()) {
+                // Merge with MOCK_SETTINGS so new fields always have safe defaults
+                // even if the Firestore document was created before those fields existed
+                setStoreSettings({ ...MOCK_SETTINGS, ...snap.data() } as StoreSettings)
+            }
             setSettingsLoaded(true)
         })
         const unsubPrefs = onSnapshot(doc(db, "settings", "admin_preferences"), (snap) => {
