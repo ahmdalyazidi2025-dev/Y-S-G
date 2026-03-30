@@ -219,31 +219,45 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         const loadingToast = toast.loading("جاري تحليل المنتج بالذكاء الاصطناعي...");
 
         try {
+            const smartFillPrompt = `أنت خبير متخصص في قطع غيار السيارات. حلل هذه الصورة بعناية واستخرج المعلومات الدقيقة:
+
+١. اقرأ رقم القطعة OEM بدقة من العبوة أو الملصق
+٢. حدد الماركة (Toyota، Honda، Bosch، NGK، إلخ)
+٣. حدد نوع القطعة تحديداً دقيقاً (فلتر زيت، فلتر هواء، شمعة إشعال، إلخ)
+٤. اكتب اسماً عربياً احترافياً مختصراً: [الماركة] + [نوع القطعة] + [رقم القطعة]
+
+أجب بـ JSON فقط بهذا الشكل، بدون أي نص إضافي:
+{
+  "name": "الاسم العربي الاحترافي للمنتج",
+  "barcode": "رقم القطعة OEM",
+  "description": "وصف مختصر: نوع القطعة، الماركة، السيارات المتوافقة"
+}`;
+
             const res = await fetch("/api/admin-assistant", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    message: "حلل هذه الصورة لمنتج جديد. أعطني: (1) اسم المنتج بدقة، (2) تصنيفه المناسب من متجري، (3) وصف جذابي. أجب بتنسيق منظم يسهل استخراج المعلومات.",
+                    message: smartFillPrompt,
                     image: formData.images[0],
-                    user: { name: "نظام الإضافة التلقائي", role: "admin" }
+                    user: { name: "Smart Fill", role: "admin" }
                 })
             });
 
             const data = await res.json();
             if (data.error) throw new Error(data.error);
 
-            // Simple parsing of AI response (expecting Name, Category, Description)
-            const text = data.text;
-            
-            // Try to extract structured data
-            const nameMatch = text.match(/الاسم|المنتج[:\-]\s*(.*)/i);
-            const catMatch = text.match(/التصنيف|قسم[:\-]\s*(.*)/i);
-            const descMatch = text.match(/الوصف[:\-]\s*([\s\S]*)/i);
+            // Parse structured JSON from AI response
+            const rawText: string = data.text || "";
+            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("لم يتمكن الذكاء الاصطناعي من التعرف على بيانات المنتج، تأكد من وضوح الصورة");
+
+            const parsed = JSON.parse(jsonMatch[0]);
 
             setFormData(prev => ({
                 ...prev,
-                name: nameMatch ? nameMatch[1].trim() : prev.name || "منتج جديد",
-                category: catMatch ? catMatch[1].trim() : prev.category,
-                description: descMatch ? descMatch[1].trim() : text.slice(0, 500)
+                name: parsed.name?.trim() || prev.name,
+                barcode: parsed.barcode?.trim() || prev.barcode,
+                description: parsed.description?.trim() || prev.description,
             }));
 
             toast.dismiss(loadingToast);

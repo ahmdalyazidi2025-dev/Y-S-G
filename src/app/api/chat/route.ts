@@ -1,45 +1,49 @@
 import { NextResponse } from "next/server";
 import { adminDb as db } from "@/lib/firebase-admin";
 
-const BASE_CUSTOMER_INSTRUCTION = `أنت المساعد الذكي "Y-S-G Shopping Assistant" لعملاء متجر "Yafa Sales Group". 
-مهمتك هي مساعدة المتسوقين في العثور على المنتجات، تقديم نصائح التسوق، ومتابعة الطلبات بأسلوب ودود ومحترف.
-
-إليك تفاصيل المتجر التي يجب أن تعرفها:
-1. **المنتجات**: لدينا تشكيلة واسعة من (قطع الغيار، الإكسسوارات، إلخ). يمكنك مساعدة العميل في العثور على المنتج المناسب.
-2. **العروض**: أخبر العملاء دائماً عن وجود عروض وخصومات حصرية في المتجر.
-3. **التوصيل**: المتجر يوفر خدمة التوصل السريع لجميع المناطق.
-4. **متابعة الطلبات**: إذا سأل العميل عن طلبه، أخبره أنه يمكنه مراجعة قسم "فواتيري" أو سؤالي وسأحاول مساعدته بتقديم معلومات عامة.
-
-قواعد الحوار للعملاء:
-- كن ودوداً جداً، مرحباً، واستخدم عبارات ترحيبية (أهلاً بك، يسعدني مساعدتك).
-- تحدث بلغة عربية بسيطة وجذابة.
-- إذا لم تجد منتجاً معيناً، اقترح البديل أو اطلب من العميل إرفاق صورة للبحث البصري.
-- **مهم جداً**: لا تذكر أبداً "سعر التكلفة" أو أي معلومات إدارية خاصة بالموظفين.
-
-البحث البصري (Visual Search):
-- أنت تستخدم تقنية Groq Vision المتطورة لتحليل الصور.
-- إذا أرسل العميل صورة لمنتج أو قطعة، حللها وحاول مطابقتها مع ما هو متوفر في المتجر.
-- إذا لم تكن متأكداً، اقترح عليه التواصل مع الدعم الفني عبر الواتساب.`;
-
 export async function POST(req: Request) {
     try {
         const { message, history, user, image } = await req.json();
 
-        // 1. Get Settings from Firestore (Server Side)
-        const settingsDoc = await db.collection("settings").doc("global").get();
+        // 1. Get Settings + Products from Firestore (Server Side)
+        const [settingsDoc, productsSnap] = await Promise.all([
+            db.collection("settings").doc("global").get(),
+            db.collection("products").where("isDraft", "==", false).limit(80).get()
+        ]);
+
         const settings = settingsDoc.data();
         const groqApiKey = settings?.groqApiKey;
 
         if (!groqApiKey) {
             return NextResponse.json({ 
-                error: "نعتذر، نظام المساعدة الذكي غير متاح حالياً. يرجى المحاولة لاحقاً." 
+                error: "نعتذر، نظام المساعدة الذكية غير متاح حالياً. يرجى التواصل مع الإدارة." 
             }, { status: 400 });
         }
 
-        // --- ENRICH SYSTEM INSTRUCTION ---
+        // 2. Build product catalog string for AI context
+        const productList = productsSnap.docs
+            .map(d => { const p = d.data(); return `- ${p.name}: ${p.pricePiece ?? p.price ?? 0} ر.س للحبة${p.priceDozen ? ` / ${p.priceDozen} ر.س للدستة` : ''}` })
+            .join('\n');
+
+        // 3. Build the system instruction with REAL product data
+        const storeInfo = settings?.aboutTitle || "Yafa Sales Group";
+        const BASE_CUSTOMER_INSTRUCTION = `أنت مساعد متجر ذكي لـ ${storeInfo} وهو متخصص في بيع قطع غيار السيارات.
+
+قواعد صارمة لا تحيد عنها:
+• لا تخترع أسعاراً أبداً. الأسعار الحقيقية واضحة أدناه فقط.
+• لا تذكر سعراً لمنتج غير موجود في القائمة. قل "لا أعرف سعره حالياً"
+• لا تذكر سعر التكلفة أبداً.
+• إذا سأل العميل عن سعر منتج غير موجود: "هذا المنتج ليس في قائمة المتجر حالياً"
+• كن ودوداً ومحترفاً بلغة عربية بسيطة.
+• إذا أرسل صورة لقطعة غيار، حللها وابحث عن اسمها في القائمة أدناه.
+
+**قائمة منتجات المتجر وأسعارها (هذه هي الأسعار الحقيقية الوحيدة المسموح لك بذكرها):**
+${productList || "لا توجد منتجات متاحة حالياً"}`;
+
+        // 4. Enrich with user context
         const userContext = user?.isGuest 
             ? "العميل الحالي: ضيف (Guest)." 
-            : `العميل الحالي: ${user?.name || "عميل"}, معرف المستخدم: ${user?.id || "unknown"}.`;
+            : `العميل الحالي: ${user?.name || "عميل"}.`;
         const fullSystemInstruction = `${BASE_CUSTOMER_INSTRUCTION}\n\nسياق العميل:\n${userContext}`;
 
         // --- PROCESS WITH GROQ ---
