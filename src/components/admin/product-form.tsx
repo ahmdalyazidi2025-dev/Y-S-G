@@ -21,7 +21,7 @@ interface ProductFormProps {
 }
 
 export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFormProps) {
-    const { addProduct, updateProduct, categories } = useStore()
+    const { addProduct, updateProduct, categories, storeSettings } = useStore()
     const galleryInputRef = useRef<HTMLInputElement>(null)
     const cameraInputRef = useRef<HTMLInputElement>(null)
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -29,6 +29,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const [editingFile, setEditingFile] = useState<File | null>(null)
     const [useBranding, setUseBranding] = useState(false)
     const [isDragging, setIsDragging] = useState(false)
+    const [isAiLoading, setIsAiLoading] = useState(false)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -206,6 +207,54 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 image: newImages.length > 0 ? newImages[0] : ""
             }
         })
+    }
+
+    const handleAiSmartFill = async () => {
+        if (formData.images.length === 0) {
+            toast.error("يرجى رفع صورة أولاً ليقوم الذكاء الاصطناعي بتحليلها");
+            return;
+        }
+
+        setIsAiLoading(true);
+        const loadingToast = toast.loading("جاري تحليل المنتج بالذكاء الاصطناعي...");
+
+        try {
+            const res = await fetch("/api/admin-assistant", {
+                method: "POST",
+                body: JSON.stringify({
+                    message: "حلل هذه الصورة لمنتج جديد. أعطني: (1) اسم المنتج بدقة، (2) تصنيفه المناسب من متجري، (3) وصف جذابي. أجب بتنسيق منظم يسهل استخراج المعلومات.",
+                    image: formData.images[0],
+                    user: { name: "نظام الإضافة التلقائي", role: "admin" }
+                })
+            });
+
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            // Simple parsing of AI response (expecting Name, Category, Description)
+            const text = data.text;
+            
+            // Try to extract structured data
+            const nameMatch = text.match(/الاسم|المنتج[:\-]\s*(.*)/i);
+            const catMatch = text.match(/التصنيف|قسم[:\-]\s*(.*)/i);
+            const descMatch = text.match(/الوصف[:\-]\s*([\s\S]*)/i);
+
+            setFormData(prev => ({
+                ...prev,
+                name: nameMatch ? nameMatch[1].trim() : prev.name || "منتج جديد",
+                category: catMatch ? catMatch[1].trim() : prev.category,
+                description: descMatch ? descMatch[1].trim() : text.slice(0, 500)
+            }));
+
+            toast.dismiss(loadingToast);
+            toast.success("تم تحليل المنتج وتعبئة البيانات بنجاح! ✨");
+        } catch (error: any) {
+            console.error("AI Smart Fill Error:", error);
+            toast.dismiss(loadingToast);
+            toast.error("فشل التعبئة التلقائية: " + error.message);
+        } finally {
+            setIsAiLoading(false);
+        }
     }
 
     const handleSubmit = (e: React.FormEvent, isDraft = false) => {
@@ -456,9 +505,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     <span className="text-[10px] font-bold text-purple-300">الكاميرا</span>
                                 </div>
 
-                                {/* Preview Images */}
                                 {formData.images.map((img, idx) => (
-                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-white/10">
+                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-white/10 shadow-lg">
                                         <Image
                                             src={img}
                                             alt={`Preview ${idx}`}
@@ -469,14 +517,22 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         <button
                                             type="button"
                                             onClick={() => removeImage(idx)}
-                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        {idx === 0 && (
-                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 font-bold">
-                                                الرئيسية
-                                            </div>
+                                        {idx === 0 && storeSettings.enableAiSystem !== false && (
+                                            <button
+                                                type="button"
+                                                onClick={handleAiSmartFill}
+                                                disabled={isAiLoading}
+                                                className="absolute bottom-2 inset-x-2 bg-gradient-to-r from-primary to-blue-600 text-white text-[10px] py-2 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xl hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
+                                            >
+                                                {isAiLoading ? (
+                                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : <Wand2 className="w-3 h-3" />}
+                                                <span>تعبئة ذكية (AI)</span>
+                                            </button>
                                         )}
                                     </div>
                                 ))}

@@ -152,9 +152,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userCredential = await signInWithEmailAndPassword(auth, finalEmail, password)
 
             // Validate Role safely
+            let actualRole = "customer"
             try {
                 const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
-                let actualRole = "customer"
                 if (userDoc.exists()) {
                     actualRole = userDoc.data().role || "customer"
                 }
@@ -174,6 +174,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 console.error("Role validation error (ignored):", roleError)
                 // If it crashes during validation, just let them in to avoid blocking legitimate users.
             }
+
+            // Set cookie for middleware protection
+            const token = await userCredential.user.getIdToken()
+            const roleMatch = actualRole || "customer"
+            document.cookie = `firebase-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+            document.cookie = `user-role=${roleMatch}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
 
             return true
         } catch (error) {
@@ -202,6 +208,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await firebaseSignOut(auth)
         setCurrentUser(null)
         localStorage.removeItem("ysg_user")
+        document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
         router.push("/login")
     }, [router, currentUser])
 

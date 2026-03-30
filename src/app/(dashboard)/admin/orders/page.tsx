@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2, Phone, Trash2 } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2, Phone, Trash2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useOrders, useCustomers, useSettings, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -153,6 +153,30 @@ export default function AdminOrdersPage() {
 
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
     const [invoicePreviewOrder, setInvoicePreviewOrder] = useState<Order | null>(null) // State for invoice preview
+    const [isAiLoading, setIsAiLoading] = useState(false)
+    const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
+
+    const handleAiAnalyzeOrder = async (order: Order) => {
+        setIsAiLoading(true);
+        setAiAnalysis(null);
+        try {
+            const res = await fetch("/api/admin-assistant", {
+                method: "POST",
+                body: JSON.stringify({
+                    message: `حلل هذا الطلب رقم #${order.id}. العميل: ${order.customerName}. المنتجات: ${order.items.map(i => `${i.name} (${i.quantity})`).join(", ")}. الإجمالي: ${order.total}. قدم لي (1) ملخص سريع للطلب، (2) درجة أهمية العميل، (3) توصية للتعامل معه.`,
+                    user: { name: "نظام تحليل الطلبات", role: "admin" }
+                })
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setAiAnalysis(data.text);
+            hapticFeedback('success');
+        } catch (error: any) {
+            toast.error("فشل التحليل: " + error.message);
+        } finally {
+            setIsAiLoading(false);
+        }
+    }
 
     const categories = {
         all: "الكل",
@@ -515,6 +539,7 @@ export default function AdminOrdersPage() {
                                                     toggleOrderSelection(order.id, e);
                                                 } else {
                                                     setSelectedOrder(order)
+                                                    setAiAnalysis(null) // Reset AI for new selection
                                                     if (!order.isRead) markOrderAsRead(order.id)
                                                 }
                                             }}
@@ -624,12 +649,26 @@ export default function AdminOrdersPage() {
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
                                         <h2 className="text-xl font-bold">طلب #{selectedOrder.id}</h2>
-                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status].bg, STATUS_CONFIG[selectedOrder.status].color)}>
-                                            {STATUS_CONFIG[selectedOrder.status].label}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status].bg, STATUS_CONFIG[selectedOrder.status].color)}>
+                                                {STATUS_CONFIG[selectedOrder.status].label}
+                                            </span>
+                                            {storeSettings.enableAiSystem !== false && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    onClick={() => handleAiAnalyzeOrder(selectedOrder)}
+                                                    disabled={isAiLoading}
+                                                    className="h-5 px-2 text-[8px] bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 gap-1 rounded-full font-black animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.2)]"
+                                                >
+                                                    {isAiLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
+                                                    تحليل ذكي (AI)
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/5 rounded-full">
+                                <button onClick={() => { setSelectedOrder(null); setAiAnalysis(null); }} className="p-2 hover:bg-white/5 rounded-full">
                                     <XCircle className="w-5 h-5 text-slate-400" />
                                 </button>
                             </div>
@@ -704,6 +743,26 @@ export default function AdminOrdersPage() {
                                     </Button>
                                 )}
                             </div>
+
+                            {/* AI Analysis Result */}
+                            <AnimatePresence>
+                                {aiAnalysis && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        className="bg-primary/5 border border-primary/20 p-4 rounded-2xl relative overflow-hidden group"
+                                    >
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Sparkles className="w-4 h-4 text-primary" />
+                                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">تحليل المساعد الذكي</span>
+                                        </div>
+                                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
+                                            {aiAnalysis}
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* Info Grid */}
                             <div className="grid grid-cols-2 gap-4">

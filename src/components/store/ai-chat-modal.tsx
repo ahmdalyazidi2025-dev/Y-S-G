@@ -31,7 +31,7 @@ interface Message {
 }
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
-    const { products, addToCart, addProductRequest, storeSettings } = useStore()
+    const { products, addToCart, addProductRequest, storeSettings, currentUser, guestId } = useStore()
     const [isExpanded, setIsExpanded] = useState(false)
     const [messages, setMessages] = useState<Message[]>([
         { id: "1", role: "ai", content: "مرحباً! أنا مساعدك الذكي في المتجر. يمكنك سؤالي عن أي منتج، أو إرسال صورة لقطعة غيار للبحث عنها، أو حتى طلب توفير منتج غير موجود! 🤖", timestamp: new Date() }
@@ -109,14 +109,26 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
 
             messagePayload.push({
                 role: "user",
-                content: userMessage.content + (selectedImage ? " [Image Attached]" : "")
+                content: userMessage.content || "حلل هذه الصورة من فضلك"
             })
 
             // Call API
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: messagePayload })
+                body: JSON.stringify({ 
+                    message: userMessage.content || "حلل هذه الصورة من فضلك",
+                    image: selectedImage,
+                    user: {
+                        id: currentUser?.id || guestId,
+                        name: currentUser?.name || "عميل",
+                        isGuest: !currentUser
+                    },
+                    history: messages.map(m => ({
+                        role: m.role === "user" ? "user" : "model",
+                        parts: [{ text: m.content }]
+                    }))
+                })
             })
 
             if (!response.ok) {

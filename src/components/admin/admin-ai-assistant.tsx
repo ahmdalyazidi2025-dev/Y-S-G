@@ -2,14 +2,17 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot, Send, X, User, Sparkles, Minimize2, Terminal } from "lucide-react"
+import { Bot, Send, X, User, Sparkles, Minimize2, Terminal, Image as ImageIcon, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useStore } from "@/context/store-context"
 
 export function AdminAiAssistant() {
-    const { currentUser } = useStore()
+    const { currentUser, storeSettings } = useStore()
     const [isOpen, setIsOpen] = useState(false)
+
+    // Global AI Toggle Check
+    if (storeSettings?.enableAiSystem === false) return null;
     const [messages, setMessages] = useState<{ role: "user" | "model", text: string, timestamp: Date }[]>([
         { 
             role: "model", 
@@ -18,31 +21,69 @@ export function AdminAiAssistant() {
         }
     ])
     const [input, setInput] = useState("")
+    const [image, setImage] = useState<string | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Auto scroll to bottom
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
-    }, [messages, isLoading])
+    }, [messages, isLoading, imagePreview])
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("حجم الصورة كبير جداً (الأقصى 5 ميجابايت)")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            const base64 = event.target?.result as string
+            setImage(base64)
+            setImagePreview(base64)
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const removeImage = () => {
+        setImage(null)
+        setImagePreview(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+    }
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!input.trim() || isLoading) return
 
         const userMessage = input.trim()
+        const currentImage = image
         const now = new Date()
-        setMessages(prev => [...prev, { role: "user", text: userMessage, timestamp: now }])
+        
+        setMessages(prev => [...prev, { 
+            role: "user", 
+            text: userMessage || "تحليل الصورة...", 
+            timestamp: now,
+            image: currentImage || undefined
+        }])
+        
         setInput("")
+        setImage(null)
+        setImagePreview(null)
         setIsLoading(true)
 
         try {
             const res = await fetch("/api/admin-assistant", {
                 method: "POST",
                 body: JSON.stringify({ 
-                    message: userMessage,
+                    message: userMessage || "حلل هذه الصورة من فضلك",
+                    image: currentImage,
                     user: {
                         name: currentUser?.name || "زميل",
                         role: currentUser?.role || "staff",
@@ -132,6 +173,11 @@ export function AdminAiAssistant() {
                                             : "bg-slate-100 text-slate-700 rounded-[1.2rem] rounded-tl-none"
                                     )}>
                                         <div className="flex flex-col gap-1">
+                                            {(m as any).image && (
+                                                <div className="mb-2 overflow-hidden rounded-lg border border-white/20">
+                                                    <img src={(m as any).image} alt="Sent" className="max-w-full h-auto object-cover" />
+                                                </div>
+                                            )}
                                             <div className="whitespace-pre-wrap">{m.text}</div>
                                             <div className={cn(
                                                 "text-[9px] opacity-40 text-left mt-1 font-medium",
@@ -159,23 +205,58 @@ export function AdminAiAssistant() {
 
                         {/* Input Area */}
                         <div className="p-5 border-t border-slate-100 bg-white/50 backdrop-blur-sm">
-                            <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
-                                <div className="relative flex-1 group">
-                                    <input
-                                        type="text"
-                                        placeholder="كيف يمكنني مساعدتك؟"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        className="w-full h-11 bg-slate-50 border border-slate-200/80 rounded-xl pl-12 pr-4 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary/30 transition-all relative font-medium placeholder:text-slate-400"
-                                        dir="rtl"
-                                    />
-                                    <Button
-                                        type="submit"
-                                        disabled={!input.trim() || isLoading}
-                                        className="absolute left-1 top-1 w-9 h-9 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all flex items-center justify-center p-0 shadow-sm"
+                            <AnimatePresence>
+                                {imagePreview && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        className="relative mb-3 w-20 h-20 group"
                                     >
-                                        <Send className="w-4 h-4" />
-                                    </Button>
+                                        <img src={imagePreview} className="w-full h-full object-cover rounded-xl border border-slate-200 shadow-sm" alt="Preview" />
+                                        <button 
+                                            onClick={removeImage}
+                                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    accept="image/*" 
+                                    onChange={handleImageSelect}
+                                />
+                                <div className="relative flex-1 group flex items-center gap-2">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="text"
+                                            placeholder="كيف يمكنني مساعدتك؟"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            className="w-full h-11 bg-slate-50 border border-slate-200/80 rounded-xl pl-12 pr-11 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus:border-primary/30 transition-all relative font-medium placeholder:text-slate-400"
+                                            dir="rtl"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="absolute right-1 top-1 w-9 h-9 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all flex items-center justify-center"
+                                        >
+                                            <Camera className="w-5 h-5" />
+                                        </button>
+                                        <Button
+                                            type="submit"
+                                            disabled={(!input.trim() && !image) || isLoading}
+                                            className="absolute left-1 top-1 w-9 h-9 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all flex items-center justify-center p-0 shadow-sm"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </form>
                             <div className="mt-2.5 flex items-center justify-center gap-3 text-[9px] text-slate-400 font-semibold opacity-60 uppercase tracking-tight">

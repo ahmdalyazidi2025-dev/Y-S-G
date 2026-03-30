@@ -1,124 +1,124 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { adminDb as db } from "@/lib/firebase-admin";
+
+const BASE_CUSTOMER_INSTRUCTION = `أنت المساعد الذكي "Y-S-G Shopping Assistant" لعملاء متجر "Yafa Sales Group". 
+مهمتك هي مساعدة المتسوقين في العثور على المنتجات، تقديم نصائح التسوق، ومتابعة الطلبات بأسلوب ودود ومحترف.
+
+إليك تفاصيل المتجر التي يجب أن تعرفها:
+1. **المنتجات**: لدينا تشكيلة واسعة من (قطع الغيار، الإكسسوارات، إلخ). يمكنك مساعدة العميل في العثور على المنتج المناسب.
+2. **العروض**: أخبر العملاء دائماً عن وجود عروض وخصومات حصرية في المتجر.
+3. **التوصيل**: المتجر يوفر خدمة التوصل السريع لجميع المناطق.
+4. **متابعة الطلبات**: إذا سأل العميل عن طلبه، أخبره أنه يمكنه مراجعة قسم "فواتيري" أو سؤالي وسأحاول مساعدته بتقديم معلومات عامة (لا تظهر أرقام سرية).
+
+قواعد الحوار للعملاء:
+- كن ودوداً جداً، مرحباً، واستخدم عبارات ترحيبية (أهلاً بك، يسعدني مساعدتك).
+- تحدث بلغة عربية بسيطة وجذابة.
+- إذا لم تجد منتجاً معيناً، اقترح البديل أو اطلب من العميل إرفاق صورة للبحث البصري.
+- **مهم جداً**: لا تذكر أبداً "سعر التكلفة" أو أي معلومات إدارية خاصة بالموظفين.
+
+البحث البصري (Visual Search):
+- إذا أرسل العميل صورة لمنتج أو قطعة، حللها وحاول مطابقتها مع ما هو متوفر في المتجر.
+- إذا لم تكن متأكداً، اقترح عليه التواصل مع الدعم الفني عبر الواتساب.`;
 
 export async function POST(req: Request) {
     try {
-        const { messages } = await req.json();
+        const { message, history, user, image } = await req.json();
 
-        // 1. Fetch Keys using Admin SDK (Bypasses Client Security Rules)
-        const docRef = adminDb.collection("settings").doc("global");
-        const docSnap = await docRef.get();
+        // 1. Get Settings from Firestore
+        const settingsDoc = await db.collection("settings").doc("global").get();
+        const settings = settingsDoc.data();
+        const geminiApiKey = settings?.geminiApiKey;
+        const groqApiKey = settings?.groqApiKey;
 
-        let apiKeys: { key: string, status: "valid" | "invalid" | "unchecked" }[] = [];
-
-        if (docSnap.exists) {
-            const data = docSnap.data();
-            apiKeys = data?.aiApiKeys || [];
+        if (!geminiApiKey && !groqApiKey) {
+            return NextResponse.json({ 
+                error: "الخدمة غير متوفرة حالياً، يرجى المحاولة لاحقاً." 
+            }, { status: 400 });
         }
 
-        // 2. Validate Keys
-        const validKeys = apiKeys.filter(k => k.key && k.status !== "invalid");
+        // --- ENRICH SYSTEM INSTRUCTION ---
+        const userContext = user?.isGuest 
+            ? "العميل الحالي: ضيف (Guest)." 
+            : `العميل الحالي: ${user?.name || "عميل"}, معرف المستخدم: ${user?.id || "unknown"}.`;
+        const fullSystemInstruction = `${BASE_CUSTOMER_INSTRUCTION}\n\nسياق العميل:\n${userContext}`;
 
-        if (validKeys.length === 0) {
-            return NextResponse.json({
-                error: "المفاتيح غير موجودة",
-                details: "يرجى من المسؤول إضافة مفتاح Google Gemini API في الإعدادات."
-            }, { status: 401 });
-        }
-
-        // 3. Prepare Gemini Payload
-        const contents = messages
-            .filter((m: any) => m.role !== "system")
-            .map((m: any) => ({
-                role: m.role === "assistant" || m.role === "ai" ? "model" : "user",
-                parts: [{ text: m.content }]
-            }));
-
-        const payload = {
-            contents: contents,
-            system_instruction: {
-                parts: [{ text: "أنت مساعد ذكي لمتجر YSG GROUP لقطع الغيار. معلوماتك مستمدة من قاعدة بيانات المتجر. جاوب باختصار ودقة." }]
-            }
-        };
-
-        // 3. Loop through keys until one works (Rotation Logic)
-        const errors = [];
-
-        // Models to try in order of priority
-        // We prioritize 1.5-flash as it is the most stable/cost-effective
-        const TARGET_MODEL = "gemini-1.5-flash"; // Or switch to "gemini-2.0-flash-exp" if needed
-
-        for (let i = 0; i < validKeys.length; i++) {
-            const keyObj = validKeys[i];
-            const apiKey = keyObj.key.trim();
-            const keyLabel = `Key #${i + 1} (...${apiKey.slice(-4)})`;
-
+        // --- TRY GROQ FIRST ---
+        if (groqApiKey) {
             try {
-                // Modified Logic: Skip "List Models" to save Quota & Latency.
-                // Directly attempt generation with the target model.
+                const isVisionRequest = !!image;
+                const model = isVisionRequest ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${TARGET_MODEL}:generateContent?key=${apiKey}`;
+                const content: any[] = [{ type: "text", text: message }];
+                if (image) {
+                    content.push({
+                        type: "image_url",
+                        image_url: { url: image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}` }
+                    });
+                }
 
-                const response = await fetch(url, {
+                const groqMessages = [
+                    { role: "system", content: fullSystemInstruction },
+                    ...(history || []).map((h: any) => ({
+                        role: h.role === "user" ? "user" : "assistant",
+                        content: h.parts?.[0]?.text || h.content || ""
+                    })),
+                    { role: "user", content: isVisionRequest ? content : message }
+                ];
+
+                const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    headers: {
+                        "Authorization": `Bearer ${groqApiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: groqMessages,
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
                 });
 
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    console.warn(`${keyLabel} failed:`, errData);
-
-                    const status = response.status;
-                    const msg = errData.error?.message || "Unknown";
-
-                    // Handle specific error codes if needed
-                    if (status === 429 || status === 503) {
-                        errors.push(`${keyLabel} [Quota/Overload]: ${msg}`);
-                    } else {
-                        errors.push(`${keyLabel} [Error]: ${status} - ${msg}`);
-                    }
-                    continue; // Try next key
+                if (groqResponse.ok) {
+                    const data = await groqResponse.json();
+                    return NextResponse.json({ text: data.choices[0].message.content });
                 }
-
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-                if (!text) {
-                    errors.push(`${keyLabel} [Empty Response]`);
-                    continue;
-                }
-
-                return NextResponse.json({ text });
-
-            } catch (error: any) {
-                console.error("Key Attempt Error:", error);
-                errors.push(`${keyLabel} [Exception]: ${error.message}`);
-                continue;
+                console.error("Groq failed for store assistant, falling back...");
+            } catch (e) {
+                console.error("Groq Error (Store):", e);
             }
         }
 
-        // If loop finishes without return, all keys failed
-        console.error("All keys failed:", errors);
+        // --- FALLBACK TO GEMINI ---
+        if (geminiApiKey) {
+            try {
+                const genAI = new GoogleGenerativeAI(geminiApiKey);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: fullSystemInstruction });
+                const chat = model.startChat({ history: history || [] });
+                
+                let promptParts: any[] = [message];
+                if (image) {
+                    const base64Data = image.split(",")[1] || image;
+                    promptParts.push({
+                        inlineData: {
+                            data: base64Data,
+                            mimeType: "image/jpeg"
+                        }
+                    });
+                }
 
-        let finalError = errors.join(" | ");
-        const isQuota = errors.some(e => e.includes("429") || e.includes("RESOURCE_EXHAUSTED") || e.includes("Quota"));
-
-        if (isQuota) {
-            finalError += "\n\n💡 نصيحة هامة: الخطأ (Quota) يعني أن 'المشروع' في جوجل انتهى رصيده. إنشاء مفتاح جديد في نفس المشروع لن يحل المشكلة. يجب إنشاء 'مشروع جديد' (New Project) في حساب جوجل واستخراج مفتاح منه.";
+                const result = await chat.sendMessage(promptParts);
+                const response = await result.response;
+                return NextResponse.json({ text: response.text() });
+            } catch (e: any) {
+                throw new Error(`AI Provider failed: ${e.message}`);
+            }
         }
 
-        return NextResponse.json({
-            error: "فشل الاتصال بجميع المفاتيح",
-            details: finalError
-        }, { status: 429 });
-
-
+        throw new Error("لم نتمكن من الاتصال بمزودات الذكاء الاصطناعي");
     } catch (error: any) {
-        console.error("Chat Route Error:", error);
-        return NextResponse.json({
-            error: "خطأ داخلي",
-            details: error.message || "Unknown Error"
-        }, { status: 500 });
+        console.error("Store Assistant Error:", error);
+        return NextResponse.json({ error: error.message || "عذراً، واجهت مشكلة في فهم طلبك." }, { status: 500 });
     }
 }

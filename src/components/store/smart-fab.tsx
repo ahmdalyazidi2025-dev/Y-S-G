@@ -24,7 +24,7 @@ export function SmartFAB({ onRequest, onChat }: Omit<SmartFABProps, 'onScan'>) {
     const isLongPress = useRef(false)
 
     // Check if AI is enabled (default to true if undefined)
-    const isAiEnabled = storeSettings.enableAIChat !== false
+    const isAiEnabled = storeSettings.enableAIChat !== false && storeSettings.enableAiSystem !== false
 
     const handleTouchStart = () => {
         if (!isAiEnabled) return // Disable long press if AI is off

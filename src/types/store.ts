@@ -221,6 +221,7 @@ export type StoreSettings = {
     allCategoryImage?: string
     autoDeleteChats?: boolean
     autoDeleteChatsDuration?: number
+    enableAiSystem?: boolean
 }
 
 export type AdminPreferences = {

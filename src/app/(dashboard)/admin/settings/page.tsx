@@ -664,6 +664,35 @@ function AdminSettingsContent() {
                                     </div>
                                 </Section>
 
+                                <Section icon={<Sparkles className="w-5 h-5 text-indigo-400" />} title="نظام الذكاء الاصطناعي (AI)">
+                                    <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                        <div className="absolute top-0 right-0 w-2 h-full bg-indigo-500/20 group-hover:bg-indigo-500 transition-colors" />
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
+                                                <Sparkles className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-foreground">التحكم في الذكاء الاصطناعي</h4>
+                                                <p className="text-[10px] text-muted-foreground">عند الإغلاق تختفي جميع أدوات الذكاء الاصطناعي من المتجر ولوحة التحكم</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                                            <div className="flex flex-col gap-1">
+                                                <Label className="text-sm font-bold cursor-pointer" onClick={() => handleChange('enableAiSystem', !formData.enableAiSystem)}>
+                                                    تفعيل ميزات الذكاء الاصطناعي
+                                                </Label>
+                                                <span className="text-[10px] text-muted-foreground">يشمل التحليل الذكي، تعبئة البيانات، ودردشة العملاء</span>
+                                            </div>
+                                            <Switch
+                                                checked={formData.enableAiSystem !== false}
+                                                onCheckedChange={(checked) => handleChange('enableAiSystem', checked)}
+                                                className="data-[state=checked]:bg-indigo-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </Section>
+
                                 <Section icon={<Database className="w-5 h-5" />} title="إدارة مساحة التخزين الخاصة بالدردشة">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="p-6 bg-card rounded-2xl border border-border space-y-4 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">

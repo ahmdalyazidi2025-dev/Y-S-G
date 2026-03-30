@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2, Bell } from "lucide-react"
+import { ClipboardList, PlusCircle, Scan, ShoppingCart, LogOut, MessageSquare, Share2, Bell, Sparkles } from "lucide-react"
 import React, { useState, useRef, useEffect } from "react" // Added useRef
 import { useStore } from "@/context/store-context"
 import { ProtectedRoute } from "@/components/auth/protected-route"
@@ -234,6 +234,17 @@ export default function StoreLayout({
                                                     >
                                                         <Scan className="w-5 h-5" />
                                                         <span className="text-[9px] font-bold">الماسح</span>
+                                                    </button>
+                                                )}
+
+                                                {storeSettings.enableAiSystem !== false && (
+                                                    <button
+                                                        onClick={() => { setIsAiChatOpen(true); hapticFeedback('success'); }}
+                                                        className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 text-indigo-500 border border-indigo-500/20 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.1)] group"
+                                                    >
+                                                        <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform animate-pulse" />
+                                                        <span className="text-[9px] font-black">مساعد AI</span>
+                                                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
                                                     </button>
                                                 )}
 
