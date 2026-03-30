@@ -13,6 +13,9 @@ import { compressImage } from "@/lib/image-utils"
 import { toast } from "sonner"
 import ScannerModal from "@/components/store/scanner-modal"
 import { ImageEditorModal } from "@/components/admin/image-editor-modal"
+import { db } from "@/lib/firebase"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { AlertCircle, ExternalLink } from "lucide-react"
 
 interface ProductFormProps {
     isOpen: boolean
@@ -28,6 +31,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const [isEditorOpen, setIsEditorOpen] = useState(false)
     const [editingFile, setEditingFile] = useState<File | null>(null)
     const [useBranding, setUseBranding] = useState(false)
+    const [duplicateFound, setDuplicateFound] = useState<{ id: string, name: string } | null>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [isAiLoading, setIsAiLoading] = useState(false)
 
@@ -260,6 +264,19 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 description: parsed.description?.trim() || prev.description,
             }));
 
+            // --- CHECK FOR DUPLICATES ---
+            if (parsed.barcode?.trim()) {
+                const q = query(collection(db, "products"), where("barcode", "==", parsed.barcode.trim()));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const existing = querySnapshot.docs[0];
+                    setDuplicateFound({ id: existing.id, name: existing.data().name });
+                    toast.warning("هذا المنتج موجود مسبقاً في المتجر!");
+                } else {
+                    setDuplicateFound(null);
+                }
+            }
+
             toast.dismiss(loadingToast);
             toast.success("تم تحليل المنتج وتعبئة البيانات بنجاح! ✨");
         } catch (error: any) {
@@ -329,7 +346,42 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Hidden Inputs */}
+                            {/* Duplicate Warning */}
+                            {duplicateFound && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3"
+                                >
+                                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <p className="text-xs font-bold text-amber-200">تنبيه: منتج مكرر</p>
+                                        <p className="text-[10px] text-amber-200/70 mt-1">يوجد منتج آخر بنفس رقم OEM الرابط: <span className="font-bold">{duplicateFound.name}</span></p>
+                                        <Button 
+                                            variant="link" 
+                                            size="sm" 
+                                            className="p-0 h-auto text-[10px] text-amber-400 mt-1 flex items-center gap-1"
+                                            onClick={() => {
+                                                // If we had a direct edit-router here, we'd use it. 
+                                                // For now, just a toast with the name.
+                                                toast.info(`المعرف: ${duplicateFound.id}`);
+                                            }}
+                                        >
+                                            استعراض المنتج الموجود <ExternalLink className="w-3 h-3" />
+                                        </Button>
+                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6 rounded-full hover:bg-amber-500/20"
+                                        onClick={() => setDuplicateFound(null)}
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </Button>
+                                </motion.div>
+                            )}
+
+                            {/* Name Input */}
                             <input
                                 type="file"
                                 ref={galleryInputRef}

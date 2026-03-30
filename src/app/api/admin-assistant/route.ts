@@ -33,8 +33,14 @@ export async function POST(req: Request) {
     try {
         const { message, history, user, image } = await req.json();
 
-        // 1. Get Settings from Firestore (Server Side)
-        const settingsDoc = await db.collection("settings").doc("global").get();
+        // 1. Get Global Context from Firestore (Parallel)
+        const [settingsDoc, ordersSnap, bannersSnap, productsSnap] = await Promise.all([
+            db.collection("settings").doc("global").get(),
+            db.collection("orders").orderBy("createdAt", "desc").limit(30).get(),
+            db.collection("banners").where("active", "==", true).get(),
+            db.collection("products").get()
+        ]);
+
         const settings = settingsDoc.data();
         const groqApiKey = settings?.groqApiKey;
 
@@ -44,8 +50,29 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // 2. Build Business Intelligence Context
+        const recentOrders = ordersSnap.docs.map(d => {
+            const o = d.data();
+            return `- طلب #${d.id.slice(0, 5)} للمشتري ${o.customerName || 'ضيف'} بقيمة ${o.total} ر.س (${o.status})`;
+        }).join('\n');
+
+        const salesStats = {
+            totalProducts: productsSnap.size,
+            activeBanners: bannersSnap.size,
+            recentOrdersCount: ordersSnap.size,
+            totalRevenue: ordersSnap.docs.reduce((acc, d) => acc + (d.data().total || 0), 0)
+        };
+
+        const businessContext = `إليك ملخص أداء المتجر الحالي لتتمكن من إجابة المسؤول:
+- عدد المنتجات الإجمالي: ${salesStats.totalProducts}
+- العروض النشطة (Banners): ${salesStats.activeBanners}
+- آخر 30 طلباً قيمتها الإجمالية: ${salesStats.totalRevenue.toFixed(2)} ر.س
+- ملخص الطلبات الأخيرة:
+${recentOrders || "لا توجد طلبات مؤخراً"}`;
+
         // --- ENRICH SYSTEM INSTRUCTION WITH USER CONTEXT ---
-        const userContext = `المستخدم الحالي: ${user?.name || "زميل"}، الدور: ${user?.role || "staff"}، الصلاحيات: ${user?.permissions?.join(', ') || 'محدودة'}.`;
+        const userContext = `المسؤول الحالي: ${user?.name || "زميل"}، الدور: ${user?.role || "admin"}
+${businessContext}`;
         const fullSystemInstruction = `${BASE_SYSTEM_INSTRUCTION}\n\nسياق الجلسة الحالية:\n${userContext}`;
 
         // --- PROCESS WITH GROQ (SOLE PROVIDER) ---

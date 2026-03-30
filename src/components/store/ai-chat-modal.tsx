@@ -156,31 +156,52 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             const result = await response.json()
             const responseText = result.text
 
-            // ... parsing logic ...
+            // 1. Parse VIN data if any
             let action: Message['action'] = "none"
-            let productData
-            let marketEstimate
             let vinData
+            
+            // Check for VIN pattern (17 chars) and AI confirmation
+            const vinMatch = responseText.match(/\b([A-HJ-NPR-Z0-9]{17})\b/i);
+            if (vinMatch && (responseText.includes("رقم الهيكل") || responseText.includes("VIN"))) {
+                action = "vin_identified";
+                // AI usually mentions the car name in the first line of decoding
+                const carName = responseText.split('\n')[0].replace(/.*:|فحص|تحليل/g, '').trim();
+                vinData = { vin: vinMatch[1], car: carName || "سيارة تم التعرف عليها" };
+            }
 
-            if (responseText.includes("متوفرة") || responseText.includes("موجودة")) {
-                const foundProduct = products.find(p => responseText.includes(p.name))
-                if (foundProduct) {
-                    action = "available"
-                    productData = { id: foundProduct.id, name: foundProduct.name, price: foundProduct.price }
+            // 2. Parse Product Card tokens [PRODUCT:id]
+            const productMatch = responseText.match(/\[PRODUCT:([a-zA-Z0-9_-]+)\]/);
+            let productData;
+            if (productMatch) {
+                const pid = productMatch[1];
+                const p = products.find(prod => prod.id === pid);
+                if (p) {
+                    action = "available";
+                    productData = { id: p.id, name: p.name, price: p.pricePiece ?? p.price ?? 0 };
                 }
-            } else if (responseText.includes("غير متوفرة") || responseText.includes("طلب")) {
-                action = "request"
-                marketEstimate = "150 - 300"
+            }
+
+            // 3. Simple fallback actions
+            if (action === "none") {
+                if (responseText.includes("متوفرة") || responseText.includes("موجودة")) {
+                    const foundProduct = products.find(p => responseText.includes(p.name))
+                    if (foundProduct) {
+                        action = "available"
+                        productData = { id: foundProduct.id, name: foundProduct.name, price: foundProduct.pricePiece ?? foundProduct.price ?? 0 }
+                    }
+                } else if (responseText.includes("غير متوفرة") || responseText.includes("طلب")) {
+                    action = "request"
+                }
             }
 
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: "ai",
-                content: responseText,
+                // Clean the token from the visible text
+                content: responseText.replace(/\[PRODUCT:([a-zA-Z0-9_-]+)\]/g, '').trim(),
                 timestamp: new Date(),
                 action,
                 productData,
-                marketEstimate,
                 vinData
             }
 
@@ -299,25 +320,43 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                             <div className="whitespace-pre-line">{msg.content}</div>
 
                                             {/* Action Buttons */}
-                                            {msg.action === "available" && msg.productData && (
-                                                <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">
-                                                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 flex items-center justify-between">
-                                                        <span className="text-xs text-green-400 font-bold">✅ متوفرة في المتجر</span>
-                                                        <span className="text-sm font-black text-white">{msg.productData.price} <span className="text-[10px] font-normal">ر.س</span></span>
+                                            {msg.action === "available" && msg.productData && (() => {
+                                                const pData = msg.productData;
+                                                const product = products.find(p => p.id === pData.id);
+                                                if (!product) return null;
+
+                                                return (
+                                                    <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-3">
+                                                        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex items-center gap-3">
+                                                            <div className="w-14 h-14 bg-black rounded-xl overflow-hidden shrink-0 border border-white/5">
+                                                                {product.images?.[0] && (
+                                                                    <Image 
+                                                                        src={product.images[0]} 
+                                                                        alt="product" 
+                                                                        width={56} 
+                                                                        height={56} 
+                                                                        className="object-cover w-full h-full"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[10px] text-emerald-400 font-black mb-0.5">✅ عرض متوفر للمحترفين</div>
+                                                                <div className="text-xs font-bold text-white truncate">{pData.name}</div>
+                                                                <div className="text-sm font-black text-white mt-1">{pData.price} <span className="text-[9px] font-normal text-slate-400">ر.س</span></div>
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            className="w-full bg-primary text-black hover:bg-primary/90 rounded-xl h-11 font-black shadow-lg shadow-primary/10 active:scale-95 transition-all text-xs"
+                                                            onClick={() => {
+                                                                addToCart(product)
+                                                                toast.success("تمت الإضافة للسلة 🛒")
+                                                            }}
+                                                        >
+                                                            إضافة فورية للسلة
+                                                        </Button>
                                                     </div>
-                                                    <Button
-                                                        className="w-full bg-green-600 hover:bg-green-500 text-white rounded-xl h-12 font-bold shadow-lg shadow-green-600/20"
-                                                        onClick={() => {
-                                                            const fullProduct = products.find(p => p.id === msg.productData?.id)
-                                                            if (fullProduct) {
-                                                                addToCart(fullProduct)
-                                                            }
-                                                        }}
-                                                    >
-                                                        إضافة للسلة 🛒
-                                                    </Button>
-                                                </div>
-                                            )}
+                                                );
+                                            })()}
 
                                             {msg.action === "request" && (
                                                 <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-2">

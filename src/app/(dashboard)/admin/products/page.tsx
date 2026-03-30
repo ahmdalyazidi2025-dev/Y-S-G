@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy, Folder, Loader2 } from "lucide-react"
+import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, Tag, Clock, FileEdit, Zap, PackagePlus, Ban, RefreshCw, Copy, Folder, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import Image from "next/image"
 import { useStore, Product } from "@/context/store-context"
 import { Input } from "@/components/ui/input"
 import { AdminProductForm } from "@/components/admin/product-form"
+import { BatchProductUpload } from "@/components/admin/batch-product-upload"
 import { cn } from "@/lib/utils"
 
 import { useSearchParams } from "next/navigation"
@@ -21,6 +22,7 @@ export default function ProductsPage() {
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
     const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "الكل")
     const [isFormOpen, setIsFormOpen] = useState(false)
+    const [isBatchOpen, setIsBatchOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
     // State for Tabs
@@ -158,7 +160,15 @@ export default function ProductsPage() {
                         />
                     </div>
                     <Button
-                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4 md:px-6 shadow-lg shadow-primary/20 shrink-0"
+                        variant="outline"
+                        className="border-indigo-500/30 text-indigo-500 hover:bg-indigo-500/10 gap-2 rounded-full h-10 px-4 md:px-5 shrink-0 hidden md:flex"
+                        onClick={() => setIsBatchOpen(true)}
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        <span>إضافة بالجملة</span>
+                    </Button>
+                    <Button
+                        className="bg-primary hover:bg-primary/90 text-black font-bold gap-2 rounded-full h-10 px-4 md:px-6 shadow-lg shadow-primary/20 shrink-0"
                         onClick={handleAddNew}
                     >
                         <PackagePlus className="w-4 h-4 md:w-5 md:h-5" />
@@ -491,6 +501,11 @@ export default function ProductsPage() {
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 initialProduct={editingProduct}
+            />
+
+            <BatchProductUpload
+                isOpen={isBatchOpen}
+                onClose={() => setIsBatchOpen(false)}
             />
         </div >
     )
