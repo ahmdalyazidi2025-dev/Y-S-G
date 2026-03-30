@@ -3,7 +3,7 @@
 const GROQ_API_URL = "https://api.groq.com/openai/v1"
 // Stable Groq models for 2026
 const TEXT_MODEL = "llama-3.3-70b-versatile"
-const VISION_MODEL = "llama-3.2-11b-vision"
+const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 /**
  * Verify a Groq API Key
