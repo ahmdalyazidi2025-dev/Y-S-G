@@ -104,7 +104,7 @@ export async function POST(req: Request) {
         // --- FALLBACK TO GEMINI ---
         if (geminiApiKey) {
             const genAI = new GoogleGenerativeAI(geminiApiKey);
-            const modelToUse = image ? "gemini-1.5-flash" : "gemini-1.5-flash"; // Both support vision
+            const modelToUse = "gemini-1.5-flash-latest"; // Both support vision
 
             try {
                 const model = genAI.getGenerativeModel({ model: modelToUse, systemInstruction: fullSystemInstruction });

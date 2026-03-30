@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         if (geminiApiKey) {
             try {
                 const genAI = new GoogleGenerativeAI(geminiApiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: fullSystemInstruction });
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest", systemInstruction: fullSystemInstruction });
                 const chat = model.startChat({ history: history || [] });
                 
                 let promptParts: any[] = [message];

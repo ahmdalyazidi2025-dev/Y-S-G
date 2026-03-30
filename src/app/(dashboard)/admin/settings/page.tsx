@@ -1127,7 +1127,7 @@ function AdminSettingsContent() {
                                     </div>
                                 </Section>
 
-                                <Section icon={<Sparkles className="w-5 h-5" />} title="إعدادات الذكاء الاصطناعي (Gemini)">
+                                <Section icon={<Sparkles className="w-5 h-5 text-indigo-400" />} title="إعدادات الذكاء الاصطناعي (Gemini & Groq)">
                                     <div className="space-y-4">
                                         <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col gap-3">
                                             <div className="flex items-center gap-3">
@@ -1179,9 +1179,12 @@ function AdminSettingsContent() {
                                         </div>
 
                                         <div className="space-y-2 pt-4 border-t border-white/5">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <Zap className="w-4 h-4 text-emerald-400" />
-                                                <Label className="text-xs font-bold text-slate-400">Groq API Key (البديل السريع)</Label>
+                                            <div className="flex items-center gap-2 mb-1 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Zap className="w-4 h-4 text-emerald-400" />
+                                                    <Label className="text-xs font-bold text-slate-400">Groq API Key</Label>
+                                                </div>
+                                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] rounded-full font-black animate-pulse">الأسرع (Recommended) ⚡️</span>
                                             </div>
                                             <div className="flex gap-2">
                                                 <Input
