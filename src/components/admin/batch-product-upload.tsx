@@ -24,6 +24,7 @@ interface BatchItem {
     result?: {
         name: string
         barcode: string
+        barcodes: string[]
         description: string
     }
     existingId?: string
@@ -73,12 +74,12 @@ export function BatchProductUpload({ isOpen, onClose }: BatchProductUploadProps)
         setIsProcessing(true)
 
         const smartFillPrompt = `أنت خبير متخصص في قطع غيار السيارات. حلل هذه الصورة بعناية واستخرج المعلومات الدقيقة:
-١. اقرأ رقم القطعة OEM بدقة من العبوة أو الملصق
-٢. حدد الماركة (Toyota، Honda، Bosch، إلخ)
-٣. اكتب اسماً عربياً احترافياً: [الماركة] + [نوع القطعة] + [رقم القطعة]
+١. اقرأ جميع أرقام القطع OEM والباركودات الظاهرة بوضوح (حتى 5 أرقام).
+٢. حدد الماركة (Toyota، Honda، Bosch، إلخ).
+٣. اكتب اسماً عربياً احترافياً: [الماركة] + [نوع القطعة] + [الرقم الأساسي].
 
 أجب بـ JSON فقط:
-{ "name": "...", "barcode": "...", "description": "..." }`;
+{ "name": "...", "barcode": "الرقم الأساسي", "barcodes": ["رقم1", "رقم2", ...], "description": "..." }`;
 
         const uploadPromises = items.map(async (item) => {
             if (item.status === 'success') return item
@@ -110,28 +111,34 @@ export function BatchProductUpload({ isOpen, onClose }: BatchProductUploadProps)
                 if (!jsonMatch) throw new Error("لم يتم التعرف على البيانات")
                 const parsed = JSON.parse(jsonMatch[0])
 
-                // 2. Check for duplicate
+                // 2. Check for duplicate (Scan all extracted barcodes)
                 let status: BatchItem['status'] = 'success'
                 let existingId: string | undefined
 
-                if (parsed.barcode) {
-                    const q = query(collection(db, "products"), where("barcode", "==", parsed.barcode.trim()))
-                    const snap = await getDocs(q)
-                    if (!snap.empty) {
+                const aiBarcodes = Array.isArray(parsed.barcodes) ? parsed.barcodes : [parsed.barcode].filter(Boolean);
+                const allCodesToCheck = Array.from(new Set([parsed.barcode, ...aiBarcodes])).filter(Boolean) as string[];
+
+                for (const b of allCodesToCheck) {
+                    const q1 = query(collection(db, "products"), where("barcode", "==", b.trim()))
+                    const q2 = query(collection(db, "products"), where("barcodes", "array-contains", b.trim()))
+                    const [s1, s2] = await Promise.all([getDocs(q1), getDocs(q2)])
+                    
+                    if (!s1.empty || !s2.empty) {
                         status = 'duplicate'
-                        existingId = snap.docs[0].id
+                        existingId = (s1.docs[0] || s2.docs[0]).id
+                        break
                     }
                 }
 
-                // 3. Save as Draft (Wait for user confirmation or auto-add?)
-                // For now, let's just mark as processed and let user review/save all at once
+                // 3. Save Context
                 const updatedItem = { 
                     ...item, 
                     status, 
                     existingId,
                     result: {
                         name: parsed.name || "منتج غير معروف",
-                        barcode: parsed.barcode || "",
+                        barcode: parsed.barcode || aiBarcodes[0] || "",
+                        barcodes: aiBarcodes.filter((b: string) => b !== (parsed.barcode || aiBarcodes[0])),
                         description: parsed.description || ""
                     }
                 }
@@ -163,6 +170,7 @@ export function BatchProductUpload({ isOpen, onClose }: BatchProductUploadProps)
                 await addProduct({
                     name: item.result!.name,
                     barcode: item.result!.barcode,
+                    barcodes: item.result!.barcodes,
                     description: item.result!.description,
                     category: "غير مصنف",
                     pricePiece: 0,

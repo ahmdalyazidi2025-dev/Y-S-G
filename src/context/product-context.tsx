@@ -113,20 +113,24 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
             if (product.isDraft) return false;
 
             const name = normalize((product.name || "").toLowerCase())
-            const barcode = (product.barcode || "").toLowerCase()
             const desc = normalize((product.description || "").toLowerCase())
+            
+            // Check all barcodes (primary + secondary)
+            const allBarcodes = [product.barcode, ...(product.barcodes || [])]
+                .filter(Boolean)
+                .map(b => b!.toLowerCase())
 
             const strippedName = stripChars(name)
-            const strippedBarcode = stripChars(barcode)
+            const strippedBarcodes = allBarcodes.map(b => stripChars(b))
 
             // For the product to match, EVERY word in the search query must be found
             return searchWords.every(word => {
                 const strippedWord = stripChars(word)
 
                 // Match the original normalized word (for precision) 
-                const matchesNormal = name.includes(word) || barcode.includes(word) || desc.includes(word)
+                const matchesNormal = name.includes(word) || allBarcodes.some(b => b.includes(word)) || desc.includes(word)
                 // OR the stripped version (to ignore dashes/spaces like matching "370" in "04115237010")
-                const matchesStripped = strippedWord.length > 0 && (strippedName.includes(strippedWord) || strippedBarcode.includes(strippedWord))
+                const matchesStripped = strippedWord.length > 0 && (strippedName.includes(strippedWord) || strippedBarcodes.some(sb => sb.includes(strippedWord)))
 
                 return matchesNormal || matchesStripped
             })
@@ -152,25 +156,46 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const scanProduct = useCallback(async (barcode: string) => {
-        const q = query(collection(db, "products"), where("barcode", "==", barcode))
-        const snap = await getDocs(q)
-        if (!snap.empty) {
-            const doc = snap.docs[0]
+        // Search in primary barcode field OR barcodes array
+        const qPrimary = query(collection(db, "products"), where("barcode", "==", barcode))
+        const qArray = query(collection(db, "products"), where("barcodes", "array-contains", barcode))
+        
+        const [snap1, snap2] = await Promise.all([getDocs(qPrimary), getDocs(qArray)])
+        
+        const doc = snap1.docs[0] || snap2.docs[0]
+        if (doc) {
             return { ...doc.data(), id: doc.id, createdAt: toDate(doc.data().createdAt) } as Product
         }
         return null
     }, [])
 
     const addProduct = async (product: Omit<Product, "id">) => {
-        const docRef = await addDoc(collection(db, "products"), sanitizeData({ ...product, createdAt: Timestamp.now() }))
-        const newProduct = { ...product, id: docRef.id, createdAt: new Date() } as Product
+        // Ensure primary barcode is in barcodes array
+        const barcodes = Array.from(new Set([
+            product.barcode,
+            ...(product.barcodes || [])
+        ])).filter(Boolean) as string[]
+
+        const finalProduct = { ...product, barcodes }
+        const docRef = await addDoc(collection(db, "products"), sanitizeData({ ...finalProduct, createdAt: Timestamp.now() }))
+        const newProduct = { ...finalProduct, id: docRef.id, createdAt: new Date() } as Product
         setProducts(prev => [newProduct, ...prev])
         toast.success("تم إضافة المنتج")
     }
 
     const updateProduct = async (id: string, data: Partial<Product>) => {
-        await updateDoc(doc(db, "products", id), sanitizeData(data))
-        setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
+        // Ensure primary barcode is also in barcodes array if provided
+        const finalData = { ...data }
+        if (data.barcode || data.barcodes) {
+            const allCodes = Array.from(new Set([
+                data.barcode || products.find(p => p.id === id)?.barcode,
+                ...(data.barcodes || products.find(p => p.id === id)?.barcodes || [])
+            ])).filter(Boolean) as string[]
+            finalData.barcodes = allCodes
+        }
+
+        await updateDoc(doc(db, "products", id), sanitizeData(finalData))
+        setProducts(prev => prev.map(p => p.id === id ? { ...p, ...finalData } : p))
         toast.success("تم تحديث المنتج")
     }
 

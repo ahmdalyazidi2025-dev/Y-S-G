@@ -51,8 +51,11 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         costPrice: "",
         notes: "",
         isFeatured: false,
+        barcodes: [] as string[]
     })
 
+    const [extraBarcodes, setExtraBarcodes] = useState<string[]>(initialProduct?.barcodes || [])
+    const [numBarcodes, setNumBarcodes] = useState(1)
     const [hasDiscount, setHasDiscount] = useState(false)
     const [hasTimer, setHasTimer] = useState(false)
 
@@ -74,6 +77,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     name: initialProduct.name,
                     unit: initialProduct.unit,
                     barcode: initialProduct.barcode,
+                    barcodes: initialProduct.barcodes || [],
                     image: initialProduct.image || "",
                     images: initialProduct.images || (initialProduct.image ? [initialProduct.image] : []),
                     category: initialProduct.category || "",
@@ -87,6 +91,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     notes: initialProduct.notes || "",
                     isFeatured: initialProduct.isFeatured || false,
                 })
+                setExtraBarcodes(initialProduct.barcodes || [])
+                setNumBarcodes(Math.max(1, (initialProduct.barcodes?.length || 0) + 1))
                 setHasDiscount(!!isDiscounted)
                 setHasTimer(!!initialProduct.discountEndDate)
             } else {
@@ -94,6 +100,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     name: "",
                     unit: "حبة",
                     barcode: "",
+                    barcodes: [],
                     image: "",
                     images: [] as string[],
                     category: categories[0]?.nameAr || "",
@@ -107,6 +114,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     notes: "",
                     isFeatured: false,
                 })
+                setExtraBarcodes([])
+                setNumBarcodes(1)
                 setHasDiscount(false)
                 setHasTimer(false)
             }
@@ -123,7 +132,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     }
 
     const processFiles = async (files: FileList | File[]) => {
-        // If Branding/Magic Fix is enabled, open the Editor with the first file
         if (useBranding && files.length > 0) {
             setEditingFile(files[0]);
             setIsEditorOpen(true);
@@ -138,8 +146,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 const file = files[i]
                 if (!file.type.startsWith('image/')) continue
 
-                // Compress and fit image to square before adding
-                // Max width 1000px, Quality 0.8, CropSquare = true (now uses 'contain' logic)
                 const compressedBase64 = await compressImage(file, 1000, 0.8, true)
                 newImages.push(compressedBase64)
             }
@@ -180,10 +186,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
 
     const handleEditorSave = async (processedFile: File) => {
         try {
-            // New: Since branding is already applied in the editor, we just compress normally (or just read as base64 since it's already optimized?)
-            // The editor returns a file (PNG). We should compress it to ensure it's not huge.
-            // The editor returns a file (PNG). We should compress it to ensure it's not huge.
-            // We also enforce square crop here just in case, though Editor usually does it.
             const compressedBase64 = await compressImage(processedFile, 1000, 0.9, true);
 
             setFormData(prev => ({
@@ -207,7 +209,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             return {
                 ...prev,
                 images: newImages,
-                // If we removed the main image (visually first), update it to the next available one
                 image: newImages.length > 0 ? newImages[0] : ""
             }
         })
@@ -234,6 +235,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
 {
   "name": "الاسم العربي الاحترافي للمنتج",
   "barcode": "رقم القطعة OEM",
+  "barcodes": ["رقم بديل 1", "رقم بديل 2"],
   "description": "وصف مختصر: نوع القطعة، الماركة، السيارات المتوافقة"
 }`;
 
@@ -250,28 +252,38 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             const data = await res.json();
             if (data.error) throw new Error(data.error);
 
-            // Parse structured JSON from AI response
             const rawText: string = data.text || "";
             const jsonMatch = rawText.match(/\{[\s\S]*\}/);
             if (!jsonMatch) throw new Error("لم يتمكن الذكاء الاصطناعي من التعرف على بيانات المنتج، تأكد من وضوح الصورة");
 
             const parsed = JSON.parse(jsonMatch[0]);
 
+            const aiBarcodes = Array.isArray(parsed.barcodes) ? parsed.barcodes : [parsed.barcode].filter(Boolean);
+            const primaryBarcode = parsed.barcode || aiBarcodes[0] || "";
+            const otherBarcodes = aiBarcodes.filter((b: string) => b !== primaryBarcode).slice(0, 4);
+
             setFormData(prev => ({
                 ...prev,
                 name: parsed.name?.trim() || prev.name,
-                barcode: parsed.barcode?.trim() || prev.barcode,
+                barcode: primaryBarcode.trim() || prev.barcode,
+                barcodes: otherBarcodes,
                 description: parsed.description?.trim() || prev.description,
             }));
 
-            // --- CHECK FOR DUPLICATES ---
-            if (parsed.barcode?.trim()) {
-                const q = query(collection(db, "products"), where("barcode", "==", parsed.barcode.trim()));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const existing = querySnapshot.docs[0];
+            setExtraBarcodes(otherBarcodes);
+            setNumBarcodes(Math.min(otherBarcodes.length + 1, 5) || 1);
+
+            const allToSearch = [primaryBarcode, ...otherBarcodes].filter(Boolean);
+            for (const b of allToSearch) {
+                const q1 = query(collection(db, "products"), where("barcode", "==", b.trim()));
+                const q2 = query(collection(db, "products"), where("barcodes", "array-contains", b.trim()));
+                const [s1, s2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+                
+                const existing = s1.docs[0] || s2.docs[0];
+                if (existing && existing.id !== initialProduct?.id) {
                     setDuplicateFound({ id: existing.id, name: existing.data().name });
-                    toast.warning("هذا المنتج موجود مسبقاً في المتجر!");
+                    toast.warning(`الباركود ${b} موجود مسبقاً في منتج آخر!`);
+                    break;
                 } else {
                     setDuplicateFound(null);
                 }
@@ -299,7 +311,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             oldPriceDozen: hasDiscount && formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
             unit: formData.unit,
             barcode: formData.barcode,
-            image: formData.images[0] || formData.image || "", // Prefer first image in array
+            barcodes: extraBarcodes.filter(Boolean),
+            image: formData.images[0] || formData.image || "",
             images: formData.images,
             category: formData.category,
             description: formData.description,
@@ -346,7 +359,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Duplicate Warning */}
                             {duplicateFound && (
                                 <motion.div 
                                     initial={{ opacity: 0, height: 0 }}
@@ -361,11 +373,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                             variant="link" 
                                             size="sm" 
                                             className="p-0 h-auto text-[10px] text-amber-400 mt-1 flex items-center gap-1"
-                                            onClick={() => {
-                                                // If we had a direct edit-router here, we'd use it. 
-                                                // For now, just a toast with the name.
-                                                toast.info(`المعرف: ${duplicateFound.id}`);
-                                            }}
+                                            onClick={() => toast.info(`المعرف: ${duplicateFound.id}`)}
                                         >
                                             استعراض المنتج الموجود <ExternalLink className="w-3 h-3" />
                                         </Button>
@@ -381,26 +389,9 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </motion.div>
                             )}
 
-                            {/* Name Input */}
-                            <input
-                                type="file"
-                                ref={galleryInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                multiple
-                                onChange={handleFileChange}
-                            />
-                            <input
-                                type="file"
-                                ref={cameraInputRef}
-                                className="hidden"
-                                accept="image/*"
-                                capture="environment" // Forces camera on mobile
-                                onChange={handleFileChange}
-                            />
+                            <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+                            <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
 
-
-                            {/* Branding Toggle */}
                             <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-xl transition-colors ${useBranding ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-400'}`}>
@@ -419,7 +410,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
-                            {/* Featured Toggle */}
                             <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-xl transition-colors ${formData.isFeatured ? 'bg-amber-500/20 text-amber-500' : 'bg-white/5 text-slate-400'}`}>
@@ -438,7 +428,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
-                            {/* Master Discount Toggle */}
                             <div className="flex items-center justify-between bg-black/10 p-4 rounded-3xl border border-white/5">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-xl transition-colors ${hasDiscount ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-slate-400'}`}>
@@ -492,7 +481,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                                         exit={{ height: 0, opacity: 0 }}
                                                         className="space-y-4 overflow-hidden pt-4 mt-4 border-t border-red-500/10"
                                                     >
-                                                        {/* Quick Duration Buttons */}
                                                         <div className="grid grid-cols-4 gap-2">
                                                             {[
                                                                 { label: "24 ساعة", hours: 24 },
@@ -517,7 +505,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                                             ))}
                                                         </div>
 
-                                                        {/* Date Input Box */}
                                                         <div className="bg-black/20 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
                                                             <div className="flex justify-between items-center px-1">
                                                                 <span className="text-[10px] text-orange-400/80">تاريخ انتهاء الخصم:</span>
@@ -542,14 +529,12 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 )}
                             </AnimatePresence>
 
-                            {/* Image Inputs (Grid) */}
                             <div
                                 className={`grid grid-cols-2 lg:grid-cols-4 gap-4 p-2 rounded-3xl transition-all ${isDragging ? 'bg-primary/20 ring-2 ring-primary ring-dashed' : ''}`}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                             >
-                                {/* Upload From Gallery */}
                                 <div
                                     onClick={() => galleryInputRef.current?.click()}
                                     className="aspect-square bg-blue-500/10 rounded-2xl border border-blue-500/20 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-blue-500/20 cursor-pointer transition-all group"
@@ -560,7 +545,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     <span className="text-[10px] font-bold text-blue-300">المعرض</span>
                                 </div>
 
-                                {/* Upload From Camera */}
                                 <div
                                     onClick={() => cameraInputRef.current?.click()}
                                     className="aspect-square bg-purple-500/10 rounded-2xl border border-purple-500/20 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-purple-500/20 cursor-pointer transition-all group"
@@ -638,6 +622,116 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     </div>
                                 </div>
 
+                                {/* Barcode Grid System (2x2 + 1) */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Hash className="w-4 h-4 text-primary" />
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">أرقام الباركود / OEM (حتى 5)</Label>
+                                        </div>
+                                        {numBarcodes < 5 && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 gap-1.5 text-[10px] bg-primary/10 text-primary hover:bg-primary/20 rounded-full font-black px-3 transition-all active:scale-95"
+                                                onClick={() => setNumBarcodes(prev => prev + 1)}
+                                            >
+                                                <Plus className="w-3 h-3" /> إضافة رقم بديل
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {/* Row 1: 1 & 2 */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[9px] font-bold text-slate-500 pr-1">1. الباركود الأساسي</Label>
+                                                <Input
+                                                    value={formData.barcode}
+                                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                                    placeholder="رقم القطعة..."
+                                                    className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center focus:ring-primary/30"
+                                                />
+                                            </div>
+                                            {numBarcodes >= 2 ? (
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[9px] font-bold text-slate-500 pr-1">2. رقم بديل</Label>
+                                                    <Input
+                                                        value={extraBarcodes[0] || ""}
+                                                        onChange={(e) => {
+                                                            const newExtras = [...extraBarcodes];
+                                                            newExtras[0] = e.target.value;
+                                                            setExtraBarcodes(newExtras);
+                                                        }}
+                                                        placeholder="..."
+                                                        className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="h-11 rounded-2xl border border-dashed border-white/5 flex items-center justify-center opacity-20">
+                                                    <Plus className="w-4 h-4" />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Row 2: 3 & 4 */}
+                                        {numBarcodes >= 3 && (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-[9px] font-bold text-slate-500 pr-1">3. رقم بديل</Label>
+                                                    <Input
+                                                        value={extraBarcodes[1] || ""}
+                                                        onChange={(e) => {
+                                                            const newExtras = [...extraBarcodes];
+                                                            newExtras[1] = e.target.value;
+                                                            setExtraBarcodes(newExtras);
+                                                        }}
+                                                        placeholder="..."
+                                                        className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
+                                                    />
+                                                </div>
+                                                {numBarcodes >= 4 ? (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[9px] font-bold text-slate-500 pr-1">4. رقم بديل</Label>
+                                                        <Input
+                                                            value={extraBarcodes[2] || ""}
+                                                            onChange={(e) => {
+                                                                const newExtras = [...extraBarcodes];
+                                                                newExtras[2] = e.target.value;
+                                                                setExtraBarcodes(newExtras);
+                                                            }}
+                                                            placeholder="..."
+                                                            className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-11 rounded-2xl border border-dashed border-white/5 flex items-center justify-center opacity-20">
+                                                        <Plus className="w-4 h-4" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Row 3: 5 */}
+                                        {numBarcodes >= 5 && (
+                                            <div className="space-y-1.5 w-full">
+                                                <Label className="text-[9px] font-bold text-slate-500 pr-1">5. رقم بديل نهائي</Label>
+                                                <Input
+                                                    value={extraBarcodes[3] || ""}
+                                                    onChange={(e) => {
+                                                        const newExtras = [...extraBarcodes];
+                                                        newExtras[3] = e.target.value;
+                                                        setExtraBarcodes(newExtras);
+                                                    }}
+                                                    placeholder="..."
+                                                    className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الوحدة</Label>
@@ -653,7 +747,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الباركود</Label>
+                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الباركود الأساسي</Label>
                                         <div className="flex gap-2">
                                             <div className="relative flex-1">
                                                 <Hash className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />

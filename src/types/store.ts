@@ -21,6 +21,7 @@ export type Product = {
     oldPriceDozen?: number
     unit: string
     barcode: string
+    barcodes?: string[]
     category: string
     image?: string
     images?: string[]
