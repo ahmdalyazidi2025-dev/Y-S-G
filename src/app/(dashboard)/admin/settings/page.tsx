@@ -1127,64 +1127,26 @@ function AdminSettingsContent() {
                                     </div>
                                 </Section>
 
-                                <Section icon={<Sparkles className="w-5 h-5 text-indigo-400" />} title="إعدادات الذكاء الاصطناعي (Gemini & Groq)">
+                                <Section icon={<Sparkles className="w-5 h-5 text-indigo-400" />} title="إعدادات الذكاء الاصطناعي (Groq)">
                                     <div className="space-y-4">
-                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-2xl p-4 flex flex-col gap-3">
+                                        <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-2xl p-4 flex flex-col gap-3">
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
+                                                <div className="p-2 bg-indigo-500/10 text-indigo-500 rounded-lg">
                                                     <Info className="w-4 h-4" />
                                                 </div>
-                                                <p className="text-xs text-blue-400 leading-relaxed font-medium">
-                                                    استخدم مفتاح Gemini API لتفعيل المساعد الذكي للموظفين. يمكنك الحصول عليه مجاناً من Google AI Studio.
+                                                <p className="text-xs text-indigo-400 leading-relaxed font-medium">
+                                                    النظام يستخدم محركات Groq المتطورة لتقديم أسرع استجابة ذكية. يمكنك الحصول على مفتاح API مجاناً من console.groq.com.
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label className="text-xs font-bold text-slate-400">Gemini API Key</Label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    type="password"
-                                                    placeholder="أدخل مفتاح الـ API هنا..."
-                                                    value={formData.geminiApiKey || ""}
-                                                    onChange={(e) => handleChange("geminiApiKey", e.target.value)}
-                                                    className="bg-background border-border h-11 text-foreground flex-1 font-mono"
-                                                />
-                                                <Button 
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={async () => {
-                                                        if (!formData.geminiApiKey) return toast.error("يرجى إدخال المفتاح أولاً");
-                                                        toast.promise(
-                                                            fetch("/api/verify-gemini", {
-                                                                method: "POST",
-                                                                body: JSON.stringify({ key: formData.geminiApiKey })
-                                                            }).then(res => res.json()).then(data => {
-                                                                if (data.valid) return true;
-                                                                throw new Error(data.error);
-                                                            }),
-                                                            {
-                                                                loading: "جاري التحقق من المفتاح...",
-                                                                success: "المفتاح صالح ويعمل بنجاح! ✅",
-                                                                error: (err) => `فشل التحقق: ${err.message}`
-                                                            }
-                                                        );
-                                                    }}
-                                                    className="h-11 px-4 border-white/10"
-                                                >
-                                                    فحص
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2 pt-4 border-t border-white/5">
+                                        <div className="space-y-2 pt-2">
                                             <div className="flex items-center gap-2 mb-1 justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <Zap className="w-4 h-4 text-emerald-400" />
                                                     <Label className="text-xs font-bold text-slate-400">Groq API Key</Label>
                                                 </div>
-                                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] rounded-full font-black animate-pulse">الأسرع (Recommended) ⚡️</span>
+                                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px] rounded-full font-black animate-pulse">محرك فائق السرعة ⚡️</span>
                                             </div>
                                             <div className="flex gap-2">
                                                 <Input
@@ -1220,7 +1182,7 @@ function AdminSettingsContent() {
                                                     فحص
                                                 </Button>
                                             </div>
-                                            <p className="text-[10px] text-muted-foreground">احصل عليه مجاناً من console.groq.com (أسرع استجابة)</p>
+                                            <p className="text-[10px] text-muted-foreground">موصى به لعمليات البحث البصري وتعبئة البيانات التلقائية</p>
                                         </div>
                                     </div>
                                 </Section>

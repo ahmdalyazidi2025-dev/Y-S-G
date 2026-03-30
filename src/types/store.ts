@@ -201,10 +201,7 @@ export type StoreSettings = {
     requireCustomerInfoOnCheckout: boolean
     aiApiKeys?: { key: string, status: "valid" | "invalid" | "unchecked" }[]
     logoUrl?: string
-    geminiApiKey?: string
     groqApiKey?: string
-    geminiCustomPrompt?: string
-    geminiReferenceImageUrl?: string
     enableMaintenance: boolean
     enableCoupons?: boolean
     enableAIChat?: boolean
