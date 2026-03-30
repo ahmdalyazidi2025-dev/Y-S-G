@@ -50,8 +50,7 @@ export async function POST(req: Request) {
 
         // --- PROCESS WITH GROQ (SOLE PROVIDER) ---
         const isVisionRequest = !!image;
-        // In 2026, stable versions are preferred
-        const model = isVisionRequest ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
+        const model = isVisionRequest ? "llama-3.2-11b-vision" : "llama-3.3-70b-versatile";
 
         // Map content for Groq
         const content: any[] = [{ type: "text", text: message }];

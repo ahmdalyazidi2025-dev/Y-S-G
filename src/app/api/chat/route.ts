@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
         // --- PROCESS WITH GROQ ---
         const isVisionRequest = !!image;
-        const model = isVisionRequest ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
+        const model = isVisionRequest ? "llama-3.2-11b-vision" : "llama-3.3-70b-versatile";
 
         const content: any[] = [{ type: "text", text: message }];
         if (image) {
