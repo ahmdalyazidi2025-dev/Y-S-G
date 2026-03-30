@@ -198,10 +198,10 @@ export type StoreSettings = {
     footerTerms: string
     footerPrivacy: string
     footerReturns: string
-    requireCustomerInfoOnCheckout: boolean
+    requireCustomerInfoOnCheckout?: boolean
     logoUrl?: string
     groqApiKey?: string
-    enableMaintenance: boolean
+    enableMaintenance?: boolean
     enableCoupons?: boolean
     enableAIChat?: boolean
     enableProductRequests?: boolean

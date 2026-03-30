@@ -227,7 +227,7 @@ export default function StoreLayout({
                                                     <span className="text-[9px] font-bold">طلب</span>
                                                 </button>
 
-                                                {storeSettings.enableBarcodeScanner && (
+                                                {storeSettings?.enableBarcodeScanner && (
                                                     <button
                                                         onClick={() => setIsScannerOpen(true)}
                                                         className="flex flex-col items-center justify-center gap-1 p-2 min-w-[50px] h-[50px] rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 active:scale-95 transition-all border border-border"

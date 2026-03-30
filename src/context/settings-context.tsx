@@ -38,7 +38,9 @@ const MOCK_SETTINGS: StoreSettings = {
     sounds: {},
     allCategoryImage: "",
     autoDeleteChats: false,
-    autoDeleteChatsDuration: 30
+    autoDeleteChatsDuration: 30,
+    enableAiSystem: true,
+    hiddenSections: []
 }
 
 interface SettingsContextType {
