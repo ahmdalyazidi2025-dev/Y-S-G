@@ -1,182 +1,34 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, Eye, Loader2, Phone, Trash2, Sparkles } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin } from "lucide-react"
 import Link from "next/link"
-import { useOrders, useCustomers, useSettings, Order } from "@/context/store-context"
+import { useStore, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
-import { isToday, isWithinInterval, startOfWeek, startOfMonth, startOfYear, endOfDay, startOfDay } from "date-fns"
-import { printOrderInvoice, downloadOrderPDF } from "@/lib/print-utils"
-import { hapticFeedback } from "@/lib/haptics"
+import { InvoiceTemplate } from "@/components/shared/invoice-template"
 import { toast } from "sonner"
-import { ReceiptInvoice } from "@/components/shared/receipt-invoice"
-import { WheelPicker } from "@/components/shared/wheel-picker"
-
+import { hapticFeedback } from "@/lib/haptics"
+import { PremiumInvoice } from "@/components/shared/premium-invoice"
+import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
-    pending: { label: "تم رفع طلبك", color: "text-muted-foreground", bg: "bg-muted", icon: Clock },
-    processing: { label: "جاري العمل", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", icon: Package },
-    shipped: { label: "تم الشحن", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10", icon: Truck },
-    delivered: { label: "تم التسليم", color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", icon: CheckCircle2 },
-    canceled: { label: "ملغاة", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10", icon: XCircle },
-    accepted: { label: "تم القبول", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: CheckCircle2 },
-    deleted: { label: "المحذوفات", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
+    pending: { label: "لم تجهز", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
+    processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
+    shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
+    delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
+    canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, deleteOrders, loadMoreOrders, hasMoreOrders, searchOrders, markOrderAsRead } = useOrders()
-    const { customers } = useCustomers()
-    const { storeSettings, settingsLoaded } = useSettings()
-    const loading = !settingsLoaded // Simplified loading for this page
+    const { orders, updateOrderStatus } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
-    const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all")
-    const [customStart, setCustomStart] = useState("")
-    const [customEnd, setCustomEnd] = useState("")
-    const [selectedCustomer, setSelectedCustomer] = useState("all")
+    const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month">("all")
     const [searchQuery, setSearchQuery] = useState("")
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-
-    // NEW: Bulk Selection State
-    const [isBulkSelectionMode, setIsBulkSelectionMode] = useState(false)
-    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
-    const [isDeletingBulk, setIsDeletingBulk] = useState(false)
-
-    // Long Press Refs
-    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const isLongPressRef = useRef<boolean>(false);
-
-    const handlePointerDown = (orderId: string) => {
-        // Only allow long press if we are not already in bulk mode AND we are viewing canceled/deleted
-        if (isBulkSelectionMode) return;
-        if (filter !== "canceled" && filter !== "deleted") return;
-
-        isLongPressRef.current = false;
-        longPressTimerRef.current = setTimeout(() => {
-            isLongPressRef.current = true;
-            hapticFeedback('heavy');
-            setIsBulkSelectionMode(true);
-            setSelectedOrderIds(prev => prev.includes(orderId) ? prev : [...prev, orderId]);
-        }, 500); // 500ms long press
-    };
-
-    const handlePointerUpOrLeave = () => {
-        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    };
-
-    const toggleOrderSelection = (id: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSelectedOrderIds(prev =>
-            prev.includes(id) ? prev.filter(orderId => orderId !== id) : [...prev, id]
-        );
-        hapticFeedback('light');
-    }
-
-    const handleBulkDelete = async () => {
-        if (selectedOrderIds.length === 0) return;
-        const confirmDelete = window.confirm(`هل أنت متأكد من حذف ${selectedOrderIds.length} طلب/طلبات نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`);
-        if (!confirmDelete) return;
-
-        setIsDeletingBulk(true);
-        try {
-            await deleteOrders(selectedOrderIds);
-            setSelectedOrderIds([]);
-            setIsBulkSelectionMode(false);
-        } finally {
-            setIsDeletingBulk(false);
-        }
-    }
-
-    // Server Search State
-    const [serverSearchResults, setServerSearchResults] = useState<Order[] | null>(null)
-    const [isSearching, setIsSearching] = useState(false)
-
-    // NEW: Grouping & View Mode state
-    const [viewMode, setViewMode] = useState<"all" | "by-customer">("all")
-    const [selectedCustomerForGroup, setSelectedCustomerForGroup] = useState<string | null>(null)
-
-    // Search Effect
-    useEffect(() => {
-        const timer = setTimeout(async () => {
-            if (searchQuery.length > 0) {
-                setIsSearching(true)
-                try {
-                    // If matches ID format or just search text
-                    const results = await searchOrders(searchQuery)
-                    setServerSearchResults(results)
-                } catch (e) {
-                    console.error(e)
-                } finally {
-                    setIsSearching(false)
-                }
-            } else {
-                setServerSearchResults(null)
-            }
-        }, 600)
-        return () => clearTimeout(timer)
-    }, [searchQuery, searchOrders])
-
-    // Infinite Scroll Observer
-    const observerTarget = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                // Only load more if:
-                // 1. Not searching (serverSearchResults is null)
-                // 2. Search query is empty
-                // 3. Has more orders to load
-                // 4. Not currently loading
-                const first = entries[0]
-                if (first.isIntersecting && hasMoreOrders && !loading && !searchQuery) {
-                    loadMoreOrders()
-                }
-            },
-            { threshold: 0.1 } // Trigger when 10% visible
-        )
-
-        const currentTarget = observerTarget.current
-        if (currentTarget) {
-            observer.observe(currentTarget)
-        }
-
-        return () => {
-            if (currentTarget) observer.unobserve(currentTarget)
-        }
-    }, [hasMoreOrders, loading, loadMoreOrders, searchQuery])
-
-
-    // ... existing code ...
-
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-    const [invoicePreviewOrder, setInvoicePreviewOrder] = useState<Order | null>(null) // State for invoice preview
-    const [isAiLoading, setIsAiLoading] = useState(false)
-    const [aiAnalysis, setAiAnalysis] = useState<string | null>(null)
-
-    const handleAiAnalyzeOrder = async (order: Order) => {
-        setIsAiLoading(true);
-        setAiAnalysis(null);
-        try {
-            const res = await fetch("/api/admin-assistant", {
-                method: "POST",
-                body: JSON.stringify({
-                    message: `حلل هذا الطلب رقم #${order.id}. العميل: ${order.customerName}. المنتجات: ${order.items.map(i => `${i.name} (${i.quantity})`).join(", ")}. الإجمالي: ${order.total}. قدم لي (1) ملخص سريع للطلب، (2) درجة أهمية العميل، (3) توصية للتعامل معه.`,
-                    user: { name: "نظام تحليل الطلبات", role: "admin" }
-                })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            setAiAnalysis(data.text);
-            hapticFeedback('success');
-        } catch (error: any) {
-            toast.error("فشل التحليل: " + error.message);
-        } finally {
-            setIsAiLoading(false);
-        }
-    }
 
     const categories = {
         all: "الكل",
@@ -199,222 +51,117 @@ export default function AdminOrdersPage() {
         hapticFeedback('success')
     }
 
-    const allOrders = serverSearchResults || orders // Use server results if active, otherwise loaded buffer
+    const handleDownloadPDF = async (order: Order) => {
+        hapticFeedback('light')
+        const success = await generateOrderPDF('premium-invoice-target', order.id)
+        if (success) toast.success("تم تجهيز وتحميل الفاتورة")
+        else toast.error("فشل في تجهيز الفاتورة")
+    }
 
-    const filteredOrders = React.useMemo(() => {
-        return allOrders.filter((o: Order) => {
-            const date = new Date(o.createdAt)
-            const now = new Date()
+    const filteredOrders = orders.filter(o => {
+        const date = new Date(o.createdAt)
+        const now = new Date()
 
-            let matchesDate = true
-            if (dateRange === "today") matchesDate = isToday(date)
-            else if (dateRange === "week") matchesDate = isWithinInterval(date, { start: startOfWeek(now), end: endOfDay(now) })
-            else if (dateRange === "month") matchesDate = isWithinInterval(date, { start: startOfMonth(now), end: endOfDay(now) })
-            else if (dateRange === "year") matchesDate = isWithinInterval(date, { start: startOfYear(now), end: endOfDay(now) })
-            else if (dateRange === "custom" && customStart && customEnd) {
-                matchesDate = isWithinInterval(date, {
-                    start: startOfDay(new Date(customStart)),
-                    end: endOfDay(new Date(customEnd))
-                })
-            }
+        let matchesDate = true
+        if (dateRange === "today") matchesDate = date.toDateString() === now.toDateString()
+        else if (dateRange === "week") {
+            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()))
+            matchesDate = date >= weekStart
+        }
+        else if (dateRange === "month") {
+            matchesDate = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+        }
 
-            if (filter !== "deleted" && o.status === "deleted") return false
+        let matchesCategory = true
+        if (activeCategory === "active") matchesCategory = ["pending", "processing", "shipped"].includes(o.status)
+        else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
+        else if (activeCategory === "received") matchesCategory = o.status === "delivered"
 
-            let matchesCategory = true
-            if (activeCategory === "active") matchesCategory = ["processing", "shipped"].includes(o.status)
-            else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
-            else if (activeCategory === "received") matchesCategory = o.status === "delivered"
+        const matchesStatus = filter === "all" || o.status === filter
+        const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
+        const matchesName = o.customerName.toLowerCase().includes(searchQuery.toLowerCase())
 
-            const matchesStatus = filter === "all" ? o.status !== "deleted" : o.status === filter
-            const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
+        return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName
+    })
 
-            const matchesCustomerGroup = !selectedCustomerForGroup ||
-                o.customerId === selectedCustomerForGroup ||
-                o.customerName === selectedCustomerForGroup
-
-            const matchesNameClient = !serverSearchResults ? o.customerName.toLowerCase().includes(searchQuery.toLowerCase()) : true
-
-            let matchesCustomer = true
-            if (selectedCustomer !== "all") {
-                matchesCustomer = o.customerId === selectedCustomer || o.customerName === selectedCustomer
-            }
-
-            return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesCustomerGroup && matchesNameClient && matchesCustomer
-        })
-    }, [allOrders, dateRange, customStart, customEnd, filter, activeCategory, regionFilter, selectedCustomerForGroup, searchQuery, serverSearchResults, selectedCustomer])
-
-    const regions = React.useMemo(() => {
-        return Array.from(new Set(orders.map((o: Order) => o.customerLocation).filter(Boolean))) as string[]
-    }, [orders])
-
-    const customerGroups = React.useMemo(() => {
-        return orders.reduce((acc: Record<string, { id: string, name: string, count: number, total: number }>, order: Order) => {
-            const id = order.customerId || order.customerName
-            if (!acc[id]) {
-                acc[id] = { id, name: order.customerName, count: 0, total: 0 }
-            }
-            acc[id].count++
-            acc[id].total += order.total
-            return acc
-        }, {})
-    }, [orders])
-
-    const sortedCustomerGroups = React.useMemo(() => {
-        return Object.values(customerGroups).sort((a, b) => b.count - a.count)
-    }, [customerGroups])
-
-    // Progressive rendering: only show 10 at a time visually
-    const [visibleCount, setVisibleCount] = useState(10)
-    useEffect(() => {
-        setVisibleCount(10)
-    }, [filter, activeCategory, searchQuery])
-
-    const displayedOrders = React.useMemo(() => {
-        return filteredOrders.slice(0, visibleCount)
-    }, [filteredOrders, visibleCount])
+    const regions = Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 md:p-8 space-y-6 pb-24">
-            {/* Header Area */}
+        <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
-                        <ArrowRight className="w-5 h-5 text-foreground" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-white" />
                     </Button>
                 </Link>
-                <div className="flex-1">
-                    <h1 className="text-2xl font-black text-foreground">متابعة الطلبات</h1>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Order Management</p>
-                </div>
+                <h1 className="text-2xl font-bold flex-1">متابعة الطلبات</h1>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex bg-muted p-1 rounded-2xl border border-border">
-                <button
-                    onClick={() => { setViewMode("all"); setFilter("all"); setSelectedCustomerForGroup(null); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
-                    className={cn(
-                        "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
-                        viewMode === "all" && filter !== "deleted" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                >
-                    <Package className="w-4 h-4" />
-                    الكل
-                </button>
-                <button
-                    onClick={() => { setViewMode("by-customer"); setFilter("all"); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
-                    className={cn(
-                        "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
-                        viewMode === "by-customer" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                >
-                    <User className="w-4 h-4" />
-                    حسب العميل
-                </button>
-                <button
-                    onClick={() => { setViewMode("all"); setFilter("deleted"); setSelectedCustomerForGroup(null); setIsBulkSelectionMode(false); setSelectedOrderIds([]); hapticFeedback('light') }}
-                    className={cn(
-                        "flex-1 py-2.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-2",
-                        filter === "deleted" ? "bg-red-500/10 text-red-500 shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                >
-                    <XCircle className="w-4 h-4" />
-                    المحذوفة
-                </button>
-            </div>
-
-            {/* Global Search */}
             <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
                 <Input
-                    placeholder="ابحث باسم العميل أو رقم الطلب..."
-                    className="bg-background border-border pr-10 text-right h-12 rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary/50"
+                    placeholder="ابحث باسم العميل..."
+                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
 
-            {/* Filters Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
                     <select
                         value={regionFilter}
                         onChange={(e) => setRegionFilter(e.target.value)}
-                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
+                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none"
                     >
-                        <option value="all" className="bg-background text-foreground">كل المناطق</option>
-                        {regions.map(r => <option key={r} value={r} className="bg-background text-foreground">{r}</option>)}
+                        <option value="all">كل المناطق</option>
+                        {regions.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                 </div>
                 <div className="relative">
-                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
+                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
                     <select
                         value={dateRange}
-                        onChange={(e) => setDateRange(e.target.value as any)}
-                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
+                        onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
+                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none"
                     >
-                        <option value="all" className="bg-background text-foreground">كل الأوقات</option>
-                        <option value="today" className="bg-background text-foreground">اليوم</option>
-                        <option value="week" className="bg-background text-foreground">هذا الأسبوع</option>
-                        <option value="month" className="bg-background text-foreground">هذا الشهر</option>
-                        <option value="year" className="bg-background text-foreground">هذا العام</option>
-                        <option value="custom" className="bg-background text-foreground">فترة مخصصة</option>
+                        <option value="all">كل الأوقات</option>
+                        <option value="today">اليوم</option>
+                        <option value="week">هذا الأسبوع</option>
+                        <option value="month">هذا الشهر</option>
                     </select>
                 </div>
-                <div className="relative">
-                    <User className="absolute right-3 top-3 w-4 h-4 text-muted-foreground z-10" />
-                    <select
-                        value={selectedCustomer}
-                        onChange={(e) => setSelectedCustomer(e.target.value)}
-                        className="w-full bg-background border border-border pr-10 text-right h-10 rounded-xl text-xs appearance-none outline-none focus:border-primary/50 text-foreground"
-                    >
-                        <option value="all" className="bg-background text-foreground">كل العملاء المسجلين</option>
-                        {customers.map(c => <option key={c.id} value={c.id} className="bg-background text-foreground">{c.name}</option>)}
-                    </select>
-                </div>
-                {dateRange === "custom" && (
-                    <div className="md:col-span-3 grid grid-cols-2 gap-2">
-                        <WheelPicker
-                            date={customStart ? new Date(customStart) : undefined}
-                            setDate={(d) => setCustomStart(d ? d.toISOString().split('T')[0] : '')}
-                            placeholder="من تاريخ"
-                        />
-                        <WheelPicker
-                            date={customEnd ? new Date(customEnd) : undefined}
-                            setDate={(d) => setCustomEnd(d ? d.toISOString().split('T')[0] : '')}
-                            placeholder="إلى تاريخ"
-                        />
-                    </div>
-                )}
             </div>
 
-            {/* Status Categories */}
-            {filter !== "deleted" && (
-                <div className="flex bg-muted p-1 rounded-2xl border border-border">
-                    {(Object.entries(categories) as [keyof typeof categories, string][]).map(([id, label]) => (
-                        <button
-                            key={id}
-                            onClick={() => setActiveCategory(id)}
-                            className={cn(
-                                "flex-1 py-2 text-[10px] font-bold rounded-xl transition-all",
-                                activeCategory === id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+                {(Object.entries(categories) as [keyof typeof categories, string][]).map(([id, label]) => (
+                    <button
+                        key={id}
+                        onClick={() => setActiveCategory(id)}
+                        className={cn(
+                            "flex-1 py-2 text-[10px] font-bold rounded-xl transition-all",
+                            activeCategory === id ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+                        )}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
 
-            {/* Quick Status Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                {["all", "processing", "shipped", "delivered", "canceled", "accepted", "deleted"].map((s) => (
+                {["all", "pending", "processing", "shipped", "delivered", "canceled"].map((s) => (
                     <button
                         key={s}
-                        onClick={() => { setFilter(s); hapticFeedback('light') }}
+                        onClick={() => {
+                            setFilter(s)
+                            hapticFeedback('light')
+                        }}
                         className={cn(
-                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border border-transparent",
-                            filter === s ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground border-border"
+                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap",
+                            filter === s
+                                ? "bg-primary text-white"
+                                : "bg-white/5 text-slate-400 hover:bg-white/10"
                         )}
                     >
                         {s === "all" ? "الكل" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG].label}
@@ -422,211 +169,43 @@ export default function AdminOrdersPage() {
                 ))}
             </div>
 
-            {/* Main Content Area */}
-            <div className="space-y-4">
-                {viewMode === "by-customer" && !selectedCustomerForGroup ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {sortedCustomerGroups.map(group => (
-                            <div
-                                key={group.id}
-                                onClick={() => setSelectedCustomerForGroup(group.id)}
-                                className="p-5 rounded-3xl bg-muted/20 border border-border/50 hover:border-primary/50 transition-all cursor-pointer group flex items-center justify-between"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black text-xl">
-                                        {group.name.charAt(0)}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="font-black text-foreground group-hover:text-primary transition-colors">{group.name}</p>
-                                        <p className="text-[10px] text-muted-foreground font-bold">{group.count} طلبات | {group.total.toFixed(2)} ر.س</p>
-                                    </div>
-                                </div>
-                                <ChevronLeft className="w-5 h-5 text-muted-foreground group-hover:-translate-x-1 transition-transform" />
-                            </div>
-                        ))}
+            <div className="space-y-3">
+                {filteredOrders.length === 0 ? (
+                    <div className="p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                        لا توجد طلبات في هذا التصنيف
                     </div>
                 ) : (
-                    <>
-                        {selectedCustomerForGroup && (
-                            <div className="flex items-center justify-between py-2 mb-2 bg-primary/5 p-4 rounded-2xl border border-primary/10">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setSelectedCustomerForGroup(null)}
-                                    className="text-primary gap-2 font-black"
-                                >
-                                    <ArrowRight className="w-4 h-4 rotate-180 rtl:rotate-0" />
-                                    <span>العودة لجميع العملاء</span>
-                                </Button>
-                                <div className="text-right">
-                                    <p className="text-sm font-black text-primary">{selectedCustomerForGroup}</p>
-                                    <p className="text-[10px] text-muted-foreground font-bold">عرض طلبات العميل المحددة</p>
+                    filteredOrders.map((order) => {
+                        const status = STATUS_CONFIG[order.status]
+                        return (
+                            <div
+                                key={order.id}
+                                className="glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                                onClick={() => setSelectedOrder(order)}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", status.bg, status.color)}>
+                                        <status.icon className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <h3 className="font-bold text-white text-sm">#{order.id} - {order.customerName}</h3>
+                                        <p className="text-[10px] text-slate-500">{order.createdAt.toLocaleString('ar-SA')}</p>
+                                    </div>
+                                </div>
+                                <div className="text-left flex items-center gap-4">
+                                    <div className="space-y-0.5">
+                                        <p className="text-xs font-bold text-white">{order.total.toFixed(2)} ر.س</p>
+                                        <p className="text-[10px] text-slate-500">{order.items.length} منتجات</p>
+                                    </div>
+                                    <ChevronLeft className="w-4 h-4 text-slate-600" />
                                 </div>
                             </div>
-                        )}
-
-                        {filteredOrders.length === 0 ? (
-                            <div className="p-20 text-center text-muted-foreground border border-dashed border-border rounded-3xl bg-muted/10">
-                                <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                                <p className="font-bold">لا توجد طلبات في هذا التصنيف</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-3">
-                                {/* Bulk Selection Bar (Only shows when mode is active) */}
-                                {isBulkSelectionMode && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className="flex items-center justify-between mb-2 bg-primary/5 p-2 px-4 rounded-xl border border-primary/20"
-                                    >
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                                if (selectedOrderIds.length === displayedOrders.length) {
-                                                    setSelectedOrderIds([]);
-                                                } else {
-                                                    setSelectedOrderIds(displayedOrders.map(o => o.id));
-                                                }
-                                            }}
-                                            className="text-xs text-primary hover:bg-primary/10 font-black h-8"
-                                        >
-                                            <CheckCircle2 className="w-4 h-4 ml-1.5" />
-                                            {selectedOrderIds.length === displayedOrders.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
-                                        </Button>
-
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                                setIsBulkSelectionMode(false);
-                                                setSelectedOrderIds([]);
-                                            }}
-                                            className="text-xs font-bold text-muted-foreground hover:bg-muted h-8"
-                                        >
-                                            إلغاء التحديد
-                                        </Button>
-                                    </motion.div>
-                                )}
-
-                                {displayedOrders.map((order: Order) => {
-                                    const status = STATUS_CONFIG[order.status]
-                                    return (
-                                        <div
-                                            key={order.id}
-                                            className={cn(
-                                                "glass-card p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition-all border group relative overflow-hidden select-none",
-                                                order.status === "deleted" && filter !== "deleted" && "opacity-60 grayscale-[0.5] border-red-500/20",
-                                                !order.isRead && "border-red-500/30 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]",
-                                                selectedOrderIds.includes(order.id) ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border"
-                                            )}
-                                            onPointerDown={() => handlePointerDown(order.id)}
-                                            onPointerUp={handlePointerUpOrLeave}
-                                            onPointerLeave={handlePointerUpOrLeave}
-                                            onPointerCancel={handlePointerUpOrLeave}
-                                            onContextMenu={(e) => {
-                                                // Prevent default context menu on mobile to allow long press
-                                                if (filter === "deleted" || filter === "canceled") {
-                                                    e.preventDefault();
-                                                }
-                                            }}
-                                            onClick={(e) => {
-                                                if (isLongPressRef.current) {
-                                                    isLongPressRef.current = false;
-                                                    return;
-                                                }
-                                                if (isBulkSelectionMode) {
-                                                    toggleOrderSelection(order.id, e);
-                                                } else {
-                                                    setSelectedOrder(order)
-                                                    setAiAnalysis(null) // Reset AI for new selection
-                                                    if (!order.isRead) markOrderAsRead(order.id)
-                                                }
-                                            }}
-                                        >
-                                            {/* New Badge Pulse Indicator */}
-                                            {!order.isRead && order.status !== "deleted" && (
-                                                <div className="absolute top-0 right-0 p-1">
-                                                    <div className="flex items-center gap-1.5 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-bl-xl animate-pulse shadow-lg">
-                                                        <div className="w-1 h-1 bg-white rounded-full animate-ping" />
-                                                        جديد
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="flex items-center gap-4">
-                                                {isBulkSelectionMode && (
-                                                    <div className={cn(
-                                                        "w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all",
-                                                        selectedOrderIds.includes(order.id) ? "bg-primary border-primary" : "bg-muted border-muted-foreground/30"
-                                                    )}>
-                                                        {selectedOrderIds.includes(order.id) && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
-                                                    </div>
-                                                )}
-
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                                                    status.bg,
-                                                    status.color,
-                                                    !order.isRead && "ring-2 ring-red-500/20 ring-offset-2 ring-offset-background"
-                                                )}>
-                                                    <status.icon className="w-5 h-5" />
-                                                </div>
-                                                <div className="space-y-0.5">
-                                                    <h3 className="font-bold text-foreground text-sm group-hover:text-primary transition-colors flex flex-wrap items-center gap-x-2">
-                                                        #{order.id} - {order.accountName || order.customerName}
-                                                        {order.accountName && order.accountName !== order.customerName && (
-                                                            <span className="text-[10px] text-primary/70 font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
-                                                                لـ: {order.customerName}
-                                                            </span>
-                                                        )}
-                                                    </h3>
-                                                    <p className="text-[10px] text-muted-foreground">{order.createdAt.toLocaleString('ar-SA')}</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-left flex items-center gap-4">
-                                                <div className="space-y-0.5">
-                                                    <p className="text-xs font-bold text-foreground">{order.total.toFixed(2)} ر.س</p>
-                                                    <p className="text-[10px] text-muted-foreground">{order.items.length} منتجات</p>
-                                                </div>
-                                                <ChevronLeft className="w-4 h-4 text-muted-foreground group-hover:-translate-x-1 transition-transform" />
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                                {displayedOrders.length < filteredOrders.length && (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-12 rounded-2xl border-dashed border-primary/30 text-primary hover:bg-primary/5 font-black mt-4"
-                                        onClick={() => setVisibleCount(prev => prev + 10)}
-                                    >
-                                        عرض المزيد من الطلبات ({filteredOrders.length - displayedOrders.length})
-                                    </Button>
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* Infinite Scroll & Loading */}
-                {!searchQuery && hasMoreOrders && (
-                    <div ref={observerTarget} className="flex justify-center p-6">
-                        {loading && (
-                            <div className="flex items-center gap-2 text-muted-foreground bg-muted/20 px-4 py-2 rounded-full text-xs animate-pulse">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>جاري تحميل المزيد من الطلبات...</span>
-                            </div>
-                        )}
-                    </div>
-                )}
-                {isSearching && (
-                    <div className="flex justify-center p-10">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
+                        )
+                    })
                 )}
             </div>
 
-            {/* Details Modal */}
+            {/* Order Details Modal */}
             <AnimatePresence>
                 {selectedOrder && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -641,238 +220,121 @@ export default function AdminOrdersPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto border border-border flex flex-col gap-6"
+                            className="glass-card w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto"
                         >
-                            {/* Modal Header */}
-                            <div className="flex items-center justify-between border-b border-border pb-4">
-                                <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                                <div className="flex items-center gap-3 flex-1">
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
-                                        <h2 className="text-xl font-bold">طلب #{selectedOrder.id}</h2>
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status].bg, STATUS_CONFIG[selectedOrder.status].color)}>
-                                                {STATUS_CONFIG[selectedOrder.status].label}
-                                            </span>
-                                            {storeSettings.enableAiSystem !== false && (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="sm" 
-                                                    onClick={() => handleAiAnalyzeOrder(selectedOrder)}
-                                                    disabled={isAiLoading}
-                                                    className="h-5 px-2 text-[8px] bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 gap-1 rounded-full font-black animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.2)]"
-                                                >
-                                                    {isAiLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Sparkles className="w-2.5 h-2.5" />}
-                                                    تحليل ذكي (AI)
-                                                </Button>
-                                            )}
-                                        </div>
+                                        <h2 className="text-xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
+                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status].bg, STATUS_CONFIG[selectedOrder.status].color)}>
+                                            {STATUS_CONFIG[selectedOrder.status].label}
+                                        </span>
                                     </div>
                                 </div>
-                                <button onClick={() => { setSelectedOrder(null); setAiAnalysis(null); }} className="p-2 hover:bg-white/5 rounded-full">
-                                    <XCircle className="w-5 h-5 text-slate-400" />
-                                </button>
-                            </div>
-
-                            {/* Actions Bar */}
-                            <div className="flex flex-wrap gap-2 pb-4 border-b border-border">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/10 gap-2 px-3 border-2 border-orange-500 dark:border-orange-500/30 shadow-sm"
-                                    onClick={() => setInvoicePreviewOrder(selectedOrder)}
-                                >
-                                    <Eye className="w-4 h-4" />
-                                    <span className="text-xs font-black">المعاينة</span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-blue-400 hover:bg-blue-400/10 gap-2 px-3 border border-blue-400/5"
-                                    onClick={() => printOrderInvoice(selectedOrder, storeSettings)}
-                                >
-                                    <Printer className="w-4 h-4" />
-                                    <span className="text-xs">طباعة</span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-emerald-400 hover:bg-emerald-400/10 gap-2 px-3 border border-emerald-400/5"
-                                    onClick={() => handleShareWhatsApp(selectedOrder)}
-                                >
-                                    <Share2 className="w-4 h-4" />
-                                    <span className="text-xs">واتساب</span>
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-primary hover:bg-primary/10 gap-2 px-3 border border-primary/5"
-                                    onClick={() => downloadOrderPDF(selectedOrder, storeSettings)}
-                                >
-                                    <FileDown className="w-4 h-4" />
-                                    <span className="text-xs">تحميل PDF</span>
-                                </Button>
-
-                                {/* ARCHIVE / RESTORE BUTTON */}
-                                {selectedOrder.status === 'deleted' ? (
+                                <div className="flex items-center gap-2">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 px-3 border border-emerald-500/20"
-                                        onClick={() => {
-                                            updateOrderStatus(selectedOrder.id, 'pending')
-                                            setSelectedOrder(null)
-                                            toast.success('تمت استعادة الفاتورة بنجاح')
-                                        }}
+                                        className="text-blue-400 hover:bg-blue-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-blue-400/20"
+                                        onClick={() => window.print()}
                                     >
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-xs">استعادة الفاتورة</span>
+                                        <Printer className="w-4 h-4" />
+                                        <span className="text-xs">طباعة</span>
                                     </Button>
-                                ) : (
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-red-400 hover:bg-red-400/10 gap-2 px-3 border border-red-500/20"
-                                        onClick={() => {
-                                            updateOrderStatus(selectedOrder.id, 'deleted')
-                                            setSelectedOrder(null)
-                                            toast.error('تم نقل الفاتورة للمحذوفات')
-                                        }}
+                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
+                                        onClick={() => handleShareWhatsApp(selectedOrder)}
                                     >
-                                        <XCircle className="w-4 h-4" />
-                                        <span className="text-xs">حذف الفاتورة</span>
+                                        <Share2 className="w-4 h-4" />
+                                        <span className="text-xs">واتساب</span>
                                     </Button>
-                                )}
-                            </div>
-
-                            {/* AI Analysis Result */}
-                            <AnimatePresence>
-                                {aiAnalysis && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        className="bg-primary/5 border border-primary/20 p-4 rounded-2xl relative overflow-hidden group"
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-primary hover:bg-primary/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-primary/20"
+                                        onClick={() => handleDownloadPDF(selectedOrder)}
                                     >
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Sparkles className="w-4 h-4 text-primary" />
-                                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">تحليل المساعد الذكي</span>
-                                        </div>
-                                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
-                                            {aiAnalysis}
-                                        </p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Info Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-3">
-                                    <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <User className="w-2.5 h-2.5" />
-                                        صاحب الحساب
-                                    </p>
-                                    <p className="font-bold text-sm">{(selectedOrder.accountName && selectedOrder.accountName !== 'زائر') ? selectedOrder.accountName : selectedOrder.customerName}</p>
-                                </div>
-                                <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-3">
-                                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <Phone className="w-2.5 h-2.5" />
-                                        بيانات المستلم
-                                    </p>
-                                    <div>
-                                        <p className="text-xs font-bold">{selectedOrder.customerName}</p>
-                                        <p className="text-[10px] font-mono text-primary">{selectedOrder.customerPhone || "---"}</p>
-                                    </div>
+                                        <FileDown className="w-4 h-4" />
+                                        <span className="text-xs">PDF</span>
+                                    </Button>
+                                    <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/5 rounded-full">
+                                        <XCircle className="w-5 h-5 text-slate-400" />
+                                    </button>
                                 </div>
                             </div>
 
-                            {/* Products */}
-                            <div className="space-y-2">
-                                <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">محتويات الطلب</h4>
-                                <div className="space-y-2">
-                                    {selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl border border-border/50 text-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">📦</div>
-                                                <div className="font-bold">{item.name}</div>
+                            <div className="grid grid-cols-2 gap-6 mb-8">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-slate-400 text-xs">
+                                        <User className="w-3 h-3" />
+                                        العميل
+                                    </div>
+                                    <p className="font-bold text-white text-sm">{selectedOrder.customerName}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-slate-400 text-xs">
+                                        <Calendar className="w-3 h-3" />
+                                        التاريخ
+                                    </div>
+                                    <p className="font-bold text-white text-sm">{selectedOrder.createdAt.toLocaleString('ar-SA')}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 mb-8">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase">قائمة المنتجات</h4>
+                                {selectedOrder.items.map((item, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-black/40 rounded flex items-center justify-center text-xs">📦</div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white">{item.name}</p>
+                                                <p className="text-[10px] text-slate-500">{item.quantity} x {item.price} ر.س</p>
                                             </div>
-                                            <div className="text-muted-foreground">{item.quantity} x {item.price}</div>
                                         </div>
+                                        <p className="text-sm font-bold text-primary">{(item.quantity * item.price).toFixed(2)} ر.س</p>
+                                    </div>
+                                ))}
+                                <div className="flex justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <div className="flex items-center gap-2 font-bold text-white">
+                                        <CreditCard className="w-4 h-4 text-primary" />
+                                        الإجمالي
+                                    </div>
+                                    <p className="text-lg font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase">تحديث حالة الطلب</h4>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>).map((statusKey) => (
+                                        <Button
+                                            key={statusKey}
+                                            variant="glass"
+                                            className={cn(
+                                                "h-10 text-[10px] font-bold rounded-lg",
+                                                selectedOrder.status === statusKey ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color : "hover:bg-white/5"
+                                            )}
+                                            onClick={() => {
+                                                updateOrderStatus(selectedOrder.id, statusKey)
+                                                setSelectedOrder({ ...selectedOrder, status: statusKey })
+                                                hapticFeedback('medium')
+                                            }}
+                                        >
+                                            {STATUS_CONFIG[statusKey].label}
+                                        </Button>
                                     ))}
                                 </div>
-                                <div className="flex justify-between p-4 bg-primary/10 rounded-2xl border border-primary/20 mt-4">
-                                    <span className="font-black">الإجمالي</span>
-                                    <span className="font-black text-primary text-xl">{selectedOrder.total.toFixed(2)} ر.س</span>
-                                </div>
                             </div>
-
-                            {/* Status Change Grid */}
-                            {selectedOrder.status !== 'deleted' && (
-                                <div className="space-y-3">
-                                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center">تحديث حالة الطلب</h4>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>)
-                                            .filter(key => !['accepted', 'rejected', 'deleted'].includes(key))
-                                            .map((statusKey) => (
-                                                <Button
-                                                    key={statusKey}
-                                                    variant="glass"
-                                                    className={cn(
-                                                        "h-12 text-[10px] font-bold rounded-xl transition-all border border-white/5",
-                                                        selectedOrder.status === statusKey
-                                                            ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color + " border-primary/30"
-                                                            : "bg-white/5 text-muted-foreground hover:bg-white/10"
-                                                    )}
-                                                    onClick={() => {
-                                                        updateOrderStatus(selectedOrder.id, statusKey)
-                                                        setSelectedOrder(null)
-                                                        toast.success('تم تحديث الحالة')
-                                                    }}
-                                                >
-                                                    {STATUS_CONFIG[statusKey].label}
-                                                </Button>
-                                            ))}
-                                    </div>
-                                </div>
-                            )}
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
 
-            {/* Floating Bulk Actions Bar */}
-            <AnimatePresence>
-                {isBulkSelectionMode && selectedOrderIds.length > 0 && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-[90%] md:max-w-md px-4 py-3 bg-red-50 dark:bg-red-500/10 border-2 border-red-500/50 rounded-2xl shadow-2xl flex items-center justify-between backdrop-blur-xl"
-                    >
-                        <div className="flex flex-col">
-                            <span className="text-red-600 dark:text-red-400 font-black text-sm">{selectedOrderIds.length} طلبات محددة</span>
-                            <span className="text-[10px] text-red-500/70 font-bold tracking-widest uppercase">جاهزة للحذف النهائي</span>
-                        </div>
-                        <Button
-                            variant="destructive"
-                            className="rounded-xl shadow-lg gap-2 font-black"
-                            onClick={handleBulkDelete}
-                            disabled={isDeletingBulk}
-                        >
-                            {isDeletingBulk ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                            <span>حذف نهائي</span>
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Print Preview */}
-            {invoicePreviewOrder && (
-                <ReceiptInvoice
-                    order={invoicePreviewOrder}
-                    isPreview={true}
-                    onClose={() => setInvoicePreviewOrder(null)}
-                />
-            )}
+            {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
+            {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-target" />}
         </div>
     )
 }

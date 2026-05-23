@@ -9,8 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Category, useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
-import { compressImage } from "@/lib/image-utils"
-import { toast } from "sonner"
 
 interface CategoryFormProps {
     isOpen: boolean
@@ -19,7 +17,7 @@ interface CategoryFormProps {
 }
 
 export function AdminCategoryForm({ isOpen, onClose, initialCategory }: CategoryFormProps) {
-    const { addCategory, updateCategory, storeSettings, updateStoreSettings } = useStore()
+    const { addCategory, updateCategory } = useStore()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [visualType, setVisualType] = useState<"image" | "icon">("icon")
     const [formData, setFormData] = useState({
@@ -27,11 +25,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         nameEn: "",
         image: "",
         icon: "📁",
-        isHidden: false,
-        order: 0,
     })
-
-    const isAllCategory = initialCategory?.id === "all-category"
 
     useEffect(() => {
         if (!isOpen) return;
@@ -43,22 +37,14 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     nameEn: initialCategory.nameEn,
                     image: initialCategory.image || "",
                     icon: initialCategory.icon || "📁",
-                    isHidden: initialCategory.isHidden || false,
-                    order: initialCategory.order || 0,
                 });
-                if (initialCategory.id === "all-category") {
-                    setVisualType("image");
-                } else {
-                    setVisualType(initialCategory.image ? "image" : "icon");
-                }
+                setVisualType(initialCategory.image ? "image" : "icon");
             } else {
                 setFormData({
                     nameAr: "",
                     nameEn: "",
                     image: "",
                     icon: "📁",
-                    isHidden: false,
-                    order: 0,
                 });
                 setVisualType("icon");
             }
@@ -67,50 +53,24 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         return () => clearTimeout(timer);
     }, [initialCategory, isOpen])
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (!file.type.startsWith('image/')) {
-            toast.error("يرجى اختيار ملف صورة صحيح")
-            return
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setFormData(prev => ({ ...prev, image: reader.result as string }))
         }
-
-        const loadingToast = toast.loading("جاري معالجة الصورة...")
-
-        try {
-            // Compress category image (Max 800px is enough for icons/cards)
-            const compressedBase64 = await compressImage(file, 800, 0.8)
-            setFormData(prev => ({ ...prev, image: compressedBase64 }))
-            toast.dismiss(loadingToast)
-            toast.success("تم رفع الصورة بنجاح")
-        } catch (error) {
-            console.error("Image processing error:", error)
-            toast.dismiss(loadingToast)
-            toast.error("فشل معالجة الصورة")
-        }
-        e.target.value = "" // Reset input
+        reader.readAsDataURL(file)
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-
-        if (isAllCategory) {
-            updateStoreSettings({
-                ...storeSettings,
-                allCategoryImage: formData.image
-            })
-            onClose()
-            return
-        }
-
         const categoryData = {
             nameAr: formData.nameAr,
             nameEn: formData.nameEn,
             image: formData.image,
             icon: formData.icon,
-            isHidden: formData.isHidden,
-            order: Number(formData.order) || 0,
         }
 
         if (initialCategory) {
@@ -157,108 +117,67 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                 onChange={handleFileChange}
                             />
 
-                            {!isAllCategory && (
-                                <>
-                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center justify-between">
-                                        <div className="space-y-0.5">
-                                            <Label className="text-white text-base">حالة القسم</Label>
-                                            <p className="text-xs text-slate-400">تحديد ما إذا كان القسم ظاهراً للعملاء أم مخفياً</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <span className={cn("text-xs font-bold transition-colors", !formData.isHidden ? "text-emerald-400" : "text-slate-500")}>
-                                                {!formData.isHidden ? "ظاهر" : "مخفي"}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, isHidden: !prev.isHidden }))}
-                                                className={cn(
-                                                    "w-12 h-6 rounded-full relative transition-colors duration-300",
-                                                    !formData.isHidden ? "bg-emerald-500/20" : "bg-slate-700"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "absolute top-1 w-4 h-4 rounded-full transition-all duration-300",
-                                                    !formData.isHidden ? "left-1 bg-emerald-500" : "left-7 bg-slate-400"
-                                                )} />
-                                            </button>
-                                        </div>
-                                    </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالعربي</Label>
+                                    <Input
+                                        required
+                                        placeholder="الاسم بالعربي"
+                                        className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white focus:ring-primary/50"
+                                        value={formData.nameAr}
+                                        onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالإنجليزي (English)</Label>
+                                    <Input
+                                        required
+                                        placeholder="Name in English"
+                                        dir="ltr"
+                                        className="bg-black/20 border-white/10 h-14 rounded-2xl text-left text-white focus:ring-primary/50"
+                                        value={formData.nameEn}
+                                        onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                                    />
+                                </div>
+                            </div>
 
-                                    <div className="space-y-2">
-                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">ترتيب الظهور (رقم أصغر يظهر أولاً)</Label>
+                            <div className="bg-black/20 p-1 rounded-2xl flex border border-white/10 h-14">
+                                <button
+                                    type="button"
+                                    onClick={() => setVisualType("image")}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
+                                        visualType === "image" ? "bg-[#1c2a36] text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                                    )}
+                                >
+                                    <ImageIcon className="w-4 h-4" />
+                                    <span>صورة</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setVisualType("icon")}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
+                                        visualType === "icon" ? "bg-[#1c2a36] text-white shadow-lg" : "text-white"
+                                    )}
+                                >
+                                    <Smile className="w-4 h-4" />
+                                    <span>أيقونة</span>
+                                </button>
+                            </div>
+
+                            {visualType === "icon" && (
+                                <div className="space-y-2">
+                                    <div className="relative">
+                                        <Smile className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                         <Input
-                                            type="number"
-                                            placeholder="0"
-                                            className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white focus:ring-primary/50"
-                                            value={formData.order}
-                                            onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                                            placeholder="هنا (Emoji) أدخل الأيقونة"
+                                            className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pl-12 focus:ring-primary/50"
+                                            value={formData.icon}
+                                            onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                                         />
                                     </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالعربي</Label>
-                                            <Input
-                                                required
-                                                placeholder="الاسم بالعربي"
-                                                className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white focus:ring-primary/50"
-                                                value={formData.nameAr}
-                                                onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالإنجليزي (English)</Label>
-                                            <Input
-                                                required
-                                                placeholder="Name in English"
-                                                dir="ltr"
-                                                className="bg-black/20 border-white/10 h-14 rounded-2xl text-left text-white focus:ring-primary/50"
-                                                value={formData.nameEn}
-                                                onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-
-                                    <div className="bg-black/20 p-1 rounded-2xl flex border border-white/10 h-14">
-                                        <button
-                                            type="button"
-                                            onClick={() => setVisualType("image")}
-                                            className={cn(
-                                                "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
-                                                visualType === "image" ? "bg-[#1c2a36] text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                                            )}
-                                        >
-                                            <ImageIcon className="w-4 h-4" />
-                                            <span>صورة</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setVisualType("icon")}
-                                            className={cn(
-                                                "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
-                                                visualType === "icon" ? "bg-[#1c2a36] text-white shadow-lg" : "text-white"
-                                            )}
-                                        >
-                                            <Smile className="w-4 h-4" />
-                                            <span>أيقونة</span>
-                                        </button>
-                                    </div>
-
-                                    {visualType === "icon" && (
-                                        <div className="space-y-2">
-                                            <div className="relative">
-                                                <Smile className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                                                <Input
-                                                    placeholder="هنا (Emoji) أدخل الأيقونة"
-                                                    className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pl-12 focus:ring-primary/50"
-                                                    value={formData.icon}
-                                                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
+                                </div>
                             )}
 
                             {visualType === "image" && (

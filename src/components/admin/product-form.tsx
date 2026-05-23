@@ -1,21 +1,16 @@
-
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Product, useStore } from "@/context/store-context"
-import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Image as ImageIcon, FileEdit, Tag, Star } from "lucide-react"
+import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { compressImage } from "@/lib/image-utils"
+import { compressImage, applyBrandingTemplate } from "@/lib/image-utils"
 import { toast } from "sonner"
 import ScannerModal from "@/components/store/scanner-modal"
-import { ImageEditorModal } from "@/components/admin/image-editor-modal"
-import { db } from "@/lib/firebase"
-import { collection, query, where, getDocs } from "firebase/firestore"
-import { AlertCircle, ExternalLink } from "lucide-react"
 
 interface ProductFormProps {
     isOpen: boolean
@@ -24,16 +19,10 @@ interface ProductFormProps {
 }
 
 export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFormProps) {
-    const { addProduct, updateProduct, categories, storeSettings } = useStore()
-    const galleryInputRef = useRef<HTMLInputElement>(null)
-    const cameraInputRef = useRef<HTMLInputElement>(null)
+    const { addProduct, updateProduct, categories } = useStore()
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [isScannerOpen, setIsScannerOpen] = useState(false)
-    const [isEditorOpen, setIsEditorOpen] = useState(false)
-    const [editingFile, setEditingFile] = useState<File | null>(null)
     const [useBranding, setUseBranding] = useState(false)
-    const [duplicateFound, setDuplicateFound] = useState<{ id: string, name: string } | null>(null)
-    const [isDragging, setIsDragging] = useState(false)
-    const [isAiLoading, setIsAiLoading] = useState(false)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -46,78 +35,49 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         oldPricePiece: "",
         priceDozen: "",
         oldPriceDozen: "",
-        description: "",
         discountEndDate: "",
-        costPrice: "",
-        notes: "",
-        isFeatured: false,
-        barcodes: [] as string[]
     })
 
-    const [extraBarcodes, setExtraBarcodes] = useState<string[]>(initialProduct?.barcodes || [])
-    const [numBarcodes, setNumBarcodes] = useState(1)
-    const [hasDiscount, setHasDiscount] = useState(false)
-    const [hasTimer, setHasTimer] = useState(false)
+    const [showCountdown, setShowCountdown] = useState(false)
 
     useEffect(() => {
         if (!isOpen) return;
 
         const timer = setTimeout(() => {
-            const formatLocalDatetime = (d: Date | string) => {
-                const date = new Date(d);
-                if (isNaN(date.getTime())) return "";
-                const pad = (n: number) => n.toString().padStart(2, '0');
-                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-            };
-
             if (initialProduct) {
-                const isDiscounted = (initialProduct.oldPricePiece && initialProduct.oldPricePiece > 0) || (initialProduct.oldPriceDozen && initialProduct.oldPriceDozen > 0);
-                
+                // If the product category is stored as Arabic name, map it to ID for the select input
+                const matchedCategory = categories.find(c => c.nameAr === initialProduct.category);
+                const categoryValue = matchedCategory ? matchedCategory.id : (initialProduct.category || "");
+
                 setFormData({
                     name: initialProduct.name,
                     unit: initialProduct.unit,
                     barcode: initialProduct.barcode,
-                    barcodes: initialProduct.barcodes || [],
                     image: initialProduct.image || "",
                     images: initialProduct.images || (initialProduct.image ? [initialProduct.image] : []),
-                    category: initialProduct.category || "",
+                    category: categoryValue,
                     pricePiece: initialProduct.pricePiece?.toString() || "",
                     oldPricePiece: initialProduct.oldPricePiece?.toString() || "",
                     priceDozen: initialProduct.priceDozen?.toString() || "",
                     oldPriceDozen: initialProduct.oldPriceDozen?.toString() || "",
-                    description: initialProduct.description || "",
-                    discountEndDate: initialProduct.discountEndDate ? formatLocalDatetime(initialProduct.discountEndDate) : "",
-                    costPrice: initialProduct.costPrice?.toString() || "",
-                    notes: initialProduct.notes || "",
-                    isFeatured: initialProduct.isFeatured || false,
+                    discountEndDate: initialProduct.discountEndDate ? new Date(initialProduct.discountEndDate).toISOString().slice(0, 16) : "",
                 })
-                setExtraBarcodes(initialProduct.barcodes || [])
-                setNumBarcodes(Math.max(1, (initialProduct.barcodes?.length || 0) + 1))
-                setHasDiscount(!!isDiscounted)
-                setHasTimer(!!initialProduct.discountEndDate)
+                setShowCountdown(!!initialProduct.discountEndDate)
             } else {
                 setFormData({
                     name: "",
                     unit: "حبة",
                     barcode: "",
-                    barcodes: [],
                     image: "",
                     images: [] as string[],
-                    category: categories[0]?.nameAr || "",
+                    category: categories[0]?.id || "",
                     pricePiece: "",
                     oldPricePiece: "",
                     priceDozen: "",
                     oldPriceDozen: "",
-                    description: "",
                     discountEndDate: "",
-                    costPrice: "",
-                    notes: "",
-                    isFeatured: false,
                 })
-                setExtraBarcodes([])
-                setNumBarcodes(1)
-                setHasDiscount(false)
-                setHasTimer(false)
+                setShowCountdown(false)
             }
         }, 0);
 
@@ -127,18 +87,6 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files
         if (!files || files.length === 0) return
-        await processFiles(files)
-        e.target.value = "";
-    }
-
-    const processFiles = async (files: FileList | File[]) => {
-        if (useBranding && files.length > 0) {
-            setEditingFile(files[0]);
-            setIsEditorOpen(true);
-            return;
-        }
-
-        const loadingToast = toast.loading("جاري معالجة وضغط الصور...");
 
         try {
             const newImages: string[] = []
@@ -146,62 +94,41 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 const file = files[i]
                 if (!file.type.startsWith('image/')) continue
 
-                const compressedBase64 = await compressImage(file, 1000, 0.8, true)
+                // 1. Apply Branding if enabled
+                if (useBranding) {
+                    /* Since applyBrandingTemplate returns base64 string, we need to handle it.
+                       Our compressImage expects File. 
+                       However, applyBrandingTemplate OUTPUTS a compressed JPEG base64 already (0.9 q).
+                       So if branding is used, we might skip extra compression or Convert base64 back to file if needed.
+                       Actually, let's keep it simple: if branding is used, the output IS the final image.
+                    */
+                    try {
+                        const brandedBase64 = await applyBrandingTemplate(file)
+                        newImages.push(brandedBase64)
+                        continue // Skip standard compression loop for this file
+                    } catch (err) {
+                        console.error("Branding failed, falling back to normal compression", err)
+                    }
+                }
+
+                // 2. Standard Compression (if branding skipped or disabled)
+                const compressedBase64 = await compressImage(file)
                 newImages.push(compressedBase64)
             }
 
             setFormData(prev => ({
                 ...prev,
                 images: [...prev.images, ...newImages],
+                // Update main image if explicitly empty or first time
                 image: prev.image || newImages[0] || ""
             }))
 
-            toast.dismiss(loadingToast);
-            if (newImages.length > 0) toast.success(`تم إضافة ${newImages.length} صورة بنجاح`)
+            if (newImages.length > 0) toast.success(`تم تحميل ${newImages.length} صورة بنجاح`)
         } catch (error) {
             console.error("Compression error:", error)
-            toast.dismiss(loadingToast);
-            toast.error("حدث خطأ أثناء معالجة الصور، يرجى المحاولة مرة أخرى")
+            toast.error("حدث خطأ أثناء معالجة الصور")
         }
     }
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(true)
-    }
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-    }
-
-    const handleDrop = async (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-        const files = e.dataTransfer.files
-        if (files && files.length > 0) {
-            await processFiles(files)
-        }
-    }
-
-    const handleEditorSave = async (processedFile: File) => {
-        try {
-            const compressedBase64 = await compressImage(processedFile, 1000, 0.9, true);
-
-            setFormData(prev => ({
-                ...prev,
-                images: [...prev.images, compressedBase64],
-                image: prev.image || compressedBase64 || ""
-            }))
-
-            setIsEditorOpen(false);
-            setEditingFile(null);
-            toast.success("تم إضافة الصورة المحسنة");
-        } catch (error) {
-            console.error("Editor save error:", error);
-            toast.error("فشل حفظ الصورة المعالجة");
-        }
-    };
 
     const removeImage = (indexToRemove: number) => {
         setFormData(prev => {
@@ -209,118 +136,27 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             return {
                 ...prev,
                 images: newImages,
+                // If we removed the main image (visually first), update it to the next available one
                 image: newImages.length > 0 ? newImages[0] : ""
             }
         })
     }
 
-    const handleAiSmartFill = async () => {
-        if (formData.images.length === 0) {
-            toast.error("يرجى رفع صورة أولاً ليقوم الذكاء الاصطناعي بتحليلها");
-            return;
-        }
-
-        setIsAiLoading(true);
-        const loadingToast = toast.loading("جاري تحليل المنتج بالذكاء الاصطناعي...");
-
-        try {
-            const smartFillPrompt = `أنت خبير متخصص في قطع غيار السيارات. حلل هذه الصورة بعناية واستخرج المعلومات الدقيقة:
-
-١. اقرأ رقم القطعة OEM بدقة من العبوة أو الملصق
-٢. حدد الماركة (Toyota، Honda، Bosch، NGK، إلخ)
-٣. حدد نوع القطعة تحديداً دقيقاً (فلتر زيت، فلتر هواء، شمعة إشعال، إلخ)
-٤. اكتب اسماً عربياً احترافياً مختصراً: [الماركة] + [نوع القطعة] + [رقم القطعة]
-
-أجب بـ JSON فقط بهذا الشكل، بدون أي نص إضافي:
-{
-  "name": "الاسم العربي الاحترافي للمنتج",
-  "barcode": "رقم القطعة OEM",
-  "barcodes": ["رقم بديل 1", "رقم بديل 2"],
-  "description": "وصف مختصر: نوع القطعة، الماركة، السيارات المتوافقة"
-}`;
-
-            const res = await fetch("/api/admin-assistant", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    message: smartFillPrompt,
-                    image: formData.images[0],
-                    user: { name: "Smart Fill", role: "admin" }
-                })
-            });
-
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-
-            const rawText: string = data.text || "";
-            const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("لم يتمكن الذكاء الاصطناعي من التعرف على بيانات المنتج، تأكد من وضوح الصورة");
-
-            const parsed = JSON.parse(jsonMatch[0]);
-
-            const aiBarcodes = Array.isArray(parsed.barcodes) ? parsed.barcodes : [parsed.barcode].filter(Boolean);
-            const primaryBarcode = parsed.barcode || aiBarcodes[0] || "";
-            const otherBarcodes = aiBarcodes.filter((b: string) => b !== primaryBarcode).slice(0, 4);
-
-            setFormData(prev => ({
-                ...prev,
-                name: parsed.name?.trim() || prev.name,
-                barcode: primaryBarcode.trim() || prev.barcode,
-                barcodes: otherBarcodes,
-                description: parsed.description?.trim() || prev.description,
-            }));
-
-            setExtraBarcodes(otherBarcodes);
-            setNumBarcodes(Math.min(otherBarcodes.length + 1, 5) || 1);
-
-            const allToSearch = [primaryBarcode, ...otherBarcodes].filter(Boolean);
-            for (const b of allToSearch) {
-                const q1 = query(collection(db, "products"), where("barcode", "==", b.trim()));
-                const q2 = query(collection(db, "products"), where("barcodes", "array-contains", b.trim()));
-                const [s1, s2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-                
-                const existing = s1.docs[0] || s2.docs[0];
-                if (existing && existing.id !== initialProduct?.id) {
-                    setDuplicateFound({ id: existing.id, name: existing.data().name });
-                    toast.warning(`الباركود ${b} موجود مسبقاً في منتج آخر!`);
-                    break;
-                } else {
-                    setDuplicateFound(null);
-                }
-            }
-
-            toast.dismiss(loadingToast);
-            toast.success("تم تحليل المنتج وتعبئة البيانات بنجاح! ✨");
-        } catch (error: any) {
-            console.error("AI Smart Fill Error:", error);
-            toast.dismiss(loadingToast);
-            toast.error("فشل التعبئة التلقائية: " + error.message);
-        } finally {
-            setIsAiLoading(false);
-        }
-    }
-
-    const handleSubmit = (e: React.FormEvent, isDraft = false) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         const productData = {
             name: formData.name,
             price: Number(formData.pricePiece) || 0,
             pricePiece: Number(formData.pricePiece) || 0,
-            oldPricePiece: hasDiscount && formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
+            oldPricePiece: formData.oldPricePiece ? Number(formData.oldPricePiece) : 0,
             priceDozen: formData.priceDozen ? Number(formData.priceDozen) : 0,
-            oldPriceDozen: hasDiscount && formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
+            oldPriceDozen: formData.oldPriceDozen ? Number(formData.oldPriceDozen) : 0,
             unit: formData.unit,
             barcode: formData.barcode,
-            barcodes: extraBarcodes.filter(Boolean),
-            image: formData.images[0] || formData.image || "",
+            image: formData.images[0] || formData.image || "", // Prefer first image in array
             images: formData.images,
             category: formData.category,
-            description: formData.description,
-            discountEndDate: (hasDiscount && hasTimer && formData.discountEndDate) ? new Date(formData.discountEndDate) : null,
-            costPrice: formData.costPrice ? Number(formData.costPrice) : 0,
-            notes: formData.notes,
-            isDraft: isDraft,
-            isFeatured: formData.isFeatured,
+            discountEndDate: showCountdown && formData.discountEndDate ? new Date(formData.discountEndDate) : null,
         }
 
         if (initialProduct) {
@@ -359,47 +195,24 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            {duplicateFound && (
-                                <motion.div 
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3"
-                                >
-                                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                    <div className="flex-1">
-                                        <p className="text-xs font-bold text-amber-200">تنبيه: منتج مكرر</p>
-                                        <p className="text-[10px] text-amber-200/70 mt-1">يوجد منتج آخر بنفس رقم OEM الرابط: <span className="font-bold">{duplicateFound.name}</span></p>
-                                        <Button 
-                                            variant="link" 
-                                            size="sm" 
-                                            className="p-0 h-auto text-[10px] text-amber-400 mt-1 flex items-center gap-1"
-                                            onClick={() => toast.info(`المعرف: ${duplicateFound.id}`)}
-                                        >
-                                            استعراض المنتج الموجود <ExternalLink className="w-3 h-3" />
-                                        </Button>
-                                    </div>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-6 w-6 rounded-full hover:bg-amber-500/20"
-                                        onClick={() => setDuplicateFound(null)}
-                                    >
-                                        <X className="w-3 h-3" />
-                                    </Button>
-                                </motion.div>
-                            )}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                multiple
+                                onChange={handleFileChange}
+                            />
 
-                            <input type="file" ref={galleryInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
-                            <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
-
+                            {/* Branding Toggle */}
                             <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
                                 <div className="flex items-center gap-3">
                                     <div className={`p-2 rounded-xl transition-colors ${useBranding ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-400'}`}>
                                         <Wand2 className="w-5 h-5" />
                                     </div>
                                     <div className="flex flex-col items-start gap-1">
-                                        <span className="text-sm font-bold text-white">المعدل الذكي (Magic Studio)</span>
-                                        <span className="text-[10px] text-slate-400">قص الخلفية + تصميم موحد</span>
+                                        <span className="text-sm font-bold text-white">تحسين وتصميم الصورة تلقائياً</span>
+                                        <span className="text-[10px] text-slate-400">إضافة خلفية احترافية وشعار المتجر</span>
                                     </div>
                                 </div>
                                 <div
@@ -410,153 +223,57 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-xl transition-colors ${formData.isFeatured ? 'bg-amber-500/20 text-amber-500' : 'bg-white/5 text-slate-400'}`}>
-                                        <Star className="w-5 h-5" />
+                            {/* Countdown Toggle & Input */}
+                            <div className="space-y-4 bg-black/10 p-4 rounded-3xl border border-white/5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl transition-colors ${showCountdown ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
+                                            <Clock className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex flex-col items-start">
+                                            <span className="text-sm font-bold text-white">تفعيل العداد التنازلي</span>
+                                            <span className="text-[10px] text-slate-400">تحفيز العميل بانتهاء العرض</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-start gap-1">
-                                        <span className="text-sm font-bold text-white">تثبيت في المقدمة (Featured)</span>
-                                        <span className="text-[10px] text-slate-400">يظهر المنتج في أعلى القائمة دائماً</span>
+                                    <div
+                                        onClick={() => setShowCountdown(!showCountdown)}
+                                        className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${showCountdown ? 'bg-orange-500' : 'bg-white/10'}`}
+                                    >
+                                        <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${showCountdown ? 'left-1' : 'left-6'}`} />
                                     </div>
                                 </div>
-                                <div
-                                    onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
-                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${formData.isFeatured ? 'bg-amber-500' : 'bg-white/10'}`}
-                                >
-                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${formData.isFeatured ? 'left-1' : 'left-6'}`} />
-                                </div>
-                            </div>
 
-                            <div className="flex items-center justify-between bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-xl transition-colors ${hasDiscount ? 'bg-red-500/20 text-red-500' : 'bg-white/5 text-slate-400'}`}>
-                                        <Tag className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex flex-col items-start">
-                                        <span className="text-sm font-bold text-white">تفعيل التخفيض</span>
-                                        <span className="text-[10px] text-slate-400">إضافة سعر قديم مشطوب وعرض سعر جديد</span>
-                                    </div>
-                                </div>
-                                <div
-                                    onClick={() => setHasDiscount(!hasDiscount)}
-                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${hasDiscount ? 'bg-red-500' : 'bg-white/10'}`}
-                                >
-                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${hasDiscount ? 'left-1' : 'left-6'}`} />
-                                </div>
-                            </div>
-
-                            <AnimatePresence>
-                                {hasDiscount && (
+                                {showCountdown && (
                                     <motion.div
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="overflow-hidden space-y-4"
+                                        className="pt-2 border-t border-white/5 space-y-2"
                                     >
-                                        <div className="bg-red-500/5 p-4 rounded-3xl border border-red-500/10 mb-6 mt-2 mx-1">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-xl transition-colors ${hasTimer ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
-                                                        <Clock className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start">
-                                                        <span className="text-sm font-bold text-white">مؤقت للعرض (اختياري)</span>
-                                                        <span className="text-[10px] text-slate-400">بدون اختياره الخصم دائم</span>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    onClick={() => setHasTimer(!hasTimer)}
-                                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${hasTimer ? 'bg-orange-500' : 'bg-white/10'}`}
-                                                >
-                                                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${hasTimer ? 'left-1' : 'left-6'}`} />
-                                                </div>
-                                            </div>
-
-                                            <AnimatePresence>
-                                                {hasTimer && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        className="space-y-4 overflow-hidden pt-4 mt-4 border-t border-red-500/10"
-                                                    >
-                                                        <div className="grid grid-cols-4 gap-2">
-                                                            {[
-                                                                { label: "24 ساعة", hours: 24 },
-                                                                { label: "3 أيام", hours: 72 },
-                                                                { label: "أسبوع", hours: 168 },
-                                                                { label: "شهر", hours: 720 },
-                                                            ].map((duration) => (
-                                                                <button
-                                                                    key={duration.hours}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const date = new Date();
-                                                                        date.setHours(date.getHours() + duration.hours);
-                                                                        const pad = (n: number) => n.toString().padStart(2, '0');
-                                                                        const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-                                                                        setFormData({ ...formData, discountEndDate: formatted });
-                                                                    }}
-                                                                    className="bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 border border-white/5 hover:border-orange-500/30 rounded-xl py-2 text-[10px] font-bold text-slate-400 transition-all active:scale-95"
-                                                                >
-                                                                    {duration.label}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-
-                                                        <div className="bg-black/20 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
-                                                            <div className="flex justify-between items-center px-1">
-                                                                <span className="text-[10px] text-orange-400/80">تاريخ انتهاء الخصم:</span>
-                                                                {formData.discountEndDate && (
-                                                                    <span className="text-[10px] font-bold text-slate-300">
-                                                                        {new Date(formData.discountEndDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <input
-                                                                type="datetime-local"
-                                                                className="w-full bg-white/5 border border-white/10 rounded-lg text-white text-xs p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500/50"
-                                                                value={formData.discountEndDate}
-                                                                onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
-                                                            />
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
+                                        <Label className="text-slate-400 text-[10px] pr-1 text-right block w-full">تاريخ ووقت انتهاء العرض</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50"
+                                            value={formData.discountEndDate}
+                                            onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
+                                            required={showCountdown}
+                                        />
                                     </motion.div>
                                 )}
-                            </AnimatePresence>
+                            </div>
 
-                            <div
-                                className={`grid grid-cols-2 lg:grid-cols-4 gap-4 p-2 rounded-3xl transition-all ${isDragging ? 'bg-primary/20 ring-2 ring-primary ring-dashed' : ''}`}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                            >
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div
-                                    onClick={() => galleryInputRef.current?.click()}
-                                    className="aspect-square bg-blue-500/10 rounded-2xl border border-blue-500/20 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-blue-500/20 cursor-pointer transition-all group"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="aspect-square bg-black/20 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-black/30 cursor-pointer transition-all group"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                        <ImageIcon className="w-5 h-5" />
+                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                        <Plus className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] font-bold text-blue-300">المعرض</span>
-                                </div>
-
-                                <div
-                                    onClick={() => cameraInputRef.current?.click()}
-                                    className="aspect-square bg-purple-500/10 rounded-2xl border border-purple-500/20 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-purple-500/20 cursor-pointer transition-all group"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                                        <Camera className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-[10px] font-bold text-purple-300">الكاميرا</span>
+                                    <span className="text-[10px] font-bold text-slate-400">إضافة صور</span>
                                 </div>
 
                                 {formData.images.map((img, idx) => (
-                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-white/10 shadow-lg">
+                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-white/10">
                                         <Image
                                             src={img}
                                             alt={`Preview ${idx}`}
@@ -567,22 +284,14 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         <button
                                             type="button"
                                             onClick={() => removeImage(idx)}
-                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                        {idx === 0 && storeSettings.enableAiSystem !== false && (
-                                            <button
-                                                type="button"
-                                                onClick={handleAiSmartFill}
-                                                disabled={isAiLoading}
-                                                className="absolute bottom-2 inset-x-2 bg-gradient-to-r from-primary to-blue-600 text-white text-[10px] py-2 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xl hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
-                                            >
-                                                {isAiLoading ? (
-                                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                ) : <Wand2 className="w-3 h-3" />}
-                                                <span>تعبئة ذكية (AI)</span>
-                                            </button>
+                                        {idx === 0 && (
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 font-bold">
+                                                الرئيسية
+                                            </div>
                                         )}
                                     </div>
                                 ))}
@@ -614,121 +323,11 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         >
                                             <option value="" disabled className="bg-[#1c2a36]">اختر القسم</option>
                                             {categories.map((cat) => (
-                                                <option key={cat.id} value={cat.nameAr} className="bg-[#1c2a36]">
+                                                <option key={cat.id} value={cat.id} className="bg-[#1c2a36]">
                                                     {cat.nameAr}
                                                 </option>
                                             ))}
                                         </select>
-                                    </div>
-                                </div>
-
-                                {/* Barcode Grid System (2x2 + 1) */}
-                                <div className="space-y-4 pt-4 border-t border-white/5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Hash className="w-4 h-4 text-primary" />
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">أرقام الباركود / OEM (حتى 5)</Label>
-                                        </div>
-                                        {numBarcodes < 5 && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-7 gap-1.5 text-[10px] bg-primary/10 text-primary hover:bg-primary/20 rounded-full font-black px-3 transition-all active:scale-95"
-                                                onClick={() => setNumBarcodes(prev => prev + 1)}
-                                            >
-                                                <Plus className="w-3 h-3" /> إضافة رقم بديل
-                                            </Button>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {/* Row 1: 1 & 2 */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1.5">
-                                                <Label className="text-[9px] font-bold text-slate-500 pr-1">1. الباركود الأساسي</Label>
-                                                <Input
-                                                    value={formData.barcode}
-                                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                                                    placeholder="رقم القطعة..."
-                                                    className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center focus:ring-primary/30"
-                                                />
-                                            </div>
-                                            {numBarcodes >= 2 ? (
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-[9px] font-bold text-slate-500 pr-1">2. رقم بديل</Label>
-                                                    <Input
-                                                        value={extraBarcodes[0] || ""}
-                                                        onChange={(e) => {
-                                                            const newExtras = [...extraBarcodes];
-                                                            newExtras[0] = e.target.value;
-                                                            setExtraBarcodes(newExtras);
-                                                        }}
-                                                        placeholder="..."
-                                                        className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="h-11 rounded-2xl border border-dashed border-white/5 flex items-center justify-center opacity-20">
-                                                    <Plus className="w-4 h-4" />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Row 2: 3 & 4 */}
-                                        {numBarcodes >= 3 && (
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-1.5">
-                                                    <Label className="text-[9px] font-bold text-slate-500 pr-1">3. رقم بديل</Label>
-                                                    <Input
-                                                        value={extraBarcodes[1] || ""}
-                                                        onChange={(e) => {
-                                                            const newExtras = [...extraBarcodes];
-                                                            newExtras[1] = e.target.value;
-                                                            setExtraBarcodes(newExtras);
-                                                        }}
-                                                        placeholder="..."
-                                                        className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
-                                                    />
-                                                </div>
-                                                {numBarcodes >= 4 ? (
-                                                    <div className="space-y-1.5">
-                                                        <Label className="text-[9px] font-bold text-slate-500 pr-1">4. رقم بديل</Label>
-                                                        <Input
-                                                            value={extraBarcodes[2] || ""}
-                                                            onChange={(e) => {
-                                                                const newExtras = [...extraBarcodes];
-                                                                newExtras[2] = e.target.value;
-                                                                setExtraBarcodes(newExtras);
-                                                            }}
-                                                            placeholder="..."
-                                                            className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="h-11 rounded-2xl border border-dashed border-white/5 flex items-center justify-center opacity-20">
-                                                        <Plus className="w-4 h-4" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Row 3: 5 */}
-                                        {numBarcodes >= 5 && (
-                                            <div className="space-y-1.5 w-full">
-                                                <Label className="text-[9px] font-bold text-slate-500 pr-1">5. رقم بديل نهائي</Label>
-                                                <Input
-                                                    value={extraBarcodes[3] || ""}
-                                                    onChange={(e) => {
-                                                        const newExtras = [...extraBarcodes];
-                                                        newExtras[3] = e.target.value;
-                                                        setExtraBarcodes(newExtras);
-                                                    }}
-                                                    placeholder="..."
-                                                    className="bg-white/5 border-white/10 rounded-2xl h-11 text-xs font-mono text-center"
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
 
@@ -747,12 +346,13 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الباركود الأساسي</Label>
+                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الباركود</Label>
                                         <div className="flex gap-2">
                                             <div className="relative flex-1">
                                                 <Hash className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                                 <Input
-                                                    placeholder="اختياري"
+                                                    required
+                                                    placeholder="أدخل الباركود يدوياً"
                                                     className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pr-12 focus:ring-primary/50"
                                                     value={formData.barcode}
                                                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
@@ -772,124 +372,71 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
 
                             {/* Piece Pricing */}
                             <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير المنتج (للحبة)</h3>
-                                <div className={hasDiscount ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الحبة</h3>
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${hasDiscount ? 'text-green-400' : 'text-slate-300'}`}>
-                                            {hasDiscount ? "سعر البيع (بعد الخصم)" : "سعر البيع الافتراضي"}
-                                        </Label>
+                                        <Label className="text-[10px] text-green-500 font-bold block text-right pr-2 uppercase">السعر الحالي (المخفض)</Label>
                                         <Input
                                             required
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className={`h-12 rounded-xl text-center font-bold text-white focus:ring-primary/50 text-lg ${hasDiscount ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
+                                            className="bg-green-500/5 border-green-500/20 h-12 rounded-xl text-center text-green-500 font-bold focus:ring-green-500/50"
                                             value={formData.pricePiece}
                                             onChange={(e) => setFormData({ ...formData, pricePiece: e.target.value })}
                                         />
                                     </div>
-                                    {hasDiscount && (
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأساسي (لشطبه)</Label>
-                                            <Input
-                                                required
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-400 font-bold focus:ring-red-500/50 text-lg"
-                                                value={formData.oldPricePiece}
-                                                onChange={(e) => setFormData({ ...formData, oldPricePiece: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-
-                            {/* Cost Price */}
-                            <div className="space-y-3 bg-yellow-500/5 p-4 rounded-3xl border border-yellow-500/10 mb-4">
-                                <h3 className="text-xs font-bold text-yellow-500 text-right pr-1 italic">التكلفة (خاص للإدارة)</h3>
-                                <div className="space-y-1">
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        placeholder="0.00"
-                                        className="bg-yellow-500/5 border-yellow-500/20 h-12 rounded-xl text-center text-yellow-100 font-bold focus:ring-yellow-500/50"
-                                        value={formData.costPrice}
-                                        onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                                    />
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأصلي (قبل الخصم)</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                            value={formData.oldPricePiece}
+                                            onChange={(e) => setFormData({ ...formData, oldPricePiece: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Dozen Pricing */}
                             <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
-                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الجملة (للدرزن - اختياري)</h3>
-                                <div className={hasDiscount ? "grid grid-cols-2 gap-4" : "grid grid-cols-1"}>
+                                <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الدرزن</h3>
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <Label className={`text-[10px] font-bold block text-right pr-2 uppercase ${hasDiscount ? 'text-green-400' : 'text-slate-300'}`}>
-                                            {hasDiscount ? "سعر الدرزن (بعد الخصم)" : "سعر الدرزن الافتراضي"}
-                                        </Label>
+                                        <Label className="text-[10px] text-green-500 font-bold block text-right pr-2 uppercase">السعر الحالي (المخفض)</Label>
                                         <Input
                                             type="number"
                                             step="0.01"
                                             placeholder="0.00"
-                                            className={`h-12 rounded-xl text-center font-bold text-white focus:ring-primary/50 text-lg ${hasDiscount ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'}`}
+                                            className="bg-green-500/5 border-green-500/20 h-12 rounded-xl text-center text-green-500 font-bold focus:ring-green-500/50"
                                             value={formData.priceDozen}
                                             onChange={(e) => setFormData({ ...formData, priceDozen: e.target.value })}
                                         />
                                     </div>
-                                    {hasDiscount && (
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">سعر الدرزن الأساسي (لشطبه)</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="0.00"
-                                                className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-400 font-bold focus:ring-red-500/50 text-lg"
-                                                value={formData.oldPriceDozen}
-                                                onChange={(e) => setFormData({ ...formData, oldPriceDozen: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] text-red-500 font-bold block text-right pr-2 uppercase">السعر الأصلي (قبل الخصم)</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            className="bg-red-500/5 border-red-500/20 h-12 rounded-xl text-center text-red-500 font-bold focus:ring-red-500/50"
+                                            value={formData.oldPriceDozen}
+                                            onChange={(e) => setFormData({ ...formData, oldPriceDozen: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الوصف (اختياري)</Label>
-                                <textarea
-                                    className="w-full bg-black/20 border border-white/10 rounded-2xl p-4 text-white text-right text-sm focus:ring-1 focus:ring-primary outline-none min-h-[100px]"
-                                    placeholder="أضف وصفاً مختصراً للمنتج..."
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-slate-400 text-xs pr-1 text-right block w-full">ملاحظات إدارية (للمسودة)</Label>
-                                <textarea
-                                    className="w-full bg-black/20 border border-white/10 rounded-2xl p-4 text-white text-right text-sm focus:ring-1 focus:ring-primary outline-none min-h-[80px]"
-                                    placeholder="ملاحظات لا تظهر للعميل..."
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="pt-2 grid grid-cols-2 gap-3">
-                                <Button
-                                    type="button"
-                                    onClick={(e) => handleSubmit(e, true)}
-                                    className="h-14 bg-white/5 hover:bg-white/10 text-slate-300 rounded-2xl gap-2 border border-white/10 font-bold transition-all active:scale-[0.98]"
-                                >
-                                    <FileEdit className="w-5 h-5" />
-                                    <span>حفظ كمسودة</span>
-                                </Button>
-                                <Button type="submit" className="h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]">
+                            <div className="pt-2">
+                                <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]">
                                     <Plus className="w-6 h-6" />
-                                    <span>{initialProduct ? "حفظ وتفعيل" : "نشر المنتج"}</span>
+                                    <span>{initialProduct ? "حفظ التغييرات" : "إضافة المنتج"}</span>
                                 </Button>
                             </div>
-                        </form >
-                    </motion.div >
+                        </form>
+                    </motion.div>
 
                     <ScannerModal
                         isOpen={isScannerOpen}
@@ -899,16 +446,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             toast.success("تم مسح الباركود بنجاح")
                         }}
                     />
-
-                    <ImageEditorModal
-                        isOpen={isEditorOpen}
-                        onClose={() => setIsEditorOpen(false)}
-                        imageFile={editingFile}
-                        onSave={handleEditorSave}
-                    />
-                </div >
+                </div>
             )}
-        </AnimatePresence >
+        </AnimatePresence>
     )
 }
-

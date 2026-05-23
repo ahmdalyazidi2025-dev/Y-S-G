@@ -1,6 +1,5 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminSidebar, AdminMobileNav } from "@/components/admin/admin-sidebar"
-import { AdminAiAssistant } from "@/components/admin/admin-ai-assistant"
 import Image from "next/image"
 
 export default function AdminLayout({
@@ -10,7 +9,7 @@ export default function AdminLayout({
 }) {
     return (
         <ProtectedRoute role="admin">
-            <div className="min-h-screen bg-background text-foreground flex transition-colors duration-300">
+            <div className="min-h-screen bg-[#080b12] text-white flex">
                 {/* Floating Branding Watermark */}
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none opacity-[0.02] z-0 overflow-hidden">
                     <Image
@@ -27,12 +26,9 @@ export default function AdminLayout({
                 <AdminMobileNav />
 
                 {/* Main Content */}
-                <main className="flex-1 w-full p-4 lg:pr-72 pb-24 lg:pb-4 relative z-10 overflow-x-hidden">
+                <main className="flex-1 p-4 lg:pr-72 pb-24 lg:pb-4 relative z-10">
                     {children}
                 </main>
-
-                {/* AI Assistant */}
-                <AdminAiAssistant />
             </div>
         </ProtectedRoute>
     )

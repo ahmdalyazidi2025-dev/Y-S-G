@@ -1,18 +1,10 @@
 "use client"
 import React, { useState, useEffect } from "react"
 
-declare global {
-    interface Window {
-        deferredPWAInstallPrompt?: any;
-    }
-}
-import { usePathname } from "next/navigation"
-
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Share, PlusSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { hapticFeedback } from "@/lib/haptics"
-import { toast } from "sonner"
 
 import Image from "next/image"
 
@@ -25,11 +17,7 @@ interface BeforeInstallPromptEvent extends Event {
     prompt(): Promise<void>
 }
 
-// Component to handle PWA installation
 export function PwaInstallPrompt() {
-    const pathname = usePathname()
-    const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/login')
-    const storageKey = isAdmin ? 'pwa-admin-prompt-seen' : 'pwa-customer-prompt-seen'
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
     const [showPrompt, setShowPrompt] = useState(false)
     const [isIOS, setIsIOS] = useState(false)
@@ -46,27 +34,13 @@ export function PwaInstallPrompt() {
         const ios = /iphone|ipad|ipod/.test(userAgent)
         if (ios !== isIOS) setIsIOS(ios)
 
-        // Consume globally captured event if available
-        if (window.deferredPWAInstallPrompt && !deferredPrompt) {
-            setDeferredPrompt(window.deferredPWAInstallPrompt)
-            if (!isStandaloneMode) {
-                setTimeout(() => {
-                    const hasSeenPrompt = sessionStorage.getItem(storageKey)
-                    if (!hasSeenPrompt) setShowPrompt(true)
-                }, 500)
-            }
-        }
-
         // Listen for beforeinstallprompt (Android/Chrome)
         const handleBeforeInstallPrompt = (e: Event) => {
             const ev = e as unknown as BeforeInstallPromptEvent
             ev.preventDefault()
             setDeferredPrompt(ev)
             if (!isStandaloneMode) {
-                setTimeout(() => {
-                    const hasSeenPrompt = sessionStorage.getItem(storageKey)
-                    if (!hasSeenPrompt) setShowPrompt(true)
-                }, 3000) // Show after 3 seconds if not seen in session
+                setTimeout(() => setShowPrompt(true), 3000) // Show after 3 seconds
             }
         }
 
@@ -74,10 +48,8 @@ export function PwaInstallPrompt() {
 
         // Fallback for Android/Desktop Chrome if event doesn't fire quickly
         const fallbackTimer = setTimeout(() => {
-            if (!isStandaloneMode && !ios) {
-                // If deferredPrompt is missing, it might mean the browser already handled it or doesn't support it well,
-                // but we still show the UI. We'll handle the click gracefully later.
-                const hasSeenPrompt = sessionStorage.getItem(storageKey)
+            if (!isStandaloneMode && !ios && !deferredPrompt) {
+                const hasSeenPrompt = localStorage.getItem('pwa-prompt-seen')
                 if (!hasSeenPrompt) {
                     setShowPrompt(true)
                 }
@@ -86,7 +58,7 @@ export function PwaInstallPrompt() {
 
         // For iOS, show prompt manually if not standalone
         if (ios && !isStandaloneMode) {
-            const hasSeenPrompt = sessionStorage.getItem(storageKey)
+            const hasSeenPrompt = localStorage.getItem('pwa-prompt-seen')
             if (!hasSeenPrompt) {
                 setTimeout(() => setShowPrompt(true), 5000)
             }
@@ -107,17 +79,12 @@ export function PwaInstallPrompt() {
                 setShowPrompt(false)
             }
             hapticFeedback('success')
-        } else {
-            // Fallback if the browser doesn't provide the deferred prompt natively anymore
-            // Instruct user or just close it gracefully if the API is restricted
-            toast.info(isIOS ? "يرجى استخدام قائمة المشاركة لاختيار إضافة إلى الشاشة الرئيسية." : "يرجى تثبيت التطبيق من قائمة المتصفح لديك (أعلى الشاشة).");
-            closePrompt();
         }
     }
 
     const closePrompt = () => {
         setShowPrompt(false)
-        sessionStorage.setItem(storageKey, 'true')
+        localStorage.setItem('pwa-prompt-seen', 'true')
         hapticFeedback('light')
     }
 
@@ -144,15 +111,15 @@ export function PwaInstallPrompt() {
 
                         <div className="flex flex-col items-center text-center gap-6">
                             <div className="w-28 h-28 bg-[#080b12] rounded-full flex items-center justify-center flex-shrink-0 shadow-2xl overflow-hidden border-4 border-white/5 p-0 relative transition-transform group-hover:scale-105 duration-500">
-                                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none rounded-full" />
-                                <Image src={isAdmin ? "/admin-logo.png" : "/logo.png"} alt="YSG" className="w-full h-full object-cover rounded-full" width={112} height={112} />
+                                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                                <Image src="/pwa-icon.jpg" alt="YSG" className="w-full h-full object-cover" width={112} height={112} />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="font-black text-white text-2xl tracking-tight flex items-center justify-center gap-2">
-                                    تثبيت <span className="text-primary">{isAdmin ? "إدارة YSG" : "Y S G"}</span> 📱
+                                    تثبيت <span className="text-primary">Y S G</span> 📱
                                 </h3>
                                 <p className="text-slate-400 text-xs leading-relaxed max-w-[250px] mx-auto font-medium">
-                                    {isAdmin ? "حوّل لوحة الإدارة إلى تطبيق على هاتفك للوصول السريع والآمن." : "حوّل المتجر إلى تطبيق على هاتفك الآن للوصول السريع والآمن بضغطة واحدة."}
+                                    حوّل المتجر إلى تطبيق على هاتفك الآن للوصول السريع والآمن بضغطة واحدة.
                                 </p>
                             </div>
                         </div>
@@ -182,19 +149,19 @@ export function PwaInstallPrompt() {
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="flex gap-3">
+                                <div className="flex gap-2">
+                                    <Button
+                                        onClick={handleInstallClick}
+                                        className="flex-1 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 text-xs py-2"
+                                    >
+                                        تثبيت الآن
+                                    </Button>
                                     <Button
                                         onClick={closePrompt}
                                         variant="glass"
-                                        className="rounded-2xl text-[12px] font-medium py-6 px-6 flex-shrink-0 bg-white/5 hover:bg-white/10"
+                                        className="rounded-xl text-[10px] py-2"
                                     >
                                         لاحقاً
-                                    </Button>
-                                    <Button
-                                        onClick={handleInstallClick}
-                                        className="flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 text-[14px] font-bold py-6 transition-all active:scale-[0.98]"
-                                    >
-                                        تثبيت الآن
                                     </Button>
                                 </div>
                             )}

@@ -6,8 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
-      { protocol: "https", hostname: "i.imgur.com" },
-      { protocol: "https", hostname: "ui-avatars.com" }
+      { protocol: "https", hostname: "i.imgur.com" }
     ],
   },
 
@@ -15,7 +14,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Force restart
 };
 
 export default nextConfig;

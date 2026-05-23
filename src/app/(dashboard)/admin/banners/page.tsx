@@ -1,26 +1,22 @@
-"use client"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Trash2, Image as ImageIcon, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import NextImage from "next/image"
-import { useSettings } from "@/context/store-context"
+import { useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { AdminBannerForm } from "@/components/admin/banner-form"
-import { Banner } from "@/types/store"
 
 export default function AdminBannersPage() {
-    const { banners, deleteBanner, toggleBanner } = useSettings()
+    const { banners, deleteBanner, toggleBanner } = useStore()
     const [isFormOpen, setIsFormOpen] = useState(false)
-    const [visibleCount, setVisibleCount] = useState(5)
 
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-foreground" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-white" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">صور العرض</h1>
@@ -40,7 +36,7 @@ export default function AdminBannersPage() {
                         لا توجد صور عرض مسجلة
                     </div>
                 ) : (
-                    banners.slice(0, visibleCount).map((banner: Banner) => (
+                    banners.map((banner) => (
                         <div key={banner.id} className="glass-card overflow-hidden group relative">
                             <div className="aspect-[3/1] bg-black/40 overflow-hidden">
                                 <NextImage
@@ -48,32 +44,30 @@ export default function AdminBannersPage() {
                                     alt="banner"
                                     width={1200}
                                     height={400}
-                                    priority={banners.indexOf(banner) < 2}
-                                    unoptimized // Base64 images don't benefit from Next.js server-side optimization
                                     className={cn("w-full h-full object-cover transition-opacity", !banner.active && "opacity-40")}
                                 />
                             </div>
 
-                            <div className="absolute top-4 right-4 flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
-                                    variant="ghost"
+                                    variant="glass"
                                     size="icon"
-                                    className="h-10 w-10 bg-black/50 hover:bg-black/70 border border-white/10 rounded-xl text-white backdrop-blur-md"
+                                    className="h-10 w-10 bg-black/60 border-none rounded-xl text-white hover:bg-primary"
                                     onClick={() => toggleBanner(banner.id)}
                                 >
-                                    {banner.active ? <EyeOff className="w-5 h-5 text-white" /> : <Eye className="w-5 h-5 text-white" />}
+                                    {banner.active ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </Button>
                                 <Button
-                                    variant="ghost"
+                                    variant="glass"
                                     size="icon"
-                                    className="h-10 w-10 bg-black/50 hover:bg-red-500 border border-white/10 rounded-xl text-white backdrop-blur-md"
+                                    className="h-10 w-10 bg-black/60 border-none rounded-xl text-white hover:bg-red-500"
                                     onClick={() => {
                                         if (confirm("هل أنت متأكد من حذف هذه الصورة؟")) {
                                             deleteBanner(banner.id)
                                         }
                                     }}
                                 >
-                                    <Trash2 className="w-5 h-5 text-white" />
+                                    <Trash2 className="w-5 h-5" />
                                 </Button>
                             </div>
 
@@ -90,18 +84,6 @@ export default function AdminBannersPage() {
                     ))
                 )}
             </div>
-
-            {visibleCount < banners.length && (
-                <div className="flex justify-center pt-4">
-                    <Button
-                        variant="ghost"
-                        className="text-primary hover:bg-primary/10 rounded-xl"
-                        onClick={() => setVisibleCount(prev => prev + 5)}
-                    >
-                        عرض المزيد من الصور ({banners.length - visibleCount})
-                    </Button>
-                </div>
-            )}
 
             <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10 border-dashed text-center">
                 <p className="text-sm text-slate-400">ملاحظة: المقاس المفضل لصور العرض هو 1200x400 بكسل</p>

@@ -4,51 +4,70 @@ import { useStore } from "@/context/store-context"
 import { MapPin, Phone } from "lucide-react"
 import Image from "next/image"
 
-export function InvoiceTemplate({ order, isPreview = false }: { order: import("@/context/store-context").Order, isPreview?: boolean }) {
+export function InvoiceTemplate({ order }: { order: import("@/context/store-context").Order }) {
     const { storeSettings } = useStore()
 
     return (
         <>
-            {/* Print Styles - Robust and aggressive to force white background and hide UI */}
+            {/* Print Styles - Hide everything except invoice when printing */}
             <style jsx global>{`
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 0;
+                        margin: 10mm;
                     }
                     
-                    /* Hide everything by default using visibility */
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
+                    
                     body * {
                         visibility: hidden;
                     }
-
-                    /* Show the invoice and its children */
+                    
                     #invoice-${order.id}, #invoice-${order.id} * {
                         visibility: visible;
                     }
                     
-                    /* Position the invoice directly on the page */
                     #invoice-${order.id} {
                         position: absolute;
-                        top: 0;
                         left: 0;
+                        top: 0;
                         width: 100%;
-                        height: auto;
                         margin: 0;
-                        padding: 20px;
+                        padding: 0;
                         background: white;
-                        z-index: 9999;
-                        display: block !important;
+                        page-break-after: avoid;
                     }
-
-                    /* Reset specific styles for print */
-                    .no-print {
+                    
+                    /* Prevent content from breaking across pages */
+                    table, .no-break {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                    
+                    /* Hide navigation and other UI elements */
+                    nav, header, footer, .no-print, button {
                         display: none !important;
+                    }
+                    
+                    /* Ensure images print */
+                    img {
+                        max-width: 100%;
+                        page-break-inside: avoid;
+                    }
+                    
+                    /* Scale content to fit */
+                    #invoice-${order.id} {
+                        transform: scale(0.95);
+                        transform-origin: top left;
                     }
                 }
             `}</style>
 
-            <div className={`bg-white text-black p-8 max-w-4xl mx-auto ${isPreview ? 'block' : 'hidden print:block'}`} id={`invoice-${order.id}`}>
+            <div className="bg-white text-black p-8 max-w-4xl mx-auto hidden print:block" id={`invoice-${order.id}`}>
                 {/* Header */}
                 <div className="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-6">
                     <div className="flex items-center gap-4">
@@ -72,7 +91,7 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="border-4 border-slate-900 text-slate-900 px-8 py-3 rounded-lg font-black text-2xl mb-3 inline-block">
+                        <div className="bg-slate-900 text-white px-8 py-3 rounded-lg font-black text-2xl mb-3 inline-block shadow-lg">
                             فاتورة مبيعات
                         </div>
                         <p className="text-slate-700 text-base font-bold mb-1">
@@ -85,72 +104,63 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                 </div>
 
                 {/* Customer Info */}
-                <div className="mb-6 p-6 bg-white rounded-xl border-4 border-slate-900">
+                <div className="mb-6 p-6 bg-slate-100 rounded-xl border-2 border-slate-300">
                     <p className="text-sm text-slate-700 font-black mb-3 uppercase">معلومات العميل</p>
                     <div className="grid grid-cols-2 gap-6">
-                        <div className="flex-1 space-y-4">
-                            <div>
-                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">صاحب الحساب / Account:</p>
-                                <p className="font-black text-lg text-slate-900 leading-tight">
-                                    {order.accountName || "---"}
-                                </p>
-                            </div>
-
-                            <div className="pt-2 border-t border-slate-200">
-                                <p className="text-[10px] text-primary/70 font-black uppercase tracking-widest mb-1">المستلم / Recipient:</p>
-                                <div className="space-y-1">
-                                    <p className="font-bold text-sm text-slate-900 leading-tight">
-                                        {order.customerName}
-                                    </p>
-                                    <p className="text-xs font-mono font-bold text-slate-500">
-                                        {order.customerPhone || "لا يوجد رقم"}
-                                    </p>
-                                </div>
-                            </div>
+                        <div>
+                            <p className="text-sm text-slate-600 font-bold mb-1">الاسم:</p>
+                            <p className="font-black text-lg text-slate-900">{order.customerName}</p>
                         </div>
-                        <div className="text-right flex flex-col justify-end">
-                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">تفاصيل الدفع / Payment:</p>
+                        <div>
+                            <p className="text-sm text-slate-600 font-bold mb-1">طريقة الدفع:</p>
                             <p className="font-black text-lg text-slate-900">الدفع عند الاستلام</p>
-                            <p className="text-[10px] text-slate-500 font-bold">Cash on Delivery</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Items Table */}
-                <table className="w-full mb-6 border-4 border-slate-900 no-break">
+                <table className="w-full mb-6 border-2 border-slate-900 no-break">
                     <thead>
-                        <tr className="border-b-4 border-slate-900 text-slate-900">
+                        <tr className="bg-slate-900 text-white">
                             <th className="text-right py-4 px-4 text-sm font-black">المنتج</th>
                             <th className="text-center py-4 px-3 text-sm font-black">الكمية</th>
-                            <th className="text-center py-4 px-3 text-sm font-black">السعر</th>
+                            <th className="text-center py-4 px-3 text-sm font-black">السعر<br />(قبل الضريبة)</th>
+                            <th className="text-center py-4 px-3 text-sm font-black">الضريبة<br />(15%)</th>
+                            <th className="text-center py-4 px-3 text-sm font-black">السعر<br />(شامل الضريبة)</th>
                             <th className="text-left py-4 px-4 text-sm font-black">الإجمالي</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {(order?.items || []).map((item, idx) => {
-                            const priceBeforeTax = item.selectedPrice || item.price || 0;
+                        {order.items.map((item, idx) => {
+                            const priceBeforeTax = item.price;
                             const taxAmount = priceBeforeTax * 0.15;
                             const priceWithTax = priceBeforeTax * 1.15;
-                            const itemQty = item.quantity || 0;
-                            const totalBeforeTax = priceBeforeTax * itemQty;
-                            const totalTax = taxAmount * itemQty;
-                            const totalWithTax = priceWithTax * itemQty;
+                            const totalBeforeTax = priceBeforeTax * item.quantity;
+                            const totalTax = taxAmount * item.quantity;
+                            const totalWithTax = priceWithTax * item.quantity;
 
                             return (
-                                <tr key={idx} className={`border-b-2 border-slate-300 bg-white`}>
+                                <tr key={idx} className={`border-b-2 border-slate-300 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}>
                                     <td className="py-4 px-4">
                                         <p className="font-black text-base text-slate-900">{item.name}</p>
-                                        <p className="text-sm text-slate-600 font-bold">{item.selectedUnit || item.unit}</p>
+                                        <p className="text-sm text-slate-600 font-bold">{item.unit}</p>
                                     </td>
                                     <td className="py-4 px-3 text-center">
-                                        <span className="font-black text-lg text-slate-900">{itemQty}</span>
+                                        <span className="font-black text-lg text-slate-900">{item.quantity}</span>
                                     </td>
                                     <td className="py-4 px-3 text-center">
                                         <span className="font-bold text-base text-slate-700">{priceBeforeTax.toFixed(2)}</span>
                                     </td>
+                                    <td className="py-4 px-3 text-center">
+                                        <span className="font-bold text-base text-red-600">{taxAmount.toFixed(2)}</span>
+                                    </td>
+                                    <td className="py-4 px-3 text-center">
+                                        <span className="font-black text-base text-slate-900">{priceWithTax.toFixed(2)}</span>
+                                    </td>
                                     <td className="py-4 px-4 text-left">
                                         <div className="text-right">
-                                            <p className="font-black text-lg text-slate-900">{totalBeforeTax.toFixed(2)} ر.س</p>
+                                            <p className="font-black text-lg text-slate-900">{totalWithTax.toFixed(2)} ر.س</p>
+                                            <p className="text-xs text-slate-500 font-bold">({totalBeforeTax.toFixed(2)} + {totalTax.toFixed(2)})</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -165,19 +175,19 @@ export function InvoiceTemplate({ order, isPreview = false }: { order: import("@
                         {/* Subtotal before tax */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">المجموع قبل الضريبة:</span>
-                            <span className="font-black text-lg">{(order.total / 1.15).toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg">{order.total.toFixed(2)} ر.س</span>
                         </div>
 
                         {/* VAT 15% */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">ضريبة القيمة المضافة (15%):</span>
-                            <span className="font-black text-lg text-red-600">{(order.total - (order.total / 1.15)).toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg text-red-600">{(order.total * 0.15).toFixed(2)} ر.س</span>
                         </div>
 
                         {/* Total with tax */}
-                        <div className="flex justify-between border-4 border-slate-900 text-slate-900 font-black text-xl p-5 rounded-xl mt-3">
+                        <div className="flex justify-between bg-slate-900 text-white font-black text-xl p-5 rounded-xl shadow-lg mt-3">
                             <span>الإجمالي شامل الضريبة:</span>
-                            <span className="text-2xl">{order.total.toFixed(2)} ر.س</span>
+                            <span className="text-2xl">{(order.total * 1.15).toFixed(2)} ر.س</span>
                         </div>
                     </div>
                 </div>

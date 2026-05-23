@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState } from "react"
 import { ProductCard } from "@/components/store/product-card"
-import { Search, Bell, User, Loader2, RefreshCw } from "lucide-react"
-import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Search, Bell } from "lucide-react"
 import { useStore, Product } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,260 +14,135 @@ import ScannerModal from "@/components/store/scanner-modal"
 import RequestModal from "@/components/store/request-modal"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
-import { CustomerNotifications } from "@/components/store/customer-notifications"
-import { HeroBanner } from "@/components/store/hero-banner"
-import { ProductCardSkeleton, CategorySkeleton } from "@/components/store/skeletons"
-import { InteractiveMarquee } from "@/components/shared/interactive-marquee"
 
 
-
-import { useSearchParams } from "next/navigation"
-
-function ObserverTrigger({ onIntersect, loading }: { onIntersect: () => void, loading: boolean }) {
-    const observerTarget = useRef(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !loading) {
-                    onIntersect();
-                }
-            },
-            { threshold: 0.1, rootMargin: '100px' }
-        );
-
-        if (observerTarget.current) {
-            observer.observe(observerTarget.current);
-        }
-
-        return () => {
-            if (observerTarget.current) observer.unobserve(observerTarget.current);
-        };
-    }, [loading, onIntersect]);
-
-    return (
-        <div ref={observerTarget} className="flex items-center gap-2 p-4">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">جاري تحميل المزيد...</span>
-        </div>
-    )
-}
 
 export default function CustomerHome() {
-    const { products, banners, categories, loading, storeSettings, fetchProducts, loadMoreProducts, searchProducts, hasMoreProducts, currentUser } = useStore()
-    const searchParams = useSearchParams()
-    // const [searchQuery, setSearchQuery] = useState("")  <-- Removed local state
-    const searchQuery = searchParams.get('q') || "" // Use URL param
+    const { products, banners, categories } = useStore()
+    const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
+    const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
 
-    // Optimization: Stable handler for viewing product details with micro-delay for UI smoothness
-    const handleViewDetails = React.useCallback((product: Product) => {
-        // Use a tiny delay to allow the browser to process the click and ripple effects
-        // before rendering the heavy details modal
-        setTimeout(() => {
-            setSelectedProduct(product)
-        }, 30)
-    }, [])
-
-    // Deep linking: Detect if notifications should be open
-    const shouldOpenNotifications = searchParams.get("notifications") === "open"
-    const productIdFromUrl = searchParams.get("product")
-
-    // Handle Deep Linking for Products
-    useEffect(() => {
-        if (productIdFromUrl && products.length > 0) {
-            const product = products.find(p => p.id === productIdFromUrl)
-            if (product) {
-                setSelectedProduct(product)
-            }
-        }
-    }, [productIdFromUrl, products])
-
-    const [serverSearchResults, setServerSearchResults] = useState<Product[] | null>(null)
-    const [isSearching, setIsSearching] = useState(false)
-
-    // Initial Fetch & Category Change
-    useEffect(() => {
-        if (!searchQuery) {
-            fetchProducts(selectedCategory === "الكل" ? undefined : selectedCategory, true)
-        }
-    }, [selectedCategory, fetchProducts, searchQuery])
-
-    // Server Search (URL Param)
-    useEffect(() => {
-        const performSearch = async () => {
-            if (searchQuery) {
-                setIsSearching(true)
-                const results = await searchProducts(searchQuery)
-                setServerSearchResults(results)
-                setIsSearching(false)
-            } else {
-                setServerSearchResults(null)
-            }
-        }
-        performSearch()
-    }, [searchQuery, searchProducts])
-
     const handleRefresh = async () => {
-        if (!searchQuery) {
-            await fetchProducts(selectedCategory === "الكل" ? undefined : selectedCategory, true)
-        }
+        // In a real app, refresh data here
+        await new Promise(r => setTimeout(r, 1500))
     }
 
     const activeBanners = banners.filter(b => b.active)
-    const activeCategories = categories.filter(c => !c.isHidden)
 
-    const filteredProducts = serverSearchResults || products.filter(product => {
-        if (product.isDraft) return false;
-        // Client-side category filter (safeguard)
-        const matchesCategory = selectedCategory === "الكل" || product.category === selectedCategory
-        return matchesCategory
-    }).sort((a, b) => { // Sort should ideally be server-side but for loaded buffer it's fine
-        // 1. Featured first
-        if (a.isFeatured && !b.isFeatured) return -1;
-        if (!a.isFeatured && b.isFeatured) return 1;
-
-        // 2. Newest first (fallback)
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
+    const filteredProducts = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (product.barcode && product.barcode.includes(searchQuery))
+        
+        // Match if product category is equal to the selected category name OR the selected category ID
+        const selectedCatObj = categories.find(c => c.nameAr === selectedCategory)
+        const matchesCategory = selectedCategory === "الكل" || 
+                                product.category === selectedCategory || 
+                                (selectedCatObj && product.category === selectedCatObj.id)
+                                
+        return matchesSearch && matchesCategory
     })
-
-    const hiddenSections = storeSettings?.hiddenSections || []
 
     return (
         <PullToRefresh onRefresh={handleRefresh}>
-            <div className="min-h-screen w-full overflow-x-hidden text-right bg-background relative pb-32">
-
-                {/* HERO BANNER SECTION */}
-                {!hiddenSections.includes('offers') && <HeroBanner />}
-
-                {/* HEADER CONTENT (Search, Profile, Bell) */}
-                <div className="relative z-10 px-4 pt-6 mb-6"> {/* Margin bottom pushes content down below the banner text area */}
-                    <div className="flex flex-col gap-6">
-                        {/* Top Bar */}
-                        <div className="flex items-center justify-between">
-                            <div className="text-foreground">
-                                <h1 className="text-2xl font-bold mb-1 flex items-center gap-2 drop-shadow-md">
-                                    مرحباً {currentUser?.name || 'بك'} <span className="animate-wave origin-bottom-right inline-block">👋</span>
-                                </h1>
-                                <p className="text-xs text-muted-foreground font-medium opacity-90 drop-shadow-sm">لنبحث عن منتجاتك المفضلة</p>
-                            </div>
+            <div className="space-y-8 pb-32 w-full overflow-x-hidden text-right">
+                {/* Search Header */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4 flex-1">
+                        <div className="relative flex-1 max-w-2xl">
+                            <Search className="absolute right-4 top-3.5 w-5 h-5 text-slate-500" />
+                            <Input
+                                placeholder="ما الذي تبحث عنه اليوم؟"
+                                className="bg-white/5 border-white/10 rounded-2xl pr-12 text-right h-12 text-lg focus:ring-2 focus:ring-primary/50 transition-all font-bold"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
                         </div>
-
+                        <div className="flex items-center gap-2">
+                            <Button variant="glass" size="icon" className="rounded-2xl h-12 w-12 border-white/5 bg-white/5">
+                                <Bell className="w-5 h-5 text-slate-400" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Removed Local Search Bar - Now in Global Layout */}
-
-
-                {/* Categories & Content Starts Here (Below Banner Area) */}
-
-                {/* Category Stories (Mobile) */}
-                {!hiddenSections.includes('categories') && (
-                    <div className="lg:hidden pl-4 relative z-10 mb-6">
-                        <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
-                    </div>
-                )}
-
-                {!hiddenSections.includes('categories') && (
-                    <div className="hidden lg:block relative z-30 mb-4 sticky top-[142px] bg-background/80 backdrop-blur-xl border-b border-border/50 -mx-4 transition-all">
-                        <InteractiveMarquee speed={0.6} className="pb-4 pt-2">
-                            <button
-                                onClick={() => setSelectedCategory("الكل")}
-                                className={cn(
-                                    "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                    selectedCategory === "الكل"
-                                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
-                                        : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
-                                )}
-                            >
-                                <span className="relative z-10">الكل</span>
-                                {selectedCategory === "الكل" && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                                )}
-                            </button>
-                            {activeCategories.map((cat) => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setSelectedCategory(cat.nameAr)}
-                                    className={cn(
-                                        "px-8 py-3 rounded-2xl text-sm font-bold transition-all border relative overflow-hidden group whitespace-nowrap",
-                                        selectedCategory === cat.nameAr
-                                            ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25 scale-105"
-                                            : "bg-card border-border text-muted-foreground hover:bg-accent hover:border-accent hover:text-foreground"
-                                    )}
-                                >
-                                    <span className="relative z-10">{cat.nameAr}</span>
-                                    {selectedCategory === cat.nameAr && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                                    )}
-                                </button>
-                            ))}
-                            {loading && [1, 2, 3].map(i => <CategorySkeleton key={i} />)}
-                        </InteractiveMarquee>
-                    </div>
-                )}
-
-                {/* Product Grid */}
-                {!hiddenSections.includes('products') && (
-                    <div className="px-4 relative z-10 min-h-[400px]">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-foreground flex items-center gap-3">
-                                <span className="w-1.5 h-8 bg-primary rounded-full block" />
-                                {selectedCategory === "الكل" ? "أحدث المنتجات" : selectedCategory}
-                                <span className="text-xs text-muted-foreground font-normal bg-card px-3 py-1 rounded-full border border-border">{filteredProducts.length} منتج</span>
-                            </h2>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-6 pb-20">
-                            {filteredProducts.length > 0 ? (
-                                filteredProducts.map((product, index) => (
-                                    <ProductCard
-                                        key={product.id}
-                                        item={product}
-                                        index={index}
-                                        onViewDetails={handleViewDetails}
+                {/* Modern Carousel */}
+                <div className="px-4">
+                    <div className="relative h-44 sm:h-56 md:h-72 lg:h-80 xl:h-96 w-full rounded-[2rem] overflow-hidden group shadow-2xl shadow-primary/10">
+                        <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out">
+                            {activeBanners.length > 0 ? activeBanners.map((banner, idx) => (
+                                <div key={idx} className="min-w-full h-full relative">
+                                    <Image
+                                        src={banner.image}
+                                        alt="banner"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
                                     />
-                                ))
-                            ) : loading ? (
-                                // Show 10 skeletons while loading
-                                Array.from({ length: 10 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                            ) : (
-                                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center gap-6">
-                                    <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center animate-pulse">
-                                        <Search className="w-10 h-10 text-slate-600" />
+                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                        <div className="space-y-1">
+                                            <h2 className="text-xl lg:text-3xl font-bold text-white drop-shadow-md">عروض حصرية 🎉</h2>
+                                            <p className="text-[10px] lg:text-sm text-slate-300">خصومات تصل إلى 50% على المنتجات المختارة</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-foreground font-bold text-lg">عفواً، لا توجد منتجات مطابقة</p>
-                                        <p className="text-sm text-muted-foreground mt-2">جرب البحث بكلمات أخرى أو تغيير التصنيف</p>
-                                    </div>
+                                </div>
+                            )) : (
+                                <div className="min-w-full h-full bg-primary/20 flex items-center justify-center">
+                                    <span className="text-slate-400">لا توجد عروض حالياً</span>
                                 </div>
                             )}
                         </div>
-
-                        {/* Infinite Scroll Trigger */}
-                        {!searchQuery && hasMoreProducts && filteredProducts.length > 0 && (
-                            <div className="flex justify-center pb-24">
-                                <ObserverTrigger
-                                    onIntersect={() => loadMoreProducts(selectedCategory === "الكل" ? undefined : selectedCategory)}
-                                    loading={loading}
-                                />
-                            </div>
-                        )}
                     </div>
-                )}
+                </div>
 
-                {/* Ambient Background */}
-                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                    <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] opacity-20 animate-pulse" />
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[120px] opacity-20 animate-pulse delay-1000" />
+                {/* Category Stories (Mobile) / Filter (Desktop) */}
+                <div className="lg:hidden">
+                    <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
+                </div>
+
+                <div className="hidden lg:flex gap-2 overflow-x-auto pb-2 no-scrollbar px-4">
+                    {["الكل", ...categories.map(c => c.nameAr)].map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={cn(
+                                "px-6 py-2.5 rounded-2xl text-sm font-medium whitespace-nowrap transition-all",
+                                selectedCategory === cat
+                                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                    : "bg-white/5 text-slate-400 hover:bg-white/10"
+                            )}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Product Grid */}
+                <div className="px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    {filteredProducts.length > 0 ? (
+                        filteredProducts.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                item={product}
+                                onViewDetails={() => setSelectedProduct(product)}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full py-20 text-center text-slate-500">
+                            لأ يوجد منتجات مطابقة للبحث
+                        </div>
+                    )}
                 </div>
 
 
+                <ScannerModal
+                    isOpen={isScannerOpen}
+                    onClose={() => setIsScannerOpen(false)}
+                    onRequestProduct={() => setIsRequestModalOpen(true)}
+                />
                 <RequestModal
                     isOpen={isRequestModalOpen}
                     onClose={() => setIsRequestModalOpen(false)}

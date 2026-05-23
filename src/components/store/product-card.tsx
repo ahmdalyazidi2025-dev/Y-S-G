@@ -1,190 +1,101 @@
 "use client"
-import { memo } from "react"
 
-import { Plus, Minus, Star, Clock } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Product, useStore } from "@/context/store-context"
 import { CountdownTimer } from "./countdown-timer"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
 
-export const ProductCard = memo(function ProductCard({ item, onViewDetails, index = 0 }: { item: Product, onViewDetails?: (item: Product) => void, index?: number }) {
-    const { addToCart, cart, updateCartQuantity, removeFromCart, storeSettings } = useStore()
+export function ProductCard({ item, onViewDetails }: { item: Product, onViewDetails?: () => void }) {
+    const { addToCart } = useStore()
 
-    // --- Smart Price Logic ---
-    const isExpired = item.discountEndDate && new Date(item.discountEndDate).getTime() < new Date().getTime()
-
-    // Piece Pricing
-    const effectivePricePiece = isExpired && item.oldPricePiece && item.oldPricePiece > 0
-        ? item.oldPricePiece
-        : item.pricePiece
-
-    const displayOldPricePiece = (!isExpired && item.oldPricePiece && item.oldPricePiece > 0) ? item.oldPricePiece : null
-
-    // Dozen Pricing
     const hasDozen = item.priceDozen && item.priceDozen > 0
-    const effectivePriceDozen = isExpired && item.oldPriceDozen && item.oldPriceDozen > 0
-        ? item.oldPriceDozen
-        : (item.priceDozen || 0)
-
-    const displayOldPriceDozen = (!isExpired && item.oldPriceDozen && item.oldPriceDozen > 0) ? item.oldPriceDozen : null
-    // -------------------------
-
-    // Offer Active Logic
-    const hasActiveOffer = item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && !isExpired
-
-    const discountPercent = displayOldPricePiece && effectivePricePiece 
-        ? Math.round(((displayOldPricePiece - effectivePricePiece) / displayOldPricePiece) * 100) 
-        : 0;
-    
-    const showDiscountBadge = hasActiveOffer || (displayOldPricePiece && displayOldPricePiece > effectivePricePiece);
-
-    // Smart Cart Logic (Piece)
-    const cartItemPiece = cart.find(i => i.id === item.id && i.selectedUnit === "حبة")
-    const quantityPiece = cartItemPiece ? cartItemPiece.quantity : 0
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
-            whileHover={{ y: -5 }}
-            className="h-full group select-none"
-        >
-            <div className="flex flex-col gap-3 h-full">
-                {/* 1. Premium Image Container */}
-                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] bg-secondary/10 border border-black/5 dark:border-white/5 shadow-sm">
+        <Card className="glass-card border-none overflow-hidden group relative bg-black/40 hover:bg-black/60 transition-all duration-500 rounded-3xl">
+            {/* Top Glow Accent */}
+            <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent group-hover:via-primary transition-all" />
 
-                    {/* Offer Badges */}
-                    <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5 rtl:right-3 ltr:left-3">
-                        {showDiscountBadge && (
-                            <div className="flex items-center gap-1 bg-red-600 text-white text-xs px-2.5 py-1 rounded-full font-bold shadow-md border border-red-700">
-                                <span className="text-[10px]">🔥</span>
-                                <span>{discountPercent > 0 ? `خصم ${discountPercent}%` : 'تخفيض'}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Timer (Moved to Bottom Left - Simplified) */}
-                    {hasActiveOffer && (
-                        <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-black/5 dark:bg-white/10 backdrop-blur-md px-2 py-1 rounded-md border border-black/5">
-                            <Clock className="w-3 h-3 text-muted-foreground" />
-                            <CountdownTimer endDate={new Date(item.discountEndDate!)} className="text-[10px] font-medium text-muted-foreground" minimal />
+            <CardContent className="p-0 relative aspect-[4/3] bg-gradient-to-br from-white/5 to-transparent flex items-center justify-center overflow-hidden">
+                {/* Product Image/Icon */}
+                <div
+                    className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-110 cursor-pointer"
+                    onClick={onViewDetails}
+                >
+                    {item.image ? (
+                        <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                            unoptimized
+                        />
+                    ) : (
+                        <div className="text-5xl transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12 transform-gpu">
+                            {/* Car parts icons */}
+                            {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}
                         </div>
                     )}
+                </div>
 
-                    {/* Image Click Area */}
-                    <div
-                        className="w-full h-full flex items-center justify-center cursor-pointer relative z-10 transition-transform duration-500 group-hover:scale-105 p-2"
-                        onClick={() => onViewDetails?.(item)}
-                    >
-                        {item.image ? (
-                            <Image
-                                src={item.image}
-                                alt={item.name}
-                                fill
-                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-                                loading="lazy"
-                                className="object-contain"
-                            />
-                        ) : (storeSettings?.logoUrl || "/logo.jpg") ? (
-                            <div className="w-[70%] h-[70%] relative opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
-                                <Image
-                                    src={storeSettings?.logoUrl || "/logo.jpg"}
-                                    alt="Store Logo"
-                                    fill
-                                    className="object-contain"
-                                    unoptimized
-                                />
-                            </div>
-                        ) : (
-                            <div className="text-7xl drop-shadow-lg filter grayscale-[0.2] group-hover:grayscale-0 transition-all">
-                                {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}
-                            </div>
-                        )}
+                {/* Badge & Timer */}
+                <div className="absolute top-2 right-2 flex flex-col items-end gap-2">
+                    <div className="bg-primary/20 backdrop-blur-md text-primary text-[8px] px-2 py-1 rounded-lg font-black uppercase tracking-widest border border-primary/20">
+                        Featured
+                    </div>
+                    {item.discountEndDate && new Date(item.discountEndDate).getTime() > new Date().getTime() && (
+                        <CountdownTimer endDate={new Date(item.discountEndDate)} />
+                    )}
+                </div>
+
+                {/* Glassy Shadow */}
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent" />
+            </CardContent>
+
+            <CardFooter className="p-4 flex flex-col items-start gap-3 relative">
+                <div className="w-full space-y-1 text-right">
+                    <h3 className="font-black text-xs text-white leading-tight group-hover:text-primary transition-colors">{item.name}</h3>
+                </div>
+
+                {/* Pricing & Add Buttons */}
+                <div className="w-full grid gap-2">
+                    {/* Piece Option */}
+                    <div className="flex items-center justify-between bg-white/5 rounded-xl p-2 border border-white/5">
+                        <div className="flex flex-col items-start">
+                            <span className="text-[10px] text-slate-400">حبة</span>
+                            <span className="text-xs font-black text-white">{item.pricePiece} <span className="text-[8px] text-slate-500">ر.س</span></span>
+                        </div>
+                        <Button
+                            size="sm"
+                            onClick={() => addToCart(item, "حبة", item.pricePiece)}
+                            className="h-8 w-8 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all p-0"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
                     </div>
 
-                    {/* Smart Action Button (Floating) */}
-                    {quantityPiece > 0 ? (
-                        <div className="absolute bottom-3 right-3 flex items-center bg-black text-white rounded-full shadow-xl shadow-black/20 z-30 h-10 min-w-[100px] justify-between px-1 animate-in fade-in zoom-in duration-200">
+                    {/* Dozen Option (if available) */}
+                    {hasDozen && (
+                        <div className="flex items-center justify-between bg-white/5 rounded-xl p-2 border border-white/5">
+                            <div className="flex flex-col items-start">
+                                <span className="text-[10px] text-slate-400">كرتون</span>
+                                <span className="text-xs font-black text-white">{item.priceDozen} <span className="text-[8px] text-slate-500">ر.س</span></span>
+                            </div>
                             <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 rounded-full text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (quantityPiece === 1) removeFromCart(item.id, "حبة");
-                                    else updateCartQuantity(item.id, "حبة", -1);
-                                }}
-                            >
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="font-bold text-sm mx-1 min-w-[1.5rem] text-center">{quantityPiece}</span>
-                            <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 rounded-full text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateCartQuantity(item.id, "حبة", 1);
-                                }}
+                                size="sm"
+                                onClick={() => addToCart(item, "كرتون", item.priceDozen!)}
+                                className="h-8 w-8 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-white border border-primary/20 transition-all p-0"
                             >
                                 <Plus className="h-4 w-4" />
                             </Button>
                         </div>
-                    ) : (
-                        <Button
-                            size="icon"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                addToCart(item, "حبة", effectivePricePiece)
-                            }}
-                            className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-black text-white hover:bg-black/90 shadow-lg shadow-black/10 hover:scale-110 active:scale-95 transition-all z-30"
-                        >
-                            <Plus className="h-5 w-5" />
-                        </Button>
                     )}
                 </div>
 
-                {/* 2. Clean Typography & Secondary Actions */}
-                <div className="flex flex-col gap-1 px-1">
-                    <div className="flex flex-col items-start gap-1 w-full">
-                        <h3
-                            className="font-bold text-lg text-foreground leading-tight line-clamp-2 break-words cursor-pointer hover:text-primary transition-colors w-full"
-                            onClick={() => onViewDetails?.(item)}
-                        >
-                            {item.name}
-                        </h3>
-
-                        {/* Price Section (Moved Below Name) */}
-                        <div className="flex items-baseline gap-2 mt-1 flex-wrap">
-                            <div className="flex items-baseline gap-1">
-                                <span className="font-black text-xl text-foreground">{effectivePricePiece}</span>
-                                <span className="text-sm font-bold text-primary">ر.س</span>
-                            </div>
-                            {displayOldPricePiece && (
-                                <span className="text-sm font-bold text-red-500 line-through opacity-90 decoration-2">{displayOldPricePiece} ر.س</span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Secondary Action: Box/Dozen (if exists) */}
-                    {hasDozen && (
-                        <div
-                            className="flex items-center justify-between mt-1 bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-lg border border-purple-100 dark:border-purple-800/50 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                addToCart(item, "كرتون", effectivePriceDozen)
-                            }}
-                        >
-                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">كرتون ({effectivePriceDozen} ر.س)</span>
-                            <Plus className="h-4 w-4 text-purple-700 dark:text-purple-300" />
-                        </div>
-                    )}
-                </div>
-            </div>
-        </motion.div>
+                {/* Interactive Ripple Effect on Click */}
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-active:opacity-100 transition-opacity pointer-events-none" />
+            </CardFooter>
+        </Card>
     )
-})
+}

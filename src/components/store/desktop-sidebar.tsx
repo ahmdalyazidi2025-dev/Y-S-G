@@ -1,18 +1,14 @@
 "use client"
 
-import { ClipboardList, MessageSquare, LogOut, LayoutDashboard, Share2 } from "lucide-react"
+import { ClipboardList, MessageSquare, LogOut, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import Image from "next/image"
 
-import { useStore } from "@/context/store-context" // Add import
-
 export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
     const pathname = usePathname()
-    const { storeSettings } = useStore()
-    console.log("Store contact:", storeSettings?.contactPhone)
 
     const navItems = [
         { name: "المتجر", icon: LayoutDashboard, href: "/customer" },
@@ -39,7 +35,7 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
                                 "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all",
                                 isActive
                                     ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                    : "text-white hover:bg-white/5 hover:text-white"
+                                    : "text-slate-400 hover:bg-white/5 hover:text-white"
                             )}
                         >
                             <item.icon className="w-5 h-5" />
@@ -51,28 +47,10 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
 
             <button
                 onClick={onLogout}
-                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-right mt-auto"
+                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-all text-right"
             >
                 <LogOut className="w-5 h-5" />
                 <span className="font-bold text-sm">تسجيل الخروج</span>
-            </button>
-
-            <button
-                onClick={() => {
-                    const url = window.location.origin
-                    const text = "تسوق أفضل المنتجات من YSG Store"
-                    if (navigator.share) {
-                        navigator.share({ title: 'YSG Store', text, url }).catch(console.error)
-                    } else {
-                        navigator.clipboard.writeText(url)
-                        // Assuming toast is available or use hapticFeedback as a simple ack if toast isn't imported
-                        // But I should probably better just rely on native behavior or simple fallback
-                    }
-                }}
-                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-white hover:bg-white/5 hover:text-white transition-all text-right border-t border-white/5"
-            >
-                <Share2 className="w-5 h-5" />
-                <span className="font-bold text-sm">مشاركة التطبيق</span>
             </button>
         </aside>
     )

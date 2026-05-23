@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { compressImage } from "@/lib/image-utils"
 import { toast } from "sonner"
-import { getFontClass } from "@/lib/fonts"
-import { Palette } from "lucide-react"
 
 interface BannerFormProps {
     isOpen: boolean
@@ -20,86 +18,43 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const { addBanner } = useStore()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [image, setImage] = useState("")
-    const [title, setTitle] = useState("")
-    const [description, setDescription] = useState("")
-    const [textColor, setTextColor] = useState("#ffffff")
-    const [fontFamily, setFontFamily] = useState("Cairo")
     const [isLoading, setIsLoading] = useState(false)
-
-    // NEW: Visual Editor State
-    const [showTextOverlay, setShowTextOverlay] = useState(true)
-    const [deviceMode, setDeviceMode] = useState<"mobile" | "desktop">("mobile")
-    const [showColorPicker, setShowColorPicker] = useState(false)
-
-    const PRESET_COLORS = ["#ffffff", "#000000", "#facc15", "#f87171", "#3b82f6", "#10b981", "#8b5cf6", "#ec4899", "#f97316", "#06b6d4"];
-    const PRESET_FONTS = [
-        { id: "Cairo", name: "رسمي" },
-        { id: "Tajawal", name: "عصري" },
-        { id: "Readex Pro", name: "تقني" },
-        { id: "Amiri", name: "كلاسيكي" },
-        { id: "Changa", name: "عريض" }
-    ];
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
         if (!file.type.startsWith('image/')) {
-            toast.error("يرجى اختيار ملف صورة صحيح (JPEG, PNG, WEBP)")
-            return
-        }
-
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("حجم الصورة كبير جداً (يجب أن تكون أقل من 2 ميجابايت)")
+            toast.error("يرجى اختيار ملف صورة صحيح")
             return
         }
 
         try {
             setIsLoading(true)
             const compressedBase64 = await compressImage(file)
-
-            if (!compressedBase64 || !compressedBase64.startsWith('data:image')) {
-                throw new Error("Invalid image data")
-            }
-
             setImage(compressedBase64)
-            toast.success("تم تجهيز الصورة للنشر")
+            toast.success("تم تحميل الصورة بنجاح")
         } catch (error) {
             console.error("Compression error:", error)
-            toast.error("حدث خطأ أثناء معالجة الصورة. حاول بصورة أخرى.")
+            toast.error("حدث خطأ أثناء معالجة الصورة")
         } finally {
             setIsLoading(false)
         }
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (!image) {
             toast.error("يرجى اختيار صورة أولاً")
             return
         }
 
-        try {
-            setIsLoading(true)
-            await addBanner({
-                image,
-                active: true,
-                title: showTextOverlay ? title || "" : "",
-                description: showTextOverlay ? description || "" : "",
-                textColor: showTextOverlay ? textColor : undefined,
-                fontFamily: showTextOverlay ? fontFamily : undefined,
-            })
-            // Reset
-            setImage("")
-            setTitle("")
-            setDescription("")
-            setShowTextOverlay(true)
-            onClose()
-        } catch (error) {
-            console.error("Upload error:", error)
-        } finally {
-            setIsLoading(false)
-        }
+        addBanner({
+            image,
+            active: true
+        })
+        setImage("")
+        onClose()
     }
 
     return (
@@ -111,291 +66,73 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                     />
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="bg-[#1c2a36] w-full max-w-4xl p-6 rounded-[32px] border border-white/10 relative shadow-2xl overflow-hidden flex flex-col md:flex-row gap-6 max-h-[90vh]"
+                        className="bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-white/10 relative shadow-2xl"
                     >
-                        {/* LEFT SIDE: PREVIEW */}
-                        <div className="flex-1 flex flex-col bg-black/20 rounded-2xl p-4 border border-white/5 order-2 md:order-1">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-bold text-slate-300 flex items-center gap-2">
-                                    <Camera className="w-4 h-4 text-primary" />
-                                    معاينة حية للمستخدم
-                                </h3>
-                                <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-                                    <button
-                                        onClick={() => setDeviceMode("mobile")}
-                                        className={`p-1.5 rounded-md transition-all ${deviceMode === 'mobile' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
-                                        title="معاينة الجوال"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                                    </button>
-                                    <button
-                                        onClick={() => setDeviceMode("desktop")}
-                                        className={`p-1.5 rounded-md transition-all ${deviceMode === 'desktop' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'}`}
-                                        title="معاينة التابلت/الكمبيوتر"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                    </button>
-                                </div>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                                <Plus className="w-6 h-6" />
                             </div>
-
-                            {/* DEVICE FRAME */}
-                            <div className="flex-1 flex items-center justify-center bg-black/20 rounded-xl overflow-hidden relative border border-white/5 pattern-grid-lg">
-                                <div
-                                    className={`transition-all duration-500 ease-in-out bg-white shadow-2xl overflow-hidden relative border-4 border-[#333] ${deviceMode === 'mobile' ? 'w-[320px] h-[600px] rounded-[30px]' : 'w-full aspect-video rounded-xl'}`}
-                                >
-                                    {/* Mock App Header */}
-                                    <div className="h-14 bg-white border-b flex items-center px-4 justify-between">
-                                        <div className="w-6 h-6 rounded-full bg-slate-200" />
-                                        <div className="w-24 h-4 rounded-full bg-slate-100" />
-                                        <div className="w-6 h-6 rounded-full bg-slate-200" />
-                                    </div>
-
-                                    {/* Mock Content */}
-                                    <div className="p-4 space-y-4 bg-slate-50 h-full overflow-y-auto hide-scrollbar">
-                                        {/* BANNER PREVIEW */}
-                                        <div className="w-full relative rounded-2xl overflow-hidden shadow-lg aspect-[2.5/1] group">
-                                            {image ? (
-                                                <Image
-                                                    src={image}
-                                                    alt="Preview"
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <div className="absolute inset-0 bg-slate-200 flex items-center justify-center text-slate-400 text-xs">
-                                                    مكان البانر
-                                                </div>
-                                            )}
-
-                                            {/* TEXT OVERLAY */}
-                                            {showTextOverlay && (image || title) && (
-                                                <div 
-                                                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4 ${getFontClass(fontFamily)}`}
-                                                    style={{ color: textColor }}
-                                                >
-                                                    <h3 className="font-bold text-lg leading-tight mb-1" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{title || "عنوان البانر"}</h3>
-                                                    <p className="text-xs line-clamp-2 opacity-90" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{description || "وصف البانر يظهر هنا..."}</p>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Mock Products */}
-                                        <div className="grid grid-cols-2 gap-3 opacity-50">
-                                            {[1, 2, 3, 4].map(i => (
-                                                <div key={i} className="aspect-square bg-white rounded-xl border" />
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Mock Notch (Mobile Only) */}
-                                    {deviceMode === 'mobile' && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#333] rounded-b-xl" />
-                                    )}
-                                </div>
-                            </div>
+                            <h2 className="text-xl font-bold text-white">إضافة صورة عرض جديدة</h2>
+                            <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {/* RIGHT SIDE: CONTROLS */}
-                        <div className="w-full md:w-[350px] flex flex-col order-1 md:order-2 h-full">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-white">محرر البانرات</h2>
-                                <button onClick={onClose} className="p-2 -ml-2 hover:bg-white/5 rounded-full text-slate-500 transition-colors">
-                                    <X className="w-5 h-5" />
-                                </button>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
+
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="aspect-[3/1] bg-black/20 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center gap-3 hover:bg-black/30 cursor-pointer transition-all group overflow-hidden relative"
+                            >
+                                {image ? (
+                                    <>
+                                        <Image
+                                            src={image}
+                                            alt="Preview"
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <Camera className="w-8 h-8 text-white" />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                            <ImageIcon className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-400">
+                                            {isLoading ? "جاري المعالجة..." : "انقر لتحميل الصورة (1200x400)"}
+                                        </span>
+                                    </>
+                                )}
                             </div>
 
-                            <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-5 overflow-y-auto pr-2 custom-scrollbar">
-                                {/* UPLOAD AREA */}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                />
-                                <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className={`aspect-[2.5/1] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${image ? 'border-primary/50 bg-primary/10' : 'border-white/10 bg-black/20'}`}
+                            <div className="pt-2">
+                                <Button
+                                    type="submit"
+                                    disabled={!image || isLoading}
+                                    className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]"
                                 >
-                                    {image ? (
-                                        <div className="flex flex-col items-center text-primary">
-                                            <Camera className="w-8 h-8 mb-2" />
-                                            <span className="text-xs font-bold">تغيير الصورة</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <ImageIcon className="w-8 h-8 text-slate-400" />
-                                            <span className="text-xs font-bold text-slate-400">اختر صورة (1200x400)</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* OPTIONS */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${showTextOverlay ? 'bg-primary text-white' : 'bg-slate-700 text-slate-400'}`}>
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-white">إظهار النصوص</span>
-                                                <span className="text-[10px] text-slate-400">الكتابة فوق الصورة</span>
-                                            </div>
-                                        </div>
-                                        <div
-                                            onClick={() => setShowTextOverlay(!showTextOverlay)}
-                                            className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors flex items-center shadow-inner ${showTextOverlay ? 'bg-primary justify-end' : 'bg-slate-700 justify-start'}`}
-                                        >
-                                            <motion.div layout className="w-4 h-4 bg-white rounded-full shadow-md" />
-                                        </div>
-                                    </div>
-
-                                    <AnimatePresence>
-                                        {showTextOverlay && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="space-y-4 overflow-hidden"
-                                            >
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-bold text-slate-400">العنوان الرئيسي</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="عرض خاص!"
-                                                        value={title}
-                                                        onChange={(e) => setTitle(e.target.value)}
-                                                        className="w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all"
-                                                        maxLength={40}
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-bold text-slate-400">الوصف الفرعي</label>
-                                                    <textarea
-                                                        placeholder="تفاصيل العرض..."
-                                                        value={description}
-                                                        onChange={(e) => setDescription(e.target.value)}
-                                                        className="w-full h-20 pt-3 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all resize-none"
-                                                        maxLength={100}
-                                                    />
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-2 gap-4 pt-2">
-                                                    {/* Font Selector */}
-                                                    <div className="space-y-2">
-                                                        <label className="text-xs font-bold text-slate-400">نوع الخط</label>
-                                                        <select
-                                                            value={fontFamily}
-                                                            onChange={(e) => setFontFamily(e.target.value)}
-                                                            className={`w-full h-12 bg-black/20 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-primary transition-all appearance-none cursor-pointer ${getFontClass(fontFamily)}`}
-                                                        >
-                                                            {PRESET_FONTS.map(f => (
-                                                                <option key={f.id} value={f.id} className={`bg-[#1c2a36] ${getFontClass(f.id)}`}>{f.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Color Picker */}
-                                                    <div className="space-y-2">
-                                                        <label className="text-xs font-bold text-slate-400">لون النص</label>
-                                                        <div className="relative">
-                                                            <div 
-                                                                onClick={() => setShowColorPicker(!showColorPicker)}
-                                                                className="relative w-full h-12 rounded-xl overflow-hidden shadow-sm border border-white/10 hover:border-primary/50 transition-all flex items-center justify-center bg-black/20 group cursor-pointer" 
-                                                                title="اختر لون النص"
-                                                            >
-                                                                {/* Gradient glow effect behind */}
-                                                                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400/20 via-fuchsia-400/20 to-indigo-400/20 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity" />
-                                                                
-                                                                <div className="flex items-center gap-3 z-10 font-mono">
-                                                                    <Palette className="w-5 h-5 drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }} />
-                                                                    <span className="text-sm font-bold tracking-wider drop-shadow-lg" style={{ color: textColor === '#ffffff' ? '#e2e8f0' : textColor }}>
-                                                                        {textColor.toUpperCase()}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-
-                                                            <AnimatePresence>
-                                                                {showColorPicker && (
-                                                                    <>
-                                                                        <div className="fixed inset-0 z-40" onClick={() => setShowColorPicker(false)} />
-                                                                        <motion.div
-                                                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                                            className="absolute z-50 bottom-full mb-3 right-0 bg-[#1c2a36] border border-white/10 p-5 rounded-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] w-[320px]"
-                                                                            onClick={(e) => e.stopPropagation()}
-                                                                        >
-                                                                            <h4 className="text-sm text-slate-300 mb-4 font-bold flex items-center gap-2">
-                                                                                <Palette className="w-4 h-4 text-primary" />
-                                                                                الألوان الأساسية السريعة
-                                                                            </h4>
-                                                                            
-                                                                            <div className="grid grid-cols-5 gap-3 mb-5">
-                                                                                {PRESET_COLORS.map(c => (
-                                                                                    <button
-                                                                                        key={c}
-                                                                                        type="button"
-                                                                                        onClick={() => { setTextColor(c); setShowColorPicker(false); }}
-                                                                                        className={`w-10 h-10 rounded-full transition-all shadow-md ${textColor === c ? 'ring-2 ring-primary ring-offset-4 ring-offset-[#1c2a36] scale-110' : 'hover:scale-110 hover:shadow-lg border border-white/10'}`}
-                                                                                        style={{ backgroundColor: c }}
-                                                                                        title={c}
-                                                                                    />
-                                                                                ))}
-                                                                            </div>
-                                                                            
-                                                                            <div className="h-[1px] w-full bg-white/10 my-4" />
-                                                                            
-                                                                            <h4 className="text-sm text-slate-300 mb-3 font-bold">تخصيص لون مختلف</h4>
-                                                                            <div className="relative w-full h-14 rounded-xl overflow-hidden flex items-center justify-center border border-white/10 hover:border-white/30 transition-all shadow-lg cursor-pointer bg-black/40 group">
-                                                                                <div className="absolute inset-0 bg-gradient-to-r from-rose-400/20 via-purple-400/20 to-blue-400/20 pointer-events-none group-hover:opacity-100 transition-opacity" />
-                                                                                <span className="text-sm font-bold text-white z-10 flex items-center gap-2 group-hover:scale-105 transition-transform drop-shadow-md">
-                                                                                    <svg className="w-5 h-5 object-cover rounded-full bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500" viewBox="0 0 24 24" />
-                                                                                    انقر لاختيار لون حر
-                                                                                </span>
-                                                                                <input
-                                                                                    type="color"
-                                                                                    value={textColor}
-                                                                                    onChange={(e) => setTextColor(e.target.value)}
-                                                                                    className="absolute inset-0 w-[200%] h-[200%] -top-4 -left-4 cursor-pointer opacity-0 mix-blend-overlay"
-                                                                                />
-                                                                            </div>
-                                                                        </motion.div>
-                                                                    </>
-                                                                )}
-                                                            </AnimatePresence>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                <div className="mt-auto pt-4">
-                                    <Button
-                                        type="submit"
-                                        disabled={!image || isLoading}
-                                        className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl gap-2 font-bold"
-                                    >
-                                        {isLoading ? (
-                                            "جاري النشر..."
-                                        ) : (
-                                            <>
-                                                <Plus className="w-5 h-5" />
-                                                نشر البانر
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            </form>
-                        </div>
+                                    <Plus className="w-6 h-6" />
+                                    <span>نشر الصورة</span>
+                                </Button>
+                            </div>
+                        </form>
                     </motion.div>
                 </div>
             )}
