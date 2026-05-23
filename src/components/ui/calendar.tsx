@@ -57,7 +57,7 @@ function Calendar({
                 ...classNames,
             }}
             formatters={{
-                formatWeekdayName: (date) => {
+                formatWeekdayName: (date: Date) => {
                     const days = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
                     return days[date.getDay()];
                 }

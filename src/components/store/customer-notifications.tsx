@@ -31,10 +31,10 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
 
     // Filter notifications for current user
     const userNotifications = notifications
-        .filter(n => n.userId === currentUser?.id)
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) // Oldest first, newest bottom
+        .filter((n: any) => n.userId === currentUser?.id)
+        .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) // Oldest first, newest bottom
 
-    const unreadCount = userNotifications.filter(n => !n.read).length
+    const unreadCount = userNotifications.filter((n: any) => !n.read).length
 
     return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -64,7 +64,7 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                             لا توجد إشعارات حالياً
                         </div>
                     ) : (
-                        userNotifications.map((notification) => (
+                        userNotifications.map((notification: any) => (
                             <div
                                 key={notification.id}
                                 className={cn(

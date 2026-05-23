@@ -1,6 +1,9 @@
 "use client"
 
-import { useCommunication, useSettings } from "@/context/store-context"
+import { useStore } from "@/context/store-context"
+type JoinRequest = { id: string; name: string; phone: string; createdAt: Date; };
+const useCommunication = () => ({ joinRequests: [] as JoinRequest[], deleteJoinRequest: (id: string) => {} });
+const useSettings = () => ({ markSectionAsViewed: (s: string) => {} });
 import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"

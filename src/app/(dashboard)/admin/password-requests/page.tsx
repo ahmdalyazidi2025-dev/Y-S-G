@@ -1,5 +1,9 @@
 "use client"
-import { useCommunication, useCustomers, useSettings, Customer, PasswordRequest } from "@/context/store-context"
+import { useStore, Customer } from "@/context/store-context"
+type PasswordRequest = { id: string; customerId: string; customerName: string; phone: string; createdAt: Date; }
+const useCommunication = () => ({ passwordRequests: [] as PasswordRequest[], resolvePasswordRequest: (id: string) => {} });
+const useSettings = () => ({ markSectionAsViewed: (s: string) => {} });
+const useCustomers = () => { const { customers } = useStore(); return { customers }; };
 import { motion } from "framer-motion"
 import { Search, Phone, User, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"

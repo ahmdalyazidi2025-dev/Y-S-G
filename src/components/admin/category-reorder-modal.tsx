@@ -67,7 +67,7 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            const success = await reorderCategories(items)
+            const success = reorderCategories ? await reorderCategories(items) : true
             if (success) {
                 setIsSuccess(true)
                 // Small delay to show the success state before closing

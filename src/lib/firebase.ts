@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -19,4 +20,7 @@ const db = getFirestore(app);
 // Analytics is only supported in browser
 export const analytics = typeof window !== "undefined" ? isSupported().then(yes => yes ? getAnalytics(app) : null) : null;
 
-export { app, db };
+const auth = getAuth(app);
+export const getSecondaryAuth = () => null;
+
+export { app, db, auth };

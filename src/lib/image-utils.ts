@@ -49,3 +49,7 @@ export const applyBrandingTemplate = async (file: File): Promise<string> => {
     // In a real implementation, this would use a Canvas to draw the template.
     return compressImage(file);
 };
+
+export const applyProfessionalTemplate = async (file: File, logoUrl?: string): Promise<string> => {
+    return applyBrandingTemplate(file);
+};

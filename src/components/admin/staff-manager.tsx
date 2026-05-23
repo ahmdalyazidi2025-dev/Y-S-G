@@ -73,8 +73,8 @@ export function StaffManager() {
 
     const startEdit = (member: StaffMember) => {
         // Extract username from email or use stored username
-        const isLegacy = member.email.includes("@ysg.local")
         const email = member.email || ""
+        const isLegacy = email.includes("@ysg.local")
         const username = member.username || (isLegacy ? (email.includes("@") ? email.split("@")[0] : member.name) : member.name)
 
         setNewStaff({

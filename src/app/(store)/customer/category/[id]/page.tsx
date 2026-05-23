@@ -113,7 +113,6 @@ export default function CategoryPage() {
                                 <ProductCard
                                     key={product.id}
                                     item={product}
-                                    index={index}
                                     onViewDetails={() => setSelectedProduct(product)}
                                 />
                             ))}

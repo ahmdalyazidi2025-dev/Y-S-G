@@ -14,6 +14,10 @@ export type Banner = {
     id: string
     image: string
     active: boolean
+    title?: string
+    fontFamily?: string
+    textColor?: string
+    description?: string
 }
 
 export type Product = {
@@ -30,6 +34,11 @@ export type Product = {
     image?: string
     images?: string[]
     discountEndDate?: Date
+    isDraft?: boolean
+    notes?: string
+    costPrice?: number
+    description?: string
+    barcodes?: string[]
 }
 
 export type CartItem = Product & {
@@ -44,6 +53,7 @@ export type Category = {
     nameEn: string
     image?: string
     icon?: string
+    isHidden?: boolean
 }
 
 export type Customer = {
@@ -54,6 +64,24 @@ export type Customer = {
     username: string
     location?: string
     lastActive?: Date
+    referralCount?: number
+    referralCode?: string
+}
+
+export type Coupon = {
+    id: string
+    code: string
+    discount: number
+    type: "percentage" | "fixed"
+    usageLimit?: number
+    usedCount?: number
+    active: boolean
+    minOrderValue?: number
+    categoryId?: string
+    expiryDate: any
+    startDate?: any
+    customerUsageLimit?: number
+    allowedCustomerTypes?: string | string[]
 }
 
 export type StaffMember = {
@@ -62,6 +90,7 @@ export type StaffMember = {
     username: string
     password?: string
     phone?: string
+    email?: string
     permissions: string[] // "orders", "products", "customers", "settings", "chat", "sales"
     createdAt?: Date
 }
@@ -74,6 +103,7 @@ export type User = {
     phone?: string
     location?: string
     permissions?: string[]
+    email?: string
 }
 
 export type Order = {
@@ -87,6 +117,7 @@ export type Order = {
     status: "pending" | "processing" | "shipped" | "delivered" | "canceled"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
+    paymentMethod?: string
 }
 
 export type ProductRequest = {
@@ -105,6 +136,8 @@ export type Message = {
     text: string
     createdAt: Date
     isAdmin: boolean
+    userId?: string
+    isSystemNotification?: boolean
 }
 
 export type Conversation = {
@@ -136,6 +169,11 @@ export type StoreSettings = {
     footerPrivacy: string
     footerReturns: string
     requireCustomerInfoOnCheckout: boolean
+    enableBarcodeScanner?: boolean
+    enableAiSystem?: boolean
+    enableCoupons?: boolean
+    logoUrl?: string
+    groqApiKey?: string
 }
 
 type StoreContextType = {
@@ -157,9 +195,13 @@ type StoreContextType = {
     addCategory: (category: Omit<Category, "id">) => void
     updateCategory: (category: Category) => void
     deleteCategory: (categoryId: string) => void
+    reorderCategories?: (categories: Category[]) => Promise<void>
     addCustomer: (customer: Omit<Customer, "id">) => void
     updateCustomer: (customer: Customer) => void
     deleteCustomer: (customerId: string) => void
+    coupons: Coupon[]
+    addCoupon: (coupon: Omit<Coupon, "id">) => void
+    deleteCoupon: (couponId: string) => void
     updateOrderStatus: (orderId: string, status: Order["status"]) => void
     addBanner: (banner: Omit<Banner, "id">) => void
     deleteBanner: (bannerId: string) => void
@@ -170,8 +212,14 @@ type StoreContextType = {
     addStaff: (member: Omit<StaffMember, "id" | "createdAt">) => void
     updateStaff: (member: StaffMember) => void
     deleteStaff: (memberId: string) => void
+    resetPassword?: (userId: string) => Promise<void>
+    addExistingUserAsStaff?: (userId: string) => Promise<void>
     broadcastToCategory: (category: string, text: string) => void
     messages: Message[]
+    notifications?: any[]
+    guestId?: string
+    markAllNotificationsRead?: () => void
+    markMessagesRead?: () => void
     sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string) => void
     broadcastNotification: (text: string) => void
     currentUser: User | null
@@ -181,6 +229,7 @@ type StoreContextType = {
     restoreDraftToCart: (orderId: string) => void
     storeSettings: StoreSettings
     updateStoreSettings: (settings: StoreSettings) => void
+    loading?: boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -218,6 +267,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [orders, setOrders] = useState<Order[]>([])
     const [messages, setMessages] = useState<Message[]>([])
     const [staff, setStaff] = useState<StaffMember[]>([])
+    const [coupons, setCoupons] = useState<Coupon[]>([])
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
             const savedUser = localStorage.getItem("ysg_user")
@@ -482,6 +532,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف العميل")
     }
 
+    const addCoupon = async (coupon: Omit<Coupon, "id">) => {
+        await addDoc(collection(db, "coupons"), coupon)
+        toast.success("تم إضافة الكوبون")
+    }
+
+    const deleteCoupon = async (couponId: string) => {
+        await deleteDoc(doc(db, "coupons", couponId))
+        toast.error("تم حذف الكوبون")
+    }
+
     const updateOrderStatus = async (orderId: string, status: Order["status"]) => {
         const order = orders.find(o => o.id === orderId)
         if (!order) return
@@ -603,6 +663,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             addToCart, removeFromCart, clearCart, createOrder, scanProduct,
             addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
             addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+            coupons, addCoupon, deleteCoupon,
             addBanner, deleteBanner, toggleBanner, addProductRequest, updateProductRequestStatus,
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
