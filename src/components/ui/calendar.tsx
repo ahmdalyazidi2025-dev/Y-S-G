@@ -55,7 +55,7 @@ function Calendar({
                     "aria-selected:bg-white/10 aria-selected:text-white rounded-none",
                 day_hidden: "invisible",
                 ...classNames,
-            }}
+            } as any}
             formatters={{
                 formatWeekdayName: (date: Date) => {
                     const days = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];

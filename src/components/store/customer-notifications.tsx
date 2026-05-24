@@ -30,7 +30,7 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
     // }, [isOpen, markAllNotificationsRead])
 
     // Filter notifications for current user
-    const userNotifications = notifications
+    const userNotifications = (notifications || [])
         .filter((n: any) => n.userId === currentUser?.id)
         .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) // Oldest first, newest bottom
 
@@ -72,7 +72,7 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                     notification.read ? "bg-white/5 border-white/5 opacity-70" : "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5"
                                 )}
                                 onClick={() => {
-                                    if (!notification.read) markNotificationRead(notification.id)
+                                    if (!notification.read && markNotificationRead) markNotificationRead(notification.id)
                                     if (notification.link) {
                                         setIsOpen(false)
                                         window.location.href = notification.link

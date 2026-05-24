@@ -90,13 +90,14 @@ export function NotificationManager() {
                         action
                     })
 
-                    // Play sound based on context
-                    if (title.includes('طلب') || title.includes('Order') || body.includes('طلب')) {
-                        playSound('newOrder')
-                    } else if (title.includes('رسالة') || body.includes('msg')) {
-                        playSound('newMessage')
-                    } else {
-                        playSound('generalPush')
+                    if (playSound) {
+                        if (title.includes('طلب') || title.includes('Order') || body.includes('طلب')) {
+                            playSound('newOrder')
+                        } else if (title.includes('رسالة') || body.includes('msg')) {
+                            playSound('newMessage')
+                        } else {
+                            playSound('generalPush')
+                        }
                     }
                 })
                 return unsubscribe

@@ -82,7 +82,7 @@ export function StaffManager() {
             username: username,
             phone: member.phone || "", // Load phone
             password: "",
-            role: member.role,
+            role: member.role || "staff",
             permissions: member.permissions || []
         })
         setEditingId(member.id)
@@ -108,7 +108,9 @@ export function StaffManager() {
 
 
         // Use specialized function to avoid creating new auth user
-        addExistingUserAsStaff(currentUser)
+        if (addExistingUserAsStaff) {
+            addExistingUserAsStaff(currentUser.id)
+        }
         toast.success("تم إضافة حسابك الحالي كمسؤول")
         hapticFeedback('success')
     }
@@ -220,7 +222,7 @@ export function StaffManager() {
                                 className="h-8 rounded-lg text-emerald-400 hover:bg-emerald-400/10 text-xs"
                                 onClick={() => {
                                     if (confirm("هل أنت متأكد من إرسال رابط استعادة كلمة المرور لهذا المستخدم؟")) {
-                                        resetPassword(member.email)
+                                        if (resetPassword && member.email) resetPassword(member.email)
                                     }
                                 }}
                             >

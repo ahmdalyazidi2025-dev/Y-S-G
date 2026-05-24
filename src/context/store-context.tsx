@@ -91,6 +91,7 @@ export type StaffMember = {
     password?: string
     phone?: string
     email?: string
+    role?: "admin" | "staff"
     permissions: string[] // "orders", "products", "customers", "settings", "chat", "sales"
     createdAt?: Date
 }
@@ -138,6 +139,9 @@ export type Message = {
     isAdmin: boolean
     userId?: string
     isSystemNotification?: boolean
+    read?: boolean
+    actionLink?: string
+    actionTitle?: string
 }
 
 export type Conversation = {
@@ -230,6 +234,10 @@ type StoreContextType = {
     storeSettings: StoreSettings
     updateStoreSettings: (settings: StoreSettings) => void
     loading?: boolean
+    playSound?: (type: string) => void
+    adminPreferences?: any
+    joinRequests?: any[]
+    markNotificationRead?: (id: string) => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)

@@ -29,8 +29,8 @@ export function AppBadgeManager() {
             // Count messages FROM customers (isAdmin: false) that are unread
             count += messages.filter(m => !m.isAdmin && !m.read).length
 
-            const lastJoin = toDate(lastViewed.joinRequests)
-            count += joinRequests.filter(r => toDate(r.createdAt) > lastJoin).length
+            const lastJoin = toDate(lastViewed?.joinRequests)
+            count += (joinRequests || []).filter((r: any) => toDate(r.createdAt) > lastJoin).length
         } else {
             // Customer/Guest: Standard Unread Count (Chat + System Notifications)
             const chatUnread = messages.filter(m => {
@@ -55,7 +55,7 @@ export function AppBadgeManager() {
                 return isFromAdmin && (directUnread || globalUnread)
             }).length
 
-            const directNotifUnread = notifications.filter(n => n.userId === targetId && !n.read).length
+            const directNotifUnread = (notifications || []).filter((n: any) => n.userId === targetId && !n.read).length
 
             count = chatUnread + systemUnread + directNotifUnread
         }

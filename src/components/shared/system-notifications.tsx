@@ -51,7 +51,7 @@ export function SystemNotifications() {
             const isRecent = (Date.now() - orderTime) < 60000 // created in last minute
 
             if (isRecent) {
-                playSound('newOrder')
+                if (playSound) playSound('newOrder')
                 toast.success(`طلب جديد بقيمة ${newOrder.total} ر.س`, {
                     description: `العميل: ${newOrder.customerName}`,
                     icon: <ShoppingBag className="w-6 h-6 text-emerald-500" />,
@@ -76,11 +76,11 @@ export function SystemNotifications() {
                     let icon = <CheckCircle2 className="w-5 h-5 text-blue-500" />
                     let sound: 'statusUpdate' | 'newOrder' | 'generalPush' = 'statusUpdate'
 
-                    if (order.status === 'accepted') {
+                    if (order.status === 'processing') {
                         msg = "تمت الموافقة على طلبك! سيصلك قريباً"
                         sound = 'newOrder' // Happy sound!
                         icon = <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    } else if (order.status === 'deleted') {
+                    } else if (order.status === 'canceled') {
                         msg = "عذراً، تم رفض الطلب. يرجى مراجعة الإشعارات"
                         // Alert sound logic usually maps to statusUpdate or I can reuse generalPush
                         sound = 'statusUpdate'
@@ -90,7 +90,7 @@ export function SystemNotifications() {
                         sound = 'newOrder'
                     }
 
-                    playSound(sound)
+                    if (playSound) playSound(sound)
 
                     toast.custom((t) => (
                         <div className="p-4 rounded-xl border-l-4 shadow-xl backdrop-blur-md bg-white/90 dark:bg-zinc-900/90 transition-all w-full max-w-[95vw] sm:max-w-[400px] flex flex-col gap-3 border-emerald-500/80 ring-1 ring-emerald-500/20">
@@ -166,7 +166,7 @@ export function SystemNotifications() {
             if (!isMe && isRecent) {
                 // Determine relevance
                 if (isAdminUser || latestMsg.userId === currentUser?.id || latestMsg.text.includes(`@${currentUser?.id}`)) {
-                    playSound('newMessage')
+                    if (playSound) playSound('newMessage')
 
                     // Do not show toast if user is already on the chat page
                     const isCustomerOnChat = !isAdminUser && pathname === '/customer/chat'
@@ -247,7 +247,7 @@ export function SystemNotifications() {
                 const isRecent = (Date.now() - reqTime) < 60000 // created in last minute
 
                 if (isRecent) {
-                    playSound('statusUpdate')
+                    if (playSound) playSound('statusUpdate')
                     toast.warning("طلب توفير منتج جديد", {
                         description: "قام أحد العملاء بطلب توفير منتج",
                         icon: <AlertTriangle className="w-5 h-5 text-orange-500" />,

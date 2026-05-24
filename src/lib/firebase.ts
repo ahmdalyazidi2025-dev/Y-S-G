@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCS9sl7j-uIrxB_w6MwkRsN7fFDnGhZxE0",
@@ -19,6 +20,7 @@ const db = getFirestore(app);
 
 // Analytics is only supported in browser
 export const analytics = typeof window !== "undefined" ? isSupported().then(yes => yes ? getAnalytics(app) : null) : null;
+export const messaging = typeof window !== "undefined" ? isSupported().then(yes => yes ? getMessaging(app) : null) : null;
 
 const auth = getAuth(app);
 export const getSecondaryAuth = () => null;
