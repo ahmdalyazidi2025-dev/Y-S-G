@@ -27,19 +27,19 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                             onSelect(cat)
                             hapticFeedback('light')
                         }}
-                        className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer group"
+                        className="flex flex-col items-center gap-2.5 flex-shrink-0 cursor-pointer group"
                     >
-                        {/* Outer Glow Circle */}
+                        {/* Outer Glow Circle - w-20 h-20 with thin sleek border */}
                         <div className={cn(
-                            "w-16 h-16 rounded-full p-[3px] transition-all duration-300 ease-out",
+                            "w-20 h-20 rounded-full p-[3px] transition-all duration-300 ease-out border shadow-sm",
                             isActive
-                                ? "bg-gradient-to-tr from-primary via-blue-500 to-emerald-400 scale-110 shadow-lg shadow-primary/20"
-                                : "bg-slate-200/80 dark:bg-white/10 group-hover:bg-slate-300 dark:group-hover:bg-white/20"
+                                ? "bg-gradient-to-tr from-primary via-blue-500 to-emerald-400 scale-110 shadow-lg shadow-primary/20 border-transparent"
+                                : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-white/5 group-hover:border-primary/30 group-hover:bg-slate-50 dark:group-hover:bg-slate-800"
                         )}>
                             {/* Inner Circle Frame */}
-                            <div className="w-full h-full rounded-full bg-white dark:bg-slate-950 overflow-hidden flex items-center justify-center border-2 border-white dark:border-slate-950 transition-colors shadow-inner">
+                            <div className="w-full h-full rounded-full bg-white dark:bg-slate-950 overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-800 transition-colors shadow-inner">
                                 {cat === "الكل" ? (
-                                    <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-primary/10 text-primary text-xl">
+                                    <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-primary/10 text-primary text-2xl">
                                         🏠
                                     </div>
                                 ) : dbCat?.image ? (
@@ -47,8 +47,8 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                                         src={dbCat.image} 
                                         alt={cat} 
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                        width={64} 
-                                        height={64} 
+                                        width={80} 
+                                        height={80} 
                                         unoptimized
                                     />
                                 ) : (
