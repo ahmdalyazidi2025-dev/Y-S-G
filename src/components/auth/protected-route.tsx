@@ -28,17 +28,17 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 }
 
                 if (!user) {
-                    router.push(`/login?role=${role}`)
+                    window.location.replace(`/login?role=${role}`)
                 } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
-                    router.push("/customer")
+                    window.location.replace("/customer")
                 } else if (role === "customer" && user.role !== "customer") {
-                    router.push(user.role === "admin" || user.role === "staff" ? "/admin" : "/login?role=customer")
+                    window.location.replace(user.role === "admin" || user.role === "staff" ? "/admin" : `/login?role=customer`)
                 } else {
                     setIsChecking(false)
                 }
             } catch (error) {
                 console.error("Auth check failed:", error)
-                router.push(`/login?role=${role}`)
+                window.location.replace(`/login?role=${role}`)
             }
         }
 
