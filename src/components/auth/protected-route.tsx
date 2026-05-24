@@ -28,6 +28,8 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 }
 
                 if (!user) {
+                    document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                    document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                     window.location.replace(`/login?role=${role}`)
                 } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
                     window.location.replace("/customer")
@@ -38,6 +40,8 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 }
             } catch (error) {
                 console.error("Auth check failed:", error)
+                document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                 window.location.replace(`/login?role=${role}`)
             }
         }
