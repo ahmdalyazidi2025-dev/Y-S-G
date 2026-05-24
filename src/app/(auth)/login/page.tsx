@@ -9,16 +9,31 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Lock, User } from "lucide-react"
 import { useStore } from "@/context/store-context"
 import { useEffect } from "react"
+import { useTheme } from "next-themes"
 
 function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { login, currentUser } = useStore()
+    const { setTheme } = useTheme()
     const baseRole = (searchParams.get("role") as "admin" | "staff" | "customer") || "customer"
     const [loginType, setLoginType] = useState<"admin" | "staff" | "customer">(baseRole)
     const [isLoading, setIsLoading] = useState(false)
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
+
+    useEffect(() => {
+        // Force reset theme to light on first visit to login to clear old dark caches
+        try {
+            const hasResetTheme = localStorage.getItem("ysg_theme_reset_v2");
+            if (!hasResetTheme) {
+                setTheme("light");
+                localStorage.setItem("ysg_theme_reset_v2", "true");
+            }
+        } catch (e) {
+            console.error("Theme storage reset failed:", e);
+        }
+    }, [setTheme]);
 
     useEffect(() => {
         if (currentUser) {

@@ -8,13 +8,28 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "next-themes";
 
 function LandingContent() {
   const searchParams = useSearchParams();
   const isFromLogout = searchParams.get("logout") === "true";
+  const { setTheme } = useTheme();
 
   const [showContent, setShowContent] = useState(isFromLogout);
   const [isAssembling, setIsAssembling] = useState(!isFromLogout);
+
+  useEffect(() => {
+    // Force reset theme to light on first visit to this version to clear old dark caches
+    try {
+      const hasResetTheme = localStorage.getItem("ysg_theme_reset_v2");
+      if (!hasResetTheme) {
+        setTheme("light");
+        localStorage.setItem("ysg_theme_reset_v2", "true");
+      }
+    } catch (e) {
+      console.error("Theme storage reset failed:", e);
+    }
+  }, [setTheme]);
 
   useEffect(() => {
     if (isFromLogout) return;
