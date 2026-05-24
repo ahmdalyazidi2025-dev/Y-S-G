@@ -38,27 +38,23 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 overflow-x-hidden relative`}>
-        {/* --- DUAL-LAYER BACKGROUND SYSTEM --- */}
-
-        {/* LAYER 1: Dark Mode Universe (Only visible in Dark Mode) */}
-        <div className="fixed inset-0 -z-50 hidden dark:block pointer-events-none">
-          <div className="absolute inset-0 bg-[#080b12] transition-colors duration-500" /> {/* Deep Space Base */}
-          <div className="absolute inset-0 bg-noise opacity-[0.03]" /> {/* Film Grain */}
-
-          {/* Nebula Glows - Only for Dark Mode */}
-          <div className="nebula-glow bg-purple-600/20 top-[-10%] left-[-10%]" />
-          <div className="nebula-glow bg-teal-500/20 bottom-[-10%] right-[-10%] [animation-delay:-5s]" />
-          <div className="nebula-glow bg-blue-600/10 top-[20%] left-[20%] w-[80vw] h-[80vw] [animation-delay:-10s]" />
-        </div>
-
-        {/* LAYER 2: Light Mode Clean (Only visible in Light Mode) */}
-        <div className="fixed inset-0 -z-50 block dark:hidden pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white to-emerald-50/20 transition-colors duration-500" /> {/* Soft Gradient */}
+        {/* --- PREMIUM UNIVERSAL LIGHT BACKGROUND SYSTEM --- */}
+        <div className="fixed inset-0 -z-50 pointer-events-none">
+          {/* Universal Premium Soft Gradient (Pure White to extremely soft blue/slate tints) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100/50" />
+          
+          {/* Soft micro-glows to add depth and luxury feel */}
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/5 blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-emerald-400/5 blur-[120px]" />
+          
+          {/* Subtle noise texture for premium film grain look */}
+          <div className="absolute inset-0 bg-noise opacity-[0.015]" />
         </div>
 
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
+          forcedTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >

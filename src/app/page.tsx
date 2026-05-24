@@ -63,7 +63,7 @@ function LandingContent() {
                   alt="Logo"
                   width={192}
                   height={192}
-                  className="rounded-full object-cover border-8 border-white/5 shadow-2xl shadow-primary/20"
+                  className="rounded-full object-cover border-8 border-slate-200/40 shadow-2xl shadow-primary/10"
                 />
                 <motion.div
                   initial={{ top: "-10%" }}
@@ -79,7 +79,7 @@ function LandingContent() {
               transition={{ delay: 0.5, duration: 1 }}
               className="mt-12 text-center"
             >
-              <h2 className="text-2xl font-black text-white tracking-[0.5em] uppercase">Intelligence</h2>
+              <h2 className="text-2xl font-black text-foreground tracking-[0.5em] uppercase">Intelligence</h2>
               <div className="mt-4 flex gap-1 justify-center">
                 {[0, 1, 2].map((i) => (
                   <motion.div
@@ -120,7 +120,7 @@ function LandingContent() {
                     alt="Logo"
                     width={96}
                     height={96}
-                    className="rounded-full object-cover border-4 border-white/10 shadow-[0_0_40px_rgba(59,130,246,0.3)] relative z-10"
+                    className="rounded-full object-cover border-4 border-slate-200/40 shadow-[0_0_40px_rgba(59,130,246,0.15)] relative z-10"
                   />
                 </div>
                 <div className="text-center space-y-1">
@@ -132,7 +132,7 @@ function LandingContent() {
               <div className="w-full flex flex-col gap-6">
                 <AnimatePresence mode="wait">
                   {isAssembling ? (
-                    <div key="skeleton" className="w-full h-56 glass-card border-white/5 relative overflow-hidden flex flex-col items-center justify-center gap-6">
+                    <div key="skeleton" className="w-full h-56 glass-card border-slate-200/50 relative overflow-hidden flex flex-col items-center justify-center gap-6">
                       <div className="w-16 h-16 skeleton rounded-3xl" />
                       <div className="w-40 h-8 skeleton" />
                     </div>
@@ -144,12 +144,12 @@ function LandingContent() {
                       transition={{ type: "spring", damping: 20 }}
                     >
                       <Link href="/login?role=customer" className="group block">
-                        <div className="relative w-full h-56 md:h-64 glass-card flex flex-col items-center justify-center gap-6 transition-all border border-white/10 group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/5">
-                          <div className="p-5 rounded-[2rem] bg-white/5 text-primary group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
+                        <div className="relative w-full h-56 md:h-64 glass-card flex flex-col items-center justify-center gap-6 transition-all border border-slate-200/60 group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/5">
+                          <div className="p-5 rounded-[2rem] bg-primary/5 text-primary group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
                             <ShoppingBag className="w-10 h-10 md:w-12 md:h-12" />
                           </div>
                           <div className="text-center">
-                            <span className="text-2xl md:text-3xl font-black text-white block">دخول العملاء</span>
+                            <span className="text-2xl md:text-3xl font-black text-slate-800 block">دخول العملاء</span>
                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.25em]">Customer Portal</span>
                           </div>
                           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-40 transition-opacity">
