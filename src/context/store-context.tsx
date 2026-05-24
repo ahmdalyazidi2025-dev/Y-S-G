@@ -632,12 +632,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         hapticFeedback('success')
     }
 
+const normalizeArabic = (str: string | null | undefined): string => {
+    if (!str) return ""
+    return str
+        .trim()
+        .toLowerCase()
+        .replace(/[\s\.\-_]/g, "") // Remove spaces, dots, dashes, underscores
+        .replace(/[أإآ]/g, "ا")    // Normalize Alef
+        .replace(/ة/g, "ه")        // Normalize Teh Marbuta
+        .replace(/ى/g, "ي")        // Normalize Yeh
+}
+
     const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
         const cleanUsername = username.trim()
         const cleanPassword = password.trim()
+        const normalizedInput = normalizeArabic(cleanUsername)
 
         // 1. Hardcoded Emergency Admin
-        if (role === "admin" && cleanUsername === "admin" && cleanPassword === "admin") {
+        if (role === "admin" && normalizedInput === "admin" && cleanPassword === "admin") {
             const user: User = { id: "admin", name: "المشرف العام", role: "admin", username: "admin", permissions: ["orders", "products", "customers", "settings", "chat", "sales"] }
             setCurrentUser(user)
             localStorage.setItem("ysg_user", JSON.stringify(user))
@@ -650,7 +662,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Staff / Admin login from database
         if (role === "admin" || role === "staff") {
-            const member = staff.find(s => s.username === cleanUsername && s.password === cleanPassword)
+            const member = staff.find(s => normalizeArabic(s.username) === normalizedInput && s.password.trim() === cleanPassword)
             if (member) {
                 const user: User = { 
                     id: member.id, 
@@ -672,7 +684,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // 3. Customer login
         if (role === "customer") {
             // Fallback guest/test account
-            if (cleanUsername === "b1" && cleanPassword === "123") {
+            if (normalizedInput === "b1" && cleanPassword === "123") {
                 const user: User = { id: "b1", name: "عميل b1", role: "customer", username: "b1" }
                 setCurrentUser(user)
                 localStorage.setItem("ysg_user", JSON.stringify(user))
@@ -683,7 +695,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return true
             }
 
-            const customer = customers.find(c => c.username === cleanUsername && c.password === cleanPassword)
+            const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password.trim() === cleanPassword)
             if (customer) {
                 const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
                 setCurrentUser(user)
