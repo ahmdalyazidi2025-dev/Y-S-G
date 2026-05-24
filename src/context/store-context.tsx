@@ -279,7 +279,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
             const savedUser = localStorage.getItem("ysg_user")
-            return savedUser ? JSON.parse(savedUser) : null
+            try {
+                return savedUser ? JSON.parse(savedUser) : null
+            } catch (e) {
+                localStorage.removeItem("ysg_user")
+                return null
+            }
         }
         return null
     })

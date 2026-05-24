@@ -13,20 +13,32 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
     useEffect(() => {
         // Wait for context to load user from localStorage
         const checkAuth = async () => {
-            // Give a tiny bit of time for the Provider's useEffect to run
-            await new Promise(resolve => setTimeout(resolve, 50))
+            try {
+                // Give a tiny bit of time for the Provider's useEffect to run
+                await new Promise(resolve => setTimeout(resolve, 50))
 
-            const savedUser = localStorage.getItem("ysg_user")
-            const user = savedUser ? JSON.parse(savedUser) : currentUser
+                const savedUser = localStorage.getItem("ysg_user")
+                let user = currentUser
+                if (savedUser) {
+                    try {
+                        user = JSON.parse(savedUser)
+                    } catch (e) {
+                        localStorage.removeItem("ysg_user")
+                    }
+                }
 
-            if (!user) {
+                if (!user) {
+                    router.push(`/login?role=${role}`)
+                } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
+                    router.push("/customer")
+                } else if (role === "customer" && user.role !== "customer") {
+                    router.push(user.role === "admin" || user.role === "staff" ? "/admin" : "/login?role=customer")
+                } else {
+                    setIsChecking(false)
+                }
+            } catch (error) {
+                console.error("Auth check failed:", error)
                 router.push(`/login?role=${role}`)
-            } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
-                router.push("/customer")
-            } else if (role === "customer" && user.role !== "customer") {
-                router.push(user.role === "admin" || user.role === "staff" ? "/admin" : "/login?role=customer")
-            } else {
-                setIsChecking(false)
             }
         }
 
