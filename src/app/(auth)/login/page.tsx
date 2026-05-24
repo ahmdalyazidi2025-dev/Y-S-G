@@ -8,16 +8,23 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, User } from "lucide-react"
 import { useStore } from "@/context/store-context"
+import { useEffect } from "react"
 
 function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const { login } = useStore()
+    const { login, currentUser } = useStore()
     const baseRole = (searchParams.get("role") as "admin" | "staff" | "customer") || "customer"
     const [loginType, setLoginType] = useState<"admin" | "staff" | "customer">(baseRole)
     const [isLoading, setIsLoading] = useState(false)
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
+
+    useEffect(() => {
+        if (currentUser) {
+            router.push(currentUser.role === "admin" || currentUser.role === "staff" ? "/admin" : "/customer")
+        }
+    }, [currentUser, router])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()

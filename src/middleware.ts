@@ -29,13 +29,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Prevent logged-in users from hitting login page again
-  if (pathname === '/login' && token) {
-    const url = request.nextUrl.clone()
-    url.pathname = (role === 'admin' || role === 'staff') ? '/admin' : '/customer'
-    return NextResponse.redirect(url)
-  }
-
   return NextResponse.next()
 }
 
