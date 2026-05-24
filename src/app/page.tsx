@@ -33,7 +33,7 @@ function LandingContent() {
   }, [showContent, isFromLogout, isAssembling]);
 
   return (
-    <main className="min-h-[100dvh] bg-[#080b12] overflow-hidden relative">
+    <main className="min-h-[100dvh] bg-background text-foreground transition-colors duration-300 overflow-hidden relative">
       <AnimatePresence mode="wait">
         {!showContent ? (
           /* Cinematic Splash Screen */
@@ -43,7 +43,7 @@ function LandingContent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
             transition={{ duration: 0.8 }}
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#080b12]"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background"
           >
             <div className="relative">
               <motion.div
@@ -118,7 +118,7 @@ function LandingContent() {
                   />
                 </div>
                 <div className="text-center space-y-1">
-                  <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">YSG SALES</h1>
+                  <h1 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">YSG SALES</h1>
                   <p className="text-[9px] md:text-[10px] text-primary/80 uppercase tracking-[0.4em] font-bold">The Future of Distribution</p>
                 </div>
               </motion.div>
@@ -158,7 +158,7 @@ function LandingContent() {
                 <div className="flex justify-center">
                   <Link
                     href="/login?role=admin"
-                    className="text-[8px] font-bold text-white/5 hover:text-white transition-all uppercase tracking-[0.4em] p-2"
+                    className="text-[8px] font-bold text-foreground/5 hover:text-foreground transition-all uppercase tracking-[0.4em] p-2"
                   >
                     Control System
                   </Link>
@@ -183,7 +183,7 @@ function LandingContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#080b12]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <LandingContent />
     </Suspense>
   )

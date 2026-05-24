@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { useStore } from "@/context/store-context"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const NAV_ITEMS = [
     { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
@@ -113,7 +114,11 @@ export function AdminSidebar() {
             </nav>
 
             {/* Bottom Section */}
-            <div className="pt-6 border-t border-white/5">
+            <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+                <div className="flex justify-between items-center px-4">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">المظهر</span>
+                    <ThemeToggle />
+                </div>
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors group"

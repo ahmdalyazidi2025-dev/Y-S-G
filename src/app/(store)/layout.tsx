@@ -14,6 +14,8 @@ import { hapticFeedback } from "@/lib/haptics"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Footer } from "@/components/store/footer"
 
+import { ThemeToggle } from "@/components/theme-toggle"
+
 export default function StoreLayout({
     children,
 }: {
@@ -44,7 +46,7 @@ export default function StoreLayout({
 
     return (
         <ProtectedRoute role="customer">
-            <div className="min-h-screen bg-[#101c26] text-white flex flex-col items-center overflow-x-hidden relative">
+            <div className="min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col items-center overflow-x-hidden relative">
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
                     <main className="flex-1 px-4 pt-6 w-full pb-32">
                         <div className="flex justify-between items-center mb-10">
@@ -60,17 +62,20 @@ export default function StoreLayout({
                                     />
                                 </div>
                                 <div className="hidden sm:block">
-                                    <h1 className="text-sm font-black tracking-widest text-white uppercase mb-0.5">YSG SALES</h1>
+                                    <h1 className="text-sm font-black tracking-widest text-foreground uppercase mb-0.5">YSG SALES</h1>
                                     <p className="text-[8px] text-primary font-bold tracking-[0.3em] uppercase opacity-70">Client Management Hub</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="px-5 py-2.5 bg-red-500/10 rounded-2xl text-red-400 hover:bg-red-400/20 transition-all border border-red-500/20 flex items-center gap-2 font-bold text-xs"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span className="hidden sm:inline">تسجيل الخروج</span>
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <ThemeToggle />
+                                <button
+                                    onClick={handleLogout}
+                                    className="px-5 py-2.5 bg-red-500/10 rounded-2xl text-red-400 hover:bg-red-400/20 transition-all border border-red-500/20 flex items-center gap-2 font-bold text-xs"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span className="hidden sm:inline">تسجيل الخروج</span>
+                                </button>
+                            </div>
                         </div>
                         {children}
                     </main>
