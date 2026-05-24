@@ -662,7 +662,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
 
         // 2. Staff / Admin login from database
         if (role === "admin" || role === "staff") {
-            const member = staff.find(s => normalizeArabic(s.username) === normalizedInput && s.password.trim() === cleanPassword)
+            const member = staff.find(s => normalizeArabic(s.username) === normalizedInput && s.password && s.password.trim() === cleanPassword)
             if (member) {
                 const user: User = { 
                     id: member.id, 
@@ -695,7 +695,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
                 return true
             }
 
-            const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password.trim() === cleanPassword)
+            const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password && c.password.trim() === cleanPassword)
             if (customer) {
                 const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
                 setCurrentUser(user)
