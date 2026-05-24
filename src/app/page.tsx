@@ -101,11 +101,6 @@ function LandingContent() {
             transition={{ duration: 1 }}
             className="flex flex-col items-center justify-center min-h-[100dvh] p-4 relative"
           >
-            {/* Floating theme toggle */}
-            <div className="absolute top-6 left-6 z-50">
-              <ThemeToggle />
-            </div>
-
             <div className="z-10 flex flex-col items-center gap-8 md:gap-12 w-full max-w-sm">
               <motion.div
                 initial={{ y: -30, opacity: 0 }}
@@ -144,13 +139,13 @@ function LandingContent() {
                       transition={{ type: "spring", damping: 20 }}
                     >
                       <Link href="/login?role=customer" className="group block">
-                        <div className="relative w-full h-56 md:h-64 glass-card flex flex-col items-center justify-center gap-6 transition-all border border-slate-200/60 group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/5">
+                        <div className="relative w-full h-56 md:h-64 glass-card flex flex-col items-center justify-center gap-6 transition-all border border-slate-200/60 dark:border-white/10 group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/5">
                           <div className="p-5 rounded-[2rem] bg-primary/5 text-primary group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
                             <ShoppingBag className="w-10 h-10 md:w-12 md:h-12" />
                           </div>
                           <div className="text-center">
-                            <span className="text-2xl md:text-3xl font-black text-slate-800 block">دخول العملاء</span>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.25em]">Customer Portal</span>
+                            <span className="text-2xl md:text-3xl font-black text-foreground block">دخول العملاء</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-[0.25em]">Customer Portal</span>
                           </div>
                           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-40 transition-opacity">
                             <Users className="w-5 h-5 text-primary" />
@@ -161,10 +156,13 @@ function LandingContent() {
                   )}
                 </AnimatePresence>
 
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-4 justify-center mt-4">
+                  <div className="scale-90">
+                    <ThemeToggle />
+                  </div>
                   <Link
                     href="/login?role=admin"
-                    className="text-[8px] font-bold text-foreground/5 hover:text-foreground transition-all uppercase tracking-[0.4em] p-2"
+                    className="text-[8px] font-bold text-foreground/20 hover:text-foreground transition-all uppercase tracking-[0.4em] p-2"
                   >
                     Control System
                   </Link>

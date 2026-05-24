@@ -43,35 +43,35 @@
 }
 
 .dark {
-  color-scheme: light;
-  /* Dark Mode overridden to match Light Mode */
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
+  color-scheme: dark;
+  /* Dark Mode - Deep Space */
+  --background: 222 47% 4%; /* Deep Void */
+  --foreground: 210 40% 98%; /* Soft White */
 
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card: 222 47% 6%;
+  --card-foreground: 210 40% 98%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover: 222 47% 6%;
+  --popover-foreground: 210 40% 98%;
 
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
+  --primary: 217 91% 60%; /* Neon Blue */
+  --primary-foreground: 222 47% 11.2%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222 47% 11.2%;
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 222 47% 11%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 210 40% 98%;
 
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222 47% 11.2%;
+  --accent: 217 32% 17%;
+  --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 62% 30%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214 32% 85%;
-  --input: 214 32% 85%;
-  --ring: 221 83% 53%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 224 76% 48%;
 }
 
 @theme {
@@ -149,9 +149,9 @@
   }
 
   .dark .glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.04);
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
   }
 
   /* Visual Polish Utilities */
@@ -177,9 +177,9 @@
   }
 
   .dark .glass-card:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(0, 0, 0, 0.15);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
   }
 
   .bg-noise {

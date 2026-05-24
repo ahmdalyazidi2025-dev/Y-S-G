@@ -21,7 +21,7 @@ export function Footer() {
     }
 
     return (
-        <footer className="bg-slate-50/50 text-slate-500 pt-16 pb-32 border-t border-slate-200/80">
+        <footer className="bg-slate-50/50 dark:bg-[#0f171e] text-slate-500 dark:text-slate-400 pt-16 pb-32 border-t border-slate-200/80 dark:border-white/5 transition-colors duration-300">
             <div className="container mx-auto px-6">
                 {/* Top Features */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
@@ -52,7 +52,7 @@ export function Footer() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
                     {/* About Section */}
                     <div className="lg:col-span-4 space-y-6">
-                        <h3 className="text-slate-800 font-bold text-xl border-r-4 border-primary pr-4">
+                        <h3 className="text-slate-800 dark:text-white font-bold text-xl border-r-4 border-primary pr-4">
                             {storeSettings.aboutTitle}
                         </h3>
                         <p className="text-sm leading-relaxed text-slate-500 text-right">
@@ -62,7 +62,7 @@ export function Footer() {
 
                     {/* Quick Links */}
                     <div className="lg:col-span-3 lg:pr-12 space-y-6">
-                        <h3 className="text-slate-800 font-bold text-lg border-r-4 border-blue-500 pr-4">روابط مهمة</h3>
+                        <h3 className="text-slate-800 dark:text-white font-bold text-lg border-r-4 border-blue-500 pr-4">روابط مهمة</h3>
                         <ul className="space-y-3 text-sm">
                             <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerTerms}</Link></li>
                             <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerPrivacy}</Link></li>
@@ -72,14 +72,14 @@ export function Footer() {
 
                     {/* Newsletter */}
                     <div className="lg:col-span-5 space-y-6">
-                        <h3 className="text-slate-800 font-bold text-lg border-r-4 border-yellow-500 pr-4">النشرة الإخبارية</h3>
+                        <h3 className="text-slate-800 dark:text-white font-bold text-lg border-r-4 border-yellow-500 pr-4">النشرة الإخبارية</h3>
                         <p className="text-sm text-slate-500">سجل الآن للحصول على التحديثات حول العروض الترويجية والقسائم.</p>
                         <form onSubmit={handleSubscribe} className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
                                     type="email"
                                     placeholder="بريدك الإلكتروني..."
-                                    className="bg-slate-100 border-slate-200 rounded-xl h-12 text-right pl-4 pr-4 text-slate-800 placeholder:text-slate-400 focus:bg-white"
+                                    className="bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5 rounded-xl h-12 text-right pl-4 pr-4 text-slate-800 dark:text-white placeholder:text-slate-400 focus:bg-white dark:focus:bg-black/40"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
@@ -92,7 +92,7 @@ export function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-8 border-t border-slate-200/80 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="pt-8 border-t border-slate-200/80 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 transition-colors">
                     {/* Social Buttons - Show only if exists */}
                     <div className="flex gap-3">
                         {storeSettings.socialFacebook && (
@@ -123,10 +123,10 @@ export function Footer() {
 
                     {/* Contact Info */}
                     <div className="flex flex-col md:flex-row gap-6 md:gap-12 items-center">
-                        <div className="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200/60">
+                        <div className="flex items-center gap-3 bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-2xl border border-slate-200/60 dark:border-white/5">
                             <div className="text-right">
                                 <p className="text-[10px] text-slate-500">الخط الساخن 24/7</p>
-                                <p className="text-sm font-bold text-slate-800 tracking-widest">{storeSettings.contactPhone}</p>
+                                <p className="text-sm font-bold text-slate-800 dark:text-white tracking-widest">{storeSettings.contactPhone}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Phone className="w-5 h-5" />
@@ -156,7 +156,7 @@ function FeatureBox({ icon, title, desc, iconColor, bgColor }: { icon: React.Rea
                 {icon}
             </div>
             <div className="text-right">
-                <h4 className="text-slate-800 font-bold mb-1">{title}</h4>
+                <h4 className="text-slate-800 dark:text-white font-bold mb-1">{title}</h4>
                 <p className="text-xs text-slate-500">{desc}</p>
             </div>
         </div>
@@ -170,8 +170,8 @@ function SocialButton({ icon, href, isWhatsapp }: { icon: React.ReactNode, href:
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 transition-all hover:scale-110",
-                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-slate-100 text-slate-600 hover:bg-primary hover:text-white"
+                "w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/5 transition-all hover:scale-110",
+                isWhatsapp ? "bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white" : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-primary hover:text-white dark:hover:bg-primary"
             )}
         >
             {icon}
