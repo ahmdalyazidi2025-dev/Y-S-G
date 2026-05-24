@@ -633,40 +633,79 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const login = async (username: string, password: string, role: "admin" | "customer" | "staff"): Promise<boolean> => {
-        if (role === "admin" && username === "admin" && password === "admin") {
+        const cleanUsername = username.trim()
+        const cleanPassword = password.trim()
+
+        // 1. Hardcoded Emergency Admin
+        if (role === "admin" && cleanUsername === "admin" && cleanPassword === "admin") {
             const user: User = { id: "admin", name: "المشرف العام", role: "admin", username: "admin", permissions: ["orders", "products", "customers", "settings", "chat", "sales"] }
-            setCurrentUser(user); localStorage.setItem("ysg_user", JSON.stringify(user))
+            setCurrentUser(user)
+            localStorage.setItem("ysg_user", JSON.stringify(user))
+            
+            // Set cookies for middleware
+            document.cookie = `firebase-auth-token=emergency-admin-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+            document.cookie = `user-role=admin; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
             return true
         }
 
-        if (role === "staff") {
-            const member = staff.find(s => s.username === username && s.password === password)
+        // 2. Staff / Admin login from database
+        if (role === "admin" || role === "staff") {
+            const member = staff.find(s => s.username === cleanUsername && s.password === cleanPassword)
             if (member) {
-                const user: User = { id: member.id, name: member.name, role: "staff", username: member.username, permissions: member.permissions }
-                setCurrentUser(user); localStorage.setItem("ysg_user", JSON.stringify(user))
+                const user: User = { 
+                    id: member.id, 
+                    name: member.name, 
+                    role: member.role as "admin" | "staff", 
+                    username: member.username, 
+                    permissions: member.permissions 
+                }
+                setCurrentUser(user)
+                localStorage.setItem("ysg_user", JSON.stringify(user))
+                
+                // Set cookies for middleware
+                document.cookie = `firebase-auth-token=staff-token-${member.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                document.cookie = `user-role=${member.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                 return true
             }
         }
 
+        // 3. Customer login
         if (role === "customer") {
-            if (username === "b1" && password === "123") {
+            // Fallback guest/test account
+            if (cleanUsername === "b1" && cleanPassword === "123") {
                 const user: User = { id: "b1", name: "عميل b1", role: "customer", username: "b1" }
-                setCurrentUser(user); localStorage.setItem("ysg_user", JSON.stringify(user))
+                setCurrentUser(user)
+                localStorage.setItem("ysg_user", JSON.stringify(user))
+                
+                // Set cookies for middleware
+                document.cookie = `firebase-auth-token=customer-b1-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                 return true
             }
-            const customer = customers.find(c => c.username === username && c.password === password)
+
+            const customer = customers.find(c => c.username === cleanUsername && c.password === cleanPassword)
             if (customer) {
                 const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
-                setCurrentUser(user); localStorage.setItem("ysg_user", JSON.stringify(user))
+                setCurrentUser(user)
+                localStorage.setItem("ysg_user", JSON.stringify(user))
+                
+                // Set cookies for middleware
+                document.cookie = `firebase-auth-token=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                 return true
             }
         }
+
         toast.error("خطأ في البيانات")
         return false
     }
 
     const logout = () => {
-        setCurrentUser(null); localStorage.removeItem("ysg_user"); setCart([])
+        setCurrentUser(null)
+        localStorage.removeItem("ysg_user")
+        setCart([])
+        document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
         toast.info("تم تسجيل الخروج")
     }
 
