@@ -7,6 +7,7 @@ import { Users, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { useSearchParams } from "next/navigation";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function LandingContent() {
   const searchParams = useSearchParams();
@@ -100,6 +101,11 @@ function LandingContent() {
             transition={{ duration: 1 }}
             className="flex flex-col items-center justify-center min-h-[100dvh] p-4 relative"
           >
+            {/* Floating theme toggle */}
+            <div className="absolute top-6 left-6 z-50">
+              <ThemeToggle />
+            </div>
+
             <div className="z-10 flex flex-col items-center gap-8 md:gap-12 w-full max-w-sm">
               <motion.div
                 initial={{ y: -30, opacity: 0 }}
