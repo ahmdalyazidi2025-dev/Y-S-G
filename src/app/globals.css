@@ -1,108 +1,35 @@
 @import "tailwindcss";
-@plugin "tailwindcss-animate";
 
 @source "../../src";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
-  --font-inter: var(--font-inter);
-}
-
-:root {
-  /* Light Mode - Human-Eye Friendly (High Contrast) */
-  --background: 0 0% 100%; /* Pure White */
-  --foreground: 222 47% 11%; /* Deep Slate (Almost Black) */
-
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-
-  --primary: 221 83% 53%; /* Royal Blue */
-  --primary-foreground: 210 40% 98%;
-
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222 47% 11.2%;
-
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 222 47% 11%; /* Deep Slate (Almost Black) - Matched to Foreground */
-
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222 47% 11.2%;
-
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 214 32% 85%; /* Visible Structure (Slate 200) */
-  --input: 214 32% 85%;
-  --ring: 221 83% 53%;
-
-  --radius: 0.5rem;
-}
-
-.dark {
-  color-scheme: dark; /* Ensures native UI elements (calendar, scrollbars) are dark */
-  /* Dark Mode - Deep Space */
-  --background: 222 47% 4%; /* Deep Void */
-  --foreground: 210 40% 98%; /* Soft White */
-
-  --card: 222 47% 6%;
-  --card-foreground: 210 40% 98%;
-
-  --popover: 222 47% 6%;
-  --popover-foreground: 210 40% 98%;
-
-  --primary: 217 91% 60%; /* Neon Blue */
-  --primary-foreground: 222 47% 11.2%;
-
-  --secondary: 217 32% 17%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 217 32% 17%;
-  --muted-foreground: 210 40% 98%;
-
-  --accent: 217 32% 17%;
-  --accent-foreground: 210 40% 98%;
-
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 217 32% 17%;
-  --input: 217 32% 17%;
-  --ring: 224 76% 48%;
-}
-
-@theme {
-  --color-background: hsl(var(--background));
-  --radius: var(--radius);
-  --color-foreground: hsl(var(--foreground));
+  --color-background: hsl(222 47% 4%);
+  --color-foreground: hsl(210 40% 98%);
   
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card: hsla(222, 47%, 7%, 0.7);
+  --color-card-foreground: hsl(210 40% 98%);
   
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover: hsl(222 47% 11%);
+  --color-popover-foreground: hsl(210 40% 98%);
   
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary: #3b82f6;
+  --color-primary-foreground: #ffffff;
   
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary: hsl(217 32% 17%);
+  --color-secondary-foreground: hsl(210 40% 98%);
   
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted: hsl(217 32% 17%);
+  --color-muted-foreground: hsl(215 20.2% 65.1%);
   
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: #8b5cf6;
+  --color-accent-foreground: hsl(210 40% 98%);
   
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(210 40% 98%);
   
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-input: rgba(255, 255, 255, 0.05);
+  --color-ring: #3b82f6;
 
   @keyframes float {
     0%, 100% { transform: translateY(0) scale(1); }
@@ -121,127 +48,65 @@
 }
 
 @layer utilities {
-  /* Light Mode Glass - Crisp & Defined */
   .glass {
-    background: rgba(255, 255, 255, 0.7); /* Increased transparency for better overlay contrast */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 0, 0, 0.08); /* Clear border */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Dark Mode Glass - Deep & Neon */
-  .dark .glass {
-    background: rgba(10, 10, 10, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: none;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
-
-  /* Card Glass Variants */
   .glass-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0,0,0, 0.08);
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+    background: rgba(13, 17, 23, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .dark .glass-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
   }
-
-  /* Visual Polish Utilities */
-  .glow-primary {
-    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.5);
-  }
-  
-  .glow-sm {
-    box-shadow: 0 0 10px -3px hsl(var(--primary) / 0.3);
-  }
-
-  .border-gradient {
-    border-image: linear-gradient(to right, transparent, hsl(var(--border)), transparent) 1;
-  }
-
-
-  .glass-card:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(0, 0, 0, 0.15);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px); /* Add subtle lift */
-    transition: all 0.3s ease;
-  }
-
-  .dark .glass-card:hover {
-    background: rgba(30, 41, 59, 0.6);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
-  }
-
-  .bg-noise {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: -1;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  }
-
-  .nebula-glow {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(100px);
-    opacity: 0.4;
-    pointer-events: none;
-    z-index: -2;
-    animation: float 20s infinite ease-in-out;
-  }
-  
-  /* Shimmer Effect */
-  .shimmer-bg {
-    background: linear-gradient(90deg, 
-      rgba(255,255,255,0) 0%, 
-      rgba(255,255,255,0.05) 50%, 
-      rgba(255,255,255,0) 100%);
-    background-size: 200% 100%;
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
     animation: shimmer 2s infinite;
   }
-}
 
-/* Fix Date Input RTL Issues - Native Fallback */
-@layer base {
-  input[type="date"],
-  input[type="datetime-local"], 
-  input[type="month"], 
-  input[type="time"] {
-    text-align: right; 
+  .glass-card:hover {
+    background: rgba(13, 17, 23, 0.85);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.1);
   }
-}
-
-/* Disable tap highlight on mobile */
-* {
-    -webkit-tap-highlight-color: transparent;
+  .nebula-glow {
+    position: fixed;
+    width: 60vw;
+    height: 60vw;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+    animation: float 20s infinite ease-in-out;
+  }
 }
 
 body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background-color: #080b12;
+    color: #f8fafc;
     overflow-x: hidden;
     padding-bottom: env(safe-area-inset-bottom);
-    width: 100%;
-}
-
-/* Global Selection Color */
-::selection {
-  background: hsl(var(--primary) / 0.3);
-  color: hsl(var(--foreground)); /* Or keeping text color natural if preferred */
 }
 
 ::-webkit-scrollbar {
@@ -251,15 +116,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-}
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
