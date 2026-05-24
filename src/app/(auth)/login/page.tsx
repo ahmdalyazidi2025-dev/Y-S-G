@@ -58,28 +58,28 @@ function LoginForm() {
     }
 
     return (
-        <Card className="glass-card border-none text-foreground">
+        <Card className="bg-white/80 border border-slate-200/80 rounded-[2rem] shadow-xl text-slate-900">
             <CardHeader className="space-y-1 text-center">
-                <CardTitle className="text-2xl font-bold tracking-tight">
+                <CardTitle className="text-2xl font-black tracking-tight">
                     {loginType === 'admin' ? 'تسجيل دخول الإدارة' : loginType === 'staff' ? 'دخول الموظفين' : 'تسجيل دخول العملاء'}
                 </CardTitle>
-                <CardDescription className="text-slate-400 dark:text-slate-500">
+                <CardDescription className="text-slate-500">
                     الرجاء إدخال بيانات الدخول للمتابعة
                 </CardDescription>
 
                 {baseRole === 'admin' && (
-                    <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl mt-4 max-w-[200px] mx-auto border border-slate-200 dark:border-white/5">
+                    <div className="flex bg-slate-100 p-1 rounded-xl mt-4 max-w-[200px] mx-auto border border-slate-200">
                         <button
                             type="button"
                             onClick={() => setLoginType("admin")}
-                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${loginType === 'admin' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${loginType === 'admin' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             مدير
                         </button>
                         <button
                             type="button"
                             onClick={() => setLoginType("staff")}
-                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${loginType === 'staff' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${loginType === 'staff' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             موظف
                         </button>
@@ -89,13 +89,13 @@ function LoginForm() {
             <form onSubmit={handleLogin}>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="username" className="text-foreground font-bold">اسم المستخدم</Label>
+                        <Label htmlFor="username" className="text-slate-700 font-bold">اسم المستخدم</Label>
                         <div className="relative">
-                            <User className="absolute right-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                            <User className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
                             <Input
                                 id="username"
                                 placeholder="اسم المستخدم"
-                                className="bg-slate-100/50 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:ring-primary/50"
+                                className="bg-slate-100/70 border-slate-200/80 pr-10 text-right text-slate-800 placeholder:text-slate-400 focus-visible:ring-primary/50 rounded-xl h-12"
                                 required
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -103,14 +103,14 @@ function LoginForm() {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="password" className="text-foreground font-bold">كلمة المرور</Label>
+                        <Label htmlFor="password" className="text-slate-700 font-bold">كلمة المرور</Label>
                         <div className="relative">
-                            <Lock className="absolute right-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
+                            <Lock className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
                             <Input
                                 id="password"
                                 type="password"
                                 placeholder="••••••••"
-                                className="bg-slate-100/50 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-foreground placeholder:text-slate-400 dark:placeholder:text-slate-500 focus-visible:ring-primary/50"
+                                className="bg-slate-100/70 border-slate-200/80 pr-10 text-right text-slate-800 placeholder:text-slate-400 focus-visible:ring-primary/50 rounded-xl h-12"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -119,7 +119,7 @@ function LoginForm() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold" disabled={isLoading}>
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl" disabled={isLoading}>
                         {isLoading ? "جاري الدخول..." : "دخول"}
                     </Button>
                 </CardFooter>
