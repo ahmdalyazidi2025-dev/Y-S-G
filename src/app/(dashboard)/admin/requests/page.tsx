@@ -15,6 +15,22 @@ const REQUEST_STATUS = {
     rejected: { label: "مرفوض", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
 }
 
+const formatRequestDate = (d: any, format: "date" | "datetime" = "datetime"): string => {
+    if (!d) return ""
+    try {
+        let dateObj: Date
+        if (d instanceof Date) dateObj = d
+        else if (d && typeof d === 'object' && 'toDate' in d && typeof d.toDate === 'function') dateObj = d.toDate()
+        else if (d && typeof d === 'object' && 'seconds' in d) dateObj = new Date(d.seconds * 1000)
+        else dateObj = new Date(d)
+        
+        if (isNaN(dateObj.getTime())) return ""
+        return format === "date" ? dateObj.toLocaleDateString('ar-SA') : dateObj.toLocaleString('ar-SA')
+    } catch {
+        return ""
+    }
+}
+
 export default function AdminRequestsPage() {
     const { productRequests, updateProductRequestStatus } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
@@ -38,7 +54,7 @@ export default function AdminRequestsPage() {
                     </div>
                 ) : (
                     productRequests.map((request) => {
-                        const status = REQUEST_STATUS[request.status]
+                        const status = REQUEST_STATUS[request.status || "pending"]
                         return (
                             <div
                                 key={request.id}
@@ -62,14 +78,14 @@ export default function AdminRequestsPage() {
                                 </div>
                                 <div className="flex-1 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-bold text-white text-sm">{request.customerName}</h3>
+                                        <h3 className="font-bold text-white text-sm">{request.customerName || "عميل غير معروف"}</h3>
                                         <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
                                             {status.label}
                                         </span>
                                     </div>
                                     <p className="text-[10px] text-slate-400 line-clamp-2">{request.description || "بدون وصف"}</p>
                                     <div className="flex items-center justify-between text-[9px] text-slate-500">
-                                        <span>{request.createdAt.toLocaleDateString('ar-SA')}</span>
+                                        <span>{formatRequestDate(request.createdAt, "date")}</span>
                                         <span className="font-mono">#{request.id}</span>
                                     </div>
                                 </div>
@@ -126,14 +142,14 @@ export default function AdminRequestsPage() {
                                             <User className="w-3 h-3" />
                                             العميل
                                         </div>
-                                        <p className="font-bold text-white text-xs">{selectedRequest.customerName}</p>
+                                        <p className="font-bold text-white text-xs">{selectedRequest.customerName || "عميل غير معروف"}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-slate-400 text-[10px]">
                                             <Calendar className="w-3 h-3" />
                                             التاريخ
                                         </div>
-                                        <p className="font-bold text-white text-xs">{selectedRequest.createdAt.toLocaleString('ar-SA')}</p>
+                                        <p className="font-bold text-white text-xs">{formatRequestDate(selectedRequest.createdAt, "datetime")}</p>
                                     </div>
                                 </div>
 

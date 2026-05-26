@@ -22,6 +22,19 @@ const STATUS_CONFIG = {
     canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
 }
 
+const formatOrderDate = (d: any): string => {
+    if (!d) return ""
+    try {
+        if (d instanceof Date) return d.toLocaleString('ar-SA')
+        if (d && typeof d === 'object' && 'toDate' in d && typeof d.toDate === 'function') return d.toDate().toLocaleString('ar-SA')
+        if (d && typeof d === 'object' && 'seconds' in d) return new Date(d.seconds * 1000).toLocaleString('ar-SA')
+        const parsed = new Date(d)
+        return isNaN(parsed.getTime()) ? "" : parsed.toLocaleString('ar-SA')
+    } catch {
+        return ""
+    }
+}
+
 export default function AdminOrdersPage() {
     const { orders, updateOrderStatus } = useStore()
     const [filter, setFilter] = useState<string>("all")
@@ -40,11 +53,11 @@ export default function AdminOrdersPage() {
 
     const handleShareWhatsApp = (order: Order) => {
         const text = `*طلب جديد #${order.id}*\n\n` +
-            `العميل: ${order.customerName}\n` +
-            `التاريخ: ${order.createdAt.toLocaleString('ar-SA')}\n\n` +
+            `العميل: ${order.customerName || "عميل غير معروف"}\n` +
+            `التاريخ: ${formatOrderDate(order.createdAt)}\n\n` +
             `*المنتجات:*\n` +
-            order.items.map(item => `- ${item.name} (${item.quantity} x ${item.price})`).join('\n') +
-            `\n\n*الإجمالي: ${order.total.toFixed(2)} ر.س*`
+            (order.items || []).map(item => `- ${item.name || "منتج"} (${(item.quantity || 0)} x ${(item.price || 0)})`).join('\n') +
+            `\n\n*الإجمالي: ${(order.total || 0).toFixed(2)} ر.س*`
 
         const url = `https://wa.me/?text=${encodeURIComponent(text)}`
         window.open(url, '_blank')
@@ -58,8 +71,18 @@ export default function AdminOrdersPage() {
         else toast.error("فشل في تجهيز الفاتورة")
     }
 
-    const filteredOrders = orders.filter(o => {
-        const date = new Date(o.createdAt)
+    const filteredOrders = (orders || []).filter(o => {
+        if (!o) return false
+        
+        let date: Date
+        const rawDate = o.createdAt
+        if (rawDate instanceof Date) date = rawDate
+        else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate && typeof (rawDate as any).toDate === 'function') date = (rawDate as any).toDate()
+        else if (rawDate && typeof rawDate === 'object' && 'seconds' in rawDate) date = new Date((rawDate as any).seconds * 1000)
+        else date = new Date(rawDate || new Date())
+
+        if (isNaN(date.getTime())) date = new Date()
+
         const now = new Date()
 
         let matchesDate = true
@@ -79,12 +102,12 @@ export default function AdminOrdersPage() {
 
         const matchesStatus = filter === "all" || o.status === filter
         const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
-        const matchesName = o.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesName = (o.customerName || "").toLowerCase().includes(searchQuery.toLowerCase())
 
         return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName
     })
 
-    const regions = Array.from(new Set(orders.map(o => o.customerLocation).filter(Boolean))) as string[]
+    const regions = Array.from(new Set((orders || []).map(o => o?.customerLocation).filter(Boolean))) as string[]
 
     return (
         <div className="space-y-6">
@@ -176,7 +199,7 @@ export default function AdminOrdersPage() {
                     </div>
                 ) : (
                     filteredOrders.map((order) => {
-                        const status = STATUS_CONFIG[order.status]
+                        const status = STATUS_CONFIG[order.status || "pending"]
                         return (
                             <div
                                 key={order.id}
@@ -188,14 +211,14 @@ export default function AdminOrdersPage() {
                                         <status.icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <h3 className="font-bold text-white text-sm">#{order.id} - {order.customerName}</h3>
-                                        <p className="text-[10px] text-slate-500">{order.createdAt.toLocaleString('ar-SA')}</p>
+                                        <h3 className="font-bold text-white text-sm">#{order.id} - {order.customerName || "عميل غير معروف"}</h3>
+                                        <p className="text-[10px] text-slate-500">{formatOrderDate(order.createdAt)}</p>
                                     </div>
                                 </div>
                                 <div className="text-left flex items-center gap-4">
                                     <div className="space-y-0.5">
-                                        <p className="text-xs font-bold text-white">{order.total.toFixed(2)} ر.س</p>
-                                        <p className="text-[10px] text-slate-500">{order.items.length} منتجات</p>
+                                        <p className="text-xs font-bold text-white">{(order.total || 0).toFixed(2)} ر.س</p>
+                                        <p className="text-[10px] text-slate-500">{(order.items || []).length} منتجات</p>
                                     </div>
                                     <ChevronLeft className="w-4 h-4 text-slate-600" />
                                 </div>
@@ -227,8 +250,8 @@ export default function AdminOrdersPage() {
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
                                         <h2 className="text-xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
-                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status].bg, STATUS_CONFIG[selectedOrder.status].color)}>
-                                            {STATUS_CONFIG[selectedOrder.status].label}
+                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status || "pending"].bg, STATUS_CONFIG[selectedOrder.status || "pending"].color)}>
+                                            {STATUS_CONFIG[selectedOrder.status || "pending"].label}
                                         </span>
                                     </div>
                                 </div>
@@ -272,29 +295,29 @@ export default function AdminOrdersPage() {
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <p className="font-bold text-white text-sm">{selectedOrder.customerName}</p>
+                                    <p className="font-bold text-white text-sm">{selectedOrder.customerName || "عميل غير معروف"}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-slate-400 text-xs">
                                         <Calendar className="w-3 h-3" />
                                         التاريخ
                                     </div>
-                                    <p className="font-bold text-white text-sm">{selectedOrder.createdAt.toLocaleString('ar-SA')}</p>
+                                    <p className="font-bold text-white text-sm">{formatOrderDate(selectedOrder.createdAt)}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-3 mb-8">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase">قائمة المنتجات</h4>
-                                {selectedOrder.items.map((item, idx) => (
+                                {(selectedOrder.items || []).map((item, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-black/40 rounded flex items-center justify-center text-xs">📦</div>
                                             <div>
-                                                <p className="text-sm font-bold text-white">{item.name}</p>
-                                                <p className="text-[10px] text-slate-500">{item.quantity} x {item.price} ر.س</p>
+                                                <p className="text-sm font-bold text-white">{item.name || "منتج"}</p>
+                                                <p className="text-[10px] text-slate-500">{(item.quantity || 0)} x {(item.price || 0)} ر.س</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm font-bold text-primary">{(item.quantity * item.price).toFixed(2)} ر.س</p>
+                                        <p className="text-sm font-bold text-primary">{((item.quantity || 0) * (item.price || 0)).toFixed(2)} ر.س</p>
                                     </div>
                                 ))}
                                 <div className="flex justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
@@ -302,7 +325,7 @@ export default function AdminOrdersPage() {
                                         <CreditCard className="w-4 h-4 text-primary" />
                                         الإجمالي
                                     </div>
-                                    <p className="text-lg font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</p>
+                                    <p className="text-lg font-bold text-primary">{(selectedOrder.total || 0).toFixed(2)} ر.س</p>
                                 </div>
                             </div>
 

@@ -10,7 +10,22 @@ interface PremiumInvoiceProps {
     id: string;
 }
 
+const formatOrderDate = (d: any): string => {
+    if (!d) return ""
+    try {
+        if (d instanceof Date) return d.toLocaleString('ar-SA')
+        if (d && typeof d === 'object' && 'toDate' in d && typeof d.toDate === 'function') return d.toDate().toLocaleString('ar-SA')
+        if (d && typeof d === 'object' && 'seconds' in d) return new Date(d.seconds * 1000).toLocaleString('ar-SA')
+        const parsed = new Date(d)
+        return isNaN(parsed.getTime()) ? "" : parsed.toLocaleString('ar-SA')
+    } catch {
+        return ""
+    }
+}
+
 export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
+    if (!order) return null;
+
     return (
         <div id={id} className="w-[800px] p-12 bg-[#080b12] text-white font-sans relative overflow-hidden hidden">
             {/* Background Decorative Elements */}
@@ -35,7 +50,7 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
                 <div className="text-right">
                     <h2 className="text-5xl font-black text-white/5 uppercase tracking-tighter mb-4">Invoice</h2>
                     <p className="text-slate-400 text-sm">تاريخ الإصدار / Date</p>
-                    <p className="font-bold">{order.createdAt.toLocaleString('ar-SA')}</p>
+                    <p className="font-bold">{formatOrderDate(order.createdAt)}</p>
                 </div>
             </div>
 
@@ -43,17 +58,17 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
             <div className="grid grid-cols-2 gap-12 mb-16 relative z-10">
                 <div className="glass-card p-8 border-white/10 bg-white/5 rounded-3xl">
                     <h3 className="text-primary text-[10px] font-black uppercase tracking-widest mb-4">Bill To | عميلنا العزيز</h3>
-                    <p className="text-2xl font-black mb-2">{order.customerName}</p>
-                    <p className="text-slate-400 text-sm">رقم العميل: {order.customerId}</p>
+                    <p className="text-2xl font-black mb-2">{order.customerName || "عميل غير معروف"}</p>
+                    <p className="text-slate-400 text-sm">رقم العميل: {order.customerId || ""}</p>
                 </div>
                 <div className="glass-card p-8 border-white/10 bg-white/5 rounded-3xl flex justify-between items-center">
                     <div>
                         <h3 className="text-primary text-[10px] font-black uppercase tracking-widest mb-4">Order ID | رقم الطلب</h3>
-                        <p className="text-2xl font-black mb-2">#{order.id.slice(-6).toUpperCase()}</p>
+                        <p className="text-2xl font-black mb-2">#{order.id ? order.id.slice(-6).toUpperCase() : ""}</p>
                         <p className="text-slate-400 text-sm">الحالة: {order.status === 'delivered' ? 'مكتمل' : 'قيد المعالجة'}</p>
                     </div>
                     <div className="p-3 bg-white rounded-2xl shadow-2xl">
-                        <QRCodeSVG value={`https://ysg-sales.web.app/verify/${order.id}`} size={80} level="H" />
+                        <QRCodeSVG value={`https://ysg-sales.web.app/verify/${order.id || ""}`} size={80} level="H" />
                     </div>
                 </div>
             </div>
@@ -67,15 +82,15 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
                     <div className="col-span-2 text-right">Total | الإجمالي</div>
                 </div>
                 <div className="space-y-3">
-                    {order.items.map((item, idx) => (
+                    {(order.items || []).map((item, idx) => (
                         <div key={idx} className="grid grid-cols-12 gap-4 p-6 bg-white/5 rounded-2xl border border-white/5 items-center">
                             <div className="col-span-6">
-                                <p className="font-bold text-lg">{item.name}</p>
-                                <p className="text-xs text-slate-500">{item.price} ر.س</p>
+                                <p className="font-bold text-lg">{item.name || "منتج"}</p>
+                                <p className="text-xs text-slate-500">{(item.price || 0)} ر.س</p>
                             </div>
                             <div className="col-span-2 text-center text-sm font-bold text-slate-400">{item.unit || 'حبة'}</div>
-                            <div className="col-span-2 text-center text-lg font-black">{item.quantity}</div>
-                            <div className="col-span-2 text-right text-lg font-black text-primary">{(item.quantity * item.price).toFixed(2)}</div>
+                            <div className="col-span-2 text-center text-lg font-black">{item.quantity || 0}</div>
+                            <div className="col-span-2 text-right text-lg font-black text-primary">{((item.quantity || 0) * (item.price || 0)).toFixed(2)}</div>
                         </div>
                     ))}
                 </div>
@@ -86,7 +101,7 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
                 <div className="w-72 space-y-4">
                     <div className="flex justify-between items-center px-4">
                         <span className="text-slate-500 text-xs font-bold uppercase">Subtotal</span>
-                        <span className="font-bold">{(order.total).toFixed(2)} ر.س</span>
+                        <span className="font-bold">{(order.total || 0).toFixed(2)} ر.س</span>
                     </div>
                     <div className="flex justify-between items-center px-4">
                         <span className="text-slate-500 text-xs font-bold uppercase">Tax (VAT 0%)</span>
@@ -94,7 +109,7 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
                     </div>
                     <div className="flex justify-between items-center p-6 bg-primary rounded-3xl shadow-xl shadow-primary/20">
                         <span className="text-white text-sm font-black uppercase">Grand Total</span>
-                        <span className="text-3xl font-black text-white">{order.total.toFixed(2)}</span>
+                        <span className="text-3xl font-black text-white">{(order.total || 0).toFixed(2)}</span>
                     </div>
                 </div>
             </div>
