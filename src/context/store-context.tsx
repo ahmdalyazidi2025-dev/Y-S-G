@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs
 } from "firebase/firestore"
 
 export type Banner = {
@@ -40,6 +40,7 @@ export type Product = {
     costPrice?: number
     description?: string
     barcodes?: string[]
+    createdAt?: Date | any
 }
 
 export type CartItem = Product & {
@@ -67,6 +68,8 @@ export type Customer = {
     lastActive?: Date
     referralCount?: number
     referralCode?: string
+    email?: string
+    createdAt?: Date | any
 }
 
 export type Coupon = {
@@ -179,6 +182,11 @@ export type StoreSettings = {
     enableCoupons?: boolean
     logoUrl?: string
     groqApiKey?: string
+    sounds?: Record<string, boolean> | any
+    autoDeleteChats?: boolean
+    autoDeleteChatsDuration?: string
+    hiddenSections?: string[] | any
+    enableProductRequests?: boolean
 }
 
 type StoreContextType = {
@@ -239,6 +247,8 @@ type StoreContextType = {
     adminPreferences?: any
     joinRequests?: any[]
     markNotificationRead?: (id: string) => void
+    fetchProducts?: (categoryId?: string, isInitial?: boolean) => Promise<void>
+    deleteAllChatsAndNotifications?: (onProgress?: (progress: number, status: string) => void) => Promise<void>
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -793,6 +803,42 @@ const normalizeArabic = (str: string | null | undefined): string => {
         toast.info("تم تسجيل الخروج")
     }
 
+    const fetchProducts = async (categoryId?: string, isInitial?: boolean) => {
+        return
+    }
+
+    const deleteAllChatsAndNotifications = async (onProgress?: (progress: number, status: string) => void) => {
+        try {
+            onProgress?.(10, "البدء في حذف الرسائل...")
+            const msgSnap = await getDocs(collection(db, "messages"))
+            let deletedCount = 0
+            const total = msgSnap.docs.length
+            
+            for (let i = 0; i < msgSnap.docs.length; i++) {
+                await deleteDoc(doc(db, "messages", msgSnap.docs[i].id))
+                deletedCount++
+                onProgress?.(10 + Math.floor((deletedCount / total) * 40), `تم حذف ${deletedCount} رسالة...`)
+            }
+
+            onProgress?.(50, "البدء في حذف الإشعارات...")
+            const notifSnap = await getDocs(collection(db, "notifications"))
+            deletedCount = 0
+            const notifTotal = notifSnap.docs.length
+
+            for (let i = 0; i < notifSnap.docs.length; i++) {
+                await deleteDoc(doc(db, "notifications", notifSnap.docs[i].id))
+                deletedCount++
+                onProgress?.(50 + Math.floor((deletedCount / notifTotal) * 40), `تم حذف ${deletedCount} إشعار...`)
+            }
+
+            onProgress?.(100, "اكتمل حذف جميع البيانات بنجاح!")
+            toast.success("تم مسح جميع الرسائل والإشعارات بنجاح")
+        } catch (e: any) {
+            console.error("Failed to delete chats and notifications:", e)
+            toast.error("فشل حذف البيانات: " + e.message)
+        }
+    }
+
     return (
         <StoreContext.Provider value={{
             products, cart, orders, categories, customers, banners, productRequests,
@@ -803,7 +849,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
             addBanner, deleteBanner, toggleBanner, addProductRequest, updateProductRequestStatus,
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
-            staff, addStaff, updateStaff, deleteStaff, broadcastToCategory
+            staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+            fetchProducts, deleteAllChatsAndNotifications
         }}>
             {children}
         </StoreContext.Provider>

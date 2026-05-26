@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Activity, UserPlus, KeyRound } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -17,8 +17,11 @@ const NAV_ITEMS = [
     { title: "الإحصائيات", icon: BarChart3, href: "/admin/analytics", color: "text-indigo-400" },
     { title: "الطلبات", icon: ClipboardList, href: "/admin/orders", color: "text-orange-400" },
     { title: "طلبات التوفير", icon: Camera, href: "/admin/requests", color: "text-purple-400" },
+    { title: "استعادة كلمة المرور", icon: KeyRound, href: "/admin/password-requests", color: "text-yellow-400" },
     { title: "صور العرض", icon: LugideImage, href: "/admin/banners", color: "text-pink-400" },
     { title: "الدردشة", icon: MessageCircle, href: "/admin/chat", color: "text-indigo-400" },
+    { title: "طلبات الانضمام", icon: UserPlus, href: "/admin/join-requests", color: "text-emerald-400" },
+    { title: "حالة النظام", icon: Activity, href: "/admin/system", color: "text-rose-400" },
     { title: "الإعدادات", icon: Settings, href: "/admin/settings", color: "text-slate-400" },
 ]
 
@@ -44,8 +47,11 @@ export function AdminSidebar() {
             "/admin/analytics": "sales",
             "/admin/orders": "orders",
             "/admin/requests": "orders",
+            "/admin/password-requests": "customers",
             "/admin/banners": "settings",
             "/admin/chat": "chat",
+            "/admin/join-requests": "customers",
+            "/admin/system": "settings",
             "/admin/settings": "settings",
         }
 
