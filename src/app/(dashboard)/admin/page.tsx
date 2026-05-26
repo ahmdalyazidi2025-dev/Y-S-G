@@ -201,32 +201,34 @@ export default function AdminDashboard() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        className="glass-card p-8 flex flex-col items-center justify-center text-center gap-5 h-48 relative border-slate-200/80 dark:border-white/5 group-hover:border-primary/30 overflow-hidden transition-all duration-300"
+                                        whileHover={{ y: -6, scale: 1.02 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        className="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 h-44 relative border-slate-200/80 dark:border-white/5 group-hover:border-primary/20 overflow-hidden transition-all duration-300"
                                     >
                                         {/* Card background glow on hover */}
                                         <div className={cn("absolute inset-0 bg-gradient-to-br via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500", module.cardGlow)} />
 
-                                        {/* Icon Container */}
+                                        {/* Icon — circular, soft, modern */}
                                         <div className={cn(
-                                            "p-4 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+                                            "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-115 group-hover:shadow-lg",
                                             module.iconBg,
                                             module.iconBorder,
                                             module.iconGlow,
                                             module.color
                                         )}>
-                                            <module.icon className="w-9 h-9" strokeWidth={1.6} />
+                                            <module.icon className="w-6 h-6" strokeWidth={1.8} />
                                         </div>
 
-                                        <div className="space-y-1 z-10">
-                                            <span className="font-black text-sm text-slate-900 dark:text-white block tracking-wide">{module.title}</span>
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.25em]">System Module</span>
+                                        <div className="space-y-0.5 z-10">
+                                            <span className="font-bold text-sm text-slate-800 dark:text-white block">{module.title}</span>
+                                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-[0.2em]">System Module</span>
                                         </div>
 
-                                        {/* Bottom accent line */}
-                                        <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] group-hover:w-2/5 transition-all duration-500 rounded-t-full", module.iconBg.includes('blue') ? 'bg-blue-500' : module.iconBg.includes('teal') ? 'bg-teal-500' : module.iconBg.includes('orange') ? 'bg-orange-500' : module.iconBg.includes('purple') ? 'bg-purple-500' : module.iconBg.includes('pink') ? 'bg-pink-500' : module.iconBg.includes('sky') ? 'bg-sky-500' : module.iconBg.includes('indigo') ? 'bg-indigo-500' : 'bg-primary')} />
+                                        {/* Bottom accent */}
+                                        <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] group-hover:w-1/3 transition-all duration-500 rounded-t-full", module.iconBg.includes('blue') ? 'bg-blue-500' : module.iconBg.includes('teal') ? 'bg-teal-500' : module.iconBg.includes('orange') ? 'bg-orange-500' : module.iconBg.includes('purple') ? 'bg-purple-500' : module.iconBg.includes('pink') ? 'bg-pink-500' : module.iconBg.includes('sky') ? 'bg-sky-500' : module.iconBg.includes('indigo') ? 'bg-indigo-500' : 'bg-primary')} />
 
-                                        <div className="absolute top-4 right-4">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                                        <div className="absolute top-3 right-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
                                         </div>
                                     </motion.div>
                                 </Link>
