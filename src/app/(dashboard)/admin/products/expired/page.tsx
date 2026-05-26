@@ -31,8 +31,8 @@ export default function ExpiredProductsPage() {
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
                 <Link href="/admin/products">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">العروض المنتهية</h1>
@@ -65,7 +65,7 @@ export default function ExpiredProductsPage() {
                                 </div>
                             </div>
 
-                            <h3 className="font-bold text-white mb-1">{product.name}</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white mb-1">{product.name}</h3>
                             <p className="text-xs text-slate-500 mb-4">{product.category}</p>
 
                             <div className="flex flex-col w-full gap-2">
@@ -78,7 +78,7 @@ export default function ExpiredProductsPage() {
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    className="w-full border-white/10 hover:bg-white/5 text-white gap-2 h-10 rounded-xl"
+                                    className="w-full border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-800 dark:text-white gap-2 h-10 rounded-xl"
                                     onClick={() => handleRepublish(product, false)}
                                 >
                                     <Play className="w-4 h-4" />

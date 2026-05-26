@@ -78,8 +78,8 @@ export default function AdminChatPage() {
         <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">
@@ -134,7 +134,7 @@ export default function AdminChatPage() {
                             activeChatMessages.map((m) => (
                                 <div key={m.id} className={cn(
                                     "max-w-[80%] p-3 rounded-2xl text-xs space-y-1",
-                                    m.isAdmin ? "bg-primary text-white self-end rounded-br-none" : "bg-white/10 text-slate-200 self-start rounded-bl-none"
+                                    m.isAdmin ? "bg-primary text-white self-end rounded-br-none" : "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-start rounded-bl-none border border-slate-200/50 dark:border-white/5"
                                 )}>
                                     <p>{m.isAdmin ? m.text.replace(`(@${selectedCustomer})`, "").trim() : m.text}</p>
                                     <p className="text-[8px] opacity-50 text-left">{format(m.createdAt, "hh:mm a", { locale: ar })}</p>
@@ -148,19 +148,19 @@ export default function AdminChatPage() {
                             <div
                                 key={conv.customerId}
                                 onClick={() => setSelectedCustomer(conv.customerId)}
-                                className="p-4 border-b border-white/5 flex items-center gap-4 hover:bg-white/5 cursor-pointer transition-colors active:bg-white/10"
+                                className="p-4 border-b border-slate-100 dark:border-white/5 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer transition-colors active:bg-slate-100 dark:active:bg-white/10"
                             >
-                                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-slate-400 relative">
+                                <div className="w-12 h-12 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 relative">
                                     <User className="w-6 h-6" />
                                     {conv.unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-[#1c2a36]">
                                             {conv.unreadCount}
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="font-bold text-sm text-white truncate">{conv.customerName}</h4>
+                                        <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{conv.customerName}</h4>
                                         {conv.lastMessageDate && (
                                             <span className="text-[10px] text-slate-500">{format(conv.lastMessageDate, "hh:mm a", { locale: ar })}</span>
                                         )}
@@ -177,10 +177,10 @@ export default function AdminChatPage() {
             </div>
 
             {(mode === "broadcast" || selectedCustomer) && (
-                <div className="flex gap-2 bg-[#1c2a36] p-3 rounded-2xl border border-white/10">
+                <div className="flex gap-2 bg-white dark:bg-[#1c2a36] p-3 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm">
                     <Input
                         placeholder={mode === "broadcast" ? "اكتب نص الإشعار هنا..." : "اكتب رسالتك..."}
-                        className="bg-black/20 border-white/5 rounded-xl h-12"
+                        className="bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-900 dark:text-white placeholder-slate-450 rounded-xl h-12"
                         value={msg}
                         onChange={(e) => setMsg(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSend()}
@@ -188,7 +188,7 @@ export default function AdminChatPage() {
                     <Button
                         size="icon"
                         className={cn(
-                            "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all border border-white/10 shadow-lg",
+                            "h-12 w-12 rounded-[18px] flex-shrink-0 transition-all border border-slate-200 dark:border-white/10 shadow-lg",
                             mode === "broadcast" ? "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20" : "bg-primary hover:bg-primary/90 shadow-primary/20"
                         )}
                         onClick={handleSend}

@@ -10,7 +10,7 @@ import { useStore } from "@/context/store-context"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const NAV_ITEMS = [
-    { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-white" },
+    { title: "الرئيسية", icon: LayoutDashboard, href: "/admin", color: "text-slate-800 dark:text-slate-200" },
     { title: "المنتجات", icon: Package, href: "/admin/products", color: "text-blue-400" },
     { title: "الأقسام", icon: Layers, href: "/admin/categories", color: "text-primary" },
     { title: "العملاء", icon: Users, href: "/admin/customers", color: "text-teal-400" },

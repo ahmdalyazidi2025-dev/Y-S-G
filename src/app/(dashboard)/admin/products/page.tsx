@@ -48,14 +48,14 @@ export default function ProductsPage() {
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إدارة المنتجات</h1>
                 <div className="flex gap-2">
                     <Link href="/admin/products/expired">
-                        <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4">
+                        <Button variant="outline" className="border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-400 gap-2 rounded-full h-10 px-4">
                             <History className="w-4 h-4" />
                             <span>المنتهية ({expiredCount})</span>
                         </Button>
@@ -71,10 +71,10 @@ export default function ProductsPage() {
             </div>
 
             <div className="relative mb-4">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500 z-10" />
                 <Input
                     placeholder="بحث بالاسم أو الباركود..."
-                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl"
+                    className="bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right h-12 rounded-xl text-slate-900 dark:text-white placeholder-slate-500"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -90,7 +90,7 @@ export default function ProductsPage() {
                             "px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border shrink-0",
                             selectedCategory === category
                                 ? "bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105"
-                                : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white"
+                                : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-650 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
                         )}
                     >
                         {category}
@@ -100,14 +100,14 @@ export default function ProductsPage() {
 
             <div className="space-y-3">
                 {filteredProducts.length === 0 ? (
-                    <div className="p-10 text-center text-slate-400 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                    <div className="p-10 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-white/5">
                         <Package className="w-10 h-10 mx-auto mb-4 opacity-20" />
                         لا توجد منتجات تطابق بحثك
                     </div>
                 ) : (
                     filteredProducts.map((product: Product) => (
-                        <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-white/[0.03] transition-colors relative overflow-hidden">
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-white/10 shrink-0">
+                        <div key={product.id} className="glass-card p-4 flex items-center gap-4 group hover:bg-slate-50/50 dark:hover:bg-white/[0.03] transition-colors relative overflow-hidden">
+                            <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center text-2xl overflow-hidden border border-slate-200 dark:border-white/10 shrink-0">
                                 {product.image ? (
                                     <div className="relative w-full h-full">
                                         <Image
@@ -124,9 +124,9 @@ export default function ProductsPage() {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-white mb-1 truncate">{product.name}</h3>
+                                <h3 className="font-bold text-slate-900 dark:text-white mb-1 truncate">{product.name}</h3>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-mono">
+                                    <span className="text-[10px] bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full text-slate-500 font-mono">
                                         {product.barcode}
                                     </span>
                                     <span className="text-[10px] text-slate-500 bg-primary/10 px-2 py-0.5 rounded-full text-primary font-bold">
@@ -137,7 +137,7 @@ export default function ProductsPage() {
 
                             <div className="flex gap-6 items-center px-4">
                                 {/* Piece Price Display */}
-                                <div className="text-right space-y-0.5 border-r border-white/5 pr-6">
+                                <div className="text-right space-y-0.5 border-r border-slate-200 dark:border-white/5 pr-6">
                                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">الحبة</p>
                                     <div className="flex flex-col items-end">
                                         <span className="text-lg font-bold text-green-500 leading-none">

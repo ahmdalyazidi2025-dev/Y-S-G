@@ -87,20 +87,20 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                         className="glass-card w-full max-w-md p-6 relative"
                     >
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold">{initialCustomer ? "تعديل عميل" : "إضافة عميل جديد"}</h2>
-                            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full">
-                                <X className="w-5 h-5 text-slate-400" />
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{initialCustomer ? "تعديل عميل" : "إضافة عميل جديد"}</h2>
+                            <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label>اسم العميل</Label>
+                                <Label className="text-slate-700 dark:text-slate-400 font-bold block text-right pr-1">اسم العميل</Label>
                                 <div className="relative">
-                                    <User className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <User className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     />
@@ -108,12 +108,12 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="space-y-2">
-                                <Label>اسم المستخدم (لتسجيل الدخول)</Label>
+                                <Label className="text-slate-700 dark:text-slate-400 font-bold block text-right pr-1">اسم المستخدم (لتسجيل الدخول)</Label>
                                 <div className="relative">
-                                    <Hash className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Hash className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                     />
@@ -121,13 +121,13 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="space-y-2">
-                                <Label>رقم الهاتف</Label>
+                                <Label className="text-slate-700 dark:text-slate-400 font-bold block text-right pr-1">رقم الهاتف</Label>
                                 <div className="relative">
-                                    <Phone className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Phone className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required
                                         type="tel"
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     />
@@ -135,13 +135,13 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="space-y-2">
-                                <Label>{initialCustomer ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}</Label>
+                                <Label className="text-slate-700 dark:text-slate-400 font-bold block text-right pr-1">{initialCustomer ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}</Label>
                                 <div className="relative">
-                                    <Lock className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <Lock className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required={!initialCustomer}
                                         type="password"
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     />
@@ -149,12 +149,12 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="space-y-2">
-                                <Label>الموقع (المدينة)</Label>
+                                <Label className="text-slate-700 dark:text-slate-400 font-bold block text-right pr-1">الموقع (المدينة)</Label>
                                 <div className="relative">
-                                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                                    <MapPin className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required
-                                        className="bg-black/20 border-white/10 pr-10 text-right"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
@@ -162,7 +162,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                             </div>
 
                             <div className="pt-4">
-                                <Button type="submit" className="w-full h-12 bg-primary text-white rounded-xl gap-2 shadow-lg shadow-primary/20">
+                                <Button type="submit" className="w-full h-12 bg-primary text-white rounded-xl gap-2 shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all">
                                     <Save className="w-4 h-4" />
                                     <span>{initialCustomer ? "حفظ التغييرات" : "إضافة العميل"}</span>
                                 </Button>

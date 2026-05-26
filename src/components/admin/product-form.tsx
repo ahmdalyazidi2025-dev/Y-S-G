@@ -182,14 +182,14 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-white/10 relative shadow-2xl overflow-y-auto max-h-[90vh]"
+                        className="bg-white dark:bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-slate-200 dark:border-white/10 relative shadow-2xl overflow-y-auto max-h-[90vh]"
                     >
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                 <PlusCircle className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold text-white">{initialProduct ? "تعديل منتج" : "إضافة منتج جديد"}</h2>
-                            <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{initialProduct ? "تعديل منتج" : "إضافة منتج جديد"}</h2>
+                            <button onClick={onClose} className="p-2 mr-auto hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -205,39 +205,39 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             />
 
                             {/* Branding Toggle */}
-                            <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <div className="flex items-center justify-between bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-150 dark:border-white/5">
                                 <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-xl transition-colors ${useBranding ? 'bg-primary/20 text-primary' : 'bg-white/5 text-slate-400'}`}>
+                                    <div className={`p-2 rounded-xl transition-colors ${useBranding ? 'bg-primary/20 text-primary' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
                                         <Wand2 className="w-5 h-5" />
                                     </div>
                                     <div className="flex flex-col items-start gap-1">
-                                        <span className="text-sm font-bold text-white">تحسين وتصميم الصورة تلقائياً</span>
-                                        <span className="text-[10px] text-slate-400">إضافة خلفية احترافية وشعار المتجر</span>
+                                        <span className="text-sm font-bold text-slate-900 dark:text-white">تحسين وتصميم الصورة تلقائياً</span>
+                                        <span className="text-[10px] text-slate-500 dark:text-slate-400">إضافة خلفية احترافية وشعار المتجر</span>
                                     </div>
                                 </div>
                                 <div
                                     onClick={() => setUseBranding(!useBranding)}
-                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${useBranding ? 'bg-primary' : 'bg-white/10'}`}
+                                    className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${useBranding ? 'bg-primary' : 'bg-slate-200 dark:bg-white/10'}`}
                                 >
                                     <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${useBranding ? 'left-1' : 'left-6'}`} />
                                 </div>
                             </div>
 
                             {/* Countdown Toggle & Input */}
-                            <div className="space-y-4 bg-black/10 p-4 rounded-3xl border border-white/5">
+                            <div className="space-y-4 bg-slate-50 dark:bg-black/10 p-4 rounded-3xl border border-slate-150 dark:border-white/5">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-xl transition-colors ${showCountdown ? 'bg-orange-500/20 text-orange-400' : 'bg-white/5 text-slate-400'}`}>
+                                        <div className={`p-2 rounded-xl transition-colors ${showCountdown ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}>
                                             <Clock className="w-5 h-5" />
                                         </div>
                                         <div className="flex flex-col items-start">
-                                            <span className="text-sm font-bold text-white">تفعيل العداد التنازلي</span>
-                                            <span className="text-[10px] text-slate-400">تحفيز العميل بانتهاء العرض</span>
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white">تفعيل العداد التنازلي</span>
+                                            <span className="text-[10px] text-slate-500 dark:text-slate-400">تحفيز العميل بانتهاء العرض</span>
                                         </div>
                                     </div>
                                     <div
                                         onClick={() => setShowCountdown(!showCountdown)}
-                                        className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${showCountdown ? 'bg-orange-500' : 'bg-white/10'}`}
+                                        className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors ${showCountdown ? 'bg-orange-500' : 'bg-slate-200 dark:bg-white/10'}`}
                                     >
                                         <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${showCountdown ? 'left-1' : 'left-6'}`} />
                                     </div>
@@ -247,12 +247,12 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                     <motion.div
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
-                                        className="pt-2 border-t border-white/5 space-y-2"
+                                        className="pt-2 border-t border-slate-200 dark:border-white/5 space-y-2"
                                     >
-                                        <Label className="text-slate-400 text-[10px] pr-1 text-right block w-full">تاريخ ووقت انتهاء العرض</Label>
+                                        <Label className="text-slate-500 dark:text-slate-400 text-[10px] pr-1 text-right block w-full">تاريخ ووقت انتهاء العرض</Label>
                                         <Input
                                             type="datetime-local"
-                                            className="bg-black/20 border-white/10 h-12 rounded-xl text-white px-4 focus:ring-orange-500/50"
+                                            className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-12 rounded-xl text-slate-800 dark:text-white px-4 focus:ring-orange-500/50"
                                             value={formData.discountEndDate}
                                             onChange={(e) => setFormData({ ...formData, discountEndDate: e.target.value })}
                                             required={showCountdown}
@@ -264,16 +264,16 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="aspect-square bg-black/20 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-black/30 cursor-pointer transition-all group"
+                                    className="aspect-square bg-slate-100/70 dark:bg-black/20 rounded-2xl border border-slate-300 dark:border-white/5 border-dashed flex flex-col items-center justify-center gap-2 hover:bg-slate-200/50 dark:hover:bg-black/30 cursor-pointer transition-all group"
                                 >
                                     <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                         <Plus className="w-6 h-6" />
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-400">إضافة صور</span>
+                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">إضافة صور</span>
                                 </div>
 
                                 {formData.images.map((img, idx) => (
-                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-white/10">
+                                    <div key={idx} className="aspect-square relative rounded-2xl overflow-hidden group border border-slate-200 dark:border-white/10">
                                         <Image
                                             src={img}
                                             alt={`Preview ${idx}`}
@@ -299,13 +299,13 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">اسم المنتج</Label>
+                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">اسم المنتج</Label>
                                     <div className="relative">
                                         <Package className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                         <Input
                                             required
                                             placeholder="مثال: بيبسي 330 مل"
-                                            className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pr-12 focus:ring-primary/50"
+                                            className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white pr-12 focus:ring-primary/50"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -313,17 +313,17 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">القسم</Label>
+                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">القسم</Label>
                                     <div className="relative">
                                         <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 pointer-events-none" />
                                         <select
                                             value={formData.category}
                                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full bg-black/20 border border-white/10 h-14 rounded-2xl text-right text-white px-12 appearance-none focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                            className="w-full bg-slate-100/70 dark:bg-black/20 border border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white px-12 appearance-none focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                                         >
-                                            <option value="" disabled className="bg-[#1c2a36]">اختر القسم</option>
+                                            <option value="" disabled className="bg-white dark:bg-[#1c2a36] text-slate-800 dark:text-white">اختر القسم</option>
                                             {categories.map((cat) => (
-                                                <option key={cat.id} value={cat.id} className="bg-[#1c2a36]">
+                                                <option key={cat.id} value={cat.id} className="bg-white dark:bg-[#1c2a36] text-slate-800 dark:text-white">
                                                     {cat.nameAr}
                                                 </option>
                                             ))}
@@ -333,34 +333,34 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الوحدة</Label>
+                                        <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">الوحدة</Label>
                                         <div className="relative">
                                             <List className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                             <Input
                                                 required
                                                 placeholder="حبة / كرتون"
-                                                className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pr-12 focus:ring-primary/50"
+                                                className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white pr-12 focus:ring-primary/50"
                                                 value={formData.unit}
                                                 onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الباركود</Label>
+                                        <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">الباركود</Label>
                                         <div className="flex gap-2">
                                             <div className="relative flex-1">
                                                 <Hash className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                                 <Input
                                                     required
                                                     placeholder="أدخل الباركود يدوياً"
-                                                    className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pr-12 focus:ring-primary/50"
+                                                    className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white pr-12 focus:ring-primary/50"
                                                     value={formData.barcode}
                                                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
                                                 />
                                             </div>
                                             <Button
                                                 type="button"
-                                                className="h-14 w-14 rounded-2xl flex-shrink-0 bg-white/5 border-white/10 hover:bg-white/10 text-primary transition-all active:scale-95"
+                                                className="h-14 w-14 rounded-2xl flex-shrink-0 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-primary transition-all active:scale-95"
                                                 onClick={() => setIsScannerOpen(true)}
                                             >
                                                 <Camera className="w-6 h-6" />
@@ -371,7 +371,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Piece Pricing */}
-                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
+                            <div className="space-y-3 bg-slate-50 dark:bg-black/10 p-4 rounded-3xl border border-slate-150 dark:border-white/5">
                                 <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الحبة</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
@@ -401,7 +401,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                             </div>
 
                             {/* Dozen Pricing */}
-                            <div className="space-y-3 bg-black/10 p-4 rounded-3xl border border-white/5">
+                            <div className="space-y-3 bg-slate-50 dark:bg-black/10 p-4 rounded-3xl border border-slate-150 dark:border-white/5">
                                 <h3 className="text-xs font-bold text-slate-500 text-right pr-1 italic">تسعير الدرزن</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">

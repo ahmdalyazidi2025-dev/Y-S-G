@@ -72,14 +72,14 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-white/10 relative shadow-2xl"
+                        className="bg-white dark:bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-slate-200 dark:border-white/10 relative shadow-2xl"
                     >
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                 <Plus className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold text-white">إضافة صورة عرض جديدة</h2>
-                            <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">إضافة صورة عرض جديدة</h2>
+                            <button onClick={onClose} className="p-2 mr-auto hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -95,7 +95,7 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
 
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="aspect-[3/1] bg-black/20 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center gap-3 hover:bg-black/30 cursor-pointer transition-all group overflow-hidden relative"
+                                className="aspect-[3/1] bg-slate-100/70 dark:bg-black/20 rounded-2xl border border-slate-300 dark:border-white/5 border-dashed flex flex-col items-center justify-center gap-3 hover:bg-slate-200/50 dark:hover:bg-black/30 cursor-pointer transition-all group overflow-hidden relative"
                             >
                                 {image ? (
                                     <>
@@ -115,7 +115,7 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                         <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                             <ImageIcon className="w-6 h-6" />
                                         </div>
-                                        <span className="text-xs font-bold text-slate-400">
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                             {isLoading ? "جاري المعالجة..." : "انقر لتحميل الصورة (1200x400)"}
                                         </span>
                                     </>

@@ -50,20 +50,20 @@ export default function CustomersPage() {
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إدارة العملاء</h1>
                 <div className="flex gap-2">
                     <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
                         <DialogTrigger>
-                            <Button variant="outline" className="border-white/10 hover:bg-white/5 text-slate-400 gap-2 rounded-full h-10 px-4">
+                            <Button variant="outline" className="border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-400 gap-2 rounded-full h-10 px-4">
                                 <ShieldCheck className="w-4 h-4" />
                                 <span>بث رسالة</span>
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="glass-card border-white/5 text-white max-w-md">
+                        <DialogContent className="glass-card border-slate-200 dark:border-white/5 text-slate-950 dark:text-white max-w-md bg-white dark:bg-[#1a242f]">
                             <DialogHeader>
                                 <DialogTitle className="text-right">بث رسالة لمجموعة</DialogTitle>
                             </DialogHeader>
@@ -71,7 +71,7 @@ export default function CustomersPage() {
                                 <div className="space-y-2">
                                     <Label className="block text-right">الفئة المستهدفة</Label>
                                     <select
-                                        className="w-full bg-black/20 border-white/10 rounded-xl h-10 px-3 text-right text-sm"
+                                        className="w-full bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl h-10 px-3 text-right text-sm"
                                         value={targetCategory}
                                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTargetCategory(e.target.value)}
                                     >
@@ -84,7 +84,7 @@ export default function CustomersPage() {
                                 <div className="space-y-2">
                                     <Label className="block text-right">نص الرسالة</Label>
                                     <Textarea
-                                        className="bg-black/20 border-white/10 rounded-xl text-right h-32"
+                                        className="bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/10 rounded-xl text-right h-32 text-slate-900 dark:text-white placeholder-slate-500"
                                         placeholder="اكتب رسالتك هنا..."
                                         value={broadcastMsg}
                                         onChange={(e) => setBroadcastMsg(e.target.value)}
@@ -107,13 +107,13 @@ export default function CustomersPage() {
             </div>
 
             {/* Checkout Settings Toggle */}
-            <div className="bg-[#1c2a36] border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+            <div className="bg-white dark:bg-[#1c2a36] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
                         <Settings2 className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="font-bold text-white">إلزام العميل بالاسم ورقم الجوال</h3>
+                        <h3 className="font-bold text-slate-900 dark:text-white">إلزام العميل بالاسم ورقم الجوال</h3>
                         <p className="text-xs text-slate-400">عند تفعيل هذا الخيار، لن يتمكن العميل من إتمام الطلب دون تعبئة بياناته</p>
                     </div>
                 </div>
@@ -139,7 +139,7 @@ export default function CustomersPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-3">
-                                        <h3 className="font-bold text-white text-lg">{customer.name}</h3>
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{customer.name}</h3>
                                         {(() => {
                                             const cat = getCategory(customer.lastActive)
                                             return (

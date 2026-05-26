@@ -111,7 +111,7 @@ export default function OffersPage() {
                     <motion.div layoutId="active-dot" className={cn("w-2 h-2 rounded-full", `bg-${color}-400`)} />
                 )}
             </div>
-            <h3 className="text-3xl font-black text-white mb-1">{count}</h3>
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1">{count}</h3>
             <p className="text-sm text-slate-400 font-bold">{title}</p>
         </div>
     )
@@ -122,8 +122,8 @@ export default function OffersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
-                            <ArrowRight className="w-6 h-6 text-foreground" />
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                            <ArrowRight className="w-6 h-6" />
                         </Button>
                     </Link>
                     <div>
@@ -140,7 +140,7 @@ export default function OffersPage() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
                     </div>
                     <input
-                        className="w-full h-12 bg-black/20 border border-white/10 rounded-2xl pr-10 pl-4 text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                        className="w-full h-12 bg-slate-100 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl pr-10 pl-4 text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
                         placeholder="ابحث عن عرض بالاسم أو الباركود..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -174,7 +174,7 @@ export default function OffersPage() {
             </div>
 
             {/* Content Area */}
-            <div className="bg-slate-900/50 border border-white/5 rounded-[40px] p-6 min-h-[500px] text-white">
+            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-[40px] p-6 min-h-[500px] text-slate-900 dark:text-white shadow-sm">
                 <AnimatePresence mode="wait">
                     {/* ACTIVE OFFERS TAB */}
                     {activeTab === "active" && (
@@ -199,7 +199,7 @@ export default function OffersPage() {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     {activeOffers.map(product => (
-                                        <div key={product.id} className="group relative bg-white/5 border border-white/5 hover:border-amber-500/30 rounded-3xl p-4 flex gap-4 transition-all hover:bg-white/10">
+                                        <div key={product.id} className="group relative bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:border-amber-500/30 rounded-3xl p-4 flex gap-4 transition-all hover:bg-slate-100/50 dark:hover:bg-white/10">
                                             {/* Timer Badge */}
                                             <div className="absolute top-4 left-4 bg-amber-500/10 border border-amber-500/20 rounded-full px-3 py-1 flex items-center gap-2">
                                                 <Timer className="w-3 h-3 text-amber-400" />
@@ -219,7 +219,7 @@ export default function OffersPage() {
                                             </div>
 
                                             <div className="flex-1 pt-1">
-                                                <h3 className="font-bold text-white text-lg mb-1">{product.name}</h3>
+                                                <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1">{product.name}</h3>
                                                 <div className="flex items-center gap-3 text-sm text-slate-400 mb-3">
                                                     <span className="line-through">{product.oldPricePiece} ر.س</span>
                                                     <ArrowRight className="w-3 h-3" />
@@ -280,7 +280,7 @@ export default function OffersPage() {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     {expiredOffers.map(product => (
-                                        <div key={product.id} className="opacity-70 hover:opacity-100 transition-opacity bg-white/5 border border-white/5 rounded-3xl p-4 flex gap-4">
+                                        <div key={product.id} className="opacity-70 hover:opacity-100 transition-opacity bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-3xl p-4 flex gap-4">
                                             <div className="w-20 h-20 bg-black/20 rounded-2xl relative overflow-hidden shrink-0 grayscale">
                                                 {product.image ? (
                                                     <Image src={product.image} fill alt={product.name} className="object-cover" />
@@ -291,7 +291,7 @@ export default function OffersPage() {
                                                 )}
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="font-bold text-slate-300 mb-1">{product.name}</h3>
+                                                <h3 className="font-bold text-slate-900 dark:text-slate-300 mb-1">{product.name}</h3>
                                                 <p className="text-xs text-red-400 font-bold mb-3">
                                                     انتهى {product.discountEndDate ? formatDistanceToNow(new Date(product.discountEndDate), { addSuffix: true, locale: arSA }) : ''}
                                                 </p>
@@ -341,7 +341,7 @@ export default function OffersPage() {
                             ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                     {drafts.map(product => (
-                                        <div key={product.id} className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-4 flex gap-4 hover:bg-blue-500/10 transition-colors">
+                                        <div key={product.id} className="bg-blue-50/50 dark:bg-blue-500/5 border border-blue-100 dark:border-blue-500/10 rounded-3xl p-4 flex gap-4 hover:bg-blue-100/50 dark:hover:bg-blue-500/10 transition-colors">
                                             <div className="w-24 h-24 bg-black/20 rounded-2xl relative overflow-hidden shrink-0 border border-white/5">
                                                 {product.image ? (
                                                     <Image src={product.image} fill alt={product.name} className="object-cover" />
@@ -353,7 +353,7 @@ export default function OffersPage() {
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex justify-between items-start">
-                                                    <h3 className="font-bold text-white text-lg">{product.name || "منتج بدون اسم"}</h3>
+                                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">{product.name || "منتج بدون اسم"}</h3>
                                                     <span className="bg-blue-500/20 text-blue-300 text-[10px] px-2 py-1 rounded-full font-bold">مسودة</span>
                                                 </div>
                                                 <p className="text-slate-400 text-sm mt-1 line-clamp-2">
@@ -407,7 +407,7 @@ function EmptyState({ icon: Icon, title, desc }: any) {
             <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
                 <Icon className="w-8 h-8 text-slate-400 opacity-50" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
             <p className="text-slate-400 max-w-sm mx-auto">{desc}</p>
         </div>
     )

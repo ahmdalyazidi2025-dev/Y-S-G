@@ -47,13 +47,13 @@ export default function AnalyticsPage() {
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إحصائيات المبيعات</h1>
 
-                <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-white/5">
                     {[
                         { id: "today", label: "اليوم" },
                         { id: "week", label: "أسبوع" },
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
                         <TrendingUp className="w-4 h-4 text-green-500 opacity-50" />
                     </div>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">إجمالي المبيعات</p>
-                    <h2 className="text-3xl font-black text-white">
+                    <h2 className="text-3xl font-black text-slate-950 dark:text-white">
                         {stats.totalSales.toLocaleString()} <small className="text-sm font-bold text-slate-500">ر.س</small>
                     </h2>
                 </div>
@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">عدد الطلبات</p>
-                    <h2 className="text-3xl font-black text-white">{stats.orderCount}</h2>
+                    <h2 className="text-3xl font-black text-slate-950 dark:text-white">{stats.orderCount}</h2>
                 </div>
 
                 <div className="glass-card p-6 border-b-2 border-orange-500/20">
@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">متوسط الطلب</p>
-                    <h2 className="text-3xl font-black text-white">
+                    <h2 className="text-3xl font-black text-slate-950 dark:text-white">
                         {Math.round(stats.avgOrder).toLocaleString()} <small className="text-sm font-bold text-slate-500">ر.س</small>
                     </h2>
                 </div>
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="glass-card p-6">
-                    <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-primary" />
                         أعلى المناطق مبيعاً
                     </h3>
@@ -124,9 +124,9 @@ export default function AnalyticsPage() {
                             <div key={loc} className="space-y-2">
                                 <div className="flex justify-between text-xs font-bold">
                                     <span className="text-slate-400">{loc}</span>
-                                    <span className="text-white">{total.toLocaleString()} ر.س</span>
+                                    <span className="text-slate-900 dark:text-white">{total.toLocaleString()} ر.س</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-1.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${(total / stats.totalSales) * 100}%` }}
@@ -145,15 +145,15 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="glass-card p-6">
-                    <h3 className="font-bold text-white mb-6 flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-teal-400" />
                         أحدث العمليات
                     </h3>
                     <div className="space-y-3">
                         {filteredOrders.slice(0, 5).map(order => (
-                            <div key={order.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                            <div key={order.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5">
                                 <div className="flex flex-col">
-                                    <span className="font-bold text-xs text-white">{order.customerName}</span>
+                                    <span className="font-bold text-xs text-slate-900 dark:text-white">{order.customerName}</span>
                                     <span className="text-[10px] text-slate-500">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</span>
                                 </div>
                                 <span className="text-sm font-bold text-green-500">{order.total} ر.س</span>

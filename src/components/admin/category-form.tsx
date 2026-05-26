@@ -96,14 +96,14 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-white/10 relative shadow-2xl overflow-y-auto max-h-[90vh]"
+                        className="bg-white dark:bg-[#1c2a36] w-full max-w-lg p-6 rounded-[32px] border border-slate-200 dark:border-white/10 relative shadow-2xl overflow-y-auto max-h-[90vh]"
                     >
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                 <PlusCircle className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold text-white">{initialCategory ? "تعديل قسم" : "إضافة قسم جديد"}</h2>
-                            <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{initialCategory ? "تعديل قسم" : "إضافة قسم جديد"}</h2>
+                            <button onClick={onClose} className="p-2 mr-auto hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -119,35 +119,35 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالعربي</Label>
+                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالعربي</Label>
                                     <Input
                                         required
                                         placeholder="الاسم بالعربي"
-                                        className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white focus:ring-primary/50"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white focus:ring-primary/50"
                                         value={formData.nameAr}
                                         onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالإنجليزي (English)</Label>
+                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">الاسم بالإنجليزي (English)</Label>
                                     <Input
                                         required
                                         placeholder="Name in English"
                                         dir="ltr"
-                                        className="bg-black/20 border-white/10 h-14 rounded-2xl text-left text-white focus:ring-primary/50"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-left text-slate-800 dark:text-white focus:ring-primary/50"
                                         value={formData.nameEn}
                                         onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
                                     />
                                 </div>
                             </div>
 
-                            <div className="bg-black/20 p-1 rounded-2xl flex border border-white/10 h-14">
+                            <div className="bg-slate-100/70 dark:bg-black/20 p-1 rounded-2xl flex border border-slate-200 dark:border-white/10 h-14">
                                 <button
                                     type="button"
                                     onClick={() => setVisualType("image")}
                                     className={cn(
                                         "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
-                                        visualType === "image" ? "bg-[#1c2a36] text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                                        visualType === "image" ? "bg-white dark:bg-[#1c2a36] text-slate-800 dark:text-white shadow-md border border-slate-200 dark:border-white/5" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                                     )}
                                 >
                                     <ImageIcon className="w-4 h-4" />
@@ -158,7 +158,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                     onClick={() => setVisualType("icon")}
                                     className={cn(
                                         "flex-1 flex items-center justify-center gap-2 rounded-xl transition-all text-xs font-bold",
-                                        visualType === "icon" ? "bg-[#1c2a36] text-white shadow-lg" : "text-white"
+                                        visualType === "icon" ? "bg-white dark:bg-[#1c2a36] text-slate-800 dark:text-white shadow-md border border-slate-200 dark:border-white/5" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                                     )}
                                 >
                                     <Smile className="w-4 h-4" />
@@ -172,7 +172,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                         <Smile className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                         <Input
                                             placeholder="هنا (Emoji) أدخل الأيقونة"
-                                            className="bg-black/20 border-white/10 h-14 rounded-2xl text-right text-white pl-12 focus:ring-primary/50"
+                                            className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white pl-12 focus:ring-primary/50"
                                             value={formData.icon}
                                             onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
                                         />
@@ -183,7 +183,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                             {visualType === "image" && (
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="aspect-video bg-black/20 rounded-2xl border border-white/5 border-dashed flex flex-col items-center justify-center gap-3 hover:bg-black/30 cursor-pointer transition-all group overflow-hidden relative"
+                                    className="aspect-video bg-slate-100/70 dark:bg-black/20 rounded-2xl border border-slate-300 dark:border-white/5 border-dashed flex flex-col items-center justify-center gap-3 hover:bg-slate-200/50 dark:hover:bg-black/30 cursor-pointer transition-all group overflow-hidden relative"
                                 >
                                     {formData.image ? (
                                         <>
@@ -203,7 +203,7 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                 <Camera className="w-6 h-6" />
                                             </div>
-                                            <span className="text-xs font-bold text-slate-400">تحميل صورة القسم</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">تحميل صورة القسم</span>
                                         </>
                                     )}
                                 </div>

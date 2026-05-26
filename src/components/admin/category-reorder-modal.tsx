@@ -25,26 +25,26 @@ function ReorderItem({ item }: ReorderItemProps) {
             dragListener={false}
             dragControls={dragControls}
             className={cn(
-                "bg-white/5 p-4 rounded-2xl border border-white/10 flex items-center gap-4 hover:bg-white/10 transition-colors group relative",
+                "bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/10 flex items-center gap-4 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group relative",
                 item.isHidden && "opacity-50"
             )}
         >
             <div
                 onPointerDown={(e) => dragControls.start(e)}
-                className="cursor-grab active:cursor-grabbing p-2 -ml-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+                className="cursor-grab active:cursor-grabbing p-2 -ml-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
             >
                 <GripVertical className="w-5 h-5 text-slate-500 group-hover:text-amber-500 transition-colors" />
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-white font-bold truncate">{item.nameAr}</p>
+                <p className="text-slate-900 dark:text-white font-bold truncate">{item.nameAr}</p>
                 <p className="text-[10px] text-slate-500 font-mono">#{item.id.slice(0, 6)}</p>
             </div>
             {item.image ? (
-                <div className="w-10 h-10 rounded-lg bg-muted border border-white/5 overflow-hidden flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-muted border border-slate-200 dark:border-white/5 overflow-hidden flex-shrink-0">
                     <img src={item.image} alt="" className="w-full h-full object-cover" />
                 </div>
             ) : (
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-xl flex-shrink-0">
                     {item.icon || "📁"}
                 </div>
             )}
@@ -101,7 +101,7 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="bg-[#1c2a36] w-full max-w-md p-6 rounded-[32px] border border-white/10 relative shadow-2xl flex flex-col max-h-[85vh]"
+                        className="bg-white dark:bg-[#1c2a36] w-full max-w-md p-6 rounded-[32px] border border-slate-200 dark:border-white/10 relative shadow-2xl flex flex-col max-h-[85vh]"
                     >
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-6">
@@ -109,10 +109,10 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                                 <LayoutList className="w-6 h-6" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold text-white">ترتيب الأقسام مخصص</h2>
-                                <p className="text-[10px] text-slate-400 font-medium">قم بسحب الأقسام لتغيير ترتيب ظهورها للعملاء</p>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">ترتيب الأقسام مخصص</h2>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">قم بسحب الأقسام لتغيير ترتيب ظهورها للعملاء</p>
                             </div>
-                            <button onClick={onClose} className="p-2 mr-auto hover:bg-white/5 rounded-full transition-colors text-slate-500">
+                            <button onClick={onClose} className="p-2 mr-auto hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -131,7 +131,7 @@ export function CategoryReorderModal({ isOpen, onClose }: CategoryReorderModalPr
                             <Button
                                 variant="outline"
                                 onClick={onClose}
-                                className="flex-1 h-14 rounded-2xl border-white/10 text-slate-300 hover:bg-white/5"
+                                className="flex-1 h-14 rounded-2xl border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
                             >
                                 إلغاء
                             </Button>
