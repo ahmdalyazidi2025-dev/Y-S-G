@@ -30,11 +30,11 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 if (!user) {
                     document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                     document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-                    window.location.replace(`/login?role=${role}`)
+                    router.replace(`/login?role=${role}`)
                 } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
-                    window.location.replace("/customer")
+                    router.replace("/customer")
                 } else if (role === "customer" && user.role !== "customer") {
-                    window.location.replace(user.role === "admin" || user.role === "staff" ? "/admin" : `/login?role=customer`)
+                    router.replace(user.role === "admin" || user.role === "staff" ? "/admin" : `/login?role=customer`)
                 } else {
                     setIsChecking(false)
                 }
@@ -42,12 +42,12 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 console.error("Auth check failed:", error)
                 document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                 document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-                window.location.replace(`/login?role=${role}`)
+                router.replace(`/login?role=${role}`)
             }
         }
 
         checkAuth()
-    }, [currentUser, router, role, pathname])
+    }, [currentUser, router, role])
 
     if (isChecking) {
         return (
