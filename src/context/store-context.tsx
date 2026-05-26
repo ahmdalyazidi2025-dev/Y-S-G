@@ -3,11 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
-import { db } from "@/lib/firebase"
+import { db, auth } from "@/lib/firebase"
+import { signInWithEmailAndPassword } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
-    QuerySnapshot, DocumentSnapshot, DocumentData
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc
 } from "firebase/firestore"
 
 export type Banner = {
@@ -660,56 +661,127 @@ const normalizeArabic = (str: string | null | undefined): string => {
             return true
         }
 
-        // 2. Staff / Admin login from database
-        if (role === "admin" || role === "staff") {
-            const member = staff.find(s => normalizeArabic(s.username) === normalizedInput && s.password && s.password.trim() === cleanPassword)
-            if (member) {
-                const user: User = { 
-                    id: member.id, 
-                    name: member.name, 
-                    role: member.role as "admin" | "staff", 
-                    username: member.username, 
-                    permissions: member.permissions 
+        try {
+            // 2. Resolve final email
+            let finalEmail = cleanUsername
+            if (role === "customer") {
+                finalEmail = `${normalizedInput}@ysg.local`
+            } else {
+                // Admin or Staff
+                const usernameDoc = await getDoc(doc(db, "usernames", normalizedInput))
+                if (usernameDoc.exists()) {
+                    finalEmail = usernameDoc.data().email
+                } else {
+                    finalEmail = `${normalizedInput}@ysg.local`
                 }
+            }
+
+            // 3. Authenticate with Firebase Auth
+            const userCredential = await signInWithEmailAndPassword(auth, finalEmail, cleanPassword)
+            const uid = userCredential.user.uid
+
+            // 4. Retrieve details and set role
+            let user: User | null = null
+
+            if (role === "customer") {
+                const customerDoc = await getDoc(doc(db, "customers", uid))
+                if (customerDoc.exists()) {
+                    const cData = customerDoc.data()
+                    user = {
+                        id: uid,
+                        name: cData.name || "عميل",
+                        role: "customer",
+                        username: cData.username || normalizedInput
+                    }
+                } else {
+                    // Fallback if document doesn't exist yet
+                    user = {
+                        id: uid,
+                        name: "عميل",
+                        role: "customer",
+                        username: normalizedInput
+                    }
+                }
+            } else {
+                // Admin or Staff
+                const staffDoc = await getDoc(doc(db, "staff", uid))
+                if (staffDoc.exists()) {
+                    const sData = staffDoc.data()
+                    user = {
+                        id: uid,
+                        name: sData.name || "موظف",
+                        role: (sData.role as "admin" | "staff") || role,
+                        username: sData.username || normalizedInput,
+                        permissions: sData.permissions || []
+                    }
+                } else {
+                    // Fallback
+                    user = {
+                        id: uid,
+                        name: "موظف",
+                        role: role as "admin" | "staff",
+                        username: normalizedInput,
+                        permissions: role === "admin" ? ["all"] : []
+                    }
+                }
+            }
+
+            if (user) {
                 setCurrentUser(user)
                 localStorage.setItem("ysg_user", JSON.stringify(user))
-                
-                // Set cookies for middleware
-                document.cookie = `firebase-auth-token=staff-token-${member.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                document.cookie = `user-role=${member.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+
+                // Get auth token and set cookies for middleware
+                const token = await userCredential.user.getIdToken()
+                document.cookie = `firebase-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                document.cookie = `user-role=${user.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                 return true
             }
+
+            return false
+        } catch (error: any) {
+            console.error("Login authentication failed:", error)
+            
+            // Try local fallback as secondary mechanism if network issues or offline
+            if (role === "customer") {
+                if (normalizedInput === "b1" && cleanPassword === "123") {
+                    const user: User = { id: "b1", name: "عميل b1", role: "customer", username: "b1" }
+                    setCurrentUser(user)
+                    localStorage.setItem("ysg_user", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token=customer-b1-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    return true
+                }
+
+                const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password && c.password.trim() === cleanPassword)
+                if (customer) {
+                    const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
+                    setCurrentUser(user)
+                    localStorage.setItem("ysg_user", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    return true
+                }
+            } else {
+                const member = staff.find(s => normalizeArabic(s.username) === normalizedInput && s.password && s.password.trim() === cleanPassword)
+                if (member) {
+                    const user: User = { 
+                        id: member.id, 
+                        name: member.name, 
+                        role: member.role as "admin" | "staff", 
+                        username: member.username, 
+                        permissions: member.permissions 
+                    }
+                    setCurrentUser(user)
+                    localStorage.setItem("ysg_user", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token=staff-token-${member.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role=${member.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    return true
+                }
+            }
+
+            toast.error("خطأ في البيانات")
+            return false
         }
-
-        // 3. Customer login
-        if (role === "customer") {
-            // Fallback guest/test account
-            if (normalizedInput === "b1" && cleanPassword === "123") {
-                const user: User = { id: "b1", name: "عميل b1", role: "customer", username: "b1" }
-                setCurrentUser(user)
-                localStorage.setItem("ysg_user", JSON.stringify(user))
-                
-                // Set cookies for middleware
-                document.cookie = `firebase-auth-token=customer-b1-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                return true
-            }
-
-            const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password && c.password.trim() === cleanPassword)
-            if (customer) {
-                const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
-                setCurrentUser(user)
-                localStorage.setItem("ysg_user", JSON.stringify(user))
-                
-                // Set cookies for middleware
-                document.cookie = `firebase-auth-token=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                return true
-            }
-        }
-
-        toast.error("خطأ في البيانات")
-        return false
     }
 
     const logout = () => {
