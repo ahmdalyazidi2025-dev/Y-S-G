@@ -7,6 +7,8 @@ import Image from "next/image"
 export function InvoiceTemplate({ order }: { order: import("@/context/store-context").Order }) {
     const { storeSettings } = useStore()
 
+    if (!order) return null;
+
     return (
         <>
             {/* Print Styles - Hide everything except invoice when printing */}
@@ -79,14 +81,14 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                             className="w-[90px] h-[90px] rounded-full object-cover border-4 border-slate-900 shadow-lg"
                         />
                         <div>
-                            <h1 className="text-3xl font-black text-slate-900 mb-2">{storeSettings.aboutTitle}</h1>
+                            <h1 className="text-3xl font-black text-slate-900 mb-2">{storeSettings?.aboutTitle || "YSG Sales"}</h1>
                             <div className="flex items-center gap-2 text-slate-700 text-sm font-semibold mb-1">
                                 <MapPin className="w-4 h-4" />
-                                <span>{storeSettings.contactAddress}</span>
+                                <span>{storeSettings?.contactAddress || ""}</span>
                             </div>
                             <div className="flex items-center gap-2 text-slate-700 text-sm font-semibold">
                                 <Phone className="w-4 h-4" />
-                                <span>{storeSettings.contactPhone}</span>
+                                <span>{storeSettings?.contactPhone || ""}</span>
                             </div>
                         </div>
                     </div>
@@ -95,10 +97,10 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                             فاتورة مبيعات
                         </div>
                         <p className="text-slate-700 text-base font-bold mb-1">
-                            <span className="font-black">رقم الفاتورة:</span> #{order.id.slice(-8).toUpperCase()}
+                            <span className="font-black">رقم الفاتورة:</span> #{order.id ? order.id.slice(-8).toUpperCase() : ""}
                         </p>
                         <p className="text-slate-700 text-base font-bold">
-                            <span className="font-black">التاريخ:</span> {new Date(order.createdAt).toLocaleDateString('ar-SA')}
+                            <span className="font-black">التاريخ:</span> {new Date(order.createdAt || new Date()).toLocaleDateString('ar-SA')}
                         </p>
                     </div>
                 </div>
@@ -109,7 +111,7 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <p className="text-sm text-slate-600 font-bold mb-1">الاسم:</p>
-                            <p className="font-black text-lg text-slate-900">{order.customerName}</p>
+                            <p className="font-black text-lg text-slate-900">{order.customerName || "عميل غير معروف"}</p>
                         </div>
                         <div>
                             <p className="text-sm text-slate-600 font-bold mb-1">طريقة الدفع:</p>
@@ -131,22 +133,22 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                         </tr>
                     </thead>
                     <tbody>
-                        {order.items.map((item, idx) => {
-                            const priceBeforeTax = item.price;
+                        {(order.items || []).map((item, idx) => {
+                            const priceBeforeTax = item.price || item.selectedPrice || 0;
                             const taxAmount = priceBeforeTax * 0.15;
                             const priceWithTax = priceBeforeTax * 1.15;
-                            const totalBeforeTax = priceBeforeTax * item.quantity;
-                            const totalTax = taxAmount * item.quantity;
-                            const totalWithTax = priceWithTax * item.quantity;
+                            const totalBeforeTax = priceBeforeTax * (item.quantity || 0);
+                            const totalTax = taxAmount * (item.quantity || 0);
+                            const totalWithTax = priceWithTax * (item.quantity || 0);
 
                             return (
                                 <tr key={idx} className={`border-b-2 border-slate-300 ${idx % 2 === 0 ? 'bg-slate-50' : 'bg-white'}`}>
                                     <td className="py-4 px-4">
-                                        <p className="font-black text-base text-slate-900">{item.name}</p>
-                                        <p className="text-sm text-slate-600 font-bold">{item.unit}</p>
+                                        <p className="font-black text-base text-slate-900">{item.name || "منتج"}</p>
+                                        <p className="text-sm text-slate-600 font-bold">{item.unit || "حبة"}</p>
                                     </td>
                                     <td className="py-4 px-3 text-center">
-                                        <span className="font-black text-lg text-slate-900">{item.quantity}</span>
+                                        <span className="font-black text-lg text-slate-900">{item.quantity || 0}</span>
                                     </td>
                                     <td className="py-4 px-3 text-center">
                                         <span className="font-bold text-base text-slate-700">{priceBeforeTax.toFixed(2)}</span>
@@ -175,19 +177,19 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                         {/* Subtotal before tax */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">المجموع قبل الضريبة:</span>
-                            <span className="font-black text-lg">{order.total.toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg">{(order.total || 0).toFixed(2)} ر.س</span>
                         </div>
 
                         {/* VAT 15% */}
                         <div className="flex justify-between text-slate-700 text-base py-3 border-b-2 border-slate-300">
                             <span className="font-black">ضريبة القيمة المضافة (15%):</span>
-                            <span className="font-black text-lg text-red-600">{(order.total * 0.15).toFixed(2)} ر.س</span>
+                            <span className="font-black text-lg text-red-600">{((order.total || 0) * 0.15).toFixed(2)} ر.س</span>
                         </div>
 
                         {/* Total with tax */}
                         <div className="flex justify-between bg-slate-900 text-white font-black text-xl p-5 rounded-xl shadow-lg mt-3">
                             <span>الإجمالي شامل الضريبة:</span>
-                            <span className="text-2xl">{(order.total * 1.15).toFixed(2)} ر.س</span>
+                            <span className="text-2xl">{((order.total || 0) * 1.15).toFixed(2)} ر.س</span>
                         </div>
                     </div>
                 </div>

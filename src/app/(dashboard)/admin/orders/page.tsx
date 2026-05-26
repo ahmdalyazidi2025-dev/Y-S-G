@@ -199,7 +199,12 @@ export default function AdminOrdersPage() {
                     </div>
                 ) : (
                     filteredOrders.map((order) => {
-                        const status = STATUS_CONFIG[order.status || "pending"]
+                        const status = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG] || {
+                            label: order.status || "غير معروف",
+                            color: "text-slate-400",
+                            bg: "bg-slate-400/10",
+                            icon: Clock
+                        }
                         return (
                             <div
                                 key={order.id}
@@ -250,9 +255,19 @@ export default function AdminOrdersPage() {
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
                                         <h2 className="text-xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
-                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", STATUS_CONFIG[selectedOrder.status || "pending"].bg, STATUS_CONFIG[selectedOrder.status || "pending"].color)}>
-                                            {STATUS_CONFIG[selectedOrder.status || "pending"].label}
-                                        </span>
+                                        {(() => {
+                                            const status = STATUS_CONFIG[selectedOrder.status as keyof typeof STATUS_CONFIG] || {
+                                                label: selectedOrder.status || "غير معروف",
+                                                color: "text-slate-400",
+                                                bg: "bg-slate-400/10",
+                                                icon: Clock
+                                            }
+                                            return (
+                                                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold", status.bg, status.color)}>
+                                                    {status.label}
+                                                </span>
+                                            )
+                                        })()}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
