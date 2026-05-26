@@ -15,11 +15,11 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_CONFIG = {
-    pending: { label: "لم تجهز", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
-    processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
-    shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
-    delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
-    canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
+    pending: { label: "لم تجهز", color: "text-orange-500", bg: "bg-orange-500/10", icon: Clock },
+    processing: { label: "جاري العمل", color: "text-blue-500", bg: "bg-blue-500/10", icon: Package },
+    shipped: { label: "تم الشحن", color: "text-purple-500", bg: "bg-purple-500/10", icon: Truck },
+    delivered: { label: "تم التسليم", color: "text-green-500", bg: "bg-green-500/10", icon: CheckCircle2 },
+    canceled: { label: "ملغاة", color: "text-red-500", bg: "bg-red-500/10", icon: XCircle },
 }
 
 const formatOrderDate = (d: any): string => {
@@ -73,7 +73,7 @@ export default function AdminOrdersPage() {
 
     const filteredOrders = (orders || []).filter(o => {
         if (!o) return false
-        
+
         let date: Date
         const rawDate = o.createdAt
         if (rawDate instanceof Date) date = rawDate
@@ -111,43 +111,46 @@ export default function AdminOrdersPage() {
 
     return (
         <div className="space-y-6">
+            {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">متابعة الطلبات</h1>
+                <h1 className="text-2xl font-bold flex-1 text-slate-900 dark:text-white">متابعة الطلبات</h1>
             </div>
 
+            {/* Search */}
             <div className="relative">
-                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                <Search className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
                     placeholder="ابحث باسم العميل..."
-                    className="bg-black/20 border-white/10 pr-10 text-right h-12 rounded-xl"
+                    className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 pr-10 text-right h-12 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
 
+            {/* Filters */}
             <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                    <MapPin className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <select
                         value={regionFilter}
                         onChange={(e) => setRegionFilter(e.target.value)}
-                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none"
+                        className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                         <option value="all">كل المناطق</option>
                         {regions.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                 </div>
                 <div className="relative">
-                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-500" />
+                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
                     <select
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value as typeof dateRange)}
-                        className="w-full bg-black/20 border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none"
+                        className="w-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 pr-10 text-right h-10 rounded-xl text-xs appearance-none text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
                         <option value="all">كل الأوقات</option>
                         <option value="today">اليوم</option>
@@ -157,14 +160,17 @@ export default function AdminOrdersPage() {
                 </div>
             </div>
 
-            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+            {/* Category Tabs */}
+            <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200 dark:border-white/5">
                 {(Object.entries(categories) as [keyof typeof categories, string][]).map(([id, label]) => (
                     <button
                         key={id}
                         onClick={() => setActiveCategory(id)}
                         className={cn(
                             "flex-1 py-2 text-[10px] font-bold rounded-xl transition-all",
-                            activeCategory === id ? "bg-primary text-white shadow-lg" : "text-slate-500 hover:text-white"
+                            activeCategory === id
+                                ? "bg-primary text-white shadow-lg"
+                                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white"
                         )}
                     >
                         {label}
@@ -172,6 +178,7 @@ export default function AdminOrdersPage() {
                 ))}
             </div>
 
+            {/* Status Filter Pills */}
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 {["all", "pending", "processing", "shipped", "delivered", "canceled"].map((s) => (
                     <button
@@ -183,8 +190,8 @@ export default function AdminOrdersPage() {
                         className={cn(
                             "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap",
                             filter === s
-                                ? "bg-primary text-white"
-                                : "bg-white/5 text-slate-400 hover:bg-white/10"
+                                ? "bg-primary text-white shadow-md"
+                                : "bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
                         )}
                     >
                         {s === "all" ? "الكل" : STATUS_CONFIG[s as keyof typeof STATUS_CONFIG].label}
@@ -192,40 +199,41 @@ export default function AdminOrdersPage() {
                 ))}
             </div>
 
+            {/* Orders List */}
             <div className="space-y-3">
                 {filteredOrders.length === 0 ? (
-                    <div className="p-20 text-center text-slate-500 border border-dashed border-slate-700 rounded-2xl bg-white/5">
+                    <div className="p-20 text-center text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-white/5">
                         لا توجد طلبات في هذا التصنيف
                     </div>
                 ) : (
                     filteredOrders.map((order) => {
                         const status = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG] || {
                             label: order.status || "غير معروف",
-                            color: "text-slate-400",
-                            bg: "bg-slate-400/10",
+                            color: "text-slate-500",
+                            bg: "bg-slate-100 dark:bg-slate-400/10",
                             icon: Clock
                         }
                         return (
                             <div
                                 key={order.id}
-                                className="glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                                className="glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5"
                                 onClick={() => setSelectedOrder(order)}
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", status.bg, status.color)}>
+                                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", status.bg, status.color)}>
                                         <status.icon className="w-5 h-5" />
                                     </div>
                                     <div className="space-y-0.5">
-                                        <h3 className="font-bold text-white text-sm">#{order.id} - {order.customerName || "عميل غير معروف"}</h3>
-                                        <p className="text-[10px] text-slate-500">{formatOrderDate(order.createdAt)}</p>
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-sm">#{order.id} - {order.customerName || "عميل غير معروف"}</h3>
+                                        <p className="text-[10px] text-slate-400">{formatOrderDate(order.createdAt)}</p>
                                     </div>
                                 </div>
                                 <div className="text-left flex items-center gap-4">
                                     <div className="space-y-0.5">
-                                        <p className="text-xs font-bold text-white">{(order.total || 0).toFixed(2)} ر.س</p>
-                                        <p className="text-[10px] text-slate-500">{(order.items || []).length} منتجات</p>
+                                        <p className="text-xs font-bold text-slate-900 dark:text-white">{(order.total || 0).toFixed(2)} ر.س</p>
+                                        <p className="text-[10px] text-slate-400">{(order.items || []).length} منتجات</p>
                                     </div>
-                                    <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                    <ChevronLeft className="w-4 h-4 text-slate-400" />
                                 </div>
                             </div>
                         )
@@ -242,7 +250,7 @@ export default function AdminOrdersPage() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedOrder(null)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
@@ -250,16 +258,17 @@ export default function AdminOrdersPage() {
                             exit={{ scale: 0.9, opacity: 0 }}
                             className="glass-card w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto"
                         >
-                            <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between mb-8 border-b border-slate-100 dark:border-white/10 pb-4">
                                 <div className="flex items-center gap-3 flex-1">
                                     <Package className="w-6 h-6 text-primary" />
                                     <div>
-                                        <h2 className="text-xl font-bold">تفاصيل الطلب #{selectedOrder.id}</h2>
+                                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">تفاصيل الطلب #{selectedOrder.id}</h2>
                                         {(() => {
                                             const status = STATUS_CONFIG[selectedOrder.status as keyof typeof STATUS_CONFIG] || {
                                                 label: selectedOrder.status || "غير معروف",
-                                                color: "text-slate-400",
-                                                bg: "bg-slate-400/10",
+                                                color: "text-slate-500",
+                                                bg: "bg-slate-100 dark:bg-slate-400/10",
                                                 icon: Clock
                                             }
                                             return (
@@ -274,7 +283,7 @@ export default function AdminOrdersPage() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-blue-400 hover:bg-blue-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-blue-400/20"
+                                        className="text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-blue-200 dark:hover:border-blue-400/20"
                                         onClick={() => window.print()}
                                     >
                                         <Printer className="w-4 h-4" />
@@ -283,7 +292,7 @@ export default function AdminOrdersPage() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-emerald-400 hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-400/20"
+                                        className="text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-400/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-emerald-200 dark:hover:border-emerald-400/20"
                                         onClick={() => handleShareWhatsApp(selectedOrder)}
                                     >
                                         <Share2 className="w-4 h-4" />
@@ -292,51 +301,53 @@ export default function AdminOrdersPage() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="text-primary hover:bg-primary/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-primary/20"
+                                        className="text-primary hover:bg-primary/5 dark:hover:bg-primary/10 gap-2 h-9 px-3 rounded-lg border border-transparent hover:border-primary/20"
                                         onClick={() => handleDownloadPDF(selectedOrder)}
                                     >
                                         <FileDown className="w-4 h-4" />
                                         <span className="text-xs">PDF</span>
                                     </Button>
-                                    <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-white/5 rounded-full">
+                                    <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors">
                                         <XCircle className="w-5 h-5 text-slate-400" />
                                     </button>
                                 </div>
                             </div>
 
+                            {/* Customer & Date info */}
                             <div className="grid grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-slate-400 text-xs">
                                         <User className="w-3 h-3" />
                                         العميل
                                     </div>
-                                    <p className="font-bold text-white text-sm">{selectedOrder.customerName || "عميل غير معروف"}</p>
+                                    <p className="font-bold text-slate-900 dark:text-white text-sm">{selectedOrder.customerName || "عميل غير معروف"}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-slate-400 text-xs">
                                         <Calendar className="w-3 h-3" />
                                         التاريخ
                                     </div>
-                                    <p className="font-bold text-white text-sm">{formatOrderDate(selectedOrder.createdAt)}</p>
+                                    <p className="font-bold text-slate-900 dark:text-white text-sm">{formatOrderDate(selectedOrder.createdAt)}</p>
                                 </div>
                             </div>
 
+                            {/* Products */}
                             <div className="space-y-3 mb-8">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase">قائمة المنتجات</h4>
+                                <h4 className="text-xs font-bold text-slate-400 uppercase">قائمة المنتجات</h4>
                                 {(selectedOrder.items || []).map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-black/40 rounded flex items-center justify-center text-xs">📦</div>
+                                            <div className="w-8 h-8 bg-slate-100 dark:bg-black/40 rounded flex items-center justify-center text-xs">📦</div>
                                             <div>
-                                                <p className="text-sm font-bold text-white">{item.name || "منتج"}</p>
-                                                <p className="text-[10px] text-slate-500">{(item.quantity || 0)} x {(item.price || 0)} ر.س</p>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">{item.name || "منتج"}</p>
+                                                <p className="text-[10px] text-slate-400">{(item.quantity || 0)} x {(item.price || 0)} ر.س</p>
                                             </div>
                                         </div>
                                         <p className="text-sm font-bold text-primary">{((item.quantity || 0) * (item.price || 0)).toFixed(2)} ر.س</p>
                                     </div>
                                 ))}
                                 <div className="flex justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
-                                    <div className="flex items-center gap-2 font-bold text-white">
+                                    <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
                                         <CreditCard className="w-4 h-4 text-primary" />
                                         الإجمالي
                                     </div>
@@ -344,16 +355,19 @@ export default function AdminOrdersPage() {
                                 </div>
                             </div>
 
+                            {/* Status Update */}
                             <div className="space-y-3">
-                                <h4 className="text-xs font-bold text-slate-500 uppercase">تحديث حالة الطلب</h4>
+                                <h4 className="text-xs font-bold text-slate-400 uppercase">تحديث حالة الطلب</h4>
                                 <div className="grid grid-cols-3 gap-2">
                                     {(Object.keys(STATUS_CONFIG) as Array<keyof typeof STATUS_CONFIG>).map((statusKey) => (
                                         <Button
                                             key={statusKey}
-                                            variant="glass"
+                                            variant="ghost"
                                             className={cn(
-                                                "h-10 text-[10px] font-bold rounded-lg",
-                                                selectedOrder.status === statusKey ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color : "hover:bg-white/5"
+                                                "h-10 text-[10px] font-bold rounded-lg border transition-all",
+                                                selectedOrder.status === statusKey
+                                                    ? STATUS_CONFIG[statusKey].bg + " " + STATUS_CONFIG[statusKey].color + " border-current/20"
+                                                    : "border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
                                             )}
                                             onClick={() => {
                                                 updateOrderStatus(selectedOrder.id, statusKey)
