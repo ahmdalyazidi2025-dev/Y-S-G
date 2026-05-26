@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Layers, Globe, Image as ImageIcon } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
 import { AdminCategoryForm } from "@/components/admin/category-form"
 
@@ -26,8 +27,8 @@ export default function CategoriesPage() {
         <div className="space-y-6">
             <div className="flex items-center gap-4">
                 <Link href="/admin">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                        <ArrowRight className="w-5 h-5" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إدارة الأقسام</h1>
@@ -47,10 +48,25 @@ export default function CategoriesPage() {
                     </div>
                 ) : (
                     categories.map((category) => (
-                        <div key={category.id} className="glass-card overflow-hidden group">
-                            <div className="h-24 bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center relative">
-                                <Layers className="w-10 h-10 text-primary opacity-20" />
-                                <div className="absolute top-2 right-2 flex gap-1">
+                        <div key={category.id} className="glass-card overflow-hidden group rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-md transition-all">
+                            <div className="h-28 bg-slate-100 dark:bg-black/20 flex items-center justify-center relative overflow-hidden">
+                                {category.image ? (
+                                    <div className="absolute inset-0">
+                                        <Image
+                                            src={category.image}
+                                            alt={category.nameAr}
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+                                    </div>
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center">
+                                        <span className="text-3xl filter drop-shadow-sm">{category.icon || "📁"}</span>
+                                    </div>
+                                )}
+                                <div className="absolute top-2 right-2 flex gap-1 z-10">
                                     <Button
                                         variant="glass"
                                         size="icon"
@@ -73,10 +89,10 @@ export default function CategoriesPage() {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="p-4 space-y-2">
+                            <div className="p-5 space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="font-bold text-white text-lg">{category.nameAr}</h3>
-                                    <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-slate-400">ID: {category.id}</span>
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">{category.nameAr}</h3>
+                                    <span className="text-[10px] bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400">ID: {category.id}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-slate-500 text-sm">
                                     <Globe className="w-3 h-3" />
