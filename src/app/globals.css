@@ -213,6 +213,15 @@
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
   }
+
+  /* Legacy Skeleton Utility */
+  .skeleton {
+    background-color: rgba(0, 0, 0, 0.07);
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .dark .skeleton {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 /* Fix Date Input RTL Issues - Native Fallback */

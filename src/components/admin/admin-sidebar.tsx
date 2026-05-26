@@ -62,7 +62,7 @@ export function AdminSidebar() {
     const filteredNavItems = NAV_ITEMS.filter(canAccess)
 
     return (
-        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-white/5 z-50 hidden lg:flex flex-col p-6 gap-8">
+        <aside className="fixed right-0 top-0 bottom-0 w-64 glass border-l border-slate-200/80 dark:border-white/5 z-50 hidden lg:flex flex-col p-6 gap-8">
             {/* Logo Section */}
             <div className="flex items-center gap-3 px-2">
                 <div className="relative">
@@ -72,11 +72,11 @@ export function AdminSidebar() {
                         alt="Logo"
                         width={40}
                         height={40}
-                        className="rounded-full object-cover border border-white/10 relative z-10"
+                        className="rounded-full object-cover border border-slate-200 dark:border-white/10 relative z-10"
                     />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-sm font-black text-white tracking-tighter">YSG GROUP</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-white tracking-tighter">YSG GROUP</span>
                     <span className="text-[8px] text-primary font-bold uppercase tracking-[0.2em]">Core Control</span>
                 </div>
             </div>
@@ -93,8 +93,8 @@ export function AdminSidebar() {
                                 className={cn(
                                     "flex items-center justify-between px-4 py-3 rounded-2xl transition-all group relative overflow-hidden",
                                     isActive
-                                        ? "bg-primary/10 text-white border border-primary/20"
-                                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                                        ? "bg-primary/10 text-primary border border-primary/20 font-bold"
+                                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
                                 )}
                             >
                                 <div className="flex items-center gap-3 relative z-10">
@@ -111,7 +111,7 @@ export function AdminSidebar() {
 
                                 <ChevronRight className={cn(
                                     "w-3 h-3 transition-transform opacity-0 group-hover:opacity-100",
-                                    isActive ? "opacity-100 text-primary" : "text-slate-600"
+                                    isActive ? "opacity-100 text-primary" : "text-slate-650 dark:text-slate-600"
                                 )} />
                             </motion.div>
                         </Link>
@@ -120,14 +120,14 @@ export function AdminSidebar() {
             </nav>
 
             {/* Bottom Section */}
-            <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+            <div className="pt-6 border-t border-slate-200/80 dark:border-white/5 flex flex-col gap-4">
                 <div className="flex justify-between items-center px-4">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">المظهر</span>
                     <ThemeToggle />
                 </div>
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-400/10 transition-colors group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-500 dark:text-red-400 hover:bg-red-400/10 transition-colors group cursor-pointer"
                 >
                     <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     <span className="text-xs font-bold">تسجيل الخروج</span>
@@ -150,7 +150,7 @@ export function AdminMobileNav() {
     ]
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-white/5 z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 glass border-t border-slate-200/80 dark:border-white/5 z-[60] flex items-center justify-around lg:hidden px-2 pb-safe">
             {BOTTOM_ITEMS.filter(item => {
                 if (!currentUser) return false
                 if (currentUser.role === "admin") return true
@@ -168,7 +168,7 @@ export function AdminMobileNav() {
                     <Link key={item.href} href={item.href} className="flex-1">
                         <div className={cn(
                             "flex flex-col items-center justify-center gap-1 transition-all",
-                            isActive ? "text-primary scale-110" : "text-slate-500 hover:text-white"
+                            isActive ? "text-primary scale-110" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                         )}>
                             <div className={cn(
                                 "p-1.5 rounded-xl transition-all",
