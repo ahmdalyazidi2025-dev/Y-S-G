@@ -14,15 +14,78 @@ import { cn } from "@/lib/utils"
 import { useStore, type Product, type Order } from "@/context/store-context"
 
 const ADMIN_MODULES = [
-    { title: "إدارة المنتجات", icon: Package, link: "/admin/products", color: "text-blue-450 dark:text-blue-400", bg: "bg-blue-400/10" },
-    { title: "الأقسام", icon: Layers, link: "/admin/categories", color: "text-primary", bg: "bg-primary/10" },
-    { title: "إدارة العملاء", icon: Users, link: "/admin/customers", color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-400/10" },
-    { title: "الإحصائيات", icon: BarChart3, link: "/admin/analytics", color: "text-indigo-650 dark:text-indigo-400", bg: "bg-indigo-400/10" },
-    { title: "متابعة الطلبات", icon: ClipboardList, link: "/admin/orders", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-400/10" },
-    { title: "طلبات التوفير", icon: Camera, link: "/admin/requests", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-400/10" },
-    { title: "صور العرض", icon: LugideImage, link: "/admin/banners", color: "text-pink-650 dark:text-pink-400", bg: "bg-pink-400/10" },
-    { title: "الدردشة", icon: MessageCircle, link: "/admin/chat", color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-400/10" },
-    { title: "الإعدادات", icon: Settings, link: "/admin/settings", color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-400/10" },
+    {
+        title: "إدارة المنتجات", icon: Package, link: "/admin/products",
+        color: "text-blue-600 dark:text-blue-400",
+        iconBg: "bg-gradient-to-br from-blue-500/20 to-blue-600/10 dark:from-blue-500/30 dark:to-blue-600/10",
+        iconBorder: "border border-blue-200 dark:border-blue-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(59,130,246,0.35)]",
+        cardGlow: "from-blue-500/8",
+    },
+    {
+        title: "الأقسام", icon: Layers, link: "/admin/categories",
+        color: "text-primary",
+        iconBg: "bg-gradient-to-br from-primary/20 to-primary/10",
+        iconBorder: "border border-primary/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(99,102,241,0.35)]",
+        cardGlow: "from-primary/8",
+    },
+    {
+        title: "إدارة العملاء", icon: Users, link: "/admin/customers",
+        color: "text-teal-600 dark:text-teal-400",
+        iconBg: "bg-gradient-to-br from-teal-500/20 to-teal-600/10 dark:from-teal-500/30 dark:to-teal-600/10",
+        iconBorder: "border border-teal-200 dark:border-teal-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(20,184,166,0.35)]",
+        cardGlow: "from-teal-500/8",
+    },
+    {
+        title: "الإحصائيات", icon: BarChart3, link: "/admin/analytics",
+        color: "text-indigo-600 dark:text-indigo-400",
+        iconBg: "bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 dark:from-indigo-500/30 dark:to-indigo-600/10",
+        iconBorder: "border border-indigo-200 dark:border-indigo-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(99,102,241,0.35)]",
+        cardGlow: "from-indigo-500/8",
+    },
+    {
+        title: "متابعة الطلبات", icon: ClipboardList, link: "/admin/orders",
+        color: "text-orange-600 dark:text-orange-400",
+        iconBg: "bg-gradient-to-br from-orange-500/20 to-orange-600/10 dark:from-orange-500/30 dark:to-orange-600/10",
+        iconBorder: "border border-orange-200 dark:border-orange-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(249,115,22,0.35)]",
+        cardGlow: "from-orange-500/8",
+    },
+    {
+        title: "طلبات التوفير", icon: Camera, link: "/admin/requests",
+        color: "text-purple-600 dark:text-purple-400",
+        iconBg: "bg-gradient-to-br from-purple-500/20 to-purple-600/10 dark:from-purple-500/30 dark:to-purple-600/10",
+        iconBorder: "border border-purple-200 dark:border-purple-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(168,85,247,0.35)]",
+        cardGlow: "from-purple-500/8",
+    },
+    {
+        title: "صور العرض", icon: LugideImage, link: "/admin/banners",
+        color: "text-pink-600 dark:text-pink-400",
+        iconBg: "bg-gradient-to-br from-pink-500/20 to-pink-600/10 dark:from-pink-500/30 dark:to-pink-600/10",
+        iconBorder: "border border-pink-200 dark:border-pink-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(236,72,153,0.35)]",
+        cardGlow: "from-pink-500/8",
+    },
+    {
+        title: "الدردشة", icon: MessageCircle, link: "/admin/chat",
+        color: "text-sky-600 dark:text-sky-400",
+        iconBg: "bg-gradient-to-br from-sky-500/20 to-sky-600/10 dark:from-sky-500/30 dark:to-sky-600/10",
+        iconBorder: "border border-sky-200 dark:border-sky-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(14,165,233,0.35)]",
+        cardGlow: "from-sky-500/8",
+    },
+    {
+        title: "الإعدادات", icon: Settings, link: "/admin/settings",
+        color: "text-slate-600 dark:text-slate-400",
+        iconBg: "bg-gradient-to-br from-slate-400/20 to-slate-500/10 dark:from-slate-500/30 dark:to-slate-600/10",
+        iconBorder: "border border-slate-200 dark:border-slate-500/20",
+        iconGlow: "group-hover:shadow-[0_0_24px_rgba(148,163,184,0.3)]",
+        cardGlow: "from-slate-400/8",
+    },
 ]
 
 export default function AdminDashboard() {
@@ -138,27 +201,32 @@ export default function AdminDashboard() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        whileHover={{ y: -8, scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="glass-card p-8 flex flex-col items-center justify-center text-center gap-6 h-48 relative border-slate-200/80 dark:border-white/5 group-hover:border-primary/50 overflow-hidden"
+                                        className="glass-card p-8 flex flex-col items-center justify-center text-center gap-5 h-48 relative border-slate-200/80 dark:border-white/5 group-hover:border-primary/30 overflow-hidden transition-all duration-300"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        {/* Card background glow on hover */}
+                                        <div className={cn("absolute inset-0 bg-gradient-to-br via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500", module.cardGlow)} />
 
+                                        {/* Icon Container */}
                                         <div className={cn(
-                                            "p-5 rounded-[2rem] bg-slate-100 dark:bg-white/5 transition-all duration-500 group-hover:scale-110 group-hover:bg-slate-200/55 dark:group-hover:bg-white/10 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]",
+                                            "p-4 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+                                            module.iconBg,
+                                            module.iconBorder,
+                                            module.iconGlow,
                                             module.color
                                         )}>
-                                            <module.icon className="w-10 h-10" strokeWidth={1.5} />
+                                            <module.icon className="w-9 h-9" strokeWidth={1.6} />
                                         </div>
+
                                         <div className="space-y-1 z-10">
-                                            <span className="font-black text-sm text-slate-900 dark:text-white block uppercase tracking-[0.15em]">{module.title}</span>
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.3em]">System Module</span>
+                                            <span className="font-black text-sm text-slate-900 dark:text-white block tracking-wide">{module.title}</span>
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.25em]">System Module</span>
                                         </div>
 
-                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[3px] bg-primary group-hover:w-1/3 transition-all duration-500 rounded-t-full" />
+                                        {/* Bottom accent line */}
+                                        <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] group-hover:w-2/5 transition-all duration-500 rounded-t-full", module.iconBg.includes('blue') ? 'bg-blue-500' : module.iconBg.includes('teal') ? 'bg-teal-500' : module.iconBg.includes('orange') ? 'bg-orange-500' : module.iconBg.includes('purple') ? 'bg-purple-500' : module.iconBg.includes('pink') ? 'bg-pink-500' : module.iconBg.includes('sky') ? 'bg-sky-500' : module.iconBg.includes('indigo') ? 'bg-indigo-500' : 'bg-primary')} />
 
-                                        <div className="absolute top-6 right-6 flex gap-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                        <div className="absolute top-4 right-4">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                                         </div>
                                     </motion.div>
                                 </Link>
@@ -290,7 +358,12 @@ function StatsCard({ title, value, icon: Icon, color, glow }: { title: string; v
         <div className="glass-card p-6 h-32 flex flex-col gap-4 relative overflow-hidden border-slate-200/80 dark:border-white/5">
             <div className={cn("absolute -right-8 -top-8 w-32 h-32 rounded-full blur-[50px] opacity-20 transition-opacity group-hover:opacity-40", glow)} />
             <div className="flex items-center justify-between relative z-10">
-                <div className={cn("p-3 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 group-hover:scale-110 transition-transform", color)}>
+                <div className={cn(
+                    "p-3 rounded-2xl transition-all duration-300",
+                    "bg-gradient-to-br from-current/10 to-current/5",
+                    "border border-current/15",
+                    color
+                )}>
                     <Icon className="w-6 h-6" />
                 </div>
                 <div className="text-right">
