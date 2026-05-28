@@ -153,22 +153,28 @@ export default function AdminDashboard() {
                                 title="إجمالي المبيعات"
                                 value={`${totalSales.toLocaleString()} ر.س`}
                                 icon={TrendingUp}
-                                color="text-emerald-600 dark:text-emerald-450"
-                                glow="bg-emerald-450/20"
+                                color="text-emerald-600"
+                                glow="bg-emerald-400/20"
+                                iconColor="#059669"
+                                iconBg="rgba(16,185,129,0.12)"
                             />
                             <StatsCard
                                 title="الطلبات النشطة"
                                 value={pendingOrders.toString()}
                                 icon={ShoppingBag}
-                                color="text-sky-600 dark:text-sky-450"
-                                glow="bg-sky-450/20"
+                                color="text-sky-600"
+                                glow="bg-sky-400/20"
+                                iconColor="#0284c7"
+                                iconBg="rgba(14,165,233,0.12)"
                             />
                             <StatsCard
                                 title="قاعدة العملاء"
                                 value={customers.length.toString()}
                                 icon={UserCheck}
-                                color="text-violet-600 dark:text-violet-450"
-                                glow="bg-violet-450/20"
+                                color="text-violet-600"
+                                glow="bg-violet-400/20"
+                                iconColor="#7c3aed"
+                                iconBg="rgba(139,92,246,0.12)"
                             />
                         </>
                     )}
@@ -355,26 +361,42 @@ function SkeletonModule({ index }: { index: number }) {
     )
 }
 
-function StatsCard({ title, value, icon: Icon, color, glow }: { title: string; value: string; icon: LucideIcon; color: string; glow: string; }) {
+function StatsCard({ title, value, icon: Icon, color, glow, iconColor, iconBg }: {
+    title: string; value: string; icon: LucideIcon; color: string; glow: string;
+    iconColor: string; iconBg: string;
+}) {
     return (
-        <div className="glass-card p-6 h-32 flex flex-col gap-4 relative overflow-hidden border-slate-200/80 dark:border-white/5">
-            <div className={cn("absolute -right-8 -top-8 w-32 h-32 rounded-full blur-[50px] opacity-20 transition-opacity group-hover:opacity-40", glow)} />
-            <div className="flex items-center justify-between relative z-10">
-                <div className={cn(
-                    "p-3 rounded-2xl transition-all duration-300",
-                    "bg-gradient-to-br from-current/10 to-current/5",
-                    "border border-current/15",
-                    color
-                )}>
-                    <Icon className="w-6 h-6" />
+        <div className="glass-card p-5 relative overflow-hidden group cursor-default">
+            {/* Soft background glow */}
+            <div className={cn("absolute -right-6 -top-6 w-28 h-28 rounded-full blur-[40px] opacity-15 group-hover:opacity-30 transition-opacity duration-500", glow)} />
+
+            <div className="flex items-center justify-between relative z-10 mb-4">
+                {/* Circular Icon */}
+                <div
+                    className="w-12 h-12 flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                        borderRadius: "50%",
+                        background: iconBg,
+                        color: iconColor,
+                        border: `1.5px solid ${iconColor}30`,
+                    }}
+                >
+                    <Icon size={20} strokeWidth={2} />
                 </div>
+
+                {/* Value & Title */}
                 <div className="text-right">
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{title}</p>
-                    <p className="text-2xl font-black text-slate-950 dark:text-white tracking-tighter">{value}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-widest mb-0.5">{title}</p>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{value}</p>
                 </div>
             </div>
-            <div className="h-1.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden relative z-10">
-                <div className={cn("h-full w-2/3 rounded-full opacity-50", glow)} />
+
+            {/* Progress bar */}
+            <div className="h-1 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                <div
+                    className="h-full w-2/3 rounded-full opacity-70"
+                    style={{ background: iconColor }}
+                />
             </div>
         </div>
     )
