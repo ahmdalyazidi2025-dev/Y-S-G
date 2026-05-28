@@ -16,75 +16,66 @@ import { useStore, type Product, type Order } from "@/context/store-context"
 const ADMIN_MODULES = [
     {
         title: "إدارة المنتجات", icon: Package, link: "/admin/products",
-        color: "text-blue-600 dark:text-blue-400",
-        iconBg: "bg-gradient-to-br from-blue-500/20 to-blue-600/10 dark:from-blue-500/30 dark:to-blue-600/10",
-        iconBorder: "border border-blue-200 dark:border-blue-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(59,130,246,0.35)]",
-        cardGlow: "from-blue-500/8",
+        iconColor: "#2563eb",
+        iconBgColor: "rgba(59,130,246,0.12)",
+        iconBorderColor: "rgba(59,130,246,0.25)",
+        glowColor: "rgba(59,130,246,0.3)",
     },
     {
         title: "الأقسام", icon: Layers, link: "/admin/categories",
-        color: "text-primary",
-        iconBg: "bg-gradient-to-br from-primary/20 to-primary/10",
-        iconBorder: "border border-primary/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(99,102,241,0.35)]",
-        cardGlow: "from-primary/8",
+        iconColor: "#4f46e5",
+        iconBgColor: "rgba(99,102,241,0.12)",
+        iconBorderColor: "rgba(99,102,241,0.25)",
+        glowColor: "rgba(99,102,241,0.3)",
     },
     {
         title: "إدارة العملاء", icon: Users, link: "/admin/customers",
-        color: "text-teal-600 dark:text-teal-400",
-        iconBg: "bg-gradient-to-br from-teal-500/20 to-teal-600/10 dark:from-teal-500/30 dark:to-teal-600/10",
-        iconBorder: "border border-teal-200 dark:border-teal-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(20,184,166,0.35)]",
-        cardGlow: "from-teal-500/8",
+        iconColor: "#0d9488",
+        iconBgColor: "rgba(20,184,166,0.12)",
+        iconBorderColor: "rgba(20,184,166,0.25)",
+        glowColor: "rgba(20,184,166,0.3)",
     },
     {
         title: "الإحصائيات", icon: BarChart3, link: "/admin/analytics",
-        color: "text-indigo-600 dark:text-indigo-400",
-        iconBg: "bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 dark:from-indigo-500/30 dark:to-indigo-600/10",
-        iconBorder: "border border-indigo-200 dark:border-indigo-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(99,102,241,0.35)]",
-        cardGlow: "from-indigo-500/8",
+        iconColor: "#4338ca",
+        iconBgColor: "rgba(99,102,241,0.12)",
+        iconBorderColor: "rgba(99,102,241,0.25)",
+        glowColor: "rgba(99,102,241,0.3)",
     },
     {
         title: "متابعة الطلبات", icon: ClipboardList, link: "/admin/orders",
-        color: "text-orange-600 dark:text-orange-400",
-        iconBg: "bg-gradient-to-br from-orange-500/20 to-orange-600/10 dark:from-orange-500/30 dark:to-orange-600/10",
-        iconBorder: "border border-orange-200 dark:border-orange-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(249,115,22,0.35)]",
-        cardGlow: "from-orange-500/8",
+        iconColor: "#ea580c",
+        iconBgColor: "rgba(249,115,22,0.12)",
+        iconBorderColor: "rgba(249,115,22,0.25)",
+        glowColor: "rgba(249,115,22,0.3)",
     },
     {
         title: "طلبات التوفير", icon: Camera, link: "/admin/requests",
-        color: "text-purple-600 dark:text-purple-400",
-        iconBg: "bg-gradient-to-br from-purple-500/20 to-purple-600/10 dark:from-purple-500/30 dark:to-purple-600/10",
-        iconBorder: "border border-purple-200 dark:border-purple-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(168,85,247,0.35)]",
-        cardGlow: "from-purple-500/8",
+        iconColor: "#9333ea",
+        iconBgColor: "rgba(168,85,247,0.12)",
+        iconBorderColor: "rgba(168,85,247,0.25)",
+        glowColor: "rgba(168,85,247,0.3)",
     },
     {
         title: "صور العرض", icon: LugideImage, link: "/admin/banners",
-        color: "text-pink-600 dark:text-pink-400",
-        iconBg: "bg-gradient-to-br from-pink-500/20 to-pink-600/10 dark:from-pink-500/30 dark:to-pink-600/10",
-        iconBorder: "border border-pink-200 dark:border-pink-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(236,72,153,0.35)]",
-        cardGlow: "from-pink-500/8",
+        iconColor: "#db2777",
+        iconBgColor: "rgba(236,72,153,0.12)",
+        iconBorderColor: "rgba(236,72,153,0.25)",
+        glowColor: "rgba(236,72,153,0.3)",
     },
     {
         title: "الدردشة", icon: MessageCircle, link: "/admin/chat",
-        color: "text-sky-600 dark:text-sky-400",
-        iconBg: "bg-gradient-to-br from-sky-500/20 to-sky-600/10 dark:from-sky-500/30 dark:to-sky-600/10",
-        iconBorder: "border border-sky-200 dark:border-sky-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(14,165,233,0.35)]",
-        cardGlow: "from-sky-500/8",
+        iconColor: "#0284c7",
+        iconBgColor: "rgba(14,165,233,0.12)",
+        iconBorderColor: "rgba(14,165,233,0.25)",
+        glowColor: "rgba(14,165,233,0.3)",
     },
     {
         title: "الإعدادات", icon: Settings, link: "/admin/settings",
-        color: "text-slate-600 dark:text-slate-400",
-        iconBg: "bg-gradient-to-br from-slate-400/20 to-slate-500/10 dark:from-slate-500/30 dark:to-slate-600/10",
-        iconBorder: "border border-slate-200 dark:border-slate-500/20",
-        iconGlow: "group-hover:shadow-[0_0_24px_rgba(148,163,184,0.3)]",
-        cardGlow: "from-slate-400/8",
+        iconColor: "#475569",
+        iconBgColor: "rgba(100,116,139,0.12)",
+        iconBorderColor: "rgba(100,116,139,0.25)",
+        glowColor: "rgba(100,116,139,0.25)",
     },
 ]
 
@@ -203,32 +194,41 @@ export default function AdminDashboard() {
                                         transition={{ delay: idx * 0.05 }}
                                         whileHover={{ y: -6, scale: 1.02 }}
                                         whileTap={{ scale: 0.97 }}
-                                        className="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 h-44 relative border-slate-200/80 dark:border-white/5 group-hover:border-primary/20 overflow-hidden transition-all duration-300"
+                                        className="glass-card p-6 flex flex-col items-center justify-center text-center gap-4 h-44 relative overflow-hidden transition-all duration-300"
+                                        style={{ borderColor: "rgba(0,0,0,0.07)" }}
                                     >
-                                        {/* Card background glow on hover */}
-                                        <div className={cn("absolute inset-0 bg-gradient-to-br via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500", module.cardGlow)} />
+                                        {/* Card glow on hover */}
+                                        <div
+                                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
+                                            style={{ background: `radial-gradient(ellipse at top, ${module.iconBgColor} 0%, transparent 70%)` }}
+                                        />
 
-                                        {/* Icon — circular, soft, modern */}
-                                        <div className={cn(
-                                            "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 group-hover:scale-115 group-hover:shadow-lg",
-                                            module.iconBg,
-                                            module.iconBorder,
-                                            module.iconGlow,
-                                            module.color
-                                        )}>
-                                            <module.icon className="w-6 h-6" strokeWidth={1.8} />
+                                        {/* Icon — fully circular with inline styles (Tailwind-safe) */}
+                                        <div
+                                            className="w-14 h-14 flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                                            style={{
+                                                borderRadius: "50%",
+                                                background: module.iconBgColor,
+                                                border: `1.5px solid ${module.iconBorderColor}`,
+                                                color: module.iconColor,
+                                            }}
+                                        >
+                                            <module.icon style={{ width: 24, height: 24, strokeWidth: 1.8 }} />
                                         </div>
 
                                         <div className="space-y-0.5 z-10">
                                             <span className="font-bold text-sm text-slate-800 dark:text-white block">{module.title}</span>
-                                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-[0.2em]">System Module</span>
+                                            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-widest">System Module</span>
                                         </div>
 
                                         {/* Bottom accent */}
-                                        <div className={cn("absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] group-hover:w-1/3 transition-all duration-500 rounded-t-full", module.iconBg.includes('blue') ? 'bg-blue-500' : module.iconBg.includes('teal') ? 'bg-teal-500' : module.iconBg.includes('orange') ? 'bg-orange-500' : module.iconBg.includes('purple') ? 'bg-purple-500' : module.iconBg.includes('pink') ? 'bg-pink-500' : module.iconBg.includes('sky') ? 'bg-sky-500' : module.iconBg.includes('indigo') ? 'bg-indigo-500' : 'bg-primary')} />
+                                        <div
+                                            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 group-hover:w-1/3 transition-all duration-500 rounded-t-full"
+                                            style={{ background: module.iconColor }}
+                                        />
 
                                         <div className="absolute top-3 right-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_rgba(16,185,129,0.7)]" />
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" style={{ boxShadow: "0 0 6px rgba(16,185,129,0.7)" }} />
                                         </div>
                                     </motion.div>
                                 </Link>
