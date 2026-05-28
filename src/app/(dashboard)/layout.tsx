@@ -2,6 +2,24 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminSidebar, AdminMobileNav } from "@/components/admin/admin-sidebar"
 import { AdminAiAssistant } from "@/components/admin/admin-ai-assistant"
 import Image from "next/image"
+import type { Metadata } from "next"
+
+// ← أيقونة الإدارة المستقلة — تظهر عند تثبيت الموقع من قسم الإدارة
+export const metadata: Metadata = {
+    title: "YSG Admin — قسم الإدارة",
+    description: "نظام الإدارة المتكامل لمجموعة YSG",
+    manifest: "/manifest-admin.json",
+    icons: {
+        icon: "/admin-logo.png",
+        apple: "/admin-logo.png",
+    },
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "YSG Admin",
+    },
+}
+
 
 export default function AdminLayout({
     children,

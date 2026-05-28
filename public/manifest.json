@@ -1,18 +1,35 @@
 {
-  "name": "Y S G",
-  "short_name": "Y S G",
-  "description": "نظام توزيع المبيعات المتكامل لمجموعة YSG",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#f8fafc",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "/pwa-icon.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    }
-  ]
+    "id": "/",
+    "name": "YSG Group — المتجر",
+    "short_name": "Y S G",
+    "description": "نظام توزيع المبيعات المتكامل لمجموعة YSG",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#f8fafc",
+    "orientation": "portrait",
+    "lang": "ar",
+    "dir": "rtl",
+    "categories": ["shopping", "business"],
+    "icons": [
+        {
+            "src": "/pwa-icon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa-icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa-icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
 }
