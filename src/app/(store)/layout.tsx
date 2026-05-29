@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { ClipboardList, ShoppingCart, PlusCircle, MessageSquare, Scan, LogOut } from "lucide-react"
+import { ClipboardList, ShoppingCart, PlusCircle, MessageSquare, Scan, LogOut, Share2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Footer } from "@/components/store/footer"
+import { toast } from "sonner"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -68,6 +69,30 @@ export default function StoreLayout({
                             </div>
                             <div className="flex items-center gap-3">
                                 <ThemeToggle />
+                                <button
+                                    onClick={() => {
+                                        try {
+                                            const shareData = {
+                                                title: 'YSG SALES',
+                                                text: 'تفضل بزيارة متجرنا الإلكتروني المميز لطلب المنتجات ومتابعة الفواتير والطلبات!',
+                                                url: window.location.origin
+                                            }
+                                            if (navigator.share) {
+                                                navigator.share(shareData)
+                                            } else {
+                                                navigator.clipboard.writeText(window.location.origin)
+                                                toast.success("تم نسخ رابط المتجر بنجاح!", { description: "رابط المتجر جاهز الآن للمشاركة 🔗" })
+                                            }
+                                        } catch (err) {
+                                            console.error(err)
+                                        }
+                                    }}
+                                    className="p-2.5 bg-emerald-500/10 rounded-2xl text-emerald-500 hover:bg-emerald-500/20 transition-all border border-emerald-500/20 flex items-center justify-center cursor-pointer gap-1.5"
+                                    title="مشاركة رابط المتجر"
+                                >
+                                    <Share2 className="w-4 h-4" />
+                                    <span className="hidden sm:inline text-xs font-bold">مشاركة المتجر</span>
+                                </button>
                                 <button
                                     onClick={handleLogout}
                                     className="px-5 py-2.5 bg-red-500/10 rounded-2xl text-red-400 hover:bg-red-400/20 transition-all border border-red-500/20 flex items-center gap-2 font-bold text-xs"

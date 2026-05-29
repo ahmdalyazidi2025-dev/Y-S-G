@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
     Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers,
-    Camera, LogOut, TrendingUp, ShoppingBag, UserCheck, Clock, BarChart3,
+    Camera, LogOut, TrendingUp, ShoppingBag, UserCheck, Clock, BarChart3, Share2,
     type LucideIcon
 } from "lucide-react"
 import NextImage from "next/image"
@@ -134,12 +134,32 @@ export default function AdminDashboard() {
                         <p className="text-[10px] text-primary/80 font-bold uppercase tracking-[0.2em]">Analytical Core Control</p>
                     </div>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    className="p-2.5 glass rounded-2xl text-red-500 dark:text-red-400 hover:text-red-650 dark:hover:text-red-300 hover:bg-red-400/10 border border-slate-200/80 dark:border-white/5 transition-all cursor-pointer"
-                >
-                    <LogOut className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            try {
+                                const storefrontLink = window.location.origin
+                                navigator.clipboard.writeText(storefrontLink)
+                                import("sonner").then(({ toast }) => {
+                                    toast.success("تم نسخ رابط المتجر بنجاح!", { description: "رابط متجر العملاء جاهز الآن للمشاركة 🔗" })
+                                })
+                            } catch (e) {
+                                console.error(e)
+                            }
+                        }}
+                        className="p-2.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/20 rounded-2xl flex items-center justify-center cursor-pointer transition-all gap-1.5"
+                        title="مشاركة رابط المتجر للعملاء"
+                    >
+                        <Share2 className="w-5 h-5" />
+                        <span className="text-xs font-bold hidden md:inline">مشاركة رابط المتجر</span>
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2.5 glass rounded-2xl text-red-500 dark:text-red-400 hover:text-red-650 dark:hover:text-red-300 hover:bg-red-400/10 border border-slate-200/80 dark:border-white/5 transition-all cursor-pointer"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Premium Stats Grid */}
