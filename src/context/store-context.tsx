@@ -70,6 +70,7 @@ export type Customer = {
     referralCode?: string
     email?: string
     createdAt?: Date | any
+    allowedCategories?: string[] | "all"
 }
 
 export type Coupon = {

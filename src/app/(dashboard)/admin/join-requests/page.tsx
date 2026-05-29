@@ -1,9 +1,9 @@
 "use client"
 
-import { useStore } from "@/context/store-context"
-type JoinRequest = { id: string; name: string; phone: string; createdAt: Date; };
+import { useStore, Customer } from "@/context/store-context"
+type JoinRequest = { id: string; name: string; phone: string; centerName?: string; location?: string; createdAt: Date; };
 const useSettings = () => ({ markSectionAsViewed: (s: string) => {} });
-import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
+import { Trash2, Copy, Search, UserPlus, ArrowRight, Phone, UserCheck, XCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { ar } from "date-fns/locale"
+import { AdminCustomerForm } from "@/components/admin/customer-form"
 
 export default function JoinRequestsPage() {
     const { joinRequests = [], deleteJoinRequest = async () => {} } = useStore()
@@ -19,15 +20,31 @@ export default function JoinRequestsPage() {
     useEffect(() => { markSectionAsViewed('joinRequests') }, [])
     /* eslint-enable react-hooks/exhaustive-deps */
     const [search, setSearch] = useState("")
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
     const filtered = joinRequests.filter(req =>
         req.name.toLowerCase().includes(search.toLowerCase()) ||
-        req.phone.includes(search)
+        req.phone.includes(search) ||
+        (req.centerName && req.centerName.toLowerCase().includes(search.toLowerCase())) ||
+        (req.location && req.location.toLowerCase().includes(search.toLowerCase()))
     )
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text)
         toast.success("تم النسخ")
+    }
+
+    const handleAddCustomer = (req: JoinRequest) => {
+        setSelectedCustomer({
+            id: "", // empty id triggers addCustomer instead of updateCustomer
+            name: req.name,
+            phone: req.phone,
+            username: req.phone, // Default username is the phone number
+            location: req.centerName ? `${req.centerName} - ${req.location || ''}` : (req.location || ""),
+            email: ""
+        })
+        // Delete joinRequest upon starting adding flow so it is promoted!
+        deleteJoinRequest(req.id)
     }
 
     return (
@@ -41,7 +58,7 @@ export default function JoinRequestsPage() {
                     </Link>
                     <div>
                         <h1 className="text-2xl font-black text-foreground mb-1">طلبات الانضمام</h1>
-                        <p className="text-muted-foreground text-sm">إدارة طلبات تسجيل العملاء الجدد</p>
+                        <p className="text-muted-foreground text-sm">إدارة وتنشيط طلبات العملاء الجدد بشكل فوري</p>
                     </div>
                 </div>
                 <div className="bg-card border border-border rounded-2xl px-4 py-2 flex items-center gap-2 text-foreground shadow-sm">
@@ -55,7 +72,7 @@ export default function JoinRequestsPage() {
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <input
                     type="text"
-                    placeholder="بحث بالاسم أو رقم الهاتف..."
+                    placeholder="بحث بالاسم، رقم الهاتف، اسم المركز أو المدينة..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full bg-background border border-border rounded-2xl h-14 pr-12 pl-4 text-foreground focus:border-primary/50 transition-colors shadow-sm focus:ring-1 focus:ring-primary/20 outline-none"
@@ -84,35 +101,67 @@ export default function JoinRequestsPage() {
                                 className="glass-card p-4 flex flex-col md:flex-row items-center justify-between gap-4 group border border-border/50 shadow-sm"
                             >
                                 <div className="flex items-center gap-4 w-full md:w-auto">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
                                         {req.name[0]}
                                     </div>
-                                    <div>
+                                    <div className="space-y-1 text-right">
                                         <h3 className="font-bold text-foreground text-lg">{req.name}</h3>
-                                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                            {req.centerName && (
+                                                <span className="font-bold text-slate-700 dark:text-slate-350">
+                                                    🏪 {req.centerName}
+                                                </span>
+                                            )}
+                                            {req.location && (
+                                                <span className="font-bold text-slate-700 dark:text-slate-350">
+                                                    📍 {req.location}
+                                                </span>
+                                            )}
                                             <span
-                                                className="hover:text-primary cursor-pointer flex items-center gap-1 transition-colors"
+                                                className="hover:text-primary cursor-pointer flex items-center gap-1 transition-colors font-mono font-bold"
                                                 onClick={() => copyToClipboard(req.phone)}
                                             >
-                                                {req.phone}
+                                                📞 {req.phone}
                                                 <Copy className="w-3 h-3" />
                                             </span>
-                                            <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-                                            <span>
-                                                {format(new Date(req.createdAt), "d MMMM yyyy - h:mm a", { locale: ar })}
+                                            <span className="text-[10px] opacity-75">
+                                                ⏰ {format(new Date(req.createdAt), "d MMMM yyyy - h:mm a", { locale: ar })}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                    {/* تواصل واتساب */}
+                                    <a
+                                        href={`https://wa.me/${req.phone.replace(/^0/, '966')}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex-1 md:flex-none"
+                                    >
+                                        <Button variant="outline" className="w-full h-10 border-green-500/20 text-green-600 dark:text-green-550 hover:bg-green-500/10 gap-2 rounded-xl text-xs font-black">
+                                            <span>واتساب</span>
+                                        </Button>
+                                    </a>
+
+                                    {/* إضافة وتفعيل */}
+                                    <button
+                                        onClick={() => handleAddCustomer(req)}
+                                        className="flex-1 md:flex-none h-10 px-4 rounded-xl bg-primary text-white hover:bg-primary/95 transition-all flex items-center justify-center gap-2 text-xs font-black"
+                                        title="إضافة وتفعيل الحساب"
+                                    >
+                                        <UserCheck className="w-4 h-4" />
+                                        <span>إضافة وتفعيل</span>
+                                    </button>
+
+                                    {/* رفض */}
                                     <button
                                         onClick={() => deleteJoinRequest(req.id)}
-                                        className="flex-1 md:flex-none h-10 px-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground border border-destructive/20 transition-all flex items-center justify-center gap-2"
-                                        title="حذف نهائي"
+                                        className="flex-1 md:flex-none h-10 px-4 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground border border-destructive/20 transition-all flex items-center justify-center gap-2 text-xs font-black"
+                                        title="رفض وحذف الطلب"
                                     >
-                                        <Trash2 className="w-4 h-4" />
-                                        <span className="md:hidden">حذف</span>
+                                        <XCircle className="w-4 h-4" />
+                                        <span>رفض</span>
                                     </button>
                                 </div>
                             </motion.div>
@@ -120,6 +169,13 @@ export default function JoinRequestsPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Customer Add Form Modal */}
+            <AdminCustomerForm
+                isOpen={!!selectedCustomer}
+                onClose={() => setSelectedCustomer(null)}
+                initialCustomer={selectedCustomer}
+            />
         </div>
     )
 }

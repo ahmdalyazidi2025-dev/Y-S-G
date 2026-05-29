@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Customer, useStore } from "@/context/store-context"
+import { cn } from "@/lib/utils"
 
 interface CustomerFormProps {
     isOpen: boolean
@@ -15,7 +16,7 @@ interface CustomerFormProps {
 }
 
 export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: CustomerFormProps) {
-    const { addCustomer, updateCustomer } = useStore()
+    const { addCustomer, updateCustomer, categories = [] } = useStore()
 
     const [formData, setFormData] = useState({
         name: "",
@@ -24,6 +25,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         password: "",
         location: "",
     })
+    const [viewAllCategories, setViewAllCategories] = useState(true)
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
     useEffect(() => {
         if (!isOpen) return;
@@ -33,10 +36,18 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                 setFormData({
                     name: initialCustomer.name,
                     phone: initialCustomer.phone,
-                    username: initialCustomer.username,
+                    username: initialCustomer.username || "",
                     password: "", // Password is never pre-filled for security
                     location: initialCustomer.location || "",
                 })
+                const allowed = initialCustomer.allowedCategories
+                if (!allowed || allowed === "all") {
+                    setViewAllCategories(true)
+                    setSelectedCategories([])
+                } else {
+                    setViewAllCategories(false)
+                    setSelectedCategories(allowed)
+                }
             } else {
                 setFormData({
                     name: "",
@@ -45,6 +56,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     password: "",
                     location: "",
                 })
+                setViewAllCategories(true)
+                setSelectedCategories([])
             }
         }, 0);
 
@@ -59,6 +72,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
             username: formData.username,
             password: formData.password || undefined,
             location: formData.location,
+            allowedCategories: (viewAllCategories ? "all" : selectedCategories) as "all" | string[],
         }
 
         if (initialCustomer) {
@@ -159,6 +173,61 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Allowed Categories Section */}
+                            <div className="space-y-3 border-t border-slate-200 dark:border-white/10 pt-4">
+                                <Label className="text-slate-900 dark:text-white font-bold block text-right">صلاحيات رؤية الأقسام</Label>
+                                
+                                <div className="flex items-center justify-between bg-slate-100/50 dark:bg-black/20 p-3 rounded-xl border border-slate-200/50 dark:border-white/5">
+                                    <Label htmlFor="view-all-cats" className="text-xs font-bold text-slate-700 dark:text-slate-350 cursor-pointer">رؤية جميع الأقسام</Label>
+                                    <input
+                                        type="checkbox"
+                                        id="view-all-cats"
+                                        checked={viewAllCategories}
+                                        onChange={(e) => setViewAllCategories(e.target.checked)}
+                                        className="w-5 h-5 rounded-lg border-slate-300 text-primary focus:ring-primary/50 cursor-pointer"
+                                    />
+                                </div>
+
+                                {!viewAllCategories && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-black/10 rounded-xl border border-slate-200/40 dark:border-white/5 no-scrollbar"
+                                    >
+                                        {categories.map((cat: any) => {
+                                            const isChecked = selectedCategories.includes(cat.id) || selectedCategories.includes(cat.nameAr)
+                                            return (
+                                                <div 
+                                                    key={cat.id} 
+                                                    onClick={() => {
+                                                        if (isChecked) {
+                                                            setSelectedCategories(selectedCategories.filter(id => id !== cat.id && id !== cat.nameAr))
+                                                        } else {
+                                                            setSelectedCategories([...selectedCategories, cat.id])
+                                                        }
+                                                    }}
+                                                    className={cn(
+                                                        "flex items-center justify-between p-2 rounded-lg border text-right cursor-pointer transition-all",
+                                                        isChecked
+                                                            ? "bg-primary/5 border-primary/30 text-primary font-bold"
+                                                            : "bg-background border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <span className="text-[11px] truncate flex-1">{cat.nameAr}</span>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {}} // handled by div click
+                                                        className="w-3.5 h-3.5 rounded border-slate-300 text-primary pointer-events-none"
+                                                    />
+                                                </div>
+                                            )
+                                        })}
+                                    </motion.div>
+                                )}
                             </div>
 
                             <div className="pt-4">

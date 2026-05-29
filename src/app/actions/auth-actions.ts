@@ -119,7 +119,7 @@ export async function requestPasswordResetAction(phone: string) {
 }
 
 // Public action: No auth needed (anyone can request to join)
-export async function addJoinRequestAction(name: string, phone: string) {
+export async function addJoinRequestAction(name: string, phone: string, centerName?: string, location?: string) {
     if (!name || !phone) return { success: false, error: "الاسم ورقم الهاتف مطلوبان" }
 
     try {
@@ -140,6 +140,8 @@ export async function addJoinRequestAction(name: string, phone: string) {
         await adminDb.collection("joinRequests").add({
             name,
             phone,
+            centerName: centerName || "",
+            location: location || "",
             createdAt: FieldValue.serverTimestamp()
         })
         return { success: true }

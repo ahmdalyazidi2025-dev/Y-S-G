@@ -23,6 +23,8 @@ function LandingContent() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinName, setJoinName] = useState("");
   const [joinPhone, setJoinPhone] = useState("");
+  const [joinCenterName, setJoinCenterName] = useState("");
+  const [joinLocation, setJoinLocation] = useState("");
   const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ function LandingContent() {
   }, [showContent, isFromLogout, isAssembling]);
 
   const handleJoinSubmit = async () => {
-    if (!joinName || !joinPhone) {
+    if (!joinName || !joinPhone || !joinCenterName || !joinLocation) {
       import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"));
       return;
     }
@@ -70,13 +72,15 @@ function LandingContent() {
 
     setIsSubmittingJoin(true);
     try {
-      const result = await addJoinRequestAction(joinName, joinPhone);
+      const result = await addJoinRequestAction(joinName, joinPhone, joinCenterName, joinLocation);
       if (!result.success) {
         throw new Error(result.error || "حدث خطأ أثناء إرسال الطلب");
       }
       setShowJoinModal(false);
       setJoinName("");
       setJoinPhone("");
+      setJoinCenterName("");
+      setJoinLocation("");
       import("sonner").then(({ toast }) => toast.success("تم إرسال طلب الانضمام بنجاح"));
     } catch (error: any) {
       console.error("Join request failed", error);
@@ -286,6 +290,28 @@ function LandingContent() {
                           onChange={(e) => setJoinName(e.target.value)}
                           className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
                           placeholder="اسمك الكريم"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">اسم المركز / المحل</label>
+                        <input
+                          type="text"
+                          value={joinCenterName}
+                          onChange={(e) => setJoinCenterName(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="مثال: مركز العناية بالسيارات"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">المدينة / الموقع</label>
+                        <input
+                          type="text"
+                          value={joinLocation}
+                          onChange={(e) => setJoinLocation(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="مثال: الرياض"
                           autoComplete="off"
                         />
                       </div>
