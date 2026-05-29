@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Activity, UserPlus, KeyRound } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Activity, UserPlus, KeyRound, Share2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -90,8 +90,8 @@ export function AdminSidebar() {
                 </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-2">
+            {/* Navigation with internal scrolling to prevent cutoff */}
+            <nav className="flex-1 space-y-2 overflow-y-auto pr-1 no-scrollbar max-h-[calc(100vh-280px)]">
                 <p className="px-4 text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-4">Management</p>
                 {filteredNavItems.map((item) => {
                     const isActive = pathname === item.href
@@ -134,16 +134,37 @@ export function AdminSidebar() {
             </nav>
 
             {/* Bottom Section */}
-            <div className="pt-6 border-t border-slate-200/80 dark:border-white/5 flex flex-col gap-4">
-                <div className="flex justify-between items-center px-4">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/5 flex flex-col gap-3">
+                {/* Global Store Sharing button in sidebar */}
+                <button
+                    onClick={() => {
+                        try {
+                            const storefrontLink = window.location.origin
+                            navigator.clipboard.writeText(storefrontLink)
+                            import("sonner").then(({ toast }) => {
+                                toast.success("تم نسخ رابط المتجر بنجاح!", { description: "رابط متجر العملاء جاهز الآن للمشاركة 🔗" })
+                            })
+                        } catch (e) {
+                            console.error(e)
+                        }
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-orange-500 hover:bg-orange-500/10 border border-orange-500/20 bg-orange-500/5 transition-all group cursor-pointer text-right justify-start"
+                    title="نسخ رابط المتجر للعملاء"
+                >
+                    <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" />
+                    <span className="text-xs font-black">نسخ رابط المتجر</span>
+                </button>
+
+                <div className="flex justify-between items-center px-4 py-1.5 bg-slate-100/50 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/5">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">المظهر</span>
                     <ThemeToggle />
                 </div>
+
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-500 dark:text-red-400 hover:bg-red-400/10 transition-colors group cursor-pointer"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-500 dark:text-red-400 hover:bg-red-400/10 transition-colors group cursor-pointer text-right justify-start"
                 >
-                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform flex-shrink-0" />
                     <span className="text-xs font-bold">تسجيل الخروج</span>
                 </button>
             </div>
