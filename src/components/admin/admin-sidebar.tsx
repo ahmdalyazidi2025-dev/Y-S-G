@@ -28,7 +28,16 @@ const NAV_ITEMS = [
 export function AdminSidebar() {
     const pathname = usePathname()
     const router = useRouter()
-    const { logout, currentUser } = useStore()
+    const { logout, currentUser, joinRequests = [], passwordRequests = [], orders = [], productRequests = [], messages = [] } = useStore()
+
+    const getBadgeCount = (href: string) => {
+        if (href === "/admin/join-requests") return joinRequests.length
+        if (href === "/admin/password-requests") return passwordRequests.length
+        if (href === "/admin/orders") return orders.filter((o: any) => o.status === 'pending').length
+        if (href === "/admin/requests") return productRequests.filter((r: any) => r.status === 'pending').length
+        if (href === "/admin/chat") return messages.filter((m: any) => !m.isAdmin && !m.read).length
+        return 0
+    }
 
     const handleLogout = () => {
         logout()
@@ -97,9 +106,14 @@ export function AdminSidebar() {
                                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
                                 )}
                             >
-                                <div className="flex items-center gap-3 relative z-10">
-                                    <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : item.color)} />
-                                    <span className="text-xs font-bold">{item.title}</span>
+                                <div className="flex items-center gap-3 relative z-10 w-full">
+                                    <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-primary" : item.color)} />
+                                    <span className="text-xs font-bold flex-1 text-right">{item.title}</span>
+                                    {getBadgeCount(item.href) > 0 && (
+                                        <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px] ml-1 shadow-sm shadow-red-500/30 animate-pulse">
+                                            {getBadgeCount(item.href)}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {isActive && (
