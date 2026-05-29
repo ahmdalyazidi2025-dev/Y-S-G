@@ -3,20 +3,29 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Users, ShoppingBag } from "lucide-react";
+import { Users, ShoppingBag, Loader2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "next-themes";
+import { useStore } from "@/context/store-context";
+import { useCommunication } from "@/context/communication-context";
 
 function LandingContent() {
   const searchParams = useSearchParams();
   const isFromLogout = searchParams.get("logout") === "true";
   const { setTheme } = useTheme();
+  const { addJoinRequest } = useCommunication();
 
   const [showContent, setShowContent] = useState(isFromLogout);
   const [isAssembling, setIsAssembling] = useState(!isFromLogout);
+
+  // Join Request State
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinName, setJoinName] = useState("");
+  const [joinPhone, setJoinPhone] = useState("");
+  const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
 
   useEffect(() => {
     // Force reset theme to light on first visit to this version to clear old dark caches
@@ -47,6 +56,34 @@ function LandingContent() {
       return () => clearTimeout(timer);
     }
   }, [showContent, isFromLogout, isAssembling]);
+
+  const handleJoinSubmit = async () => {
+    if (!joinName || !joinPhone) {
+      import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"));
+      return;
+    }
+
+    // SA Phone Validation
+    const phoneRegex = /^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/;
+    if (!phoneRegex.test(joinPhone)) {
+      import("sonner").then(({ toast }) => toast.error("يرجى إدخال رقم جوال سعودي صحيح (يبدأ بـ 05 ويتكون من 10 أرقام)"));
+      return;
+    }
+
+    setIsSubmittingJoin(true);
+    try {
+      await addJoinRequest(joinName, joinPhone);
+      setShowJoinModal(false);
+      setJoinName("");
+      setJoinPhone("");
+      import("sonner").then(({ toast }) => toast.success("تم إرسال طلب الانضمام بنجاح"));
+    } catch (error: any) {
+      console.error("Join request failed", error);
+      import("sonner").then(({ toast }) => toast.error(error.message || "حدث خطأ أثناء إرسال الطلب"));
+    } finally {
+      setIsSubmittingJoin(false);
+    }
+  };
 
   return (
     <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-white to-slate-100/50 text-slate-900 overflow-hidden relative">
@@ -147,9 +184,15 @@ function LandingContent() {
               <div className="w-full flex flex-col gap-6">
                 <AnimatePresence mode="wait">
                   {isAssembling ? (
-                    <div key="skeleton" className="w-full h-56 bg-white/80 border border-slate-200/80 rounded-[2rem] relative overflow-hidden flex flex-col items-center justify-center gap-6 shadow-md">
-                      <div className="w-16 h-16 bg-slate-100 animate-pulse rounded-3xl" />
-                      <div className="w-40 h-8 bg-slate-100 animate-pulse rounded-lg" />
+                    <div key="skeleton" className="w-full space-y-6">
+                      <div className="w-full h-56 bg-white/80 border border-slate-200/80 rounded-[2rem] relative overflow-hidden flex flex-col items-center justify-center gap-6 shadow-md">
+                        <div className="w-16 h-16 bg-slate-100 animate-pulse rounded-3xl" />
+                        <div className="w-40 h-8 bg-slate-100 animate-pulse rounded-lg" />
+                      </div>
+                      <div className="w-full h-32 bg-white/80 border border-slate-200/80 rounded-[2rem] relative overflow-hidden flex flex-col items-center justify-center gap-4 shadow-md">
+                        <div className="w-10 h-10 bg-slate-100 animate-pulse rounded-2xl" />
+                        <div className="w-32 h-6 bg-slate-100 animate-pulse rounded-lg" />
+                      </div>
                     </div>
                   ) : (
                     <motion.div
@@ -157,6 +200,7 @@ function LandingContent() {
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ type: "spring", damping: 20 }}
+                      className="space-y-6"
                     >
                       <Link href="/login?role=customer" className="group block">
                         <div className="relative w-full h-56 md:h-64 bg-white/80 border border-slate-200/80 rounded-[2rem] flex flex-col items-center justify-center gap-6 transition-all shadow-md group-active:scale-95 cursor-pointer overflow-hidden group-hover:border-primary/50 group-hover:bg-primary/[0.02] group-hover:shadow-lg transition-all duration-300">
@@ -172,20 +216,118 @@ function LandingContent() {
                           </div>
                         </div>
                       </Link>
+
+                      {/* Join Request Box */}
+                      <motion.button
+                        onClick={() => setShowJoinModal(true)}
+                        className="group relative w-full h-32 bg-white/80 border border-slate-200/80 rounded-[2rem] flex items-center justify-center gap-6 transition-all active:scale-[0.98] cursor-pointer overflow-hidden hover:border-primary/50 hover:bg-primary/[0.02] hover:shadow-lg transition-all duration-300 px-8 text-right"
+                      >
+                        {/* Soft Ambient Background */}
+                        <div className="absolute inset-0 bg-gradient-to-l from-primary/5 via-transparent to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                        {/* Icon Container */}
+                        <div className="relative z-10 shrink-0">
+                          <div className="relative w-16 h-16 rounded-[1.25rem] bg-primary/5 border border-primary/10 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-500 text-primary">
+                            <Users className="w-7 h-7" />
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-1 relative z-10 space-y-1">
+                          <h2 className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-primary transition-colors">
+                            طلب انضمام
+                          </h2>
+                          <p className="text-[11px] text-slate-500 font-bold tracking-wide">
+                            كن شريكاً لنا في النجاح
+                          </p>
+                        </div>
+
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 rotate-[-90deg] opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                          <ArrowRight className="w-5 h-5 text-primary" />
+                        </div>
+                      </motion.button>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <div className="flex flex-col items-center gap-4 justify-center mt-4">
-                  <Link
-                    href="/login?role=admin"
-                    className="text-[8px] font-bold text-slate-300 hover:text-slate-600 transition-all uppercase tracking-[0.4em] p-2"
-                  >
-                    Control System
-                  </Link>
-                </div>
+                {/* Visible admin link removed for better customer security. Direct URL access /login?role=admin remains functional. */}
+                <div className="h-6" />
               </div>
             </div>
+
+            {/* Join Request Modal */}
+            <AnimatePresence>
+              {showJoinModal && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                  onClick={() => setShowJoinModal(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-white border border-slate-200 p-6 rounded-[2rem] w-full max-w-md shadow-2xl space-y-4 text-slate-900"
+                  >
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-slate-900 mb-1">طلب انضمام</h3>
+                      <p className="text-slate-500 text-sm">أدخل بياناتك وسيتم التواصل معك من قبل الإدارة</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">الاسم الكامل</label>
+                        <input
+                          type="text"
+                          value={joinName}
+                          onChange={(e) => setJoinName(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="اسمك الكريم"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">رقم الهاتف</label>
+                        <input
+                          type="tel"
+                          value={joinPhone}
+                          onChange={(e) => setJoinPhone(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="05xxxxxxx"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => setShowJoinModal(false)}
+                        className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold transition-colors"
+                        disabled={isSubmittingJoin}
+                      >
+                        إلغاء
+                      </button>
+                      <button
+                        onClick={handleJoinSubmit}
+                        className="flex-1 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold flex items-center justify-center gap-2 transition-colors"
+                        disabled={isSubmittingJoin}
+                      >
+                        {isSubmittingJoin ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            جاري الإرسال...
+                          </>
+                        ) : (
+                          "إرسال الطلب"
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <motion.div
               initial={{ opacity: 0 }}
