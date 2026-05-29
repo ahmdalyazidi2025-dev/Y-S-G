@@ -720,7 +720,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return "Disconnected"
             }
 
-            const targetCustomers = customers.filter(c => getCategory(c.lastActive) === category)
+            const targetCustomers = category === "all" ? customers : customers.filter(c => getCategory(c.lastActive) === category)
 
             if (targetCustomers.length === 0) {
                 toast.warning("لا يوجد عملاء في هذه الفئة حالياً")
@@ -749,6 +749,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await sendPushToUsers(customerIds, "إشعار من الإدارة", text)
 
             toast.success(`تم بث الرسالة بنجاح إلى ${targetCustomers.length} عميل في فئة ${
+                category === "all" ? "الكل" :
                 category === "Active" ? "نشط" :
                 category === "Average" ? "متوسط" :
                 category === "Weak" ? "ضعيف" : "منقطع"
