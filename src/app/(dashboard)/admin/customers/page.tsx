@@ -56,13 +56,16 @@ export default function CustomersPage() {
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إدارة العملاء</h1>
                 <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        className="border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-400 gap-2 rounded-full h-10 px-4"
+                        onClick={() => setIsBroadcastOpen(true)}
+                    >
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>بث رسالة</span>
+                    </Button>
+
                     <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-400 gap-2 rounded-full h-10 px-4">
-                                <ShieldCheck className="w-4 h-4" />
-                                <span>بث رسالة</span>
-                            </Button>
-                        </DialogTrigger>
                         <DialogContent className="glass-card border-slate-200 dark:border-white/5 text-slate-950 dark:text-white max-w-md bg-white dark:bg-[#1a242f]">
                             <DialogHeader>
                                 <DialogTitle className="text-right">بث رسالة لمجموعة</DialogTitle>
