@@ -10,7 +10,7 @@ const toDate = (d: any) => {
 }
 
 export function AppBadgeManager() {
-    const { messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId } = useStore()
+    const { messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, passwordRequests, guestId } = useStore()
     const [badgeCount, setBadgeCount] = useState(0)
 
     useEffect(() => {
@@ -31,6 +31,9 @@ export function AppBadgeManager() {
 
             const lastJoin = toDate(lastViewed?.joinRequests)
             count += (joinRequests || []).filter((r: any) => toDate(r.createdAt) > lastJoin).length
+
+            const lastPassword = toDate(lastViewed?.passwordRequests)
+            count += (passwordRequests || []).filter((r: any) => toDate(r.createdAt) > lastPassword).length
         } else {
             // Customer/Guest: Standard Unread Count (Chat + System Notifications)
             const chatUnread = messages.filter(m => {
@@ -62,7 +65,7 @@ export function AppBadgeManager() {
 
         setBadgeCount(count)
 
-    }, [messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, guestId])
+    }, [messages, notifications, orders, productRequests, currentUser, adminPreferences, joinRequests, passwordRequests, guestId])
 
 
     // Update PWA Badge & Favicon

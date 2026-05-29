@@ -3,17 +3,19 @@
 import { useEffect, useRef } from "react"
 import { useStore } from "@/context/store-context"
 import { toast } from "sonner"
-import { ShoppingBag, MessageSquare, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { ShoppingBag, MessageSquare, AlertTriangle, CheckCircle2, UserPlus, Phone } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 export function SystemNotifications() {
-    const { orders, messages, productRequests: requests, currentUser, playSound } = useStore()
+    const { orders, messages, productRequests: requests, currentUser, playSound, joinRequests = [], passwordRequests = [] } = useStore()
     const pathname = usePathname()
 
     // track previous counts to detect "new" items vs initial load
     const prevOrdersLength = useRef(orders.length)
     const prevMessagesLength = useRef(messages.length)
     const prevRequestsLength = useRef(requests.length)
+    const prevJoinRequestsLength = useRef(joinRequests.length)
+    const prevPasswordRequestsLength = useRef(passwordRequests.length)
 
     // Track previous status of specific orders for customer updates
     const prevOrderStatuses = useRef<Record<string, string>>({})
@@ -261,6 +263,82 @@ export function SystemNotifications() {
         }
         prevRequestsLength.current = requests.length
     }, [requests, isAdminUser])
+
+    // --------------------------------------------------------------------------
+    // 4. JOIN REQUESTS MONITORING (Admin Only)
+    // --------------------------------------------------------------------------
+    useEffect(() => {
+        if (isFirstLoad.current) {
+            prevJoinRequestsLength.current = joinRequests.length
+            return
+        }
+
+        if (isAdminUser && joinRequests.length > prevJoinRequestsLength.current) {
+            // Find the new join request (latest one)
+            const sortedJoins = [...joinRequests].sort((a, b) => {
+                const timeA = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date(a.createdAt).getTime()
+                const timeB = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date(b.createdAt).getTime()
+                return timeB - timeA
+            })
+            const newJoin = sortedJoins[0]
+
+            if (newJoin) {
+                const reqTime = (newJoin.createdAt as any)?.toMillis ? (newJoin.createdAt as any).toMillis() : new Date(newJoin.createdAt).getTime()
+                const isRecent = (Date.now() - reqTime) < 60000 // created in last minute
+
+                if (isRecent) {
+                    if (playSound) playSound('newMessage') // Ping sound
+                    toast.success("طلب انضمام جديد", {
+                        description: `العميل: ${newJoin.name} (${newJoin.phone})`,
+                        icon: <UserPlus className="w-5 h-5 text-primary" />,
+                        action: {
+                            label: "عرض",
+                            onClick: () => window.location.href = `/admin/join-requests`
+                        }
+                    })
+                }
+            }
+        }
+        prevJoinRequestsLength.current = joinRequests.length
+    }, [joinRequests, isAdminUser, playSound])
+
+    // --------------------------------------------------------------------------
+    // 5. PASSWORD RECOVERY REQUESTS MONITORING (Admin Only)
+    // --------------------------------------------------------------------------
+    useEffect(() => {
+        if (isFirstLoad.current) {
+            prevPasswordRequestsLength.current = passwordRequests.length
+            return
+        }
+
+        if (isAdminUser && passwordRequests.length > prevPasswordRequestsLength.current) {
+            // Find the new password request (latest one)
+            const sortedPasswords = [...passwordRequests].sort((a, b) => {
+                const timeA = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date(a.createdAt).getTime()
+                const timeB = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date(b.createdAt).getTime()
+                return timeB - timeA
+            })
+            const newPassword = sortedPasswords[0]
+
+            if (newPassword) {
+                const reqTime = (newPassword.createdAt as any)?.toMillis ? (newPassword.createdAt as any).toMillis() : new Date(newPassword.createdAt).getTime()
+                const isRecent = (Date.now() - reqTime) < 60000 // created in last minute
+
+                if (isRecent) {
+                    if (playSound) playSound('passwordRequest') // Alert beep sound
+                    toast.warning("طلب استعادة كلمة المرور", {
+                        description: `العميل: ${newPassword.customerName} (${newPassword.phone})`,
+                        icon: <Phone className="w-5 h-5 text-amber-500" />,
+                        action: {
+                            label: "عرض",
+                            onClick: () => window.location.href = `/admin/password-requests`
+                        }
+                    })
+                }
+            }
+        }
+        prevPasswordRequestsLength.current = passwordRequests.length
+    }, [passwordRequests, isAdminUser, playSound])
 
     return null // Headless component
 }

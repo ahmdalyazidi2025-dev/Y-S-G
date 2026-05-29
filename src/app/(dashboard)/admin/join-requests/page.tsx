@@ -2,7 +2,6 @@
 
 import { useStore } from "@/context/store-context"
 type JoinRequest = { id: string; name: string; phone: string; createdAt: Date; };
-const useCommunication = () => ({ joinRequests: [] as JoinRequest[], deleteJoinRequest: (id: string) => {} });
 const useSettings = () => ({ markSectionAsViewed: (s: string) => {} });
 import { Trash2, Copy, Search, UserPlus, ArrowRight } from "lucide-react"
 import { useState, useEffect } from "react"
@@ -14,7 +13,7 @@ import { format } from "date-fns"
 import { ar } from "date-fns/locale"
 
 export default function JoinRequestsPage() {
-    const { joinRequests, deleteJoinRequest } = useCommunication()
+    const { joinRequests = [], deleteJoinRequest = async () => {} } = useStore()
     const { markSectionAsViewed } = useSettings()
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => { markSectionAsViewed('joinRequests') }, [])

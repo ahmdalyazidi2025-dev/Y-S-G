@@ -246,6 +246,9 @@ type StoreContextType = {
     playSound?: (type: string) => void
     adminPreferences?: any
     joinRequests?: any[]
+    passwordRequests?: any[]
+    deleteJoinRequest?: (id: string) => Promise<void>
+    resolvePasswordRequest?: (id: string) => Promise<void>
     markNotificationRead?: (id: string) => void
     fetchProducts?: (categoryId?: string, isInitial?: boolean) => Promise<void>
     deleteAllChatsAndNotifications?: (onProgress?: (progress: number, status: string) => void) => Promise<void>
@@ -300,6 +303,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return null
     })
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
+    const [joinRequests, setJoinRequests] = useState<any[]>([])
+    const [passwordRequests, setPasswordRequests] = useState<any[]>([])
 
     const toDate = useCallback((ts: Timestamp | Date | { seconds: number, nanoseconds: number } | null | undefined): Date => {
         if (!ts) return new Date()
@@ -387,6 +392,67 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubMessages(); unsubSettings();
         }
     }, [toDate])
+
+    useEffect(() => {
+        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
+            setJoinRequests([])
+            setPasswordRequests([])
+            return
+        }
+
+        const unsubJoin = onSnapshot(
+            query(collection(db, "joinRequests"), orderBy("createdAt", "desc")),
+            (snap) => {
+                setJoinRequests(snap.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id,
+                    createdAt: toDate(doc.data().createdAt)
+                })))
+            },
+            (err) => console.error("Error syncing join requests:", err)
+        )
+
+        const unsubPassword = onSnapshot(
+            query(collection(db, "password_requests"), orderBy("createdAt", "desc")),
+            (snap) => {
+                setPasswordRequests(snap.docs.map(doc => ({
+                    ...doc.data(),
+                    id: doc.id,
+                    createdAt: toDate(doc.data().createdAt)
+                })))
+            },
+            (err) => console.error("Error syncing password requests:", err)
+        )
+
+        return () => {
+            unsubJoin()
+            unsubPassword()
+        }
+    }, [currentUser, toDate])
+
+    const deleteJoinRequest = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "joinRequests", id))
+            toast.success("تم حذف طلب الانضمام بنجاح")
+        } catch {
+            toast.error("فشل حذف طلب الانضمام")
+        }
+    }
+
+    const resolvePasswordRequest = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "password_requests", id))
+            toast.success("تم إغلاق طلب استعادة كلمة المرور")
+        } catch {
+            toast.error("فشل إغلاق طلب استعادة كلمة المرور")
+        }
+    }
+
+    const playSound = (type: string) => {
+        import("@/lib/utils/store-helpers").then(({ playSound: playSoundHelper }) => {
+            playSoundHelper(type as any, storeSettings?.sounds)
+        }).catch(err => console.error("Error playing sound:", err))
+    }
 
     const updateStoreSettings = async (settings: StoreSettings) => {
         try {
@@ -850,7 +916,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
-            fetchProducts, deleteAllChatsAndNotifications
+            fetchProducts, deleteAllChatsAndNotifications,
+            joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound
         }}>
             {children}
         </StoreContext.Provider>
