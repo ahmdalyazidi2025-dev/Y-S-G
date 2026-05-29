@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Globe, Package, ArrowUpDown } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Globe, Package, ArrowUpDown, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
@@ -11,11 +11,23 @@ import { CategorySortModal } from "@/components/admin/category-sort-modal"
 import { useRouter } from "next/navigation"
 
 export default function CategoriesPage() {
-    const { categories, deleteCategory, products } = useStore()
+    const { categories, deleteCategory, updateCategory, products } = useStore()
     const [isCatFormOpen, setIsCatFormOpen] = useState(false)
     const [isSortModalOpen, setIsSortModalOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const router = useRouter()
+
+    const handleToggleVisibility = async (e: React.MouseEvent, cat: Category) => {
+        e.stopPropagation()
+        try {
+            await updateCategory({
+                ...cat,
+                isHidden: !cat.isHidden
+            })
+        } catch (error) {
+            console.error("Failed to toggle category visibility:", error)
+        }
+    }
 
     const handleEditCat = (e: React.MouseEvent, cat: Category) => {
         e.stopPropagation()
@@ -107,6 +119,13 @@ export default function CategoriesPage() {
 
                                     {/* Action buttons */}
                                     <div className="absolute top-3 left-3 flex gap-2 z-10">
+                                        <button
+                                            className={`h-9 w-9 rounded-xl flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 ${category.isHidden ? 'bg-slate-600 hover:bg-slate-700 text-white shadow-slate-600/30' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30'}`}
+                                            onClick={(e) => handleToggleVisibility(e, category)}
+                                            title={category.isHidden ? "إظهار القسم" : "إخفاء القسم"}
+                                        >
+                                            {category.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
                                         <button
                                             className="h-9 w-9 rounded-xl flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 transition-all duration-200 hover:scale-110"
                                             onClick={(e) => handleEditCat(e, category)}
