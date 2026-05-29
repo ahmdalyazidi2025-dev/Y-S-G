@@ -9,14 +9,12 @@ import { Footer } from "@/components/store/footer";
 import { useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "next-themes";
-import { useStore } from "@/context/store-context";
-import { useCommunication } from "@/context/communication-context";
+import { addJoinRequestAction } from "@/app/actions/auth-actions";
 
 function LandingContent() {
   const searchParams = useSearchParams();
   const isFromLogout = searchParams.get("logout") === "true";
   const { setTheme } = useTheme();
-  const { addJoinRequest } = useCommunication();
 
   const [showContent, setShowContent] = useState(isFromLogout);
   const [isAssembling, setIsAssembling] = useState(!isFromLogout);
@@ -72,7 +70,10 @@ function LandingContent() {
 
     setIsSubmittingJoin(true);
     try {
-      await addJoinRequest(joinName, joinPhone);
+      const result = await addJoinRequestAction(joinName, joinPhone);
+      if (!result.success) {
+        throw new Error(result.error || "حدث خطأ أثناء إرسال الطلب");
+      }
       setShowJoinModal(false);
       setJoinName("");
       setJoinPhone("");

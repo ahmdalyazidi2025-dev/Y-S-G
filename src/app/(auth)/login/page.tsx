@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,16 +8,14 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, User, Phone, ArrowRight } from "lucide-react"
 import { useStore } from "@/context/store-context"
-import { useCommunication } from "@/context/communication-context"
-import { useEffect } from "react"
 import { useTheme } from "next-themes"
 import { motion, AnimatePresence } from "framer-motion"
+import { requestPasswordResetAction } from "@/app/actions/auth-actions"
 
 function LoginForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { login, currentUser } = useStore()
-    const { requestPasswordReset } = useCommunication()
     const { setTheme } = useTheme()
     const baseRole = (searchParams.get("role") as "admin" | "staff" | "customer") || "customer"
     const [loginType, setLoginType] = useState<"admin" | "staff" | "customer">(baseRole)
@@ -76,12 +74,23 @@ function LoginForm() {
         }
 
         setIsLoading(true)
-        const result = await requestPasswordReset(recoveryPhone)
-        if (result.success) {
-            setShowForgotPassword(false)
-            setRecoveryPhone("")
+        try {
+            const result = await requestPasswordResetAction(recoveryPhone)
+            if (!result.success) {
+                const msg = result.error || "حدث خطأ، حاول مرة أخرى"
+                import("sonner").then(({ toast }) => toast.error(msg))
+            } else {
+                const msg = "تم إرسال طلبك للإدارة، سيتم التواصل معك قريباً"
+                import("sonner").then(({ toast }) => toast.success(msg))
+                setShowForgotPassword(false)
+                setRecoveryPhone("")
+            }
+        } catch (error) {
+            console.error("Password Request Error:", error)
+            import("sonner").then(({ toast }) => toast.error("حدث خطأ، حاول مرة أخرى"))
+        } finally {
+            setIsLoading(false)
         }
-        setIsLoading(false)
     }
 
     return (
