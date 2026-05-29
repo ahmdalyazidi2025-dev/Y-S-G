@@ -9,8 +9,11 @@ import Image from "next/image"
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
     const { categories } = useStore()
 
+    // Filter out hidden categories from customer view
+    const visibleCategories = categories.filter(c => !c.isHidden)
+
     // "الكل" + DB categories
-    const allCategories = ["الكل", ...categories.map(c => c.nameAr)]
+    const allCategories = ["الكل", ...visibleCategories.map(c => c.nameAr)]
 
     return (
         <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar px-4 pt-2 w-full">
