@@ -120,10 +120,22 @@ export default function CategoriesPage() {
                                         </span>
                                     </div>
 
-                                    {/* ID badge */}
-                                    <div className="absolute top-3 right-3 z-10">
+                                    {/* ID & Status & Order badges */}
+                                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                                         <span className="text-[10px] bg-black/40 backdrop-blur-sm px-2 py-1 rounded-lg text-white/80 font-mono">
                                             #{category.id}
+                                        </span>
+                                        {category.isHidden ? (
+                                            <span className="text-[10px] bg-red-600/90 backdrop-blur-sm px-2 py-1 rounded-lg text-white font-bold">
+                                                مخفي
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] bg-emerald-600/90 backdrop-blur-sm px-2 py-1 rounded-lg text-white font-bold">
+                                                نشط
+                                            </span>
+                                        )}
+                                        <span className="text-[10px] bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-lg text-white font-bold">
+                                            الترتيب: {category.order ?? 0}
                                         </span>
                                     </div>
                                 </div>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Users, ShoppingBag, Loader2, ArrowRight } from "lucide-react";
+import { Users, ShoppingBag, Loader2, ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/store/footer";
 import { useSearchParams } from "next/navigation";
@@ -27,7 +27,18 @@ function LandingContent() {
   const [joinLocation, setJoinLocation] = useState("");
   const [joinPassword, setJoinPassword] = useState("");
   const [joinConfirmPassword, setJoinConfirmPassword] = useState("");
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showPwaPromptModal, setShowPwaPromptModal] = useState(false);
   const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
+
+  useEffect(() => {
+    const handlePrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handlePrompt);
+    return () => window.removeEventListener("beforeinstallprompt", handlePrompt);
+  }, []);
 
   useEffect(() => {
     // Force reset theme to light on first visit to this version to clear old dark caches
@@ -87,6 +98,17 @@ function LandingContent() {
       const result = await addJoinRequestAction(joinName, joinPhone, joinCenterName, joinLocation, joinPassword);
       if (!result.success) {
         throw new Error(result.error || "حدث خطأ أثناء إرسال الطلب");
+      }
+      try {
+        localStorage.setItem("ysg_pending_request", JSON.stringify({
+          name: joinName,
+          phone: joinPhone,
+          centerName: joinCenterName,
+          location: joinLocation,
+          status: "pending"
+        }));
+      } catch (e) {
+        console.error("Failed to write ysg_pending_request to localStorage:", e);
       }
       setShowJoinModal(false);
       setJoinName("");
@@ -238,7 +260,14 @@ function LandingContent() {
 
                       {/* Join Request Box */}
                       <motion.button
-                        onClick={() => setShowJoinModal(true)}
+                        onClick={() => {
+                          const isInstalled = window.matchMedia("(display-mode: standalone)").matches || localStorage.getItem("ysg-pwa-installed") === "1"
+                          if (!isInstalled) {
+                            setShowPwaPromptModal(true)
+                          } else {
+                            setShowJoinModal(true)
+                          }
+                        }}
                         className="group relative w-full h-32 bg-white/80 border border-slate-200/80 rounded-[2rem] flex items-center justify-center gap-6 transition-all active:scale-[0.98] cursor-pointer overflow-hidden hover:border-primary/50 hover:bg-primary/[0.02] hover:shadow-lg transition-all duration-300 px-8 text-right"
                       >
                         {/* Soft Ambient Background */}
@@ -290,9 +319,16 @@ function LandingContent() {
                     onClick={(e) => e.stopPropagation()}
                     className="bg-white border border-slate-200 p-6 rounded-[2rem] w-full max-w-md shadow-2xl space-y-4 text-slate-900"
                   >
-                    <div className="text-center">
+                    <div className="text-center relative">
+                      {/* X Button in the top to close */}
+                      <button 
+                        onClick={() => setShowJoinModal(false)}
+                        className="absolute left-0 top-0 p-1 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                       <h3 className="text-xl font-bold text-slate-900 mb-1">طلب انضمام</h3>
-                      <p className="text-slate-500 text-sm">أدخل بياناتك وسيتم التواصل معك من قبل الإدارة</p>
+                      <p className="text-slate-500 text-sm">أدخل بياناتك وسيتم تفعيل حسابك فور تعميده من الإدارة</p>
                     </div>
 
                     <div className="space-y-3">
@@ -385,6 +421,89 @@ function LandingContent() {
                         ) : (
                           "إرسال الطلب"
                         )}
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* PWA Pre-Join Requirement Modal */}
+            <AnimatePresence>
+              {showPwaPromptModal && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                  onClick={() => setShowPwaPromptModal(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="relative bg-slate-950 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl space-y-6 text-center text-white"
+                  >
+                    {/* Close 'X' button in the top left for refusal */}
+                    <button 
+                      onClick={() => {
+                        setShowPwaPromptModal(false);
+                        setShowJoinModal(true); // Open the join request modal anyway if they refuse/close
+                      }}
+                      className="absolute top-5 left-5 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white"
+                      title="متابعة بدون تثبيت"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+
+                    <div className="w-20 h-20 bg-primary/10 rounded-[24px] flex items-center justify-center mx-auto text-primary text-4xl shadow-lg border border-primary/20">
+                      📱
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-black text-white">تثبيت أيقونة المتجر أولاً</h3>
+                      <p className="text-slate-400 text-xs leading-relaxed max-w-[280px] mx-auto">
+                        لضمان تلقي إشعارات قبول انضمامك الفورية ومتابعة فواتيرك وطلب المنتجات بضغطة واحدة، نوصيك بتثبيت أيقونة المتجر على شاشتك الرئيسية أولاً.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <button
+                        onClick={async () => {
+                          if (deferredPrompt) {
+                            await deferredPrompt.prompt()
+                            const { outcome } = await deferredPrompt.userChoice
+                            if (outcome === "accepted") {
+                              localStorage.setItem("ysg-pwa-installed", "1")
+                              setShowPwaPromptModal(false)
+                              setShowJoinModal(true) // Proceed to join request!
+                            }
+                          } else {
+                            // iOS / unsupported browser
+                            import("sonner").then(({ toast }) => {
+                              toast.info("لأجهزة الآيفون: اضغط على زر المشاركة بالأسفل ثم اختر 'إضافة إلى الشاشة الرئيسية' للثبيت.", { duration: 6000 });
+                            });
+                            // Let them proceed after showing iOS message
+                            setTimeout(() => {
+                              setShowPwaPromptModal(false);
+                              setShowJoinModal(true);
+                            }, 3000);
+                          }
+                        }}
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-sm shadow-xl shadow-primary/25 hover:opacity-95 transition-opacity flex items-center justify-center gap-2"
+                      >
+                        📥 تثبيت أيقونة المتجر الآن
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowPwaPromptModal(false);
+                          setShowJoinModal(true); // Bypass and open join modal
+                        }}
+                        className="text-slate-500 hover:text-slate-350 text-xs font-bold transition-colors underline"
+                      >
+                        متابعة بدون تثبيت (طلب عادي)
                       </button>
                     </div>
                   </motion.div>

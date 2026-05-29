@@ -111,7 +111,19 @@ export function InvoiceTemplate({ order }: { order: import("@/context/store-cont
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <p className="text-sm text-slate-600 font-bold mb-1">الاسم:</p>
-                            <p className="font-black text-lg text-slate-900">{order.customerName || "عميل غير معروف"}</p>
+                            {(() => {
+                                const fullName = order.customerName || "عميل غير معروف"
+                                const match = fullName.match(/^([^(]+)\s*\(([^)]+)\)$/)
+                                if (match) {
+                                    return (
+                                        <div className="flex flex-col">
+                                            <span className="font-black text-lg text-slate-900">{match[1].trim()}</span>
+                                            <span className="text-xs font-bold text-slate-500 mt-0.5">العميل: {match[2].trim()}</span>
+                                        </div>
+                                    )
+                                }
+                                return <p className="font-black text-lg text-slate-900">{fullName}</p>
+                            })()}
                         </div>
                         <div>
                             <p className="text-sm text-slate-600 font-bold mb-1">طريقة الدفع:</p>

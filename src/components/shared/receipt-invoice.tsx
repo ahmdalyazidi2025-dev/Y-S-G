@@ -154,7 +154,19 @@ export function InvoicePaper({ id, order, subtotal, tax, storeSettings }: any) {
                 <div className="space-y-3 sm:text-left">
                     <div className="flex sm:justify-end gap-2">
                         <span className="font-bold text-slate-500 w-24 sm:w-auto text-right sm:ml-2">العميل:</span>
-                        <span className="font-black text-black">{order.customerName || "عميل نقدي"}</span>
+                        {(() => {
+                            const fullName = order.customerName || "عميل نقدي"
+                            const match = fullName.match(/^([^(]+)\s*\(([^)]+)\)$/)
+                            if (match) {
+                                return (
+                                    <div className="flex flex-col text-right sm:items-end">
+                                        <span className="font-black text-black">{match[1].trim()}</span>
+                                        <span className="text-[10px] font-bold text-slate-500 mt-0.5">العميل: {match[2].trim()}</span>
+                                    </div>
+                                )
+                            }
+                            return <span className="font-black text-black">{fullName}</span>
+                        })()}
                     </div>
                     <div className="flex sm:justify-end gap-2">
                         <span className="font-bold text-slate-500 w-24 sm:w-auto text-right sm:ml-2">جوال العميل:</span>

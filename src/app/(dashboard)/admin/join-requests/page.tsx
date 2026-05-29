@@ -35,12 +35,16 @@ export default function JoinRequestsPage() {
     }
 
     const handleAddCustomer = (req: JoinRequest) => {
+        // Clean and replace spaces with underscores for standard usernames
+        const cleanCenterName = req.centerName ? req.centerName.trim().replace(/\s+/g, '_') : ""
+        const cleanPersonalName = req.name ? req.name.trim().replace(/\s+/g, '_') : ""
+        
         setSelectedCustomer({
             id: "", // empty id triggers addCustomer instead of updateCustomer
-            name: req.name,
+            name: req.centerName ? `${req.centerName} (${req.name})` : req.name,
             phone: req.phone,
-            username: req.phone, // Default username is the phone number
-            location: req.centerName ? `${req.centerName} - ${req.location || ''}` : (req.location || ""),
+            username: req.centerName ? `${cleanCenterName}_${cleanPersonalName}` : cleanPersonalName, // Default username combines Center Name and Personal Name for uniqueness!
+            location: req.location || "",
             password: req.password || "", // pre-fill chosen password
             email: ""
         })

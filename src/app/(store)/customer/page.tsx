@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { ProductCard } from "@/components/store/product-card"
 import { Input } from "@/components/ui/input"
-import { Search, Bell } from "lucide-react"
+import { Search, Bell, Sparkles, CheckCircle } from "lucide-react"
 import { useStore, Product } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,8 +14,7 @@ import ScannerModal from "@/components/store/scanner-modal"
 import RequestModal from "@/components/store/request-modal"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CartDrawer } from "@/components/store/cart-drawer"
-
-
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function CustomerHome() {
     const { products, banners, categories } = useStore()
@@ -25,6 +24,17 @@ export default function CustomerHome() {
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
+    const [showAcceptedWelcome, setShowAcceptedWelcome] = useState(false)
+
+    useEffect(() => {
+        try {
+            if (localStorage.getItem("ysg_accepted_welcome") === "true") {
+                setShowAcceptedWelcome(true)
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }, [])
 
     const handleRefresh = async () => {
         // In a real app, refresh data here
@@ -131,12 +141,62 @@ export default function CustomerHome() {
                     onClose={() => setIsRequestModalOpen(false)}
                 />
 
-                <ProductDetailsModal
+                 <ProductDetailsModal
                     isOpen={!!selectedProduct}
                     onClose={() => setSelectedProduct(null)}
                     product={selectedProduct}
                 />
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+                {/* Celebratory Accepted Welcome Modal */}
+                <AnimatePresence>
+                    {showAcceptedWelcome && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 30 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 30 }}
+                                transition={{ type: "spring", damping: 18 }}
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl space-y-6 text-center text-slate-900 dark:text-white"
+                            >
+                                <div className="relative">
+                                    <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-[2rem] flex items-center justify-center mx-auto text-primary text-4xl shadow-inner animate-bounce">
+                                        🎉
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 animate-pulse text-amber-500">
+                                        <Sparkles className="w-6 h-6" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                                        تم قبول وتفعيل حسابك بنجاح!
+                                    </h3>
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                                        أهلاً بك كشريك نجاح في متجر <strong>YSG SALES</strong>. لقد تم تدشين حسابك بنجاح وبإمكانك الآن تصفح الأقسام الحصرية المحددة لك، طلب المنتجات، ومتابعة الفواتير والدفع فوراً!
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        try {
+                                            localStorage.removeItem("ysg_accepted_welcome")
+                                        } catch(e) {}
+                                        setShowAcceptedWelcome(false)
+                                    }}
+                                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-sm shadow-xl shadow-primary/25 hover:opacity-95 transition-opacity flex items-center justify-center gap-2"
+                                >
+                                    🛍️ ابدأ تصفح المتجر الآن
+                                </button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </PullToRefresh>
     )

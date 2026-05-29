@@ -25,6 +25,8 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
         nameEn: "",
         image: "",
         icon: "📁",
+        isHidden: false,
+        order: 0,
     })
 
     useEffect(() => {
@@ -37,6 +39,8 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     nameEn: initialCategory.nameEn,
                     image: initialCategory.image || "",
                     icon: initialCategory.icon || "📁",
+                    isHidden: initialCategory.isHidden || false,
+                    order: initialCategory.order ?? 0,
                 });
                 setVisualType(initialCategory.image ? "image" : "icon");
             } else {
@@ -45,6 +49,8 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                     nameEn: "",
                     image: "",
                     icon: "📁",
+                    isHidden: false,
+                    order: 0,
                 });
                 setVisualType("icon");
             }
@@ -71,6 +77,8 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
             nameEn: formData.nameEn,
             image: formData.image,
             icon: formData.icon,
+            isHidden: formData.isHidden,
+            order: Number(formData.order) || 0,
         }
 
         if (initialCategory) {
@@ -208,6 +216,30 @@ export function AdminCategoryForm({ isOpen, onClose, initialCategory }: Category
                                     )}
                                 </div>
                             )}
+                            {/* Visibility and Display Order */}
+                            <div className="grid grid-cols-2 gap-4 border-t border-slate-200/60 dark:border-white/5 pt-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full">ترتيب الظهور للعملاء</Label>
+                                    <Input
+                                        type="number"
+                                        placeholder="0"
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white focus:ring-primary/50 font-bold"
+                                        value={formData.order}
+                                        onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-end pb-2">
+                                    <label className="flex items-center gap-3 cursor-pointer select-none text-slate-700 dark:text-slate-300 font-bold text-sm justify-end pr-1">
+                                        <span>إخفاء القسم بالكامل</span>
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isHidden}
+                                            onChange={(e) => setFormData({ ...formData, isHidden: e.target.checked })}
+                                            className="w-5.5 h-5.5 rounded-lg border-slate-300 text-primary focus:ring-primary accent-primary cursor-pointer"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
 
                             <div className="pt-2">
                                 <Button type="submit" className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98]">

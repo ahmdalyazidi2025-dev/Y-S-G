@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where
 } from "firebase/firestore"
 
 export type Banner = {
@@ -56,6 +56,7 @@ export type Category = {
     image?: string
     icon?: string
     isHidden?: boolean
+    order?: number
 }
 
 export type Customer = {
@@ -328,7 +329,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
-            setCategories(snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category)))
+            const list = snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
+            list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+            setCategories(list)
         })
 
         const unsubCustomers = onSnapshot(collection(db, "customers"), (snap: QuerySnapshot<DocumentData>) => {
@@ -726,6 +729,20 @@ const normalizeArabic = (str: string | null | undefined): string => {
         const cleanPassword = password.trim()
         const normalizedInput = normalizeArabic(cleanUsername)
 
+        // If it's a customer, check if they have a pending join request in Firestore
+        if (role === "customer") {
+            try {
+                // Match phone number written in join request
+                const joinReqSnap = await getDocs(query(collection(db, "joinRequests"), where("phone", "==", cleanUsername)))
+                if (!joinReqSnap.empty) {
+                    toast.info("طلب الانضمام الخاص بك قيد المراجعة حالياً من قبل الإدارة. سيتم تفعيل حسابك قريباً وتصلك رسالة ترحيبية!", { duration: 6000 })
+                    return false
+                }
+            } catch (err) {
+                console.error("Failed to check pending join requests:", err)
+            }
+        }
+
         // 1. Hardcoded Emergency Admin
         if (role === "admin" && normalizedInput === "admin" && cleanPassword === "admin") {
             const user: User = { id: "admin", name: "المشرف العام", role: "admin", username: "admin", permissions: ["orders", "products", "customers", "settings", "chat", "sales"] }
@@ -806,6 +823,18 @@ const normalizeArabic = (str: string | null | undefined): string => {
             if (user) {
                 setCurrentUser(user)
                 localStorage.setItem("ysg_user", JSON.stringify(user))
+
+                if (role === "customer") {
+                    try {
+                        const pendingReq = localStorage.getItem("ysg_pending_request")
+                        if (pendingReq) {
+                            localStorage.removeItem("ysg_pending_request")
+                            localStorage.setItem("ysg_accepted_welcome", "true")
+                        }
+                    } catch (e) {
+                        console.error("Failed to update welcome flags in localStorage:", e)
+                    }
+                }
 
                 // Get auth token and set cookies for middleware
                 const token = await userCredential.user.getIdToken()

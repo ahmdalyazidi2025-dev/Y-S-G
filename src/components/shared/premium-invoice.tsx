@@ -58,7 +58,19 @@ export function PremiumInvoice({ order, id }: PremiumInvoiceProps) {
             <div className="grid grid-cols-2 gap-12 mb-16 relative z-10">
                 <div className="glass-card p-8 border-white/10 bg-white/5 rounded-3xl">
                     <h3 className="text-primary text-[10px] font-black uppercase tracking-widest mb-4">Bill To | عميلنا العزيز</h3>
-                    <p className="text-2xl font-black mb-2">{order.customerName || "عميل غير معروف"}</p>
+                    {(() => {
+                        const fullName = order.customerName || "عميل غير معروف"
+                        const match = fullName.match(/^([^(]+)\s*\(([^)]+)\)$/)
+                        if (match) {
+                            return (
+                                <div className="flex flex-col">
+                                    <span className="text-2xl font-black text-white">{match[1].trim()}</span>
+                                    <span className="text-xs font-bold text-slate-400 mt-1">العميل: {match[2].trim()}</span>
+                                </div>
+                            )
+                        }
+                        return <p className="text-2xl font-black mb-2">{fullName}</p>
+                    })()}
                     <p className="text-slate-400 text-sm">رقم العميل: {order.customerId || ""}</p>
                 </div>
                 <div className="glass-card p-8 border-white/10 bg-white/5 rounded-3xl flex justify-between items-center">
