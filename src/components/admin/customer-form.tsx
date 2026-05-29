@@ -37,7 +37,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
                     name: initialCustomer.name,
                     phone: initialCustomer.phone,
                     username: initialCustomer.username || "",
-                    password: "", // Password is never pre-filled for security
+                    password: initialCustomer.password || "", // Pre-fill password if provided (e.g. from joinRequest)
                     location: initialCustomer.location || "",
                 })
                 const allowed = initialCustomer.allowedCategories

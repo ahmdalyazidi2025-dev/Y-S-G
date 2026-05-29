@@ -25,6 +25,8 @@ function LandingContent() {
   const [joinPhone, setJoinPhone] = useState("");
   const [joinCenterName, setJoinCenterName] = useState("");
   const [joinLocation, setJoinLocation] = useState("");
+  const [joinPassword, setJoinPassword] = useState("");
+  const [joinConfirmPassword, setJoinConfirmPassword] = useState("");
   const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
 
   useEffect(() => {
@@ -58,8 +60,18 @@ function LandingContent() {
   }, [showContent, isFromLogout, isAssembling]);
 
   const handleJoinSubmit = async () => {
-    if (!joinName || !joinPhone || !joinCenterName || !joinLocation) {
+    if (!joinName || !joinPhone || !joinCenterName || !joinLocation || !joinPassword || !joinConfirmPassword) {
       import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"));
+      return;
+    }
+
+    if (joinPassword.length < 6) {
+      import("sonner").then(({ toast }) => toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل"));
+      return;
+    }
+
+    if (joinPassword !== joinConfirmPassword) {
+      import("sonner").then(({ toast }) => toast.error("كلمة المرور وتأكيدها غير متطابقين"));
       return;
     }
 
@@ -72,7 +84,7 @@ function LandingContent() {
 
     setIsSubmittingJoin(true);
     try {
-      const result = await addJoinRequestAction(joinName, joinPhone, joinCenterName, joinLocation);
+      const result = await addJoinRequestAction(joinName, joinPhone, joinCenterName, joinLocation, joinPassword);
       if (!result.success) {
         throw new Error(result.error || "حدث خطأ أثناء إرسال الطلب");
       }
@@ -81,6 +93,8 @@ function LandingContent() {
       setJoinPhone("");
       setJoinCenterName("");
       setJoinLocation("");
+      setJoinPassword("");
+      setJoinConfirmPassword("");
       import("sonner").then(({ toast }) => toast.success("تم إرسال طلب الانضمام بنجاح"));
     } catch (error: any) {
       console.error("Join request failed", error);
@@ -316,13 +330,35 @@ function LandingContent() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">رقم الهاتف</label>
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">رقم الهاتف (لتسجيل الدخول)</label>
                         <input
                           type="tel"
                           value={joinPhone}
                           onChange={(e) => setJoinPhone(e.target.value)}
-                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all font-mono"
                           placeholder="05xxxxxxx"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">كلمة المرور</label>
+                        <input
+                          type="password"
+                          value={joinPassword}
+                          onChange={(e) => setJoinPassword(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="أدخل كلمة المرور (6 خانات على الأقل)"
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-slate-600 block text-right pr-1 font-bold">تأكيد كلمة المرور</label>
+                        <input
+                          type="password"
+                          value={joinConfirmPassword}
+                          onChange={(e) => setJoinConfirmPassword(e.target.value)}
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-right focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all"
+                          placeholder="أعد إدخال كلمة المرور"
                           autoComplete="off"
                         />
                       </div>

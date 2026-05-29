@@ -1,7 +1,7 @@
 "use client"
 
 import { useStore, Customer } from "@/context/store-context"
-type JoinRequest = { id: string; name: string; phone: string; centerName?: string; location?: string; createdAt: Date; };
+type JoinRequest = { id: string; name: string; phone: string; centerName?: string; location?: string; password?: string; createdAt: Date; };
 const useSettings = () => ({ markSectionAsViewed: (s: string) => {} });
 import { Trash2, Copy, Search, UserPlus, ArrowRight, Phone, UserCheck, XCircle } from "lucide-react"
 import { useState, useEffect } from "react"
@@ -41,6 +41,7 @@ export default function JoinRequestsPage() {
             phone: req.phone,
             username: req.phone, // Default username is the phone number
             location: req.centerName ? `${req.centerName} - ${req.location || ''}` : (req.location || ""),
+            password: req.password || "", // pre-fill chosen password
             email: ""
         })
         // Delete joinRequest upon starting adding flow so it is promoted!
