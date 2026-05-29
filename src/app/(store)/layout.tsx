@@ -30,6 +30,7 @@ export default function StoreLayout({
     const { cart, logout } = useStore()
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
+    const showBottomNav = pathname === "/customer" || pathname === "/customer/invoices"
 
     const handleLogout = () => {
         logout()
@@ -49,7 +50,7 @@ export default function StoreLayout({
         <ProtectedRoute role="customer">
             <div className="min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col items-center overflow-x-hidden relative">
                 <div className="w-full max-w-7xl mx-auto flex flex-col min-h-screen relative z-10">
-                    <main className="flex-1 px-4 pt-6 w-full pb-32">
+                    <main className={cn("flex-1 px-4 pt-6 w-full", showBottomNav ? "pb-32" : "pb-12")}>
                         <div className="flex justify-between items-center mb-10">
                             <div className="flex items-center gap-4">
                                 <div className="relative">
@@ -109,67 +110,69 @@ export default function StoreLayout({
                 </div>
 
                 {/* Bottom Navigation (Adaptive & Wide) */}
-                <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg h-20 glass rounded-[32px] z-[50] border border-white/10 shadow-2xl flex items-center justify-around px-2 transition-all">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href
-                        const Icon = item.icon
+                {showBottomNav && (
+                    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg h-20 glass rounded-[32px] z-[50] border border-white/10 shadow-2xl flex items-center justify-around px-2 transition-all animate-in slide-in-from-bottom-5 duration-300">
+                        {navItems.map((item) => {
+                            const isActive = pathname === item.href
+                            const Icon = item.icon
 
-                        if (item.isCenter) {
-                            return (
+                            if (item.isCenter) {
+                                return (
+                                    <button
+                                        key={item.name}
+                                        onClick={() => {
+                                            item.onClick?.()
+                                            hapticFeedback('medium')
+                                        }}
+                                        className="relative -top-8 w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all border-4 border-[#101c26] group"
+                                    >
+                                        <Icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+                                        <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
+                                    </button>
+                                )
+                            }
+
+                            const Content = (
+                                <div className={cn(
+                                    "flex flex-col items-center gap-1 transition-all relative",
+                                    isActive ? "text-primary scale-110" : "text-slate-400 hover:text-slate-300"
+                                )}>
+                                    <div className="relative">
+                                        <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+                                        {item.badge && item.badge > 0 ? (
+                                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
+                                                {item.badge}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                    <span className="text-[10px] font-medium">{item.name}</span>
+                                </div>
+                            )
+
+                            return item.href ? (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className="p-2"
+                                    onClick={() => hapticFeedback('light')}
+                                >
+                                    {Content}
+                                </Link>
+                            ) : (
                                 <button
                                     key={item.name}
                                     onClick={() => {
                                         item.onClick?.()
-                                        hapticFeedback('medium')
+                                        hapticFeedback('light')
                                     }}
-                                    className="relative -top-8 w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all border-4 border-[#101c26] group"
+                                    className="p-2"
                                 >
-                                    <Icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
-                                    <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
+                                    {Content}
                                 </button>
                             )
-                        }
-
-                        const Content = (
-                            <div className={cn(
-                                "flex flex-col items-center gap-1 transition-all relative",
-                                isActive ? "text-primary scale-110" : "text-slate-400 hover:text-slate-300"
-                            )}>
-                                <div className="relative">
-                                    <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
-                                    {item.badge && item.badge > 0 ? (
-                                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
-                                            {item.badge}
-                                        </span>
-                                    ) : null}
-                                </div>
-                                <span className="text-[10px] font-medium">{item.name}</span>
-                            </div>
-                        )
-
-                        return item.href ? (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className="p-2"
-                                onClick={() => hapticFeedback('light')}
-                            >
-                                {Content}
-                            </Link>
-                        ) : (
-                            <button
-                                key={item.name}
-                                onClick={() => {
-                                    item.onClick?.()
-                                    hapticFeedback('light')
-                                }}
-                                className="p-2"
-                            >
-                                {Content}
-                            </button>
-                        )
-                    })}
-                </nav>
+                        })}
+                    </nav>
+                )}
 
                 <ScannerModal
                     isOpen={isScannerOpen}
