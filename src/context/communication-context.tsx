@@ -292,8 +292,59 @@ export function CommunicationProvider({ children }: { children: React.ReactNode 
         await batch.commit()
     }
 
-    const broadcastToCategory = (category: string, text: string) => {
-        toast.info(`بث إلى فئة ${category}: ${text}`, { icon: "📢" })
+    const broadcastToCategory = async (category: string, text: string) => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "customers"))
+            const allCustomers: any[] = []
+            querySnapshot.forEach(doc => {
+                allCustomers.push({ id: doc.id, ...doc.data() })
+            })
+
+            const getCategory = (lastActive?: any) => {
+                if (!lastActive) return "Disconnected"
+                const dateObj = lastActive.toDate ? lastActive.toDate() : new Date(lastActive)
+                const days = Math.floor((new Date().getTime() - dateObj.getTime()) / (1000 * 60 * 60 * 24))
+                if (days <= 7) return "Active"
+                if (days <= 14) return "Average"
+                if (days <= 30) return "Weak"
+                return "Disconnected"
+            }
+
+            const targetCustomers = allCustomers.filter(c => getCategory(c.lastActive) === category)
+
+            if (targetCustomers.length === 0) {
+                toast.warning("لا يوجد عملاء في هذه الفئة حالياً")
+                return
+            }
+
+            const promises = targetCustomers.map(async (customer) => {
+                await addDoc(collection(db, "messages"), sanitizeData({
+                    senderId: "admin",
+                    senderName: "الإدارة",
+                    text,
+                    isAdmin: true,
+                    read: false,
+                    userId: customer.id,
+                    isSystemNotification: true,
+                    createdAt: Timestamp.now()
+                }))
+            })
+
+            await Promise.all(promises)
+
+            const { sendPushToUsers } = await import("@/app/actions/notifications")
+            const customerIds = targetCustomers.map(c => c.id)
+            await sendPushToUsers(customerIds, "إشعار من الإدارة", text)
+
+            toast.success(`تم بث الرسالة بنجاح إلى ${targetCustomers.length} عميل في فئة ${
+                category === "Active" ? "نشط" :
+                category === "Average" ? "متوسط" :
+                category === "Weak" ? "ضعيف" : "منقطع"
+            }`)
+        } catch (error) {
+            console.error("Error broadcasting to category:", error)
+            toast.error("حدث خطأ أثناء بث الرسالة للفئة")
+        }
     }
 
     const markAllNotificationsRead = async (userId: string) => {
