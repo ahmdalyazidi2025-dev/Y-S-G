@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Share, PlusSquare, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -21,7 +21,8 @@ const PROMPT_KEY_CUSTOMER = "ysg-pwa-prompt-dismissed-customer"
 const PROMPT_KEY_ADMIN    = "ysg-pwa-prompt-dismissed-admin"
 const INSTALLED_KEY       = "ysg-pwa-installed"
 
-export function PwaInstallPrompt() {
+// المكوّن الداخلي — يستخدم useSearchParams داخل Suspense
+function PwaInstallPromptInner() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
 
@@ -261,5 +262,14 @@ export function PwaInstallPrompt() {
                 </motion.div>
             )}
         </AnimatePresence>
+    )
+}
+
+// ← المكوّن المُصدَّر: يُغلّف الداخلي بـ Suspense لإصلاح خطأ Next.js
+export function PwaInstallPrompt() {
+    return (
+        <Suspense fallback={null}>
+            <PwaInstallPromptInner />
+        </Suspense>
     )
 }
