@@ -5,7 +5,7 @@ import { X, Share, PlusSquare, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { hapticFeedback } from "@/lib/haptics"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 
 interface BeforeInstallPromptEvent extends Event {
     readonly platforms: string[]
@@ -23,7 +23,16 @@ const INSTALLED_KEY       = "ysg-pwa-installed"
 
 export function PwaInstallPrompt() {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
+
+    // نعرف أن المستخدم من الإدارة إذا:
+    // 1. المسار يبدأ بـ /admin
+    // 2. أو صفحة تسجيل الدخول تحمل role=admin أو from يحتوي على /admin
+    const fromParam = searchParams?.get("from") || ""
+    const roleParam = searchParams?.get("role") || ""
     const isAdmin = pathname?.startsWith("/admin")
+        || roleParam === "admin"
+        || fromParam.includes("/admin")
 
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
     const [showPrompt, setShowPrompt] = useState(false)
@@ -108,7 +117,7 @@ export function PwaInstallPrompt() {
     // بيانات العرض حسب النوع (إدارة / عميل)
     const config = isAdmin
         ? {
-            icon: "/admin-logo.png",
+            icon: "/admin-logo.png?v=3",
             title: "YSG Admin",
             subtitle: "قسم الإدارة",
             description: "ثبّت لوحة الإدارة كتطبيق مستقل للوصول السريع ومتابعة الطلبات والمبيعات.",
