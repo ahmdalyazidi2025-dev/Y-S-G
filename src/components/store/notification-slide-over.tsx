@@ -15,7 +15,7 @@ export default function NotificationSlideOver({ isOpen, onClose }: { isOpen: boo
     // Clear notifications when opened
     useEffect(() => {
         if (isOpen) {
-            if (markAllNotificationsRead) markAllNotificationsRead()
+            if (markAllNotificationsRead) markAllNotificationsRead(currentCustomerId || "")
             if (markMessagesRead) markMessagesRead()
         }
     }, [isOpen, markAllNotificationsRead, markMessagesRead, currentCustomerId])

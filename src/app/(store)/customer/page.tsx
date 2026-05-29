@@ -13,6 +13,7 @@ import { PullToRefresh } from "@/components/store/pull-to-refresh"
 import ScannerModal from "@/components/store/scanner-modal"
 import RequestModal from "@/components/store/request-modal"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
+import { CustomerNotifications } from "@/components/store/customer-notifications"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -72,9 +73,7 @@ export default function CustomerHome() {
                             />
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="rounded-2xl h-12 w-12 border-slate-200/80 dark:border-white/5 bg-white dark:bg-white/5 shadow-md shadow-slate-100/50 dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/10 transition-all cursor-pointer">
-                                <Bell className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                            </Button>
+                            <CustomerNotifications />
                         </div>
                     </div>
                 </div>

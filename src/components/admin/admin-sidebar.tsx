@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Activity, UserPlus, KeyRound, Share2 } from "lucide-react"
+import { BarChart3, Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers, Camera, LayoutDashboard, LogOut, ChevronRight, Activity, UserPlus, KeyRound, Share2, Bell } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -21,6 +21,7 @@ const NAV_ITEMS = [
     { title: "صور العرض", icon: LugideImage, href: "/admin/banners", color: "text-pink-400" },
     { title: "الدردشة", icon: MessageCircle, href: "/admin/chat", color: "text-indigo-400" },
     { title: "طلبات الانضمام", icon: UserPlus, href: "/admin/join-requests", color: "text-emerald-400" },
+    { title: "بث الإشعارات", icon: Bell, href: "/admin/notifications", color: "text-amber-500" },
     { title: "حالة النظام", icon: Activity, href: "/admin/system", color: "text-rose-400" },
     { title: "الإعدادات", icon: Settings, href: "/admin/settings", color: "text-slate-400" },
 ]
@@ -60,6 +61,7 @@ export function AdminSidebar() {
             "/admin/banners": "settings",
             "/admin/chat": "chat",
             "/admin/join-requests": "customers",
+            "/admin/notifications": "settings",
             "/admin/system": "settings",
             "/admin/settings": "settings",
         }

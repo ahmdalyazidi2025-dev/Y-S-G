@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch
 } from "firebase/firestore"
 
 export type Banner = {
@@ -72,6 +72,7 @@ export type Customer = {
     email?: string
     createdAt?: Date | any
     allowedCategories?: string[] | "all"
+    fcmTokens?: string[]
 }
 
 export type Coupon = {
@@ -233,7 +234,7 @@ type StoreContextType = {
     messages: Message[]
     notifications?: any[]
     guestId?: string
-    markAllNotificationsRead?: () => void
+    markAllNotificationsRead?: (userId: string) => void
     markMessagesRead?: () => void
     sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string) => void
     broadcastNotification: (text: string) => void
@@ -307,6 +308,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
     const [joinRequests, setJoinRequests] = useState<any[]>([])
     const [passwordRequests, setPasswordRequests] = useState<any[]>([])
+    const [notifications, setNotifications] = useState<any[]>([])
 
     const toDate = useCallback((ts: Timestamp | Date | { seconds: number, nanoseconds: number } | null | undefined): Date => {
         if (!ts) return new Date()
@@ -386,6 +388,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
+        const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
+            setNotifications(snap.docs.map((doc) => {
+                const data = doc.data()
+                return { ...data, id: doc.id, createdAt: data.createdAt ? toDate(data.createdAt) : undefined }
+            }))
+        })
+
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
             if (snap.exists()) setStoreSettings(snap.data() as StoreSettings)
         })
@@ -393,7 +402,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return () => {
             unsubProducts(); unsubCategories(); unsubCustomers(); unsubStaff();
             unsubOrders(); unsubBanners(); unsubRequests();
-            unsubMessages(); unsubSettings();
+            unsubMessages(); unsubSettings(); unsubNotifications();
         }
     }, [toDate])
 
@@ -951,6 +960,27 @@ const normalizeArabic = (str: string | null | undefined): string => {
         return
     }
 
+    const markNotificationRead = async (id: string) => {
+        try {
+            await updateDoc(doc(db, "notifications", id), { read: true })
+        } catch (e) {
+            console.error("Error marking notification read:", e)
+        }
+    }
+
+    const markAllNotificationsRead = async (userId: string) => {
+        try {
+            const unread = notifications.filter(n => n.userId === userId && !n.read)
+            const batch = writeBatch(db)
+            unread.forEach(n => {
+                batch.update(doc(db, "notifications", n.id), { read: true })
+            })
+            await batch.commit()
+        } catch (e) {
+            console.error("Error marking all notifications read:", e)
+        }
+    }
+
     const deleteAllChatsAndNotifications = async (onProgress?: (progress: number, status: string) => void) => {
         try {
             onProgress?.(10, "البدء في حذف الرسائل...")
@@ -995,7 +1025,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             fetchProducts, deleteAllChatsAndNotifications,
-            joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound
+            joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
+            notifications, markNotificationRead, markAllNotificationsRead
         }}>
             {children}
         </StoreContext.Provider>
