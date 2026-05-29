@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, Globe, Package } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, Globe, Package, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Category } from "@/context/store-context"
 import { AdminCategoryForm } from "@/components/admin/category-form"
+import { CategorySortModal } from "@/components/admin/category-sort-modal"
 import { useRouter } from "next/navigation"
 
 export default function CategoriesPage() {
     const { categories, deleteCategory, products } = useStore()
     const [isCatFormOpen, setIsCatFormOpen] = useState(false)
+    const [isSortModalOpen, setIsSortModalOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const router = useRouter()
 
@@ -51,13 +53,22 @@ export default function CategoriesPage() {
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1 text-slate-900 dark:text-white">إدارة الأقسام</h1>
-                <Button
-                    className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4"
-                    onClick={handleAddCategory}
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>إضافة قسم</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        className="bg-orange-500 hover:bg-orange-600 text-white gap-2 rounded-full h-10 px-4 shadow-lg shadow-orange-500/25 transition-all duration-200"
+                        onClick={() => setIsSortModalOpen(true)}
+                    >
+                        <ArrowUpDown className="w-4 h-4" />
+                        <span>ترتيب الأقسام</span>
+                    </Button>
+                    <Button
+                        className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4"
+                        onClick={handleAddCategory}
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>إضافة قسم</span>
+                    </Button>
+                </div>
             </div>
 
             {/* Categories Grid */}
@@ -163,6 +174,11 @@ export default function CategoriesPage() {
                 isOpen={isCatFormOpen}
                 onClose={() => setIsCatFormOpen(false)}
                 initialCategory={editingCategory}
+            />
+
+            <CategorySortModal
+                isOpen={isSortModalOpen}
+                onClose={() => setIsSortModalOpen(false)}
             />
         </div>
     )
