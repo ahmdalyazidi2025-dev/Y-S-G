@@ -44,15 +44,15 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
         if (!isOpen) return;
 
         const timer = setTimeout(() => {
-            if (initialProduct) {
+            if (initialProduct && initialProduct.id) {
                 // If the product category is stored as Arabic name, map it to ID for the select input
                 const matchedCategory = categories.find(c => c.nameAr === initialProduct.category);
                 const categoryValue = matchedCategory ? matchedCategory.id : (initialProduct.category || "");
 
                 setFormData({
-                    name: initialProduct.name,
-                    unit: initialProduct.unit,
-                    barcode: initialProduct.barcode,
+                    name: initialProduct.name || "",
+                    unit: initialProduct.unit || "حبة",
+                    barcode: initialProduct.barcode || "",
                     image: initialProduct.image || "",
                     images: initialProduct.images || (initialProduct.image ? [initialProduct.image] : []),
                     category: categoryValue,
@@ -70,7 +70,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                     barcode: "",
                     image: "",
                     images: [] as string[],
-                    category: categories[0]?.id || "",
+                    category: initialProduct?.category || categories[0]?.id || "",
                     pricePiece: "",
                     oldPricePiece: "",
                     priceDozen: "",
