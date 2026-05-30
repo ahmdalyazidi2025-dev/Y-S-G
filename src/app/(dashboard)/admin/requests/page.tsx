@@ -224,6 +224,11 @@ export default function AdminRequestsPage() {
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-slate-400 text-[10px]"><User className="w-3 h-3" />العميل</div>
                                         <p className="font-bold text-slate-900 dark:text-white text-xs">{selectedRequest.customerName || "عميل غير معروف"}</p>
+                                        {selectedRequest.customerPhone && (
+                                            <a href={`tel:${selectedRequest.customerPhone}`} className="text-[10px] text-primary hover:underline font-bold block mt-0.5">
+                                                📞 {selectedRequest.customerPhone}
+                                            </a>
+                                        )}
                                     </div>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2 text-slate-400 text-[10px]"><Calendar className="w-3 h-3" />التاريخ</div>

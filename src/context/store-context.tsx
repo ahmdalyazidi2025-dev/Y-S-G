@@ -132,6 +132,8 @@ export type Order = {
 export type ProductRequest = {
     id: string
     customerName: string
+    customerId?: string
+    customerPhone?: string
     image?: string
     description?: string
     status: "pending" | "fulfilled" | "rejected"
@@ -933,7 +935,10 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         id: uid,
                         name: cData.name || "عميل",
                         role: "customer",
-                        username: cData.username || normalizedInput
+                        username: cData.username || normalizedInput,
+                        phone: cData.phone || "",
+                        location: cData.location || "",
+                        email: cData.email || ""
                     }
                 } else {
                     // Fallback if document doesn't exist yet
@@ -1008,7 +1013,15 @@ const normalizeArabic = (str: string | null | undefined): string => {
 
                 const customer = customers.find(c => normalizeArabic(c.username) === normalizedInput && c.password && c.password.trim() === cleanPassword)
                 if (customer) {
-                    const user: User = { id: customer.id, name: customer.name, role: "customer", username: customer.username }
+                    const user: User = { 
+                        id: customer.id, 
+                        name: customer.name, 
+                        role: "customer", 
+                        username: customer.username,
+                        phone: customer.phone || "",
+                        location: customer.location || "",
+                        email: customer.email || ""
+                    }
                     setCurrentUser(user)
                     localStorage.setItem("ysg_user", JSON.stringify(user))
                     document.cookie = `firebase-auth-token=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
