@@ -10,11 +10,15 @@ import { useSearchParams } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "next-themes";
 import { addJoinRequestAction } from "@/app/actions/auth-actions";
+import { useStore } from "@/context/store-context";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 function LandingContent() {
   const searchParams = useSearchParams();
   const isFromLogout = searchParams.get("logout") === "true";
   const { setTheme } = useTheme();
+  const { storeSettings } = useStore();
 
   const [showContent, setShowContent] = useState(isFromLogout);
   const [isAssembling, setIsAssembling] = useState(!isFromLogout);
@@ -30,6 +34,8 @@ function LandingContent() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPwaPromptModal, setShowPwaPromptModal] = useState(false);
   const [isSubmittingJoin, setIsSubmittingJoin] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [activePolicy, setActivePolicy] = useState<{ title: string; content: string } | null>(null);
 
   useEffect(() => {
     const handlePrompt = (e: Event) => {
@@ -73,6 +79,11 @@ function LandingContent() {
   const handleJoinSubmit = async () => {
     if (!joinName || !joinPhone || !joinCenterName || !joinLocation || !joinPassword || !joinConfirmPassword) {
       import("sonner").then(({ toast }) => toast.error("يرجى تعبئة جميع الحقول"));
+      return;
+    }
+
+    if (!agreeTerms) {
+      import("sonner").then(({ toast }) => toast.error("يرجى الموافقة على شروط الاستخدام وسياسة الخصوصية للمتابعة"));
       return;
     }
 
@@ -398,6 +409,33 @@ function LandingContent() {
                           autoComplete="off"
                         />
                       </div>
+                      <div className="flex items-center gap-2 pt-2 text-right">
+                        <input
+                          type="checkbox"
+                          id="agree-terms"
+                          checked={agreeTerms}
+                          onChange={(e) => setAgreeTerms(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                        />
+                        <label htmlFor="agree-terms" className="text-xs text-slate-600 cursor-pointer select-none font-bold">
+                          أوافق على{" "}
+                          <button
+                            type="button"
+                            onClick={() => setActivePolicy({ title: "شروط الاستخدام", content: storeSettings.footerTerms })}
+                            className="text-primary hover:underline font-extrabold focus:outline-none"
+                          >
+                            شروط الاستخدام
+                          </button>{" "}
+                          و{" "}
+                          <button
+                            type="button"
+                            onClick={() => setActivePolicy({ title: "سياسة الخصوصية والأحكام", content: storeSettings.footerPrivacy })}
+                            className="text-primary hover:underline font-extrabold focus:outline-none"
+                          >
+                            سياسة الخصوصية
+                          </button>
+                        </label>
+                      </div>
                     </div>
 
                     <div className="flex gap-2 pt-2">
@@ -519,6 +557,23 @@ function LandingContent() {
             >
               <Footer forceLight={true} />
             </motion.div>
+            <Dialog open={!!activePolicy} onOpenChange={(open) => !open && setActivePolicy(null)}>
+              {activePolicy && (
+                <DialogContent className="glass-card border-slate-200 dark:border-white/5 text-slate-950 dark:text-white max-w-2xl bg-white dark:bg-[#1a242f] rounded-3xl p-6 shadow-2xl z-[100]">
+                  <DialogHeader className="border-b border-slate-100 dark:border-white/10 pb-4 mb-4">
+                    <DialogTitle className="text-right font-black text-xl text-primary">{activePolicy.title}</DialogTitle>
+                  </DialogHeader>
+                  <div className="max-h-[60vh] overflow-y-auto pr-1 no-scrollbar text-right text-slate-700 dark:text-slate-350 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                    {activePolicy.content || "لا توجد تفاصيل متوفرة حالياً لهذه السياسة."}
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <Button onClick={() => setActivePolicy(null)} className="rounded-xl px-6 font-bold bg-primary text-white hover:bg-primary/95 transition-all">
+                      إغلاق
+                    </Button>
+                  </div>
+                </DialogContent>
+              )}
+            </Dialog>
           </motion.div>
         )}
       </AnimatePresence>

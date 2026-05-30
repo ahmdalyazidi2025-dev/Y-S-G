@@ -8,10 +8,12 @@ import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 export function Footer({ forceLight = false }: { forceLight?: boolean }) {
     const { storeSettings } = useStore()
     const [email, setEmail] = useState("")
+    const [activePolicy, setActivePolicy] = useState<{ title: string; content: string } | null>(null)
 
     const handleSubscribe = (e: React.FormEvent) => {
         e.preventDefault()
@@ -77,10 +79,31 @@ export function Footer({ forceLight = false }: { forceLight?: boolean }) {
                             "font-bold text-lg border-r-4 border-blue-500 pr-4",
                             forceLight ? "text-slate-800" : "text-slate-800 dark:text-white"
                         )}>روابط مهمة</h3>
-                        <ul className="space-y-3 text-sm">
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerTerms}</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerPrivacy}</Link></li>
-                            <li><Link href="#" className="hover:text-primary transition-colors">{storeSettings.footerReturns}</Link></li>
+                        <ul className="space-y-3 text-sm flex flex-col items-start pr-4 text-slate-500 dark:text-slate-400">
+                            <li>
+                                <button 
+                                    onClick={() => setActivePolicy({ title: "شروط الاستخدام", content: storeSettings.footerTerms })}
+                                    className="hover:text-primary transition-colors text-right block w-full focus:outline-none font-medium"
+                                >
+                                    شروط الاستخدام
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => setActivePolicy({ title: "سياسة الخصوصية والأحكام", content: storeSettings.footerPrivacy })}
+                                    className="hover:text-primary transition-colors text-right block w-full focus:outline-none font-medium"
+                                >
+                                    سياسة الخصوصية
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => setActivePolicy({ title: "سياسة الاسترجاع والضمان", content: storeSettings.footerReturns })}
+                                    className="hover:text-primary transition-colors text-right block w-full focus:outline-none font-medium"
+                                >
+                                    سياسة الاسترجاع
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -180,6 +203,24 @@ export function Footer({ forceLight = false }: { forceLight?: boolean }) {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={!!activePolicy} onOpenChange={(open) => !open && setActivePolicy(null)}>
+                {activePolicy && (
+                    <DialogContent className="glass-card border-slate-200 dark:border-white/5 text-slate-950 dark:text-white max-w-2xl bg-white dark:bg-[#1a242f] rounded-3xl p-6 shadow-2xl">
+                        <DialogHeader className="border-b border-slate-100 dark:border-white/10 pb-4 mb-4">
+                            <DialogTitle className="text-right font-black text-xl text-primary">{activePolicy.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-[60vh] overflow-y-auto pr-1 no-scrollbar text-right text-slate-700 dark:text-slate-350 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                            {activePolicy.content || "لا توجد تفاصيل متوفرة حالياً لهذه السياسة."}
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                            <Button onClick={() => setActivePolicy(null)} className="rounded-xl px-6 font-bold bg-primary text-white hover:bg-primary/95 transition-all">
+                                إغلاق
+                            </Button>
+                        </div>
+                    </DialogContent>
+                )}
+            </Dialog>
         </footer>
     )
 }
