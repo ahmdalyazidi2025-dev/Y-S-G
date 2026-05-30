@@ -10,6 +10,7 @@ import {
     onSnapshot, query, orderBy, Timestamp, setDoc,
     QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch
 } from "firebase/firestore"
+import { adminCreateOrUpdateUserAction, adminDeleteUserAction } from "@/app/actions/auth-actions"
 
 export type Banner = {
     id: string
@@ -620,19 +621,100 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const addCustomer = async (customer: Omit<Customer, "id">) => {
-        await addDoc(collection(db, "customers"), customer)
-        toast.success("تم إضافة العميل للسحابة")
+        try {
+            if (!customer.username) throw new Error("اسم المستخدم مطلوب");
+            const normalizedUsername = customer.username.toLowerCase().trim().replace(/\s+/g, '');
+            const generatedEmail = `${normalizedUsername}@ysg.local`;
+
+            // 1. Create or update user in Firebase Auth
+            const result = await adminCreateOrUpdateUserAction(generatedEmail, customer.password || "Ysg@2025", customer.name, currentUser?.id);
+            if (!result.success || !result.uid) {
+                throw new Error(result.error || "فشل إنشاء حساب العميل في خادم المصادقة");
+            }
+            const uid = result.uid;
+
+            // 2. Set Firestore documents under the created Auth UID
+            await setDoc(doc(db, "users", uid), {
+                id: uid,
+                name: customer.name,
+                role: "customer",
+                email: generatedEmail,
+                username: normalizedUsername,
+                phone: customer.phone,
+            });
+            await setDoc(doc(db, "usernames", normalizedUsername), { email: generatedEmail, uid });
+            await setDoc(doc(db, "customers", uid), {
+                ...customer,
+                id: uid,
+                email: generatedEmail,
+                username: normalizedUsername,
+                createdAt: Timestamp.now()
+            });
+
+            toast.success("تم إضافة وتفعيل العميل بنجاح ✅");
+        } catch (error: any) {
+            console.error("Failed to add customer:", error);
+            toast.error("فشل إضافة العميل: " + error.message);
+            throw error;
+        }
     }
 
     const updateCustomer = async (customer: Customer) => {
-        const { id, ...data } = customer
-        await updateDoc(doc(db, "customers", id), data)
-        toast.success("تم تحديث بيانات العميل")
+        try {
+            const { id, password, ...data } = customer;
+
+            if (password) {
+                const normalizedUsername = customer.username ? customer.username.toLowerCase().trim().replace(/\s+/g, '') : "";
+                const generatedEmail = `${normalizedUsername}@ysg.local`;
+                const result = await adminCreateOrUpdateUserAction(generatedEmail, password, customer.name, currentUser?.id);
+                if (!result.success) {
+                    throw new Error(result.error || "فشل تحديث كلمة المرور في الخادم");
+                }
+            }
+
+            await updateDoc(doc(db, "customers", id), {
+                ...data,
+                updatedAt: Timestamp.now()
+            });
+            await setDoc(doc(db, "users", id), {
+                id,
+                name: customer.name,
+                role: "customer",
+                email: `${customer.username?.toLowerCase().trim().replace(/\s+/g, '')}@ysg.local`,
+                username: customer.username,
+                phone: customer.phone,
+            }, { merge: true });
+
+            toast.success("تم تحديث بيانات العميل بنجاح");
+        } catch (error: any) {
+            console.error("Failed to update customer:", error);
+            toast.error("فشل تحديث بيانات العميل: " + error.message);
+        }
     }
 
     const deleteCustomer = async (customerId: string) => {
-        await deleteDoc(doc(db, "customers", customerId))
-        toast.error("تم حذف العميل")
+        try {
+            // Find customer details to remove username
+            const customerDoc = await getDoc(doc(db, "customers", customerId));
+            const cData = customerDoc.data();
+
+            // Securely delete from Firebase Auth
+            const result = await adminDeleteUserAction(customerId, currentUser?.id);
+            if (!result.success) {
+                console.warn("Auth user deletion warning (continuing):", result.error);
+            }
+
+            await deleteDoc(doc(db, "customers", customerId));
+            await deleteDoc(doc(db, "users", customerId));
+            if (cData?.username) {
+                await deleteDoc(doc(db, "usernames", cData.username.toLowerCase().trim()));
+            }
+
+            toast.error("تم حذف العميل بالكامل");
+        } catch (error: any) {
+            console.error("Failed to delete customer:", error);
+            toast.error("فشل حذف العميل: " + error.message);
+        }
     }
 
     const addCoupon = async (coupon: Omit<Coupon, "id">) => {

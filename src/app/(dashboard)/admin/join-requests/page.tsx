@@ -21,6 +21,7 @@ export default function JoinRequestsPage() {
     /* eslint-enable react-hooks/exhaustive-deps */
     const [search, setSearch] = useState("")
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+    const [activeReqId, setActiveReqId] = useState<string | null>(null)
 
     const filtered = joinRequests.filter(req =>
         req.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -48,8 +49,8 @@ export default function JoinRequestsPage() {
             password: req.password || "", // pre-fill chosen password
             email: ""
         })
-        // Delete joinRequest upon starting adding flow so it is promoted!
-        deleteJoinRequest(req.id)
+        // Store request ID so we can delete it ONLY when the customer is successfully created!
+        setActiveReqId(req.id)
     }
 
     return (
@@ -178,8 +179,17 @@ export default function JoinRequestsPage() {
             {/* Customer Add Form Modal */}
             <AdminCustomerForm
                 isOpen={!!selectedCustomer}
-                onClose={() => setSelectedCustomer(null)}
+                onClose={() => {
+                    setSelectedCustomer(null)
+                    setActiveReqId(null)
+                }}
                 initialCustomer={selectedCustomer}
+                onSuccess={async () => {
+                    if (activeReqId) {
+                        await deleteJoinRequest(activeReqId)
+                        setActiveReqId(null)
+                    }
+                }}
             />
         </div>
     )

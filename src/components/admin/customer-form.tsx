@@ -13,9 +13,10 @@ interface CustomerFormProps {
     isOpen: boolean
     onClose: () => void
     initialCustomer?: Customer | null
+    onSuccess?: () => void
 }
 
-export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: CustomerFormProps) {
+export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess }: CustomerFormProps) {
     const { addCustomer, updateCustomer, categories = [] } = useStore()
 
     const [formData, setFormData] = useState({
@@ -64,7 +65,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
         return () => clearTimeout(timer);
     }, [initialCustomer, isOpen])
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const customerData = {
             name: formData.name,
@@ -75,12 +76,19 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer }: Customer
             allowedCategories: (viewAllCategories ? "all" : selectedCategories) as "all" | string[],
         }
 
-        if (initialCustomer) {
-            updateCustomer({ ...customerData, id: initialCustomer.id })
-        } else {
-            addCustomer(customerData)
+        try {
+            if (initialCustomer && initialCustomer.id) {
+                await updateCustomer({ ...customerData, id: initialCustomer.id })
+            } else {
+                await addCustomer(customerData)
+            }
+            if (onSuccess) {
+                onSuccess()
+            }
+            onClose()
+        } catch (error) {
+            console.error("Submit customer form failed:", error)
         }
-        onClose()
     }
 
     return (
