@@ -369,18 +369,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
-            setOrders(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Order, "id">
-                return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: toDate(data.createdAt),
-                    statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
-                } as Order
-            }))
-        })
-
         const unsubBanners = onSnapshot(collection(db, "banners"), (snap: QuerySnapshot<DocumentData>) => {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
@@ -412,10 +400,45 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             unsubProducts(); unsubCategories(); unsubCustomers(); unsubStaff();
-            unsubOrders(); unsubBanners(); unsubRequests();
+            unsubBanners(); unsubRequests();
             unsubMessages(); unsubSettings(); unsubNotifications();
         }
     }, [toDate])
+
+    useEffect(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        const customerId = currentUser?.id || "guest"
+
+        let ordersQuery;
+        if (isAdmin) {
+            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"))
+        } else {
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
+        }
+
+        const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
+            const docs = snap.docs.map((doc) => {
+                const data = doc.data() as Omit<Order, "id">
+                return {
+                    ...data,
+                    id: doc.id,
+                    createdAt: toDate(data.createdAt),
+                    statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                } as Order
+            })
+
+            // Client-side sort is safe for small-medium sets and avoids index requirement
+            if (!isAdmin) {
+                docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            }
+
+            setOrders(docs)
+        }, (error) => {
+            console.error("Firestore unsubOrders Listen Error:", error)
+        })
+
+        return () => unsubOrders()
+    }, [currentUser, toDate])
 
     useEffect(() => {
         if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
