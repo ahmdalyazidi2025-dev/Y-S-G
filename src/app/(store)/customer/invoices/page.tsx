@@ -144,34 +144,36 @@ export default function InvoicesPage() {
                                 <div className="space-y-8">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">تفاصيل الفاتورة</h2>
-                                            <p className="text-slate-500 dark:text-slate-400 text-sm">رقم الطلب: #{selectedOrder.id}</p>
+                                            <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-1">تفاصيل الفاتورة</h2>
+                                            <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">
+                                                رقم الطلب: <span className="text-slate-900 dark:text-white font-black">#{selectedOrder.id}</span>
+                                            </p>
                                         </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-slate-400">
+                                        <button onClick={() => setSelectedOrder(null)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
                                             <X className="w-5 h-5" />
                                         </button>
                                     </div>
 
                                     {/* Detailed Status Stepper */}
                                     <div className="space-y-4">
-                                        <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl">
-                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-4">تتبع حالة الطلب</p>
+                                        <div className="bg-slate-50 dark:bg-white/5 border border-slate-150 dark:border-white/10 p-4 rounded-2xl">
+                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest mb-4">تتبع حالة الطلب</p>
                                             <OrderStatusProgress status={selectedOrder.status} />
                                         </div>
 
                                         {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
-                                            <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl space-y-3">
-                                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">تاريخ التحديثات</p>
+                                            <div className="bg-slate-50 dark:bg-white/5 border border-slate-150 dark:border-white/10 p-4 rounded-2xl space-y-3">
+                                                <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-widest">تاريخ التحديثات</p>
                                                 <div className="space-y-3">
                                                     {selectedOrder.statusHistory.map((h, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between text-[11px]">
+                                                        <div key={i} className="flex items-center justify-between text-[11px] border-b border-slate-100 dark:border-white/5 pb-2 last:border-0 last:pb-0">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                                <span className="text-slate-800 dark:text-white font-medium">
+                                                                <span className="text-slate-800 dark:text-white font-bold">
                                                                     {STATUS_MAP[h.status as keyof typeof STATUS_MAP]?.label || h.status}
                                                                 </span>
                                                             </div>
-                                                            <span className="text-slate-500">
+                                                            <span className="text-slate-600 dark:text-slate-400 font-medium">
                                                                 {new Date(h.timestamp).toLocaleString('ar-SA', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                                                             </span>
                                                         </div>
@@ -182,10 +184,10 @@ export default function InvoicesPage() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 px-1">المنتجات المختارة</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-300 px-1">المنتجات المختارة</p>
                                         <div className="space-y-3">
                                             {selectedOrder.items.map((item, idx: number) => (
-                                                <div key={idx} className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl flex items-center gap-4">
+                                                <div key={idx} className="bg-slate-50 dark:bg-white/5 border border-slate-150 dark:border-white/10 p-4 rounded-2xl flex items-center gap-4">
                                                     <div className="w-12 h-12 bg-slate-200 dark:bg-white/5 rounded-xl border border-slate-300 dark:border-white/5 flex items-center justify-center text-xs overflow-hidden relative">
                                                         {item.image ? (
                                                             <Image
@@ -198,21 +200,21 @@ export default function InvoicesPage() {
                                                         ) : item.name.charAt(0)}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <p className="font-bold text-sm text-slate-800 dark:text-white">{item.name}</p>
-                                                        <p className="text-[10px] text-slate-500">{item.quantity} {item.selectedUnit} × {item.selectedPrice} ر.س</p>
+                                                        <p className="font-bold text-sm text-slate-800 dark:text-white leading-snug">{item.name}</p>
+                                                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold mt-0.5">{item.quantity} {item.selectedUnit} × {item.selectedPrice} ر.س</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="font-bold text-sm text-primary">{(item.quantity * item.selectedPrice).toFixed(2)}</p>
-                                                        <p className="text-[10px] text-slate-500">ر.س</p>
+                                                        <p className="font-black text-sm text-slate-900 dark:text-primary">{(item.quantity * item.selectedPrice).toFixed(2)}</p>
+                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">ر.س</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                                    <div className="space-y-4 pt-4 border-t border-slate-250 dark:border-white/5">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="text-slate-400">الإجمالي النهائي</span>
+                                            <span className="text-slate-600 dark:text-slate-400 font-bold">الإجمالي النهائي</span>
                                             <span className="text-2xl font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</span>
                                         </div>
                                         {selectedOrder.status === "pending" && (

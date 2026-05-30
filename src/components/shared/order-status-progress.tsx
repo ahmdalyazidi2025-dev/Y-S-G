@@ -28,7 +28,7 @@ export function OrderStatusProgress({ status }: { status: Status }) {
         <div className="py-6">
             <div className="relative flex justify-between">
                 {/* Connecting Line */}
-                <div className="absolute top-5 left-0 right-0 h-0.5 bg-white/5 -z-10" />
+                <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-100 dark:bg-white/5 -z-10" />
                 <div
                     className="absolute top-5 right-0 h-0.5 bg-primary transition-all duration-500 -z-10"
                     style={{
@@ -47,14 +47,14 @@ export function OrderStatusProgress({ status }: { status: Status }) {
                             <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2",
                                 isCompleted ? "bg-primary border-primary text-white" :
-                                    isActive ? "bg-[#1c2a36] border-primary text-primary shadow-lg shadow-primary/20" :
-                                        "bg-[#1c2a36] border-white/5 text-slate-600"
+                                    isActive ? "bg-white dark:bg-[#1c2a36] border-primary text-primary shadow-lg shadow-primary/20" :
+                                        "bg-slate-50 dark:bg-[#1c2a36] border-slate-200 dark:border-white/5 text-slate-400 dark:text-slate-600"
                             )}>
                                 {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                             </div>
                             <span className={cn(
                                 "text-[10px] font-bold text-center max-w-[60px] leading-tight",
-                                isActive ? "text-white" : "text-slate-500"
+                                isActive ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"
                             )}>
                                 {stage.label}
                             </span>
