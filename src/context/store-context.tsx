@@ -630,7 +630,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const addCustomer = async (customer: Omit<Customer, "id">) => {
         try {
             if (!customer.username) throw new Error("اسم المستخدم مطلوب");
-            const normalizedUsername = customer.username.toLowerCase().trim().replace(/\s+/g, '');
+            const normalizedUsername = normalizeArabic(customer.username);
             const generatedEmail = `${normalizedUsername}@ysg.local`;
 
             // 1. Create or update user in Firebase Auth
@@ -671,7 +671,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             const { id, password, ...data } = customer;
 
             if (password) {
-                const normalizedUsername = customer.username ? customer.username.toLowerCase().trim().replace(/\s+/g, '') : "";
+                const normalizedUsername = customer.username ? normalizeArabic(customer.username) : "";
                 const generatedEmail = `${normalizedUsername}@ysg.local`;
                 const result = await adminCreateOrUpdateUserAction(generatedEmail, password, customer.name, currentUser?.id);
                 if (!result.success) {
@@ -679,16 +679,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 }
             }
 
+            const normalizedUsername = customer.username ? normalizeArabic(customer.username) : "";
             await updateDoc(doc(db, "customers", id), {
                 ...data,
+                username: normalizedUsername,
                 updatedAt: Timestamp.now()
             });
             await setDoc(doc(db, "users", id), {
                 id,
                 name: customer.name,
                 role: "customer",
-                email: `${customer.username?.toLowerCase().trim().replace(/\s+/g, '')}@ysg.local`,
-                username: customer.username,
+                email: `${normalizedUsername}@ysg.local`,
+                username: normalizedUsername,
                 phone: customer.phone,
             }, { merge: true });
 
