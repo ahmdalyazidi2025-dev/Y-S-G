@@ -19,6 +19,7 @@ export default function CustomersPage() {
     const [broadcastMsg, setBroadcastMsg] = useState("")
     const [targetCategory, setTargetCategory] = useState<string>("all")
     const [activeFilter, setActiveFilter] = useState<string>("all")
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
 
     const getCategory = (lastActive?: Date) => {
         if (!lastActive) return { label: "منقطع", color: "text-red-400", bg: "bg-red-400/10", id: "Disconnected" }
@@ -197,6 +198,17 @@ export default function CustomersPage() {
                                             <div className="flex items-center gap-1">
                                                 <MapPin className="w-3 h-3 text-orange-400" />
                                                 <span>{customer.location}</span>
+                                            </div>
+                                        )}
+                                        {customer.password && (
+                                            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/20 px-2 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 text-[10px]">
+                                                <button
+                                                    onClick={() => setVisiblePasswords(prev => ({ ...prev, [customer.id]: !prev[customer.id] }))}
+                                                    className="text-[10px] text-primary hover:underline font-bold focus:outline-none flex items-center gap-1 cursor-pointer"
+                                                    title="عرض / إخفاء كلمة المرور"
+                                                >
+                                                    <span>🔑 {visiblePasswords[customer.id] ? customer.password : "••••••"}</span>
+                                                </button>
                                             </div>
                                         )}
                                     </div>

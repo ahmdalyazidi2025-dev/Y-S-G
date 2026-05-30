@@ -22,6 +22,7 @@ export default function JoinRequestsPage() {
     const [search, setSearch] = useState("")
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
     const [activeReqId, setActiveReqId] = useState<string | null>(null)
+    const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
 
     const filtered = joinRequests.filter(req =>
         req.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -133,6 +134,17 @@ export default function JoinRequestsPage() {
                                             <span className="text-[10px] opacity-75">
                                                 ⏰ {format(new Date(req.createdAt), "d MMMM yyyy - h:mm a", { locale: ar })}
                                             </span>
+                                            {req.password && (
+                                                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/20 px-2 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 text-[10px]">
+                                                    <button
+                                                        onClick={() => setVisiblePasswords(prev => ({ ...prev, [req.id]: !prev[req.id] }))}
+                                                        className="text-[10px] text-primary hover:underline font-bold focus:outline-none flex items-center gap-1 cursor-pointer"
+                                                        title="عرض / إخفاء كلمة المرور"
+                                                    >
+                                                        <span>🔑 {visiblePasswords[req.id] ? req.password : "••••••"}</span>
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
