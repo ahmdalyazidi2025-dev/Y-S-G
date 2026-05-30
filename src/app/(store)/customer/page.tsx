@@ -112,19 +112,71 @@ export default function CustomerHome() {
                     <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
                 </div>
 
-                {/* Product Grid */}
-                <div className="px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                    {filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                item={product}
-                                onViewDetails={() => setSelectedProduct(product)}
-                            />
-                        ))
+                {/* Product Grid / Category Sections */}
+                <div className="px-4 space-y-10">
+                    {searchQuery === "" && selectedCategory === "الكل" ? (
+                        categories.filter(c => !c.isHidden).map((cat) => {
+                            const categoryProducts = products.filter(product => 
+                                product.category === cat.id || 
+                                product.category === cat.nameAr ||
+                                product.category === cat.nameEn
+                            );
+
+                            if (categoryProducts.length === 0) return null;
+
+                            return (
+                                <div key={cat.id} className="space-y-4">
+                                    <div className="flex items-center justify-between border-r-4 border-primary pr-3">
+                                        <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
+                                            {cat.nameAr}
+                                        </h3>
+                                        <span className="text-xs bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full font-bold">
+                                            {categoryProducts.length} منتج
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Horizontal Swipeable Container */}
+                                    <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar scroll-smooth snap-x">
+                                        {categoryProducts.map((product) => (
+                                            <div key={product.id} className="min-w-[170px] sm:min-w-[210px] max-w-[230px] snap-start flex-shrink-0">
+                                                <ProductCard
+                                                    item={product}
+                                                    onViewDetails={() => setSelectedProduct(product)}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        })
                     ) : (
-                        <div className="col-span-full py-20 text-center text-slate-500">
-                            لأ يوجد منتجات مطابقة للبحث
+                        <div className="space-y-4">
+                            {selectedCategory !== "الكل" && (
+                                <div className="flex items-center justify-between border-r-4 border-primary pr-3">
+                                    <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-white">
+                                        {selectedCategory}
+                                    </h3>
+                                    <span className="text-xs bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full font-bold">
+                                        {filteredProducts.length} منتج
+                                    </span>
+                                </div>
+                            )}
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                                {filteredProducts.length > 0 ? (
+                                    filteredProducts.map((product) => (
+                                        <ProductCard
+                                            key={product.id}
+                                            item={product}
+                                            onViewDetails={() => setSelectedProduct(product)}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="col-span-full py-20 text-center text-slate-500 font-bold bg-slate-50/50 dark:bg-slate-900/20 rounded-3xl border border-dashed border-slate-200 dark:border-white/5">
+                                        لا توجد منتجات مطابقة لفلتر البحث
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
