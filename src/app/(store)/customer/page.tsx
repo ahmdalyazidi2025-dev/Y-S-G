@@ -67,7 +67,7 @@ export default function CustomerHome() {
                             <Search className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 group-hover:text-primary transition-colors" />
                             <Input
                                 placeholder="ما الذي تبحث عنه اليوم؟"
-                                className="bg-white/90 dark:bg-white/5 border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-2xl pr-12 text-right h-12 text-lg shadow-md shadow-slate-100/50 dark:shadow-none hover:border-primary/30 dark:hover:border-white/20 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:bg-white transition-all font-bold"
+                                className="bg-white/90 dark:bg-slate-900 border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-2xl pr-12 text-right h-12 text-lg shadow-md shadow-slate-100/50 dark:shadow-none hover:border-primary/30 dark:hover:border-white/20 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:bg-white dark:focus-visible:bg-slate-900 transition-all font-bold"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
