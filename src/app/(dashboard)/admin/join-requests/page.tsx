@@ -135,14 +135,8 @@ export default function JoinRequestsPage() {
                                                 ⏰ {format(new Date(req.createdAt), "d MMMM yyyy - h:mm a", { locale: ar })}
                                             </span>
                                             {req.password && (
-                                                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/20 px-2 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 text-[10px]">
-                                                    <button
-                                                        onClick={() => setVisiblePasswords(prev => ({ ...prev, [req.id]: !prev[req.id] }))}
-                                                        className="text-[10px] text-primary hover:underline font-bold focus:outline-none flex items-center gap-1 cursor-pointer"
-                                                        title="عرض / إخفاء كلمة المرور"
-                                                    >
-                                                        <span>🔑 {visiblePasswords[req.id] ? req.password : "••••••"}</span>
-                                                    </button>
+                                                <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/20 px-2 py-0.5 rounded-lg border border-slate-200/50 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-350">
+                                                    <span>🔑 كلمة المرور: <span className="font-mono text-primary select-all">{req.password}</span></span>
                                                 </div>
                                             )}
                                         </div>

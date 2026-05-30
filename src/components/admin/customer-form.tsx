@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { X, Save, User, Phone, Lock, Hash, MapPin } from "lucide-react"
+import { X, Save, User, Phone, Lock, Hash, MapPin, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,6 +28,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
     })
     const [viewAllCategories, setViewAllCategories] = useState(true)
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+    const [showFormPassword, setShowFormPassword] = useState(false)
 
     useEffect(() => {
         if (!isOpen) return;
@@ -190,11 +191,19 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                                     <Lock className="absolute right-3 top-4 w-4 h-4 text-slate-500" />
                                     <Input
                                         required={!initialCustomer}
-                                        type="password"
-                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
+                                        type={showFormPassword ? "text" : "password"}
+                                        className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 pr-10 pl-10 text-right text-slate-800 dark:text-white h-12 rounded-xl focus-visible:ring-primary/50"
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFormPassword(!showFormPassword)}
+                                        className="absolute left-3 top-3.5 text-slate-450 hover:text-slate-600 focus:outline-none"
+                                        title={showFormPassword ? "إخفاء كلمة المرور" : "عرض كلمة المرور"}
+                                    >
+                                        {showFormPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
                                 </div>
                             </div>
 
