@@ -41,11 +41,11 @@ export default function InvoicesPage() {
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
                 <Link href="/customer">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-slate-800 dark:text-white" />
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold flex-1">سجل الطلبات</h1>
+                <h1 className="text-2xl font-bold flex-1 text-slate-900 dark:text-white">سجل الطلبات</h1>
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
@@ -54,10 +54,10 @@ export default function InvoicesPage() {
                         key={s}
                         onClick={() => setFilter(s)}
                         className={cn(
-                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border border-white/5",
+                            "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border",
                             filter === s
                                 ? "bg-primary text-white border-primary/20 shadow-lg shadow-primary/10"
-                                : "bg-white/5 text-slate-400 hover:bg-white/10"
+                                : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10"
                         )}
                     >
                         {s === "all" ? "الكل" : STATUS_MAP[s as keyof typeof STATUS_MAP].label}
@@ -74,13 +74,13 @@ export default function InvoicesPage() {
                     filteredOrders.map((order) => {
                         const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
                         return (
-                            <div key={order.id} className="glass-card p-5 space-y-4 relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer" onClick={() => setSelectedOrder(order)}>
+                            <div key={order.id} className="bg-white dark:bg-white/5 border border-slate-150 dark:border-white/10 p-5 space-y-4 rounded-3xl relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer shadow-sm hover:shadow-md dark:shadow-none" onClick={() => setSelectedOrder(order)}>
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
 
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
                                         <p className="text-[10px] text-slate-500 uppercase tracking-wider">رقم الطلب</p>
-                                        <p className="font-bold text-white flex items-center gap-2">
+                                        <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                             <FileText className="w-4 h-4 text-primary" />
                                             #{order.id}
                                         </p>
@@ -91,10 +91,10 @@ export default function InvoicesPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between py-2 border-y border-white/5">
+                                <div className="flex items-center justify-between py-2 border-y border-slate-100 dark:border-white/5">
                                     <div className="flex -space-x-2 rtl:space-x-reverse">
                                         {order.items.slice(0, 3).map((item, idx) => (
-                                            <div key={idx} className="w-8 h-8 rounded-full bg-white/10 border-2 border-[#1c2a36] flex items-center justify-center text-[10px] overflow-hidden relative">
+                                            <div key={idx} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 border-2 border-white dark:border-[#1c2a36] flex items-center justify-center text-[10px] overflow-hidden relative">
                                                 {item.image ? (
                                                     <Image
                                                         src={item.image}
@@ -107,20 +107,20 @@ export default function InvoicesPage() {
                                             </div>
                                         ))}
                                         {order.items.length > 3 && (
-                                            <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-[#1c2a36] flex items-center justify-center text-[10px] text-slate-400">
+                                            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-[#1c2a36] flex items-center justify-center text-[10px] text-slate-600 dark:text-slate-400">
                                                 +{order.items.length - 3}
                                             </div>
                                         )}
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[10px] text-slate-500">التاريخ</p>
-                                        <p className="text-xs text-white">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
+                                        <p className="text-xs text-slate-800 dark:text-white">{new Date(order.createdAt).toLocaleDateString('ar-SA')}</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-center justify-between pt-1">
-                                    <p className="text-lg font-bold text-white">
-                                        {order.total.toFixed(2)} <span className="text-[10px] font-normal text-slate-400">ر.س</span>
+                                    <p className="text-lg font-bold text-slate-800 dark:text-white">
+                                        {order.total.toFixed(2)} <span className="text-[10px] font-normal text-slate-500 dark:text-slate-450">ر.س</span>
                                     </p>
                                     <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-[10px] font-bold">
                                         فتح الفاتورة
@@ -137,37 +137,37 @@ export default function InvoicesPage() {
                 <Drawer.Portal>
                     <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
                     <Drawer.Content className="fixed bottom-0 left-0 right-0 max-h-[96%] outline-none z-50 flex flex-col">
-                        <div className="bg-[#1c2a36] rounded-t-[32px] p-6 border-t border-white/10 flex-1 overflow-y-auto">
-                            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-white/10 mb-8" />
+                        <div className="bg-white dark:bg-[#1c2a36] rounded-t-[32px] p-6 border-t border-slate-200 dark:border-white/10 flex-1 overflow-y-auto">
+                            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-slate-300 dark:bg-white/10 mb-8" />
 
                             {selectedOrder && (
                                 <div className="space-y-8">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-1">تفاصيل الفاتورة</h2>
-                                            <p className="text-slate-400 text-sm">رقم الطلب: #{selectedOrder.id}</p>
+                                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">تفاصيل الفاتورة</h2>
+                                            <p className="text-slate-500 dark:text-slate-400 text-sm">رقم الطلب: #{selectedOrder.id}</p>
                                         </div>
-                                        <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white/5 rounded-full text-slate-400">
+                                        <button onClick={() => setSelectedOrder(null)} className="p-2 bg-slate-100 dark:bg-white/5 rounded-full text-slate-500 dark:text-slate-400">
                                             <X className="w-5 h-5" />
                                         </button>
                                     </div>
 
                                     {/* Detailed Status Stepper */}
                                     <div className="space-y-4">
-                                        <div className="glass-card p-4 bg-white/5 border-white/5">
+                                        <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl">
                                             <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-4">تتبع حالة الطلب</p>
                                             <OrderStatusProgress status={selectedOrder.status} />
                                         </div>
 
                                         {selectedOrder.statusHistory && selectedOrder.statusHistory.length > 0 && (
-                                            <div className="glass-card p-4 bg-white/5 border-white/5 space-y-3">
+                                            <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl space-y-3">
                                                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">تاريخ التحديثات</p>
                                                 <div className="space-y-3">
                                                     {selectedOrder.statusHistory.map((h, i: number) => (
                                                         <div key={i} className="flex items-center justify-between text-[11px]">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                                <span className="text-white font-medium">
+                                                                <span className="text-slate-800 dark:text-white font-medium">
                                                                     {STATUS_MAP[h.status as keyof typeof STATUS_MAP]?.label || h.status}
                                                                 </span>
                                                             </div>
@@ -182,11 +182,11 @@ export default function InvoicesPage() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <p className="text-sm font-bold text-slate-300 px-1">المنتجات المختارة</p>
+                                        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 px-1">المنتجات المختارة</p>
                                         <div className="space-y-3">
                                             {selectedOrder.items.map((item, idx: number) => (
-                                                <div key={idx} className="glass-card p-4 flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-white/5 rounded-xl border border-white/5 flex items-center justify-center text-xs overflow-hidden relative">
+                                                <div key={idx} className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 p-4 rounded-2xl flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-slate-200 dark:bg-white/5 rounded-xl border border-slate-300 dark:border-white/5 flex items-center justify-center text-xs overflow-hidden relative">
                                                         {item.image ? (
                                                             <Image
                                                                 src={item.image}
@@ -198,7 +198,7 @@ export default function InvoicesPage() {
                                                         ) : item.name.charAt(0)}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <p className="font-bold text-sm text-white">{item.name}</p>
+                                                        <p className="font-bold text-sm text-slate-800 dark:text-white">{item.name}</p>
                                                         <p className="text-[10px] text-slate-500">{item.quantity} {item.selectedUnit} × {item.selectedPrice} ر.س</p>
                                                     </div>
                                                     <div className="text-right">
@@ -210,7 +210,7 @@ export default function InvoicesPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-white/5">
                                         <div className="flex justify-between items-center px-1">
                                             <span className="text-slate-400">الإجمالي النهائي</span>
                                             <span className="text-2xl font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</span>
@@ -242,7 +242,7 @@ export default function InvoicesPage() {
                                                 <FileDown className="w-5 h-5" />
                                                 <span>تحميل PDF</span>
                                             </Button>
-                                            <Button className="h-14 rounded-2xl bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-colors col-span-2" onClick={() => setSelectedOrder(null)}>
+                                            <Button className="h-14 rounded-2xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors col-span-2" onClick={() => setSelectedOrder(null)}>
                                                 إغلاق
                                             </Button>
                                         </div>
