@@ -759,10 +759,41 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!order) return
         await updateDoc(doc(db, "orders", orderId), {
             status,
-            statusHistory: [...order.statusHistory, { status, timestamp: Timestamp.now() }]
+            statusHistory: [...(order.statusHistory || []), { status, timestamp: Timestamp.now() }]
         })
         toast.info(`تم تحديث الحالة سحابياً: ${status}`)
         hapticFeedback('medium')
+
+        // Trigger customer in-app and push notification
+        try {
+            const statusLabels: Record<string, string> = {
+                pending: "لم تجهز بعد وهي قيد المراجعة",
+                processing: "قيد التجهيز والتحضير حالياً 📦",
+                shipped: "تم الشحن وهي في الطريق إليك 🚚",
+                delivered: "تم التسليم بنجاح، شكراً لتعاملك معنا! ✅",
+                canceled: "تم إلغاؤها من قبل الإدارة ❌"
+            }
+            const statusLabel = statusLabels[status] || status
+            const title = `تحديث حالة الفاتورة #${orderId}`
+            const body = `تغيرت حالة فاتورتك رقم #${orderId} لتصبح: ${statusLabel}`
+
+            // Write to notifications collection
+            await addDoc(collection(db, "notifications"), {
+                userId: order.customerId,
+                title,
+                body,
+                link: "/customer/invoices",
+                read: false,
+                targetLabel: order.customerName,
+                createdAt: Timestamp.now()
+            })
+
+            // Trigger Push Notification via FCM
+            const { sendPushToUsers } = await import("@/app/actions/notifications")
+            await sendPushToUsers([order.customerId], title, body, "/customer/invoices")
+        } catch (notifErr) {
+            console.error("Failed to send status update notification:", notifErr)
+        }
     }
 
     const addBanner = async (banner: Omit<Banner, "id">) => {
