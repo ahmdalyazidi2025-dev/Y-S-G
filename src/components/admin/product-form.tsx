@@ -159,7 +159,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
             discountEndDate: showCountdown && formData.discountEndDate ? new Date(formData.discountEndDate) : null,
         }
 
-        if (initialProduct) {
+        if (initialProduct && initialProduct.id) {
             updateProduct(initialProduct.id, productData as Partial<Product>)
         } else {
             addProduct(productData as Omit<Product, "id">)
@@ -351,8 +351,7 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                             <div className="relative flex-1">
                                                 <Hash className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                                 <Input
-                                                    required
-                                                    placeholder="أدخل الباركود يدوياً"
+                                                    placeholder="أدخل الباركود يدوياً (اختياري)"
                                                     className="bg-slate-100/70 dark:bg-black/20 border-slate-200 dark:border-white/10 h-14 rounded-2xl text-right text-slate-800 dark:text-white pr-12 focus:ring-primary/50"
                                                     value={formData.barcode}
                                                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
