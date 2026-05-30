@@ -27,7 +27,7 @@ export default function StoreLayout({
     const [isRequestOpen, setIsRequestOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout } = useStore()
+    const { cart, logout, storeSettings } = useStore()
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
     const showBottomNav = pathname === "/customer" || pathname === "/customer/invoices"
@@ -41,7 +41,9 @@ export default function StoreLayout({
     const navItems = [
         { name: "الفواتير", icon: ClipboardList, href: "/customer/invoices" },
         { name: "السلة", icon: ShoppingCart, onClick: () => setIsCartOpen(true), badge: cartCount },
-        { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) },
+        ...(storeSettings?.enableBarcodeScanner !== false ? [
+            { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }
+        ] : []),
         { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) },
         { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
     ]
