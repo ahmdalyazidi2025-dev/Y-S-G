@@ -21,8 +21,8 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-primary/20 to-transparent group-hover:via-primary/50 transition-all" />
 
             <div>
-                {/* Product Image/Icon - Rectangular Portrait aspect-[3/4] */}
-                <div className="p-3 relative aspect-[3/4] bg-slate-50/60 dark:bg-slate-950/40 flex items-center justify-center overflow-hidden border-b border-slate-100 dark:border-white/5">
+                {/* Product Image/Icon - Rectangular Portrait aspect-[3/4] - mمتلئة بالكامل p-0 object-cover */}
+                <div className="relative aspect-[3/4] bg-slate-50/60 dark:bg-slate-950/40 flex items-center justify-center overflow-hidden border-b border-slate-100 dark:border-white/5">
                     <div
                         className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105 cursor-pointer relative"
                         onClick={onViewDetails}
@@ -32,7 +32,7 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                                 src={item.image}
                                 alt={item.name}
                                 fill
-                                className="object-contain p-2 transition-opacity duration-300"
+                                className="object-cover p-0 transition-opacity duration-300"
                                 unoptimized
                             />
                         ) : (
@@ -88,8 +88,8 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                     </Button>
                 </div>
 
-                {/* Dozen Price Section */}
-                {hasDozen && (
+                {/* Dozen Price Section - Render invisible spacer if unavailable to maintain perfect uniform card heights across all sections */}
+                {hasDozen ? (
                     <div className="w-full flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 rounded-xl p-1.5 border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors duration-200">
                         <div className="flex flex-col items-start text-left select-none">
                             <span className="text-[8px] bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-black mb-0.5">
@@ -114,6 +114,8 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                             <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </Button>
                     </div>
+                ) : (
+                    <div className="w-full h-[38px] opacity-0 pointer-events-none select-none" aria-hidden="true" />
                 )}
 
                 {/* Interactive Ripple Effect on Click */}
