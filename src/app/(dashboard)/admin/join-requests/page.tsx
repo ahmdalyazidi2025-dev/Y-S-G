@@ -44,7 +44,7 @@ export default function JoinRequestsPage() {
             id: "", // empty id triggers addCustomer instead of updateCustomer
             name: req.centerName ? `${req.centerName} (${req.name})` : req.name,
             phone: req.phone,
-            username: req.centerName ? `${cleanCenterName}_${cleanPersonalName}` : cleanPersonalName, // Default username combines Center Name and Personal Name for uniqueness!
+            username: req.centerName ? cleanCenterName : cleanPersonalName, // Simply use Center Name as username (or Personal Name if empty) for super easy remembering!
             location: req.location || "",
             password: req.password || "", // pre-fill chosen password
             email: ""
