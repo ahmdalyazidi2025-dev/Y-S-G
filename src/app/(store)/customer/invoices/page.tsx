@@ -16,11 +16,11 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
-    pending: { label: "لم تجهز", color: "text-orange-400", bg: "bg-orange-400/10", icon: Clock },
-    processing: { label: "جاري العمل", color: "text-blue-400", bg: "bg-blue-400/10", icon: Package },
-    shipped: { label: "تم الشحن", color: "text-purple-400", bg: "bg-purple-400/10", icon: Truck },
-    delivered: { label: "تم التسليم", color: "text-green-400", bg: "bg-green-400/10", icon: CheckCircle2 },
-    canceled: { label: "ملغاة", color: "text-red-400", bg: "bg-red-400/10", icon: XCircle },
+    pending: { label: "لم تجهز", color: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/10", icon: Clock },
+    processing: { label: "جاري العمل", color: "text-blue-700 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10", icon: Package },
+    shipped: { label: "تم الشحن", color: "text-purple-700 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-500/10", icon: Truck },
+    delivered: { label: "تم التسليم", color: "text-green-700 dark:text-green-400", bg: "bg-green-50 dark:bg-green-500/10", icon: CheckCircle2 },
+    canceled: { label: "ملغاة", color: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10", icon: XCircle },
 }
 
 export default function InvoicesPage() {
