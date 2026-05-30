@@ -219,6 +219,10 @@ export type StoreSettings = {
     autoDeleteChats?: boolean
     autoDeleteChatsDuration?: number
     enableAiSystem?: boolean
+    whatsappTemplates?: {
+        newCustomer?: string;
+        [key: string]: any;
+    }
 }
 
 export type AdminPreferences = {

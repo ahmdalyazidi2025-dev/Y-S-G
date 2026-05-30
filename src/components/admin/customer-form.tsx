@@ -17,7 +17,7 @@ interface CustomerFormProps {
 }
 
 export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess }: CustomerFormProps) {
-    const { addCustomer, updateCustomer, categories = [] } = useStore()
+    const { addCustomer, updateCustomer, categories = [], storeSettings } = useStore()
 
     const [formData, setFormData] = useState({
         name: "",
@@ -81,6 +81,27 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                 await updateCustomer({ ...customerData, id: initialCustomer.id })
             } else {
                 await addCustomer(customerData)
+
+                // WhatsApp welcome message auto-sending on success
+                const template = storeSettings?.whatsappTemplates?.newCustomer || 
+                    "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}";
+                
+                const messageText = template
+                    .replace(/{name}/g, customerData.name)
+                    .replace(/{username}/g, customerData.username)
+                    .replace(/{password}/g, customerData.password || "");
+                
+                let cleanPhone = customerData.phone.trim();
+                if (cleanPhone.startsWith("05")) {
+                    cleanPhone = "966" + cleanPhone.substring(1);
+                } else if (cleanPhone.startsWith("5")) {
+                    cleanPhone = "966" + cleanPhone;
+                } else if (cleanPhone.startsWith("0")) {
+                    cleanPhone = "966" + cleanPhone.substring(1);
+                }
+
+                const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+                window.open(waUrl, "_blank");
             }
             if (onSuccess) {
                 onSuccess()

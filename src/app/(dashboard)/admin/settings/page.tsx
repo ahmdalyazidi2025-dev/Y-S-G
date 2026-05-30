@@ -20,7 +20,7 @@ import { useFcmToken } from "@/hooks/use-fcm-token"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useSearchParams } from "next/navigation"
-import { Lock, Shield, UserPlus } from "lucide-react"
+import { Lock, Shield, UserPlus, MessageSquare } from "lucide-react"
 import { StaffManager } from "@/components/admin/staff-manager"
 import { verifyAIKey } from "@/app/actions/ai"
 import { Switch } from "@/components/ui/switch"
@@ -787,6 +787,59 @@ function AdminSettingsContent() {
                                                         </Button>
                                                     )}
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Section>
+
+                                <Section icon={<MessageSquare className="w-5 h-5 text-emerald-400" />} title="قوالب رسائل واتساب">
+                                    <div className="p-6 bg-card rounded-2xl border border-border space-y-6 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                        <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-colors" />
+                                        
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                                <MessageSquare className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-foreground">قالب واتساب: عميل جديد</h4>
+                                                <p className="text-[10px] text-muted-foreground">الرسالة الترحيبية التلقائية التي تُرسل للعملاء الجدد عند تفعيل حساباتهم</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center pr-1">
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص الرسالة الترحيبية</Label>
+                                                    <span className="text-[10px] text-primary font-bold">يمكنك استخدام المتغيرات التلقائية</span>
+                                                </div>
+                                                <Textarea
+                                                    value={formData.whatsappTemplates?.newCustomer || ""}
+                                                    onChange={(e) => handleChange("whatsappTemplates", {
+                                                        ...formData.whatsappTemplates,
+                                                        newCustomer: e.target.value
+                                                    })}
+                                                    className="bg-background border-border min-h-[120px] text-foreground text-right rounded-xl focus:ring-1 focus:ring-emerald-500"
+                                                    placeholder="اكتب نص الرسالة الترحيبية هنا..."
+                                                />
+                                            </div>
+
+                                            <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2">
+                                                <h5 className="text-xs font-bold text-foreground text-right mb-1">المتغيرات المدعومة للتضمين التلقائي:</h5>
+                                                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{name}`}</span>
+                                                        <span>اسم العميل</span>
+                                                    </div>
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{username}`}</span>
+                                                        <span>اسم المستخدم</span>
+                                                    </div>
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{password}`}</span>
+                                                        <span>كلمة المرور</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[9px] text-amber-600 dark:text-amber-400 mt-2 text-right">⚠️ ملاحظة: لا يمكن للعميل تسجيل الدخول بدون اسم المستخدم وكلمة المرور، لذا تأكد من بقاء المتغيرات أعلاه في نص الرسالة ليتلقاها العميل.</p>
                                             </div>
                                         </div>
                                     </div>

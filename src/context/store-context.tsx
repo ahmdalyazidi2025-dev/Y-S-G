@@ -191,6 +191,10 @@ export type StoreSettings = {
     autoDeleteChatsDuration?: string
     hiddenSections?: string[] | any
     enableProductRequests?: boolean
+    whatsappTemplates?: {
+        newCustomer?: string;
+        [key: string]: any;
+    }
 }
 
 type StoreContextType = {
@@ -281,6 +285,9 @@ const MOCK_SETTINGS: StoreSettings = {
     footerPrivacy: "الشروط والأحكام",
     footerReturns: "سياسة الاسترجاع",
     requireCustomerInfoOnCheckout: false,
+    whatsappTemplates: {
+        newCustomer: "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}"
+    },
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {

@@ -30,6 +30,9 @@ const MOCK_SETTINGS: StoreSettings = {
     requireCustomerInfoOnCheckout: false,
     logoUrl: "",
     groqApiKey: "",
+    whatsappTemplates: {
+        newCustomer: "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}"
+    },
     enableMaintenance: false,
     enableCoupons: true,
     enableAIChat: true,
