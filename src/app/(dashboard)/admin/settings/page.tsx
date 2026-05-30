@@ -825,21 +825,13 @@ function AdminSettingsContent() {
 
                                             <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2">
                                                 <h5 className="text-xs font-bold text-foreground text-right mb-1">المتغيرات المدعومة للتضمين التلقائي:</h5>
-                                                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                <div className="grid grid-cols-3 gap-2 text-center text-[10px] mb-2">
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350 col-span-3">
                                                         <span className="text-primary font-bold block">{`{name}`}</span>
-                                                        <span>اسم العميل</span>
-                                                    </div>
-                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
-                                                        <span className="text-primary font-bold block">{`{username}`}</span>
-                                                        <span>اسم المستخدم</span>
-                                                    </div>
-                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
-                                                        <span className="text-primary font-bold block">{`{password}`}</span>
-                                                        <span>كلمة المرور</span>
+                                                        <span>يتم استبدالها تلقائياً باسم العميل الكريم</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-[9px] text-amber-600 dark:text-amber-400 mt-2 text-right">⚠️ ملاحظة: لا يمكن للعميل تسجيل الدخول بدون اسم المستخدم وكلمة المرور، لذا تأكد من بقاء المتغيرات أعلاه في نص الرسالة ليتلقاها العميل.</p>
+                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-450 mt-2 text-right font-medium">✨ ميزة ذكية: سيقوم النظام بتضمين (اسم المستخدم، كلمة المرور، ورابط تسجيل الدخول) تلقائياً في نهاية رسالتك بتنسيق فاخر ومغلق لحمايتها من التعديل أو النسيان.</p>
                                             </div>
                                         </div>
                                     </div>

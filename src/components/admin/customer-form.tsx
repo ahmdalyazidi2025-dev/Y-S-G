@@ -83,13 +83,20 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                 await addCustomer(customerData)
 
                 // WhatsApp welcome message auto-sending on success
-                const template = storeSettings?.whatsappTemplates?.newCustomer || 
-                    "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}";
+                const baseTemplate = storeSettings?.whatsappTemplates?.newCustomer || 
+                    "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح.";
                 
-                const messageText = template
-                    .replace(/{name}/g, customerData.name)
-                    .replace(/{username}/g, customerData.username)
-                    .replace(/{password}/g, customerData.password || "");
+                // 1. Replace the name placeholder if exists
+                let customMessage = baseTemplate.replace(/{name}/g, customerData.name);
+                
+                // 2. Beautifully append the username and password at the bottom automatically
+                const credentialsPart = 
+                    `\n\n*🔐 بيانات دخول حسابك:*\n` +
+                    `• *اسم المستخدم:* ${customerData.username}\n` +
+                    `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
+                    `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
+                
+                const messageText = customMessage + credentialsPart;
                 
                 let cleanPhone = customerData.phone.trim();
                 if (cleanPhone.startsWith("05")) {
