@@ -133,13 +133,6 @@ export default function CategoriesPage() {
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </button>
-                                        <button
-                                            className="h-9 w-9 rounded-xl flex items-center justify-center bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:scale-110"
-                                            onClick={(e) => handleDeleteCat(e, category)}
-                                            title="حذف القسم"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
                                     </div>
 
                                     {/* Product count badge */}
@@ -164,9 +157,6 @@ export default function CategoriesPage() {
                                                 نشط
                                             </span>
                                         )}
-                                        <span className="text-[10px] bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-lg text-white font-bold">
-                                            الترتيب: {category.order ?? 0}
-                                        </span>
                                     </div>
                                 </div>
 
