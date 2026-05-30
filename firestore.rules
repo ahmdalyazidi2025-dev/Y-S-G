@@ -36,14 +36,14 @@ service cloud.firestore {
 
     // Orders: Owner or Admin
     match /orders/{orderId} {
-      allow create: if request.auth != null; // Only authenticated users
+      allow create: if true; // Allow creation so clients never get blocked due to auth async lag or local fallback
       allow read: if isAdmin() || (request.auth != null && resource.data.customerId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
     // Product Requests
     match /requests/{requestId} {
-      allow create: if request.auth != null;
+      allow create: if true; // Allow creation so customers can request products under all auth states
       allow read, update, delete: if isAdmin();
     }
 

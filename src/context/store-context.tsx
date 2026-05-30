@@ -11,6 +11,7 @@ import {
     QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch
 } from "firebase/firestore"
 import { adminCreateOrUpdateUserAction, adminDeleteUserAction } from "@/app/actions/auth-actions"
+import { sanitizeData } from "@/lib/utils/store-helpers"
 
 export type Banner = {
     id: string
@@ -555,7 +556,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
         }
         try {
-            await addDoc(collection(db, "orders"), orderData)
+            await addDoc(collection(db, "orders"), sanitizeData(orderData))
 
             // Update customer lastActive
             const customerId = currentUser?.id || "guest"
@@ -568,8 +569,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setCart([])
             toast.success(isDraft ? "تم الحفظ كمسودة سحابية" : "تم إرسال الطلب للسحابة بنجاح")
             hapticFeedback('success')
-        } catch {
-            toast.error("فشل إرسال الطلب")
+        } catch (error: any) {
+            console.error("Order creation failed:", error)
+            toast.error("فشل إرسال الطلب: " + (error?.message || error || ""))
             hapticFeedback('error')
         }
     }
