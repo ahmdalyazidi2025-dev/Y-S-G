@@ -544,19 +544,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const finalCustomerPhone = additionalInfo?.phone || currentUser?.phone || ""
         const finalCustomerLocation = currentUser?.location || ""
 
-        const orderData = {
-            customerName: finalCustomerName,
-            customerPhone: finalCustomerPhone,
-            customerLocation: finalCustomerLocation,
-            customerId: currentUser?.id || "guest",
-            items: cart,
-            total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
-            status: isDraft ? "pending" : "processing",
-            createdAt: Timestamp.now(),
-            statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
-        }
         try {
-            await addDoc(collection(db, "orders"), sanitizeData(orderData))
+            let orderId: string
+            try {
+                const counterRef = doc(db, "counters", "orders")
+                const counterSnap = await getDoc(counterRef)
+                const newCounterValue = (counterSnap.exists() ? (counterSnap.data().current || 0) : 0) + 1
+                orderId = newCounterValue.toString()
+                await setDoc(counterRef, { current: newCounterValue }, { merge: true })
+            } catch (counterError) {
+                console.warn("Counter logic failed, falling back to timestamp ID:", counterError)
+                orderId = Date.now().toString().slice(-8) // Fallback to last 8 digits of timestamp
+            }
+
+            const orderData = {
+                id: orderId,
+                customerName: finalCustomerName,
+                customerPhone: finalCustomerPhone,
+                customerLocation: finalCustomerLocation,
+                customerId: currentUser?.id || "guest",
+                items: cart,
+                total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
+                status: isDraft ? "pending" : "processing",
+                createdAt: Timestamp.now(),
+                statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
+            }
+
+            await setDoc(doc(db, "orders", orderId), sanitizeData(orderData))
 
             // Update customer lastActive
             const customerId = currentUser?.id || "guest"

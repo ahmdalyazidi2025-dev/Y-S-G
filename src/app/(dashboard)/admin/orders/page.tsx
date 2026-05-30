@@ -94,7 +94,9 @@ export default function AdminOrdersPage() {
 
         const matchesStatus = filter === "all" || o.status === filter
         const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
-        const matchesName = (o.customerName || "").toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesName = 
+            (o.customerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (o.id || "").toLowerCase().includes(searchQuery.toLowerCase())
         return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName
     }), [orders, dateRange, activeCategory, filter, regionFilter, searchQuery])
 
