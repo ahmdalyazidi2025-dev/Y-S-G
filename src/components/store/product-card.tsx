@@ -21,8 +21,8 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-primary/20 to-transparent group-hover:via-primary/50 transition-all" />
 
             <div>
-                {/* Product Image/Icon */}
-                <div className="p-3 relative aspect-square bg-slate-50/60 dark:bg-slate-950/40 flex items-center justify-center overflow-hidden border-b border-slate-100 dark:border-white/5">
+                {/* Product Image/Icon - Rectangular Portrait aspect-[3/4] */}
+                <div className="p-3 relative aspect-[3/4] bg-slate-50/60 dark:bg-slate-950/40 flex items-center justify-center overflow-hidden border-b border-slate-100 dark:border-white/5">
                     <div
                         className="w-full h-full flex items-center justify-center transition-transform duration-500 group-hover:scale-105 cursor-pointer relative"
                         onClick={onViewDetails}
@@ -36,7 +36,7 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                                 unoptimized
                             />
                         ) : (
-                            <div className="text-5xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 transform-gpu select-none">
+                            <div className="text-4xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 transform-gpu select-none">
                                 {item.name.includes("زيت") ? "🛢️" : item.name.includes("فلتر") ? "⚙️" : item.name.includes("بطارية") ? "🔋" : "🔧"}
                             </div>
                         )}
@@ -50,10 +50,10 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                     </div>
                 </div>
 
-                {/* Product Title */}
-                <div className="px-3 pt-3 text-right">
+                {/* Product Title - Sized down to save space */}
+                <div className="px-2 pt-2 text-right">
                     <h3 
-                        className="font-bold text-[13px] sm:text-[14px] text-slate-800 dark:text-slate-100 leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2 cursor-pointer min-h-[2.5rem]"
+                        className="font-bold text-[11px] sm:text-[12px] text-slate-800 dark:text-slate-100 leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2 cursor-pointer min-h-[2rem]"
                         onClick={onViewDetails}
                     >
                         {item.name}
@@ -61,19 +61,19 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                 </div>
             </div>
 
-            <CardFooter className="p-3 pt-2 flex flex-col items-start gap-2 relative">
-                {/* Piece Price Section */}
-                <div className="w-full flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl p-2 border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors duration-200">
+            <CardFooter className="p-2 pt-1 flex flex-col items-start gap-1.5 relative">
+                {/* Piece Price Section - More compact padding and smaller sizes */}
+                <div className="w-full flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 rounded-xl p-1.5 border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors duration-200">
                     <div className="flex flex-col items-start text-left select-none">
-                        <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded font-black mb-1">
+                        <span className="text-[8px] bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-1 py-0.5 rounded font-black mb-0.5">
                             حبة
                         </span>
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] sm:text-[14px] font-black text-emerald-600 dark:text-emerald-400">
-                                {item.pricePiece} <small className="text-[8px]">ر.س</small>
+                        <div className="flex items-center gap-1">
+                            <span className="text-[11px] sm:text-[12px] font-black text-emerald-600 dark:text-emerald-400">
+                                {item.pricePiece} <small className="text-[7px]">ر.س</small>
                             </span>
                             {hasDiscountPiece && (
-                                <span className="text-[10px] text-rose-500 line-through font-semibold whitespace-nowrap">
+                                <span className="text-[9px] text-rose-500 line-through font-semibold whitespace-nowrap">
                                     {item.oldPricePiece}
                                 </span>
                             )}
@@ -82,25 +82,25 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                     <Button
                         size="sm"
                         onClick={() => addToCart(item, "حبة", item.pricePiece)}
-                        className="h-8 w-8 rounded-full bg-primary hover:bg-primary/95 text-white shadow-md shadow-primary/20 transition-all p-0 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95"
+                        className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-primary hover:bg-primary/95 text-white shadow-md shadow-primary/20 transition-all p-0 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95"
                     >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </Button>
                 </div>
 
                 {/* Dozen Price Section */}
                 {hasDozen && (
-                    <div className="w-full flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl p-2 border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors duration-200">
+                    <div className="w-full flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 rounded-xl p-1.5 border border-slate-100 dark:border-white/5 hover:border-slate-200 dark:hover:border-white/10 transition-colors duration-200">
                         <div className="flex flex-col items-start text-left select-none">
-                            <span className="text-[9px] bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded font-black mb-1">
+                            <span className="text-[8px] bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-1 py-0.5 rounded font-black mb-0.5">
                                 كرتون
                             </span>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[13px] sm:text-[14px] font-black text-emerald-600 dark:text-emerald-400">
-                                    {item.priceDozen} <small className="text-[8px]">ر.س</small>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[11px] sm:text-[12px] font-black text-emerald-600 dark:text-emerald-400">
+                                    {item.priceDozen} <small className="text-[7px]">ر.س</small>
                                 </span>
                                 {hasDiscountDozen && (
-                                    <span className="text-[10px] text-rose-500 line-through font-semibold whitespace-nowrap">
+                                    <span className="text-[9px] text-rose-500 line-through font-semibold whitespace-nowrap">
                                         {item.oldPriceDozen}
                                     </span>
                                 )}
@@ -109,9 +109,9 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                         <Button
                             size="sm"
                             onClick={() => addToCart(item, "كرتون", item.priceDozen!)}
-                            className="h-8 w-8 rounded-full bg-primary hover:bg-primary/95 text-white shadow-md shadow-primary/20 transition-all p-0 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95"
+                            className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-primary hover:bg-primary/95 text-white shadow-md shadow-primary/20 transition-all p-0 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </Button>
                     </div>
                 )}

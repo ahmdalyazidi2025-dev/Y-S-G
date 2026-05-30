@@ -30,7 +30,7 @@ export default function StoreLayout({
     const { cart, logout, storeSettings } = useStore()
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
-    const showBottomNav = pathname === "/customer" || pathname === "/customer/invoices"
+    const showBottomNav = pathname === "/customer"
 
     const handleLogout = () => {
         logout()
