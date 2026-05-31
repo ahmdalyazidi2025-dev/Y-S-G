@@ -113,7 +113,7 @@ export default function StoreLayout({
 
                 {/* Bottom Navigation (Adaptive & Wide) */}
                 {showBottomNav && (
-                    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg h-20 glass rounded-[32px] z-[50] border border-white/10 shadow-2xl flex items-center justify-around px-2 transition-all animate-in slide-in-from-bottom-5 duration-300">
+                    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-16 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl rounded-[24px] z-[45] border border-slate-200/50 dark:border-white/5 shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center justify-around px-3 transition-all animate-in slide-in-from-bottom-5 duration-300">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href
                             const Icon = item.icon
@@ -126,9 +126,9 @@ export default function StoreLayout({
                                             item.onClick?.()
                                             hapticFeedback('medium')
                                         }}
-                                        className="relative -top-8 w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/40 active:scale-95 transition-all border-4 border-[#101c26] group"
+                                        className="relative -top-5 w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-all border-2 border-white dark:border-slate-950 group"
                                     >
-                                        <Icon className="w-8 h-8 text-white group-hover:scale-110 transition-transform" />
+                                        <Icon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" strokeWidth={2.5} />
                                         <div className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
                                     </button>
                                 )
@@ -136,18 +136,18 @@ export default function StoreLayout({
 
                             const Content = (
                                 <div className={cn(
-                                    "flex flex-col items-center gap-1 transition-all relative",
-                                    isActive ? "text-primary scale-110" : "text-slate-400 hover:text-slate-300"
+                                    "flex flex-col items-center gap-0.5 transition-all relative",
+                                    isActive ? "text-primary" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                                 )}>
                                     <div className="relative">
-                                        <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+                                        <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
                                         {item.badge && item.badge > 0 ? (
-                                            <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#1c2a36]">
+                                            <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border border-white dark:border-slate-950 px-1">
                                                 {item.badge}
                                             </span>
                                         ) : null}
                                     </div>
-                                    <span className="text-[10px] font-medium">{item.name}</span>
+                                    <span className="text-[9px] font-bold tracking-wide mt-0.5">{item.name}</span>
                                 </div>
                             )
 
