@@ -9,7 +9,7 @@ import { ProfileInfoForm } from "@/components/store/profile/profile-info-form"
 import { motion } from "framer-motion"
 
 export default function CustomerProfilePage() {
-    const { currentUser, orders, loading } = useStore()
+    const { currentUser, orders, loading, storeSettings } = useStore()
     const router = useRouter()
 
     useEffect(() => {
@@ -59,7 +59,6 @@ export default function CustomerProfilePage() {
                             
                             <button 
                                 onClick={() => {
-                                    const { storeSettings } = useStore()
                                     const baseTemplate = storeSettings?.whatsappTemplates?.inviteFriend || 
                                         "مرحباً بك يا صديقي! أدعوك للتسجيل والإنضمام إلى متجرنا المميز لجميع مستلزمات قطع غيار ومستلزمات السيارات! 🚗✨\n\nخطوات الإنضمام سهلة جداً وبسيطة:\n1. اضغط على رابط طلب الانضمام التالي:\n{url}\n2. اضغط على زر 'تقديم طلب انضمام كعميل جديد'.\n3. املأ بياناتك (الاسم، الجوال، اسم المستخدم المطلوب).\n4. بعد الإرسال، ستقوم الإدارة بمراجعة حسابك وتفعيله فوراً لتستمتع بأفضل الأسعار والعروض الحصرية! 🎁\n\nأرسلها لك صديقك: {name} 🤝";
                                     
