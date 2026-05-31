@@ -20,7 +20,7 @@ const formatDate = (date: any) => {
 }
 
 export default function PasswordRequestsPage() {
-    const { passwordRequests = [], resolvePasswordRequest = async () => {} } = useStore()
+    const { passwordRequests = [], resolvePasswordRequest = async () => {}, storeSettings } = useStore()
     const { customers } = useCustomers()
     const { markSectionAsViewed } = useSettings()
     const [searchTerm, setSearchTerm] = useState("")
@@ -72,61 +72,93 @@ export default function PasswordRequestsPage() {
                         <p>لا توجد طلبات معلقة حالياً</p>
                     </div>
                 ) : (
-                    filteredRequests.map((req: PasswordRequest) => (
-                        <motion.div
-                            key={req.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:border-primary/50 transition-colors"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-500">
-                                    <Phone className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-foreground">{req.customerName}</h3>
-                                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                                        <span className="font-mono dir-ltr">{req.phone}</span>
-                                        <span>•</span>
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            <span>{formatDate(req.createdAt)}</span>
+                    filteredRequests.map((req: PasswordRequest) => {
+                        const customer = customers.find(c => c.id === req.customerId || c.phone === req.phone)
+                        
+                        // Construct the pre-filled template message
+                        const baseTemplate = storeSettings?.whatsappTemplates?.passwordRecovery || 
+                            "مرحباً بك {name}. تم إعادة تعيين كلمة مرور حسابك بنجاح.\n\n*🔐 بيانات دخولك الجديدة:*\n• *اسم المستخدم:* {username}\n• *كلمة المرور:* {password}\n\n🔗 رابط تسجيل الدخول:\n{url}";
+                        
+                        let messageText = ""
+                        if (customer) {
+                            const domain = typeof window !== "undefined" ? window.location.origin : ""
+                            messageText = baseTemplate
+                                .replace(/{name}/g, customer.name)
+                                .replace(/{username}/g, customer.username || "")
+                                .replace(/{password}/g, customer.password || "")
+                                .replace(/{url}/g, `${domain}/login`);
+                            
+                            // Fallback if they customized the template but forgot credentials placeholders
+                            if (!baseTemplate.includes("{username}") && !baseTemplate.includes("{password}")) {
+                                messageText += 
+                                    `\n\n*🔐 بيانات دخولك الجديدة:*\n` +
+                                    `• *اسم المستخدم:* ${customer.username}\n` +
+                                    `• *كلمة المرور:* ${customer.password || ""}\n\n` +
+                                    `🔗 رابط تسجيل الدخول:\n${domain}/login`;
+                            }
+                        }
+
+                        const cleanPhone = req.phone.trim().replace(/^0/, '966')
+                        const waUrl = customer 
+                            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`
+                            : `https://wa.me/${cleanPhone}`
+
+                        return (
+                            <motion.div
+                                key={req.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group hover:border-primary/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center text-yellow-600 dark:text-yellow-500">
+                                        <Phone className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-lg text-foreground">{req.customerName}</h3>
+                                        <div className="flex items-center gap-2 text-slate-500 text-sm">
+                                            <span className="font-mono dir-ltr">{req.phone}</span>
+                                            <span>•</span>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                <span>{formatDate(req.createdAt)}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                                <a
-                                    href={`https://wa.me/${req.phone.replace(/^0/, '966')}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex-1 md:flex-none"
-                                >
-                                    <Button variant="outline" className="w-full border-green-500/20 text-green-600 hover:bg-green-500/10 gap-2">
-                                        <span>واتساب</span>
+                                <div className="flex items-center gap-2 w-full md:w-auto">
+                                    <a
+                                        href={waUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex-1 md:flex-none"
+                                    >
+                                        <Button variant="outline" className="w-full border-green-500/20 text-green-600 hover:bg-green-500/10 gap-2">
+                                            <span>واتساب</span>
+                                        </Button>
+                                    </a>
+
+                                    <Button
+                                        onClick={() => handleOpenProfile(req.customerId)}
+                                        className="flex-1 md:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
+                                    >
+                                        <User className="w-4 h-4 ml-2" />
+                                        <span>الملف الشخصي</span>
                                     </Button>
-                                </a>
 
-                                <Button
-                                    onClick={() => handleOpenProfile(req.customerId)}
-                                    className="flex-1 md:flex-none bg-primary text-primary-foreground hover:bg-primary/90"
-                                >
-                                    <User className="w-4 h-4 ml-2" />
-                                    <span>الملف الشخصي</span>
-                                </Button>
-
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => resolvePasswordRequest(req.id)}
-                                    className="flex-1 md:flex-none bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300"
-                                >
-                                    <CheckCircle className="w-4 h-4 ml-2" />
-                                    <span>إغلاق الطلب</span>
-                                </Button>
-                            </div>
-                        </motion.div>
-                    ))
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => resolvePasswordRequest(req.id)}
+                                        className="flex-1 md:flex-none bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300"
+                                    >
+                                        <CheckCircle className="w-4 h-4 ml-2" />
+                                        <span>إغلاق الطلب</span>
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        )
+                    })
                 )}
             </div>
 
