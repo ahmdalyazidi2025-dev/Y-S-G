@@ -36,7 +36,7 @@ const formatOrderDate = (d: any): string => {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, deleteOrdersBulk } = useStore()
+    const { orders, updateOrderStatus, deleteOrdersBulk, customers } = useStore()
     const [viewMode, setViewMode] = useState<"all" | "byCustomer">("byCustomer")
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
@@ -357,7 +357,19 @@ export default function AdminOrdersPage() {
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-slate-900 dark:text-white truncate">{customerName}</h3>
+                                            {(() => {
+                                                const dbCustomer = customers.find(c => c.id === lastOrder?.customerId)
+                                                return (
+                                                    <h3 className="font-bold text-slate-900 dark:text-white truncate flex flex-wrap items-center gap-1.5">
+                                                        <span>{customerName}</span>
+                                                        {dbCustomer && (
+                                                            <span className="text-[10px] font-medium text-primary bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
+                                                                المركز: {dbCustomer.name} (@{dbCustomer.username})
+                                                            </span>
+                                                        )}
+                                                    </h3>
+                                                )
+                                            })()}
                                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                                                 <span className="text-xs bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
                                                     {customerOrders.length} طلب
@@ -499,7 +511,19 @@ export default function AdminOrdersPage() {
                                             <status.icon className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-slate-900 dark:text-white text-sm">#{order.id} - {order.customerName || "عميل غير معروف"}</h3>
+                                            {(() => {
+                                                const dbCustomer = customers.find(c => c.id === order.customerId)
+                                                return (
+                                                    <h3 className="font-bold text-slate-900 dark:text-white text-sm flex flex-wrap items-center gap-1.5">
+                                                        <span>#{order.id} - {order.customerName || "عميل غير معروف"}</span>
+                                                        {dbCustomer && (
+                                                            <span className="text-[9px] font-normal text-primary bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                                                                المركز: {dbCustomer.name} (@{dbCustomer.username})
+                                                            </span>
+                                                        )}
+                                                    </h3>
+                                                )
+                                            })()}
                                             <p className="text-[10px] text-slate-400">{formatOrderDate(order.createdAt)}</p>
                                         </div>
                                     </div>
@@ -554,9 +578,19 @@ export default function AdminOrdersPage() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-6 mb-8">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-slate-400 text-xs"><User className="w-3 h-3" />العميل</div>
+                                <div className="space-y-1.5 col-span-2">
+                                    <div className="flex items-center gap-2 text-slate-400 text-xs"><User className="w-3 h-3" />العميل والمركز المسجل</div>
                                     <p className="font-bold text-slate-900 dark:text-white text-sm">{selectedOrder.customerName || "عميل غير معروف"}</p>
+                                    {(() => {
+                                        const dbCustomer = customers.find(c => c.id === selectedOrder.customerId)
+                                        if (!dbCustomer) return null
+                                        return (
+                                            <div className="text-[10px] text-primary font-bold bg-primary/5 p-2 rounded-xl border border-primary/10 flex flex-wrap items-center justify-between gap-2 mt-1">
+                                                <span>🏢 المركز: <span className="text-slate-700 dark:text-slate-350">{dbCustomer.name}</span></span>
+                                                <span>👤 اليوزر: <span className="text-slate-700 dark:text-slate-350">@{dbCustomer.username}</span></span>
+                                            </div>
+                                        )
+                                    })()}
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-slate-400 text-xs"><Calendar className="w-3 h-3" />التاريخ</div>
