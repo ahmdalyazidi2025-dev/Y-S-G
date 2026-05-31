@@ -27,6 +27,42 @@ const getPrintStyles = () => `
             margin: 0;
             color: #000;
         }
+        .no-print-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-danger {
+            background: #ef4444;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
         .header { 
             display: flex; 
             justify-content: space-between; 
@@ -54,6 +90,7 @@ const getPrintStyles = () => `
         }
         
         @media print {
+            .no-print-header { display: none !important; }
             body { padding: 0; }
             table { font-size: 11px; }
             th, td { padding: 4px; }
@@ -62,6 +99,16 @@ const getPrintStyles = () => `
 `;
 
 const getPrintHTML = (products: Product[], title: string, filters?: string) => `
+    <div class="no-print-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 14px; font-weight: bold;">📋 تقرير المنتجات جاهز للحفظ بتنسيق PDF</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="window.print()">💾 حفظ كـ PDF أو طباعة التقرير</button>
+            <button class="btn btn-danger" onclick="window.close()">❌ إغلاق النافذة</button>
+        </div>
+    </div>
+
     <div class="header">
         <div class="logo-section">
             <img src="/logo.jpg" class="logo" alt="Logo" onerror="this.style.display='none'">
@@ -142,9 +189,6 @@ export const printProductList = (products: Product[], title: string = "قائم�
                     window.onload = function() {
                         try {
                             window.print();
-                            setTimeout(() => {
-                                window.close();
-                            }, 500);
                         } catch (e) {
                             console.error("Print dialog failed", e);
                         }
