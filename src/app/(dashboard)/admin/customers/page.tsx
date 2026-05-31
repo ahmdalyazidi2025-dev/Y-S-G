@@ -54,12 +54,12 @@ export default function CustomersPage() {
 
     const categoriesList = [
         { id: "all", label: "الكل", color: "text-slate-500 dark:text-slate-300", bg: "bg-slate-500/10", activeBg: "bg-slate-500 text-white", apiId: "all" },
-        { id: "New", label: "جدد", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", activeBg: "bg-violet-500 text-white", apiId: "New" },
-        { id: "LoggedIn", label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", activeBg: "bg-teal-500 text-white", apiId: "LoggedIn" },
         { id: "Active", label: "نشط", color: "text-green-500 dark:text-green-400", bg: "bg-green-500/10", activeBg: "bg-green-500 text-white", apiId: "Active" },
         { id: "Average", label: "متوسط", color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", activeBg: "bg-blue-500 text-white", apiId: "Average" },
         { id: "Weak", label: "ضعيف", color: "text-orange-500 dark:text-orange-400", bg: "bg-orange-500/10", activeBg: "bg-orange-500 text-white", apiId: "Weak" },
         { id: "Disconnected", label: "منقطع", color: "text-red-500 dark:text-red-400", bg: "bg-red-500/10", activeBg: "bg-red-500 text-white", apiId: "Disconnected" },
+        { id: "New", label: "جدد", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", activeBg: "bg-violet-500 text-white", apiId: "New" },
+        { id: "LoggedIn", label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", activeBg: "bg-teal-500 text-white", apiId: "LoggedIn" },
     ]
 
     const filteredCustomers = customers.filter(c => {
