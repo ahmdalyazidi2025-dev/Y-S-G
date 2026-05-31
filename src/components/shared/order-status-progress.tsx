@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Check, Clock, Package, Truck, Home } from "lucide-react"
 
-type Status = "pending" | "processing" | "shipped" | "delivered" | "canceled"
+type Status = "draft" | "pending" | "processing" | "shipped" | "delivered" | "canceled"
 
 const STAGES = [
     { key: "pending", label: "بانتظار التأكيد", icon: Clock },
@@ -13,6 +13,14 @@ const STAGES = [
 ]
 
 export function OrderStatusProgress({ status }: { status: Status }) {
+    if (status === "draft") {
+        return (
+            <div className="bg-slate-500/10 border border-slate-500/20 rounded-2xl p-4 text-center">
+                <p className="text-slate-400 font-bold text-sm">هذه الفاتورة مسودة ولم يتم إرسالها للإدارة بعد</p>
+            </div>
+        )
+    }
+
     if (status === "canceled") {
         return (
             <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 text-center">

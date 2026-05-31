@@ -112,7 +112,7 @@ export type Order = {
     paymentMethod?: string
     items: CartItem[]
     total: number
-    status: "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "deleted"
+    status: "draft" | "pending" | "processing" | "shipped" | "delivered" | "canceled" | "accepted" | "deleted"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
     isRead?: boolean

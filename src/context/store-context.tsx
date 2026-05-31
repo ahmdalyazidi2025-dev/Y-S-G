@@ -128,7 +128,7 @@ export type Order = {
     customerId: string
     items: CartItem[]
     total: number
-    status: "pending" | "processing" | "shipped" | "delivered" | "canceled"
+    status: "draft" | "pending" | "processing" | "shipped" | "delivered" | "canceled"
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
     paymentMethod?: string
@@ -424,7 +424,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
 
         const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
-            const docs = snap.docs.map((doc) => {
+            let docs = snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Order, "id">
                 return {
                     ...data,
@@ -433,6 +433,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
                 } as Order
             })
+
+            if (isAdmin) {
+                // Admin must NOT see drafts! Only real orders!
+                docs = docs.filter(o => o.status !== "draft")
+            }
 
             // Client-side sort is safe for small-medium sets and avoids index requirement
             if (!isAdmin) {
@@ -595,9 +600,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 customerId: currentUser?.id || "guest",
                 items: cart,
                 total: cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0),
-                status: isDraft ? "pending" : "processing",
+                status: isDraft ? "draft" : "processing",
                 createdAt: Timestamp.now(),
-                statusHistory: [{ status: isDraft ? "pending" : "processing", timestamp: Timestamp.now() }]
+                statusHistory: [{ status: isDraft ? "draft" : "processing", timestamp: Timestamp.now() }]
             }
 
             await setDoc(doc(db, "orders", orderId), sanitizeData(orderData))

@@ -16,6 +16,7 @@ import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
+    draft: { label: "مسودة", color: "text-slate-650 dark:text-slate-350", bg: "bg-slate-100 dark:bg-white/5", icon: Clock },
     pending: { label: "لم تجهز", color: "text-orange-700 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-500/10", icon: Clock },
     processing: { label: "جاري العمل", color: "text-blue-700 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-500/10", icon: Package },
     shipped: { label: "تم الشحن", color: "text-purple-700 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-500/10", icon: Truck },
@@ -24,7 +25,7 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart } = useStore()
+    const { orders, restoreDraftToCart, updateOrderStatus } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
@@ -49,7 +50,7 @@ export default function InvoicesPage() {
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
-                {["all", "pending", "processing", "shipped", "canceled"].map((s) => (
+                {["all", "draft", "pending", "processing", "shipped", "canceled"].map((s) => (
                     <button
                         key={s}
                         onClick={() => setFilter(s)}
@@ -217,6 +218,30 @@ export default function InvoicesPage() {
                                             <span className="text-slate-600 dark:text-slate-400 font-bold">الإجمالي النهائي</span>
                                             <span className="text-2xl font-bold text-primary">{selectedOrder.total.toFixed(2)} ر.س</span>
                                         </div>
+                                        {selectedOrder.status === "draft" && (
+                                            <div className="flex flex-col gap-3 w-full">
+                                                <Button
+                                                    className="w-full h-14 rounded-2xl bg-primary text-white gap-2 shadow-lg shadow-primary/20 font-bold"
+                                                    onClick={async () => {
+                                                        await updateOrderStatus(selectedOrder.id, "processing")
+                                                        toast.success("تم إرسال الفاتورة بنجاح إلى الإدارة! 🚀")
+                                                        setSelectedOrder(null)
+                                                    }}
+                                                >
+                                                    <span>إرسال الفاتورة الآن للإدارة</span>
+                                                </Button>
+                                                <Button
+                                                    className="w-full h-14 rounded-2xl bg-orange-500/10 text-orange-500 border border-orange-500/20 hover:bg-orange-500/20 transition-colors gap-2 font-bold"
+                                                    onClick={() => {
+                                                        restoreDraftToCart(selectedOrder.id)
+                                                        setSelectedOrder(null)
+                                                    }}
+                                                >
+                                                    <Plus className="w-5 h-5" />
+                                                    <span>إعادة للسلة للتعديل</span>
+                                                </Button>
+                                            </div>
+                                        )}
                                         {selectedOrder.status === "pending" && (
                                             <Button
                                                 className="w-full h-14 rounded-2xl bg-primary text-white gap-2 shadow-lg shadow-primary/20"
