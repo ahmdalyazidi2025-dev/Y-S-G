@@ -47,15 +47,23 @@ export default function AdminOrdersPage() {
 
     // Selection & Deletion Undo mechanism
     const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
+    const [isSelectionMode, setIsSelectionMode] = useState(false)
     const [deletionQueue, setDeletionQueue] = useState<string[] | null>(null)
     const [countdown, setCountdown] = useState<number>(0)
     const [countdownTimer, setCountdownTimer] = useState<any>(null)
 
-    const toggleSelectOrder = (orderId: string, e: React.MouseEvent) => {
-        e.stopPropagation()
-        setSelectedOrderIds(prev =>
-            prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
-        )
+    const toggleSelectOrder = (orderId: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation()
+        if (!isSelectionMode) {
+            setIsSelectionMode(true)
+        }
+        setSelectedOrderIds(prev => {
+            const next = prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+            if (next.length === 0) {
+                setIsSelectionMode(false)
+            }
+            return next
+        })
         hapticFeedback('light')
     }
 
@@ -65,6 +73,7 @@ export default function AdminOrdersPage() {
         setDeletionQueue(ids)
         setCountdown(5)
         setSelectedOrderIds([]) // Clear selection
+        setIsSelectionMode(false) // Exit selection mode
 
         const timer = setInterval(() => {
             setCountdown(prev => {
@@ -91,6 +100,7 @@ export default function AdminOrdersPage() {
         }
         if (deletionQueue) {
             setSelectedOrderIds(deletionQueue) // Restore selection
+            setIsSelectionMode(true) // Re-enter selection mode
             setDeletionQueue(null)
             toast.success("تم التراجع عن حذف الطلبات ↩️")
         }
@@ -191,6 +201,45 @@ export default function AdminOrdersPage() {
                 </Link>
                 <h1 className="text-2xl font-bold flex-1 text-slate-900 dark:text-white">متابعة الطلبات</h1>
 
+                {isSelectionMode ? (
+                    <div className="flex items-center gap-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={toggleSelectAll}
+                            className="bg-primary/15 text-primary text-xs font-bold hover:bg-primary/20 rounded-xl px-4 py-2 border border-primary/30 transition-all shadow-sm shadow-primary/5 active:scale-95"
+                        >
+                            {isAllSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                                setSelectedOrderIds([])
+                                setIsSelectionMode(false)
+                                hapticFeedback('light')
+                            }}
+                            className="text-slate-500 text-xs font-bold hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl px-3 py-2 active:scale-95"
+                        >
+                            إلغاء
+                        </Button>
+                    </div>
+                ) : (
+                    filteredOrders.length > 0 && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                                setIsSelectionMode(true)
+                                hapticFeedback('medium')
+                            }}
+                            className="bg-primary/15 text-primary text-xs font-bold hover:bg-primary/20 rounded-xl px-4 py-2 border border-primary/30 transition-all shadow-sm shadow-primary/5 active:scale-95"
+                        >
+                            تحديد جماعي
+                        </Button>
+                    )
+                )}
+
                 {/* View Toggle */}
                 <div className="flex bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10">
                     <button
@@ -277,33 +326,6 @@ export default function AdminOrdersPage() {
                 ))}
             </div>
 
-            {filteredOrders.length > 0 && (
-                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
-                    <button
-                        onClick={toggleSelectAll}
-                        className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
-                    >
-                        <div className={cn("w-4.5 h-4.5 rounded border flex items-center justify-center transition-all",
-                            isAllSelected
-                                ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
-                                : "border-slate-300 dark:border-slate-600"
-                        )}>
-                            {isAllSelected && <span className="text-[10px] font-bold">✓</span>}
-                        </div>
-                        <span>تحديد الكل ({filteredOrders.length})</span>
-                    </button>
-
-                    {selectedOrderIds.length > 0 && (
-                        <button
-                            onClick={() => { setSelectedOrderIds([]); hapticFeedback('light') }}
-                            className="text-xs text-red-500 hover:text-red-600 font-bold"
-                        >
-                            إلغاء التحديد ({selectedOrderIds.length})
-                        </button>
-                    )}
-                </div>
-            )}
-
             {/* ===== BY CUSTOMER VIEW ===== */}
             {viewMode === "byCustomer" && (
                 <div className="space-y-3">
@@ -385,19 +407,27 @@ export default function AdminOrdersPage() {
                                                                 className={cn("flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors",
                                                                     isSelected && "bg-primary/5 dark:bg-primary/10"
                                                                 )}
-                                                                onClick={() => setSelectedOrder(order)}
+                                                                onClick={() => {
+                                                                    if (isSelectionMode) {
+                                                                        toggleSelectOrder(order.id)
+                                                                    } else {
+                                                                        setSelectedOrder(order)
+                                                                    }
+                                                                }}
                                                             >
                                                                 {/* Checkbox */}
-                                                                <div 
-                                                                    onClick={(e) => toggleSelectOrder(order.id, e)}
-                                                                    className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
-                                                                        isSelected 
-                                                                            ? "bg-primary border-primary text-white shadow-sm" 
-                                                                            : "border-slate-300 dark:border-white/20 hover:border-primary"
-                                                                    )}
-                                                                >
-                                                                    {isSelected && <span className="text-[10px] font-bold">✓</span>}
-                                                                </div>
+                                                                {isSelectionMode && (
+                                                                    <div 
+                                                                        onClick={(e) => toggleSelectOrder(order.id, e)}
+                                                                        className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
+                                                                            isSelected 
+                                                                                ? "bg-primary border-primary text-white shadow-sm" 
+                                                                                : "border-slate-300 dark:border-white/20 hover:border-primary"
+                                                                        )}
+                                                                    >
+                                                                        {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                                                                    </div>
+                                                                )}
 
                                                                 <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", status.bg, status.color)}>
                                                                     <status.icon className="w-4 h-4" />
@@ -443,19 +473,27 @@ export default function AdminOrdersPage() {
                                     className={cn("glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5",
                                         isSelected && "border-primary/30 bg-primary/5 dark:bg-primary/10"
                                     )}
-                                    onClick={() => setSelectedOrder(order)}>
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            toggleSelectOrder(order.id)
+                                        } else {
+                                            setSelectedOrder(order)
+                                        }
+                                    }}>
                                     <div className="flex items-center gap-4">
                                         {/* Checkbox */}
-                                        <div 
-                                            onClick={(e) => toggleSelectOrder(order.id, e)}
-                                            className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
-                                                isSelected 
-                                                    ? "bg-primary border-primary text-white shadow-sm" 
-                                                    : "border-slate-300 dark:border-white/20 hover:border-primary"
-                                            )}
-                                        >
-                                            {isSelected && <span className="text-[10px] font-bold">✓</span>}
-                                        </div>
+                                        {isSelectionMode && (
+                                            <div 
+                                                onClick={(e) => toggleSelectOrder(order.id, e)}
+                                                className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
+                                                    isSelected 
+                                                        ? "bg-primary border-primary text-white shadow-sm" 
+                                                        : "border-slate-300 dark:border-white/20 hover:border-primary"
+                                                )}
+                                            >
+                                                {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                                            </div>
+                                        )}
 
                                         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", status.bg, status.color)}>
                                             <status.icon className="w-5 h-5" />
