@@ -93,17 +93,22 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                 const isPasswordChanged = formData.password.trim() !== "" && formData.password !== (initialCustomer.password || "");
                 if (isPasswordChanged) {
                     const baseTemplate = storeSettings?.whatsappTemplates?.passwordRecovery || 
-                        "مرحباً بك {name}. تم إعادة تعيين كلمة مرور حسابك بنجاح.";
+                        "مرحباً بك {name}. تم إعادة تعيين كلمة مرور حسابك بنجاح.\n\n*🔐 بيانات دخولك الجديدة:*\n• *اسم المستخدم:* {username}\n• *كلمة المرور:* {password}\n\n🔗 رابط تسجيل الدخول:\n{url}";
                     
-                    let customMessage = baseTemplate.replace(/{name}/g, customerData.name);
+                    let messageText = baseTemplate
+                        .replace(/{name}/g, customerData.name)
+                        .replace(/{username}/g, customerData.username)
+                        .replace(/{password}/g, customerData.password || "")
+                        .replace(/{url}/g, `${window.location.origin}/login`);
                     
-                    const credentialsPart = 
-                        `\n\n*🔐 بيانات دخولك الجديدة:*\n` +
-                        `• *اسم المستخدم:* ${customerData.username}\n` +
-                        `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
-                        `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
-                    
-                    const messageText = customMessage + credentialsPart;
+                    // Fallback if they customized the template but forgot credentials placeholders
+                    if (!baseTemplate.includes("{username}") && !baseTemplate.includes("{password}")) {
+                        messageText += 
+                            `\n\n*🔐 بيانات دخولك الجديدة:*\n` +
+                            `• *اسم المستخدم:* ${customerData.username}\n` +
+                            `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
+                            `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
+                    }
                     
                     let cleanPhone = customerData.phone.trim();
                     if (cleanPhone.startsWith("05")) {
@@ -122,19 +127,22 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
 
                 // WhatsApp welcome message auto-sending on success
                 const baseTemplate = storeSettings?.whatsappTemplates?.newCustomer || 
-                    "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح.";
+                    "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح.\n\n*🔐 بيانات دخول حسابك:*\n• *اسم المستخدم:* {username}\n• *كلمة المرور:* {password}\n\n🔗 رابط تسجيل الدخول:\n{url}";
                 
-                // 1. Replace the name placeholder if exists
-                let customMessage = baseTemplate.replace(/{name}/g, customerData.name);
+                let messageText = baseTemplate
+                    .replace(/{name}/g, customerData.name)
+                    .replace(/{username}/g, customerData.username)
+                    .replace(/{password}/g, customerData.password || "")
+                    .replace(/{url}/g, `${window.location.origin}/login`);
                 
-                // 2. Beautifully append the username and password at the bottom automatically
-                const credentialsPart = 
-                    `\n\n*🔐 بيانات دخول حسابك:*\n` +
-                    `• *اسم المستخدم:* ${customerData.username}\n` +
-                    `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
-                    `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
-                
-                const messageText = customMessage + credentialsPart;
+                // Fallback if they customized the template but forgot credentials placeholders
+                if (!baseTemplate.includes("{username}") && !baseTemplate.includes("{password}")) {
+                    messageText += 
+                        `\n\n*🔐 بيانات دخول حسابك:*\n` +
+                        `• *اسم المستخدم:* ${customerData.username}\n` +
+                        `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
+                        `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
+                }
                 
                 let cleanPhone = customerData.phone.trim();
                 if (cleanPhone.startsWith("05")) {

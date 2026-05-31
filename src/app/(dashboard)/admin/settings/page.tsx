@@ -839,15 +839,27 @@ function AdminSettingsContent() {
                                                 />
                                             </div>
 
-                                            <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2">
-                                                <h5 className="text-xs font-bold text-foreground text-right mb-1">المتغيرات المدعومة للتضمين التلقائي:</h5>
-                                                <div className="grid grid-cols-3 gap-2 text-center text-[10px] mb-2">
-                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350 col-span-3">
+                                            <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-3">
+                                                <h5 className="text-xs font-bold text-foreground text-right mb-1">المتغيرات المدعومة للتضمين التلقائي (اكتبها في أي مكان بالرسالة):</h5>
+                                                <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
                                                         <span className="text-primary font-bold block">{`{name}`}</span>
-                                                        <span>يتم استبدالها تلقائياً باسم العميل الكريم</span>
+                                                        <span>اسم العميل</span>
+                                                    </div>
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{username}`}</span>
+                                                        <span>اسم المستخدم</span>
+                                                    </div>
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{password}`}</span>
+                                                        <span>كلمة المرور</span>
+                                                    </div>
+                                                    <div className="bg-background p-2 rounded-lg border border-border/80 font-mono text-slate-700 dark:text-slate-350">
+                                                        <span className="text-primary font-bold block">{`{url}`}</span>
+                                                        <span>رابط تسجيل الدخول</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-450 mt-2 text-right font-medium">✨ ميزة ذكية: سيقوم النظام بتضمين (اسم المستخدم، كلمة المرور، ورابط تسجيل الدخول) تلقائياً في نهاية رسالتك بتنسيق فاخر ومغلق لحمايتها من التعديل أو النسيان.</p>
+                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-450 mt-2 text-right font-medium">✨ ميزة ذكية: يمكنك توزيع المتغيرات السابقة في أي سطر تريده لتخصيص الرسالة بالكامل. في حال نسيت وضع اسم المستخدم أو كلمة المرور، سيقوم النظام تلقائياً بإلحاقهم في ذيل الرسالة تلقائياً كحماية احتياطية.</p>
                                             </div>
                                         </div>
                                     </div>
