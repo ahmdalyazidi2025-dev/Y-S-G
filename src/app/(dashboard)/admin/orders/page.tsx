@@ -133,34 +133,43 @@ export default function AdminOrdersPage() {
         else toast.error("فشل في تجهيز الفاتورة")
     }
 
-    const filteredOrders = useMemo(() => (orders || []).filter(o => {
-        if (!o) return false
-        let date: Date
-        const rawDate = o.createdAt
-        if (rawDate instanceof Date) date = rawDate
-        else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate && typeof (rawDate as any).toDate === 'function') date = (rawDate as any).toDate()
-        else if (rawDate && typeof rawDate === 'object' && 'seconds' in rawDate) date = new Date((rawDate as any).seconds * 1000)
-        else date = new Date(rawDate || new Date())
-        if (isNaN(date.getTime())) date = new Date()
+    const filteredOrders = useMemo(() => {
+        const list = (orders || []).filter(o => {
+            if (!o) return false
+            let date: Date
+            const rawDate = o.createdAt
+            if (rawDate instanceof Date) date = rawDate
+            else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate && typeof (rawDate as any).toDate === 'function') date = (rawDate as any).toDate()
+            else if (rawDate && typeof rawDate === 'object' && 'seconds' in rawDate) date = new Date((rawDate as any).seconds * 1000)
+            else date = new Date(rawDate || new Date())
+            if (isNaN(date.getTime())) date = new Date()
 
-        const now = new Date()
-        let matchesDate = true
-        if (dateRange === "today") matchesDate = date.toDateString() === now.toDateString()
-        else if (dateRange === "week") { const w = new Date(now.setDate(now.getDate() - now.getDay())); matchesDate = date >= w }
-        else if (dateRange === "month") matchesDate = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+            const now = new Date()
+            let matchesDate = true
+            if (dateRange === "today") matchesDate = date.toDateString() === now.toDateString()
+            else if (dateRange === "week") { const w = new Date(now.setDate(now.getDate() - now.getDay())); matchesDate = date >= w }
+            else if (dateRange === "month") matchesDate = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
 
-        let matchesCategory = true
-        if (activeCategory === "active") matchesCategory = ["pending", "processing", "shipped"].includes(o.status)
-        else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
-        else if (activeCategory === "received") matchesCategory = o.status === "delivered"
+            let matchesCategory = true
+            if (activeCategory === "active") matchesCategory = ["pending", "processing", "shipped"].includes(o.status)
+            else if (activeCategory === "finished") matchesCategory = ["delivered", "canceled"].includes(o.status)
+            else if (activeCategory === "received") matchesCategory = o.status === "delivered"
 
-        const matchesStatus = filter === "all" || o.status === filter
-        const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
-        const matchesName = 
-            (o.customerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (o.id || "").toLowerCase().includes(searchQuery.toLowerCase())
-        return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName
-    }), [orders, dateRange, activeCategory, filter, regionFilter, searchQuery])
+            const matchesStatus = filter === "all" || o.status === filter
+            const matchesRegion = regionFilter === "all" || o.customerLocation === regionFilter
+            const matchesName = 
+                (o.customerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (o.id || "").toLowerCase().includes(searchQuery.toLowerCase())
+            return matchesDate && matchesCategory && matchesStatus && matchesRegion && matchesName
+        })
+
+        // Sort: Newest to Oldest
+        return list.sort((a, b) => {
+            const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+            const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+            return timeB - timeA
+        })
+    }, [orders, dateRange, activeCategory, filter, regionFilter, searchQuery])
 
     // Group orders by customer name
     const ordersByCustomer = useMemo(() => {
@@ -170,7 +179,13 @@ export default function AdminOrdersPage() {
             if (!groups[key]) groups[key] = []
             groups[key].push(order)
         })
-        return Object.entries(groups).sort((a, b) => b[1].length - a[1].length)
+
+        // Sort groups by the date of the newest order in each group (descending)
+        return Object.entries(groups).sort((a, b) => {
+            const newestA = a[1][0]?.createdAt ? new Date(a[1][0].createdAt).getTime() : 0
+            const newestB = b[1][0]?.createdAt ? new Date(b[1][0].createdAt).getTime() : 0
+            return newestB - newestA
+        })
     }, [filteredOrders])
 
     const isAllSelected = useMemo(() => {
