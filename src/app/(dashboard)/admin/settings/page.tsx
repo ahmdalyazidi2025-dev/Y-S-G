@@ -841,7 +841,7 @@ function AdminSettingsContent() {
 
                                             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/5">
                                                 <div className="flex justify-between items-center pr-1">
-                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص رسالة دعوة صديق للمتجر (مشاركة المتجر)</Label>
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">قالب دعوة العملاء الجدد</Label>
                                                     <span className="text-[10px] text-primary font-bold">يمكنك استخدام المتغيرات التلقائية</span>
                                                 </div>
                                                 <Textarea
