@@ -610,12 +610,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
             await setDoc(doc(db, "orders", orderId), sanitizeData(orderData))
 
-            // Update customer lastActive
+            // Update customer lastActive (wrapped in safe try-catch so it never blocks checkout)
             const customerId = currentUser?.id || "guest"
             if (customerId !== "guest" && currentUser?.role === "customer") {
-                await updateDoc(doc(db, "customers", customerId), {
-                    lastActive: Timestamp.now()
-                })
+                try {
+                    await updateDoc(doc(db, "customers", customerId), {
+                        lastActive: Timestamp.now()
+                    })
+                } catch (customerUpdateErr) {
+                    console.warn("Non-blocking error: Failed to update customer lastActive:", customerUpdateErr)
+                }
             }
 
             setCart([])
