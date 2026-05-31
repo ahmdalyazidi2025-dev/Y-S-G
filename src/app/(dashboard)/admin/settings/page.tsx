@@ -267,7 +267,16 @@ function AdminSettingsContent() {
             if (reportCategory !== 'all') filters.push(`القسم: ${reportCategory}`)
             if (reportStartDate || reportEndDate) filters.push(`الفترة: ${reportStartDate} إلى ${reportEndDate}`)
 
-            printProductList(filtered, "تقرير المنتجات", filters.join(' | '))
+            // Map category IDs to human-readable names for printing
+            const productsWithCategoryNames = filtered.map(p => {
+                const catObj = categories.find(c => c.id === p.category || c.nameAr === p.category)
+                return {
+                    ...p,
+                    category: catObj ? catObj.nameAr : (p.category || '-')
+                }
+            })
+
+            printProductList(productsWithCategoryNames, "تقرير المنتجات", filters.join(' | '))
         } catch (error) {
             console.error("HandlePrintReport Error:", error)
             toast.error("فشل في معالجة بيانات التقرير للطباعة")
