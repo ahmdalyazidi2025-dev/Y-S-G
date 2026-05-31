@@ -53,6 +53,21 @@ export default function CustomerHome() {
         }
     }, [products])
 
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        const handleOpenProductModal = (e: Event) => {
+            const productId = (e as CustomEvent).detail
+            if (productId && products.length > 0) {
+                const prod = products.find(p => p.id === productId)
+                if (prod) {
+                    setSelectedProduct(prod)
+                }
+            }
+        }
+        window.addEventListener("open-product-modal", handleOpenProductModal)
+        return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
+    }, [products])
+
     const handleRefresh = async () => {
         // In a real app, refresh data here
         await new Promise(r => setTimeout(r, 1500))

@@ -150,7 +150,6 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             if (!notification.read && markNotificationRead) markNotificationRead(notification.id)
                                             
                                             let targetLink = notification.link
-                                            // Extract product link from body if action link is not set
                                             if (!targetLink && notification.body?.includes('?product=')) {
                                                 const match = notification.body.match(/(https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+)/i)
                                                 if (match) {
@@ -160,7 +159,14 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             
                                             if (targetLink) {
                                                 setIsOpen(false)
-                                                window.location.href = targetLink
+                                                const match = targetLink.match(/\?product=([a-zA-Z0-9_-]+)/i)
+                                                // If we are already on customer store page, open it instantly without a reload!
+                                                if (match && (window.location.pathname.endsWith("/customer") || window.location.pathname === "/customer" || window.location.pathname.endsWith("/customer/"))) {
+                                                    const productId = match[1]
+                                                    window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
+                                                } else {
+                                                    window.location.href = targetLink
+                                                }
                                             }
                                         }}
                                     >
