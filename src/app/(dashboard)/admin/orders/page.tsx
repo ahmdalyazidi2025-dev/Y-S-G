@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, ChevronDown, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, LayoutList, Users } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, ChevronDown, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, LayoutList, Users, Trash2, Undo } from "lucide-react"
 import Link from "next/link"
 import { useStore, Order } from "@/context/store-context"
 import { cn } from "@/lib/utils"
@@ -36,7 +36,7 @@ const formatOrderDate = (d: any): string => {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus } = useStore()
+    const { orders, updateOrderStatus, deleteOrdersBulk } = useStore()
     const [viewMode, setViewMode] = useState<"all" | "byCustomer">("byCustomer")
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
@@ -44,6 +44,58 @@ export default function AdminOrdersPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
     const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
+
+    // Selection & Deletion Undo mechanism
+    const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([])
+    const [deletionQueue, setDeletionQueue] = useState<string[] | null>(null)
+    const [countdown, setCountdown] = useState<number>(0)
+    const [countdownTimer, setCountdownTimer] = useState<any>(null)
+
+    const toggleSelectOrder = (orderId: string, e: React.MouseEvent) => {
+        e.stopPropagation()
+        setSelectedOrderIds(prev =>
+            prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+        )
+        hapticFeedback('light')
+    }
+
+    const startUndoTimer = (ids: string[]) => {
+        if (countdownTimer) clearInterval(countdownTimer)
+
+        setDeletionQueue(ids)
+        setCountdown(5)
+        setSelectedOrderIds([]) // Clear selection
+
+        const timer = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer)
+                    setCountdownTimer(null)
+                    if (deleteOrdersBulk) {
+                        deleteOrdersBulk(ids, false)
+                    }
+                    setDeletionQueue(null)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+
+        setCountdownTimer(timer)
+    }
+
+    const handleUndo = () => {
+        if (countdownTimer) {
+            clearInterval(countdownTimer)
+            setCountdownTimer(null)
+        }
+        if (deletionQueue) {
+            setSelectedOrderIds(deletionQueue) // Restore selection
+            setDeletionQueue(null)
+            toast.success("تم التراجع عن حذف الطلبات ↩️")
+        }
+        hapticFeedback('success')
+    }
 
     const categories = {
         all: "الكل",
@@ -110,6 +162,21 @@ export default function AdminOrdersPage() {
         })
         return Object.entries(groups).sort((a, b) => b[1].length - a[1].length)
     }, [filteredOrders])
+
+    const isAllSelected = useMemo(() => {
+        return filteredOrders.length > 0 && filteredOrders.every(o => selectedOrderIds.includes(o.id))
+    }, [filteredOrders, selectedOrderIds])
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) {
+            const filteredIds = filteredOrders.map(o => o.id)
+            setSelectedOrderIds(prev => prev.filter(id => !filteredIds.includes(id)))
+        } else {
+            const filteredIds = filteredOrders.map(o => o.id)
+            setSelectedOrderIds(prev => Array.from(new Set([...prev, ...filteredIds])))
+        }
+        hapticFeedback('medium')
+    }
 
     const regions = Array.from(new Set((orders || []).map(o => o?.customerLocation).filter(Boolean))) as string[]
 
@@ -210,6 +277,33 @@ export default function AdminOrdersPage() {
                 ))}
             </div>
 
+            {filteredOrders.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
+                    <button
+                        onClick={toggleSelectAll}
+                        className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                    >
+                        <div className={cn("w-4.5 h-4.5 rounded border flex items-center justify-center transition-all",
+                            isAllSelected
+                                ? "bg-primary border-primary text-white shadow-sm shadow-primary/20"
+                                : "border-slate-300 dark:border-slate-600"
+                        )}>
+                            {isAllSelected && <span className="text-[10px] font-bold">✓</span>}
+                        </div>
+                        <span>تحديد الكل ({filteredOrders.length})</span>
+                    </button>
+
+                    {selectedOrderIds.length > 0 && (
+                        <button
+                            onClick={() => { setSelectedOrderIds([]); hapticFeedback('light') }}
+                            className="text-xs text-red-500 hover:text-red-600 font-bold"
+                        >
+                            إلغاء التحديد ({selectedOrderIds.length})
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* ===== BY CUSTOMER VIEW ===== */}
             {viewMode === "byCustomer" && (
                 <div className="space-y-3">
@@ -284,12 +378,27 @@ export default function AdminOrdersPage() {
                                                         const status = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG] || {
                                                             label: order.status, color: "text-slate-500", bg: "bg-slate-100", icon: Clock
                                                         }
+                                                        const isSelected = selectedOrderIds.includes(order.id)
                                                         return (
                                                             <div
                                                                 key={order.id}
-                                                                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors"
+                                                                className={cn("flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors",
+                                                                    isSelected && "bg-primary/5 dark:bg-primary/10"
+                                                                )}
                                                                 onClick={() => setSelectedOrder(order)}
                                                             >
+                                                                {/* Checkbox */}
+                                                                <div 
+                                                                    onClick={(e) => toggleSelectOrder(order.id, e)}
+                                                                    className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
+                                                                        isSelected 
+                                                                            ? "bg-primary border-primary text-white shadow-sm" 
+                                                                            : "border-slate-300 dark:border-white/20 hover:border-primary"
+                                                                    )}
+                                                                >
+                                                                    {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                                                                </div>
+
                                                                 <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", status.bg, status.color)}>
                                                                     <status.icon className="w-4 h-4" />
                                                                 </div>
@@ -328,11 +437,26 @@ export default function AdminOrdersPage() {
                             const status = STATUS_CONFIG[order.status as keyof typeof STATUS_CONFIG] || {
                                 label: order.status || "غير معروف", color: "text-slate-500", bg: "bg-slate-100 dark:bg-slate-400/10", icon: Clock
                             }
+                            const isSelected = selectedOrderIds.includes(order.id)
                             return (
                                 <div key={order.id}
-                                    className="glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5"
+                                    className={cn("glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5",
+                                        isSelected && "border-primary/30 bg-primary/5 dark:bg-primary/10"
+                                    )}
                                     onClick={() => setSelectedOrder(order)}>
                                     <div className="flex items-center gap-4">
+                                        {/* Checkbox */}
+                                        <div 
+                                            onClick={(e) => toggleSelectOrder(order.id, e)}
+                                            className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-all flex-shrink-0 cursor-pointer",
+                                                isSelected 
+                                                    ? "bg-primary border-primary text-white shadow-sm" 
+                                                    : "border-slate-300 dark:border-white/20 hover:border-primary"
+                                            )}
+                                        >
+                                            {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                                        </div>
+
                                         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0", status.bg, status.color)}>
                                             <status.icon className="w-5 h-5" />
                                         </div>
@@ -451,6 +575,81 @@ export default function AdminOrdersPage() {
 
             {selectedOrder && <InvoiceTemplate order={selectedOrder} />}
             {selectedOrder && <PremiumInvoice order={selectedOrder} id="premium-invoice-target" />}
+
+            {/* Floating Bulk Action Bar */}
+            <AnimatePresence>
+                {selectedOrderIds.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, x: "-50%", opacity: 0 }}
+                        animate={{ y: 0, x: "-50%", opacity: 1 }}
+                        exit={{ y: 100, x: "-50%", opacity: 0 }}
+                        className="fixed bottom-6 left-1/2 z-40 w-[calc(100%-2rem)] max-w-md p-4 rounded-2xl glass-card border border-slate-200 dark:border-white/10 shadow-2xl flex items-center justify-between gap-4"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                {selectedOrderIds.length}
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">تحديد جماعي للطلبات</h4>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">سيتم تطبيق الإجراء على الطلبات المحددة</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setSelectedOrderIds([])}
+                                className="text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 font-bold h-9 px-3 rounded-lg"
+                            >
+                                إلغاء
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    startUndoTimer(selectedOrderIds)
+                                    hapticFeedback('medium')
+                                }}
+                                className="bg-red-500 hover:bg-red-600 text-white font-bold h-9 px-4 rounded-lg flex items-center gap-1.5 shadow-lg shadow-red-500/20"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="text-xs">حذف وإلغاء</span>
+                            </Button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Floating Deletion Undo Banner */}
+            <AnimatePresence>
+                {deletionQueue !== null && (
+                    <motion.div
+                        initial={{ y: 100, x: "-50%", opacity: 0 }}
+                        animate={{ y: 0, x: "-50%", opacity: 1 }}
+                        exit={{ y: 100, x: "-50%", opacity: 0 }}
+                        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md p-4 rounded-2xl bg-slate-900 dark:bg-slate-950 border border-amber-500/30 shadow-2xl flex items-center justify-between gap-4 text-white"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-500 font-bold animate-pulse">
+                                {countdown}
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-white">جاري حذف وإلغاء الطلبات ({deletionQueue.length})</h4>
+                                <p className="text-[10px] text-amber-400 font-medium">سيتم إشعار العملاء تلقائياً بالإلغاء</p>
+                            </div>
+                        </div>
+
+                        <Button
+                            size="sm"
+                            onClick={handleUndo}
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold h-9 px-4 rounded-lg flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all duration-300"
+                        >
+                            <Undo className="w-3.5 h-3.5" />
+                            <span className="text-xs">تراجع</span>
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

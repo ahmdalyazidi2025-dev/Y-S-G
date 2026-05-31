@@ -37,6 +37,22 @@ export default function CustomerHome() {
         }
     }, [])
 
+    useEffect(() => {
+        if (typeof window !== "undefined" && products.length > 0) {
+            const params = new URLSearchParams(window.location.search)
+            const productId = params.get("product")
+            if (productId) {
+                const prod = products.find(p => p.id === productId)
+                if (prod) {
+                    setSelectedProduct(prod)
+                    // Clean URL quietly
+                    const cleanUrl = window.location.pathname
+                    window.history.replaceState({}, document.title, cleanUrl)
+                }
+            }
+        }
+    }, [products])
+
     const handleRefresh = async () => {
         // In a real app, refresh data here
         await new Promise(r => setTimeout(r, 1500))

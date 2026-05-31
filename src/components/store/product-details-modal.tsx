@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Product, useStore } from "@/context/store-context"
-import { X, ChevronRight, ChevronLeft, ShoppingCart, Info, Sparkles, Box } from "lucide-react"
+import { X, ChevronRight, ChevronLeft, ShoppingCart, Info, Sparkles, Box, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { CountdownTimer } from "./countdown-timer"
 import Image from "next/image"
+import { toast } from "sonner"
 
 interface ProductDetailsModalProps {
     isOpen: boolean
@@ -28,6 +29,13 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
             setSelectedUnit("حبة")
         }
     }, [product])
+
+    const handleShareProduct = () => {
+        if (!activeProduct) return
+        const link = `${window.location.origin}/customer?product=${activeProduct.id}`
+        navigator.clipboard.writeText(link)
+        toast.success("تم نسخ رابط المنتج! يمكنك مشاركته الآن عبر الواتساب 🎉")
+    }
 
     if (!activeProduct) return null
 
@@ -91,6 +99,13 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                     <CountdownTimer endDate={new Date(activeProduct.discountEndDate)} />
                                 </div>
                             )}
+                            <button 
+                                onClick={handleShareProduct} 
+                                className="p-2.5 bg-slate-100/90 dark:bg-black/35 hover:bg-slate-200 dark:hover:bg-black/50 text-blue-500 rounded-full backdrop-blur-md transition-all shadow-md cursor-pointer border border-slate-200/50 dark:border-white/5"
+                                title="مشاركة المنتج"
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </button>
                             <button 
                                 onClick={onClose} 
                                 className="p-2.5 bg-slate-100/90 dark:bg-black/35 hover:bg-slate-200 dark:hover:bg-black/50 text-slate-800 dark:text-white rounded-full backdrop-blur-md transition-all shadow-md cursor-pointer border border-slate-200/50 dark:border-white/5"

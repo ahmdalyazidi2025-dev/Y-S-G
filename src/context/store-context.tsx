@@ -132,6 +132,7 @@ export type Order = {
     createdAt: Date
     statusHistory: { status: string, timestamp: Date }[]
     paymentMethod?: string
+    deletedByCustomer?: boolean
 }
 
 export type ProductRequest = {
@@ -256,6 +257,7 @@ type StoreContextType = {
     logout: () => void
     updateCartQuantity: (productId: string, unit: string, delta: number) => void
     restoreDraftToCart: (orderId: string) => void
+    deleteOrdersBulk?: (orderIds: string[], softDeleteForCustomer?: boolean) => Promise<void>
     storeSettings: StoreSettings
     updateStoreSettings: (settings: StoreSettings) => void
     loading?: boolean
@@ -441,6 +443,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (isAdmin) {
                 // Admin must NOT see drafts! Only real orders!
                 docs = docs.filter(o => o.status !== "draft")
+            } else {
+                // Customer must NOT see soft-deleted orders!
+                docs = docs.filter(o => !o.deletedByCustomer)
             }
 
             // Client-side sort is safe for small-medium sets and avoids index requirement
@@ -857,6 +862,52 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    const deleteOrdersBulk = async (orderIds: string[], softDeleteForCustomer = false) => {
+        try {
+            if (softDeleteForCustomer) {
+                // Customer bulk soft delete: mark as deletedByCustomer: true
+                await Promise.all(orderIds.map(id => 
+                    updateDoc(doc(db, "orders", id), { deletedByCustomer: true })
+                ))
+                toast.success("تم حذف الفواتير المحددة بنجاح")
+            } else {
+                // Admin bulk permanent delete: deleteDoc
+                // But check if any order is pending/processing, and notify the customer!
+                await Promise.all(orderIds.map(async (id) => {
+                    const order = orders.find(o => o.id === id)
+                    if (order) {
+                        // Send notification if canceled while pending/processing
+                        if (order.status === "pending" || order.status === "processing") {
+                            try {
+                                const title = `إلغاء الفاتورة #${id}`
+                                const body = `تم إلغاء فاتورتك رقم #${id}، يرجى إعادة الطلب مرة أخرى ❌`
+                                await addDoc(collection(db, "notifications"), {
+                                    userId: order.customerId,
+                                    title,
+                                    body,
+                                    link: "/customer/invoices",
+                                    read: false,
+                                    targetLabel: order.customerName,
+                                    createdAt: Timestamp.now()
+                                })
+                                const { sendPushToUsers } = await import("@/app/actions/notifications")
+                                await sendPushToUsers([order.customerId], title, body, "/customer/invoices")
+                            } catch (notifErr) {
+                                console.error("Failed to send order cancellation notification:", notifErr)
+                            }
+                        }
+                    }
+                    await deleteDoc(doc(db, "orders", id))
+                }))
+                toast.success("تم إلغاء وحذف الطلبات المحددة بنجاح ✅")
+            }
+            hapticFeedback('medium')
+        } catch (error) {
+            console.error("Bulk delete failed:", error)
+            toast.error("فشل حذف الفواتير")
+        }
+    }
+
     const addBanner = async (banner: Omit<Banner, "id">) => {
         await addDoc(collection(db, "banners"), banner)
         toast.success("تم إضافة الصورة")
@@ -1242,7 +1293,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             fetchProducts, deleteAllChatsAndNotifications,
             joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
-            notifications, markNotificationRead, markAllNotificationsRead
+            notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk
         }}>
             {children}
         </StoreContext.Provider>

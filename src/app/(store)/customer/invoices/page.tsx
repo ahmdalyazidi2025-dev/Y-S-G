@@ -2,10 +2,10 @@
 
 import { useStore, Order } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown } from "lucide-react"
+import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, FileText, X, Plus, Printer, FileDown, Check, Trash2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Drawer } from "vaul"
 import { OrderStatusProgress } from "@/components/shared/order-status-progress"
@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { PremiumInvoice } from "@/components/shared/premium-invoice"
 import { generateOrderPDF } from "@/lib/pdf-utils"
+import { AnimatePresence, motion } from "framer-motion"
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
     draft: { label: "مسودة", color: "text-slate-650 dark:text-slate-350", bg: "bg-slate-100 dark:bg-white/5", icon: Clock },
@@ -25,9 +26,12 @@ const STATUS_MAP: Record<string, { label: string, color: string, bg: string, ico
 }
 
 export default function InvoicesPage() {
-    const { orders, restoreDraftToCart, updateOrderStatus } = useStore()
+    const { orders, restoreDraftToCart, updateOrderStatus, deleteOrdersBulk } = useStore()
     const [filter, setFilter] = useState<string>("all")
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
+    const [isSelectionMode, setIsSelectionMode] = useState(false)
+    const pressTimer = useRef<any>(null)
 
     const handleDownloadPDF = async (order: Order) => {
         hapticFeedback('light')
@@ -38,8 +42,36 @@ export default function InvoicesPage() {
 
     const filteredOrders = filter === "all" ? orders : orders.filter(o => o.status === filter)
 
+    const handleLongPress = (id: string) => {
+        hapticFeedback('medium')
+        setIsSelectionMode(true)
+        setSelectedIds([id])
+    }
+
+    const startPress = (id: string) => {
+        if (isSelectionMode) return
+        pressTimer.current = setTimeout(() => {
+            handleLongPress(id)
+        }, 600)
+    }
+
+    const cancelPress = () => {
+        if (pressTimer.current) clearTimeout(pressTimer.current)
+    }
+
+    const handleCardClick = (order: Order) => {
+        if (isSelectionMode) {
+            hapticFeedback('light')
+            setSelectedIds(prev => 
+                prev.includes(order.id) ? prev.filter(id => id !== order.id) : [...prev, order.id]
+            )
+        } else {
+            setSelectedOrder(order)
+        }
+    }
+
     return (
-        <div className="space-y-6 pb-20">
+        <div className="space-y-6 pb-32 text-right relative">
             <div className="flex items-center gap-4">
                 <Link href="/customer">
                     <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
@@ -47,13 +79,45 @@ export default function InvoicesPage() {
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1 text-slate-900 dark:text-white">سجل الطلبات</h1>
+                {isSelectionMode ? (
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                            const allIds = filteredOrders.map(o => o.id)
+                            if (selectedIds.length === allIds.length) {
+                                setSelectedIds([])
+                            } else {
+                                setSelectedIds(allIds)
+                            }
+                        }}
+                        className="text-primary text-xs font-bold hover:bg-primary/10 rounded-xl"
+                    >
+                        {selectedIds.length === filteredOrders.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                    </Button>
+                ) : (
+                    filteredOrders.length > 0 && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setIsSelectionMode(true)}
+                            className="text-primary text-xs font-bold hover:bg-primary/10 rounded-xl"
+                        >
+                            تحديد
+                        </Button>
+                    )
+                )}
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar px-1">
                 {["all", "draft", "pending", "processing", "shipped", "canceled"].map((s) => (
                     <button
                         key={s}
-                        onClick={() => setFilter(s)}
+                        onClick={() => {
+                            setFilter(s)
+                            setSelectedIds([])
+                            setIsSelectionMode(false)
+                        }}
                         className={cn(
                             "px-4 py-2 rounded-full text-xs font-medium transition-all whitespace-nowrap border",
                             filter === s
@@ -79,6 +143,7 @@ export default function InvoicesPage() {
                             bg: "bg-slate-100 dark:bg-white/5",
                             icon: Clock
                         }
+                        const isSelected = selectedIds.includes(order.id)
                         return (
                             <div 
                                 key={order.id} 
@@ -86,9 +151,15 @@ export default function InvoicesPage() {
                                     "p-5 space-y-4 rounded-3xl relative overflow-hidden group active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md dark:shadow-none border",
                                     order.status === "draft"
                                         ? "bg-gradient-to-br from-blue-50/40 via-white to-white dark:from-blue-950/15 dark:via-white/5 dark:to-white/5 border-blue-200/60 dark:border-blue-500/20 shadow-lg shadow-blue-500/[0.03] dark:shadow-none hover:border-blue-300 dark:hover:border-blue-500/40"
-                                        : "bg-white dark:bg-white/5 border-slate-150 dark:border-white/10"
+                                        : "bg-white dark:bg-white/5 border-slate-150 dark:border-white/10",
+                                    isSelected && "border-primary ring-2 ring-primary/20 bg-primary/[0.02]"
                                 )}
-                                onClick={() => setSelectedOrder(order)}
+                                onClick={() => handleCardClick(order)}
+                                onMouseDown={() => startPress(order.id)}
+                                onMouseUp={cancelPress}
+                                onMouseLeave={cancelPress}
+                                onTouchStart={() => startPress(order.id)}
+                                onTouchEnd={cancelPress}
                             >
                                 <div className={cn(
                                     "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl transition-colors -mr-12 -mt-12",
@@ -96,12 +167,26 @@ export default function InvoicesPage() {
                                 )} />
 
                                 <div className="flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">رقم الطلب</p>
-                                        <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-primary" />
-                                            #{order.id}
-                                        </p>
+                                    <div className="flex items-center gap-2 flex-1">
+                                        {isSelectionMode && (
+                                            <div 
+                                                className={cn(
+                                                    "w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 ml-2 cursor-pointer",
+                                                    isSelected 
+                                                        ? "bg-primary border-primary text-white" 
+                                                        : "border-slate-300 dark:border-white/20 bg-transparent"
+                                                )}
+                                            >
+                                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                            </div>
+                                        )}
+                                        <div className="space-y-0.5">
+                                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">رقم الطلب</p>
+                                            <p className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                                <FileText className="w-4 h-4 text-primary" />
+                                                #{order.id}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className={cn("flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold", status.bg, status.color)}>
                                         <status.icon className="w-3 h-3" />
@@ -140,7 +225,7 @@ export default function InvoicesPage() {
                                     <p className="text-lg font-bold text-slate-800 dark:text-white">
                                         {order.total.toFixed(2)} <span className="text-[10px] font-normal text-slate-500 dark:text-slate-450">ر.س</span>
                                     </p>
-                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-[10px] font-bold">
+                                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10 text-[10px] font-bold rounded-xl">
                                         فتح الفاتورة
                                     </Button>
                                 </div>
@@ -150,7 +235,52 @@ export default function InvoicesPage() {
                 )}
             </div>
 
-            {/* Order Details Drawer */}
+            <AnimatePresence>
+                {isSelectionMode && selectedIds.length > 0 && (
+                    <motion.div 
+                        initial={{ y: 100, opacity: 0, x: "-50%" }}
+                        animate={{ y: 0, opacity: 1, x: "-50%" }}
+                        exit={{ y: 100, opacity: 0, x: "-50%" }}
+                        transition={{ type: "spring", damping: 20, stiffness: 250 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-[#1c2a36] border border-slate-200 dark:border-white/10 p-4 rounded-[24px] shadow-2xl flex items-center justify-between gap-6 z-50 w-[90%] max-w-md text-right border-t-4 border-t-rose-500"
+                    >
+                        <div className="flex flex-col text-right">
+                            <span className="text-[10px] text-slate-500 font-bold">التحديد المتعدد</span>
+                            <span className="text-xs font-black text-slate-800 dark:text-white mt-0.5">
+                                تم تحديد {selectedIds.length} فواتير
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => {
+                                    setIsSelectionMode(false)
+                                    setSelectedIds([])
+                                }}
+                                className="text-xs hover:bg-slate-100 dark:hover:bg-white/5 font-bold rounded-xl text-slate-600 dark:text-slate-400 h-10 px-4"
+                            >
+                                إلغاء
+                            </Button>
+                            <Button 
+                                size="sm" 
+                                className="bg-rose-500 hover:bg-rose-600 text-white font-bold gap-2 rounded-xl px-5 h-10 shadow-lg shadow-rose-500/10 active:scale-95 transition-all"
+                                onClick={async () => {
+                                    if (deleteOrdersBulk) {
+                                        await deleteOrdersBulk(selectedIds, true)
+                                        setIsSelectionMode(false)
+                                        setSelectedIds([])
+                                    }
+                                }}
+                            >
+                                <Trash2 className="w-4 h-4 text-white" />
+                                <span>حذف من السجل</span>
+                            </Button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <Drawer.Root open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
                 <Drawer.Portal>
                     <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />

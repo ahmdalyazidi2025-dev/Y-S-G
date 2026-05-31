@@ -1,12 +1,13 @@
 "use client"
 
-import { Plus } from "lucide-react"
+import { Plus, Share2 } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Product, useStore } from "@/context/store-context"
 import { CountdownTimer } from "./countdown-timer"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 export function ProductCard({ item, onViewDetails }: { item: Product, onViewDetails?: () => void }) {
     const { addToCart } = useStore()
@@ -51,6 +52,20 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
                         <CountdownTimer endDate={new Date(item.discountEndDate)} />
                     )}
                 </div>
+
+                {/* Floating Share Button on the Top-Left */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        const link = `${window.location.origin}/customer?product=${item.id}`
+                        navigator.clipboard.writeText(link)
+                        toast.success("تم نسخ رابط المنتج لمشاركته عبر الواتساب 🎉")
+                    }}
+                    className="absolute top-1.5 left-1.5 z-10 p-1.5 bg-white/90 dark:bg-black/35 hover:bg-white dark:hover:bg-black/50 text-blue-500 rounded-lg backdrop-blur-sm transition-all shadow-sm border border-slate-200/50 dark:border-white/5 cursor-pointer"
+                    title="نسخ رابط المنتج"
+                >
+                    <Share2 className="w-3.5 h-3.5" />
+                </button>
 
                 {/* Bigger & Outward-Pushing Premium Primary Color Plus (+) Button on the Bottom-Left */}
                 <Button
