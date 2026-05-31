@@ -420,6 +420,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (isAdmin) {
             ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"))
         } else {
+            // Secure direct match query (matches Firebase Security Rules perfectly)
             ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
         }
 

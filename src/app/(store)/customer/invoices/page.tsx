@@ -223,7 +223,7 @@ export default function InvoicesPage() {
                                                 <Button
                                                     className="w-full h-14 rounded-2xl bg-primary text-white gap-2 shadow-lg shadow-primary/20 font-bold"
                                                     onClick={async () => {
-                                                        await updateOrderStatus(selectedOrder.id, "processing")
+                                                        await updateOrderStatus(selectedOrder.id, "pending")
                                                         toast.success("تم إرسال الفاتورة بنجاح إلى الإدارة! 🚀")
                                                         setSelectedOrder(null)
                                                     }}
