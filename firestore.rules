@@ -38,7 +38,7 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow create: if true; // Allow creation so clients never get blocked due to auth async lag or local fallback
       allow read: if isAdmin() || (request.auth != null && resource.data.customerId == request.auth.uid);
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() || (request.auth != null && resource.data.customerId == request.auth.uid);
     }
 
     // Product Requests
