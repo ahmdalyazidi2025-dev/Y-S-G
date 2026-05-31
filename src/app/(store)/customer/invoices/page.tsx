@@ -73,7 +73,12 @@ export default function InvoicesPage() {
                     </div>
                 ) : (
                     filteredOrders.map((order) => {
-                        const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP]
+                        const status = STATUS_MAP[order.status as keyof typeof STATUS_MAP] || {
+                            label: order.status || "معلق",
+                            color: "text-slate-600 dark:text-slate-400",
+                            bg: "bg-slate-100 dark:bg-white/5",
+                            icon: Clock
+                        }
                         return (
                             <div key={order.id} className="bg-white dark:bg-white/5 border border-slate-150 dark:border-white/10 p-5 space-y-4 rounded-3xl relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer shadow-sm hover:shadow-md dark:shadow-none" onClick={() => setSelectedOrder(order)}>
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
