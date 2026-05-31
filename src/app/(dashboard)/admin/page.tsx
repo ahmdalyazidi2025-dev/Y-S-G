@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import {
     Package, Users, ClipboardList, Image as LugideImage, MessageCircle, Settings, Layers,
     Camera, LogOut, TrendingUp, ShoppingBag, UserCheck, Clock, BarChart3, Share2,
+    Copy, Check, X,
     type LucideIcon
 } from "lucide-react"
 import NextImage from "next/image"
@@ -82,6 +83,8 @@ const ADMIN_MODULES = [
 export default function AdminDashboard() {
     const { orders, customers, products, logout, currentUser } = useStore()
     const [isLoading, setIsLoading] = useState(true)
+    const [isShareLinksOpen, setIsShareLinksOpen] = useState(false)
+    const [copiedLink, setCopiedLink] = useState<string | null>(null)
     const router = useRouter()
 
     const filteredModules = ADMIN_MODULES.filter(module => {
@@ -136,22 +139,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => {
-                            try {
-                                const storefrontLink = window.location.origin
-                                navigator.clipboard.writeText(storefrontLink)
-                                import("sonner").then(({ toast }) => {
-                                    toast.success("تم نسخ رابط المتجر بنجاح!", { description: "رابط متجر العملاء جاهز الآن للمشاركة 🔗" })
-                                })
-                            } catch (e) {
-                                console.error(e)
-                            }
-                        }}
+                        onClick={() => setIsShareLinksOpen(true)}
                         className="p-2.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 border border-orange-500/20 rounded-2xl flex items-center justify-center cursor-pointer transition-all gap-1.5"
-                        title="مشاركة رابط المتجر للعملاء"
+                        title="مشاركة روابط المتجر ولوحة التحكم"
                     >
                         <Share2 className="w-5 h-5" />
-                        <span className="text-xs font-bold hidden md:inline">مشاركة رابط المتجر</span>
+                        <span className="text-xs font-bold hidden md:inline">مشاركة الروابط</span>
                     </button>
                     <button
                         onClick={handleLogout}
@@ -377,6 +370,94 @@ function SkeletonModule({ index }: { index: number }) {
                     <div className="w-16 h-2 skeleton mx-auto opacity-50" />
                 </div>
             </div>
+
+            {/* Share Links Dialog */}
+            <AnimatePresence>
+                {isShareLinksOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsShareLinksOpen(false)}
+                            className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                        />
+                        
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="glass-card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto no-scrollbar space-y-6 text-right"
+                        >
+                            <button 
+                                onClick={() => setIsShareLinksOpen(false)}
+                                className="absolute top-4 left-4 p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                            
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1">🔗 مشاركة روابط المتجر</h3>
+                                <p className="text-[10px] text-slate-500">اختر الرابط المناسب لنسخه ومشاركته</p>
+                            </div>
+
+                            <div className="space-y-4 pt-2">
+                                {/* Customer Link Card */}
+                                <div className="p-4 rounded-2xl border border-slate-150 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-xs font-black text-slate-800 dark:text-white mb-1">🛒 رابط متجر العملاء</h4>
+                                        <p className="text-[10px] text-slate-400 truncate dir-ltr text-right">{typeof window !== "undefined" ? window.location.origin : ""}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            try {
+                                                const link = window.location.origin
+                                                navigator.clipboard.writeText(link)
+                                                setCopiedLink("customer")
+                                                import("sonner").then(({ toast }) => {
+                                                    toast.success("تم نسخ رابط المتجر بنجاح!")
+                                                })
+                                                setTimeout(() => setCopiedLink(null), 2000)
+                                            } catch (e) {
+                                                console.error(e)
+                                            }
+                                        }}
+                                        className="p-3 rounded-xl bg-primary hover:bg-primary/95 text-white active:scale-95 transition-all flex-shrink-0"
+                                    >
+                                        {copiedLink === "customer" ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4" />}
+                                    </button>
+                                </div>
+
+                                {/* Admin/Staff Link Card */}
+                                <div className="p-4 rounded-2xl border border-slate-150 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-xs font-black text-slate-800 dark:text-white mb-1">🔐 رابط لوحة الموظفين والإدارة</h4>
+                                        <p className="text-[10px] text-slate-400 truncate dir-ltr text-right">{typeof window !== "undefined" ? `${window.location.origin}/login` : ""}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            try {
+                                                const link = `${window.location.origin}/login`
+                                                navigator.clipboard.writeText(link)
+                                                setCopiedLink("staff")
+                                                import("sonner").then(({ toast }) => {
+                                                    toast.success("تم نسخ رابط تسجيل دخول الإدارة بنجاح!")
+                                                })
+                                                setTimeout(() => setCopiedLink(null), 2000)
+                                            } catch (e) {
+                                                console.error(e)
+                                            }
+                                        }}
+                                        className="p-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white active:scale-95 transition-all flex-shrink-0"
+                                    >
+                                        {copiedLink === "staff" ? <Check className="w-4 h-4 stroke-[3]" /> : <Copy className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
