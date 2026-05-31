@@ -23,7 +23,16 @@ export default function CustomersPage() {
 
     const getCategory = (customer: Customer) => {
         if (customer.isNewCustomer) return { label: "جدد", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", id: "New" }
-        if (customer.hasLoggedIn && !customer.lastActive) return { label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", id: "LoggedIn" }
+        
+        // Retain in "تم الدخول" (LoggedIn) for 7 days from their first login date
+        if (customer.hasLoggedIn && customer.firstLoginDate) {
+            const loginDays = Math.floor((new Date().getTime() - new Date(customer.firstLoginDate).getTime()) / (1000 * 60 * 60 * 24))
+            if (loginDays <= 7) {
+                return { label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", id: "LoggedIn" }
+            }
+        } else if (customer.hasLoggedIn && !customer.lastActive) {
+            return { label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", id: "LoggedIn" }
+        }
 
         const lastActive = customer.lastActive
         if (!lastActive) return { label: "منقطع", color: "text-red-500 dark:text-red-400", bg: "bg-red-500/10", id: "Disconnected" }

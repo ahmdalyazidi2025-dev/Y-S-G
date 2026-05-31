@@ -77,6 +77,7 @@ export type Customer = {
     fcmTokens?: string[]
     isNewCustomer?: boolean
     hasLoggedIn?: boolean
+    firstLoginDate?: Date | any
 }
 
 export type Coupon = {
@@ -357,7 +358,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return {
                     ...data,
                     id: doc.id,
-                    lastActive: data.lastActive ? toDate(data.lastActive) : undefined
+                    lastActive: data.lastActive ? toDate(data.lastActive) : undefined,
+                    firstLoginDate: data.firstLoginDate ? toDate(data.firstLoginDate) : undefined
                 } as Customer
             }))
         })
@@ -781,6 +783,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             await updateDoc(doc(db, "customers", customerId), {
                 isNewCustomer: false,
                 hasLoggedIn: true,
+                firstLoginDate: Timestamp.now(),
                 lastActive: Timestamp.now()
             });
         } catch (e) {
