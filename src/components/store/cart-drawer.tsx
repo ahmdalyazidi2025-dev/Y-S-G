@@ -73,7 +73,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 <p className="text-xs opacity-75 mt-1">تصفح المنتجات وأضف ما تحتاجه للطلب</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 mb-48 animate-in fade-in slide-in-from-bottom-4">
+                            <div className="space-y-4 mb-6 animate-in fade-in slide-in-from-bottom-4">
                                 {cart.map((item) => (
                                     <div key={item.id} className="glass-card p-4 flex gap-4 items-center border border-slate-200 dark:border-white/5 shadow-sm rounded-2xl hover:border-primary/20 transition-all">
                                         <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
@@ -127,7 +127,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     </div>
 
                     {cart.length > 0 && (
-                        <div className="fixed bottom-0 left-0 right-0 p-6 bg-white dark:bg-[#121b22] border-t border-slate-200 dark:border-white/10 pb-10 space-y-4 shadow-2xl transition-colors duration-300">
+                        <div className="p-6 bg-white dark:bg-[#121b22] border-t border-slate-200 dark:border-white/10 pb-10 space-y-4 shadow-2xl transition-colors duration-300 w-full">
                             {/* Customer Info Inputs - Render ONLY if requested/required by store settings */}
                             {storeSettings?.requireCustomerInfoOnCheckout && (
                                 <div className="grid grid-cols-2 gap-3 text-right">
