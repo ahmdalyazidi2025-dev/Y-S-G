@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Drawer } from "vaul"
 import { useStore } from "@/context/store-context"
 import { Button } from "@/components/ui/button"
@@ -15,21 +15,46 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
 
+    // Pre-fill registered customer details when opening the drawer
+    useEffect(() => {
+        if (isOpen && currentUser) {
+            setCustomerName(currentUser.name || "")
+            setCustomerPhone(currentUser.phone || "")
+        }
+    }, [isOpen, currentUser])
+
     const total = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
 
-    const handleCreateOrder = (isDraft: boolean) => {
-        // Validation if required
-        if (storeSettings.requireCustomerInfoOnCheckout) {
-            const hasName = customerName.trim().length > 0 || !!currentUser?.name
-            const hasPhone = customerPhone.trim().length > 0 || !!currentUser?.phone
+    // Saudi phone validator (05xxxxxxxx, 5xxxxxxxx, +9665xxxxxxxx, 9665xxxxxxxx)
+    const isSaudiPhone = (phone: string) => {
+        const clean = phone.replace(/[\s-]/g, "")
+        const saudiRegex = /^(05|5|\+9665|9665)\d{8}$/
+        return saudiRegex.test(clean)
+    }
 
-            if (!hasName || !hasPhone) {
-                toast.error("يرجى إدخال الاسم ورقم الجوال لإكمال الطلب")
+    const handleCreateOrder = (isDraft: boolean) => {
+        const nameToSave = customerName.trim()
+        const phoneToSave = customerPhone.trim()
+
+        // Validation - strict requirement if enabled by Admin Settings
+        if (storeSettings?.requireCustomerInfoOnCheckout) {
+            if (!nameToSave) {
+                toast.error("يرجى إدخال اسم العميل لإكمال الطلب")
+                return
+            }
+
+            if (!phoneToSave) {
+                toast.error("يرجى إدخال رقم الجوال لإكمال الطلب")
+                return
+            }
+
+            if (!isSaudiPhone(phoneToSave)) {
+                toast.error("يرجى إدخال رقم جوال سعودي صحيح يبدأ بـ 05 (مثال: 05xxxxxxxx)")
                 return
             }
         }
 
-        createOrder(isDraft, { name: customerName, phone: customerPhone })
+        createOrder(isDraft, { name: nameToSave, phone: phoneToSave })
         onClose()
     }
 
@@ -112,40 +137,42 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
                     {cart.length > 0 && (
                         <div className="fixed bottom-0 left-0 right-0 p-6 bg-white dark:bg-[#121b22] border-t border-slate-200 dark:border-white/10 pb-10 space-y-4 shadow-2xl transition-colors duration-300">
-                            {/* Customer Info Inputs (Only if guest or wants to specify) */}
-                            <div className="grid grid-cols-2 gap-3 text-right">
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-slate-500 dark:text-slate-400 pr-1 flex items-center gap-1 font-bold">
-                                        الاسم
-                                        {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500 font-extrabold">*</span>}
-                                    </label>
-                                    <div className="relative">
-                                        <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input
-                                            placeholder={currentUser?.name || "اسم العميل"}
-                                            value={customerName}
-                                            onChange={(e) => setCustomerName(e.target.value)}
-                                            className="h-10 text-right pr-9 bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-black/40 focus:ring-primary/50 rounded-xl text-xs font-bold"
-                                        />
+                            {/* Customer Info Inputs - Render ONLY if requested/required by store settings */}
+                            {storeSettings?.requireCustomerInfoOnCheckout && (
+                                <div className="grid grid-cols-2 gap-3 text-right">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-slate-500 dark:text-slate-400 pr-1 flex items-center gap-1 font-bold">
+                                            الاسم الكامل
+                                            <span className="text-red-500 font-extrabold">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                placeholder="اسم العميل الكامل"
+                                                value={customerName}
+                                                onChange={(e) => setCustomerName(e.target.value)}
+                                                className="h-10 text-right pr-9 bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-black/40 focus:ring-primary/50 rounded-xl text-xs font-bold"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-slate-500 dark:text-slate-400 pr-1 flex items-center gap-1 font-bold">
+                                            رقم الجوال (سعودي)
+                                            <span className="text-red-500 font-extrabold">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Input
+                                                placeholder="05xxxxxxxx"
+                                                value={customerPhone}
+                                                onChange={(e) => setCustomerPhone(e.target.value)}
+                                                className="h-10 text-right pr-9 bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-black/40 focus:ring-primary/50 rounded-xl text-xs font-bold"
+                                                inputMode="numeric"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-[10px] text-slate-500 dark:text-slate-400 pr-1 flex items-center gap-1 font-bold">
-                                        جوال
-                                        {storeSettings.requireCustomerInfoOnCheckout && <span className="text-red-500 font-extrabold">*</span>}
-                                    </label>
-                                    <div className="relative">
-                                        <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <Input
-                                            placeholder="رقم الجوال"
-                                            value={customerPhone}
-                                            onChange={(e) => setCustomerPhone(e.target.value)}
-                                            className="h-10 text-right pr-9 bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 text-slate-800 dark:text-white focus:bg-white dark:focus:bg-black/40 focus:ring-primary/50 rounded-xl text-xs font-bold"
-                                            inputMode="numeric"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            )}
 
                             <div className="flex justify-between items-center text-right border-t border-slate-100 dark:border-white/5 pt-4">
                                 <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">الإجمالي التقديري</span>
