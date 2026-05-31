@@ -117,6 +117,7 @@ export type User = {
     location?: string
     permissions?: string[]
     email?: string
+    allowedCategories?: string[] | "all"
 }
 
 export type Order = {
@@ -1032,7 +1033,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         username: cData.username || normalizedInput,
                         phone: cData.phone || "",
                         location: cData.location || "",
-                        email: cData.email || ""
+                        email: cData.email || "",
+                        allowedCategories: cData.allowedCategories || "all"
                     }
                 } else {
                     throw new Error("عذراً، هذا الحساب غير موجود في النظام أو تم حذفه من قبل الإدارة.")
@@ -1198,9 +1200,25 @@ const normalizeArabic = (str: string | null | undefined): string => {
         }
     }
 
+    const visibleProducts = React.useMemo(() => {
+        if (currentUser?.role === "customer" && currentUser.allowedCategories && currentUser.allowedCategories !== "all") {
+            const allowed = currentUser.allowedCategories as string[]
+            return products.filter(p => allowed.includes(p.category))
+        }
+        return products
+    }, [products, currentUser])
+
+    const visibleCategories = React.useMemo(() => {
+        if (currentUser?.role === "customer" && currentUser.allowedCategories && currentUser.allowedCategories !== "all") {
+            const allowed = currentUser.allowedCategories as string[]
+            return categories.filter(c => allowed.includes(c.id) || allowed.includes(c.nameAr) || allowed.includes(c.nameEn))
+        }
+        return categories
+    }, [categories, currentUser])
+
     return (
         <StoreContext.Provider value={{
-            products, cart, orders, categories, customers, banners, productRequests,
+            products: visibleProducts, cart, orders, categories: visibleCategories, customers, banners, productRequests,
             addToCart, removeFromCart, clearCart, createOrder, scanProduct,
             addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
             addCustomer, updateCustomer, deleteCustomer, updateOrderStatus, markCustomerLoggedIn,
