@@ -336,7 +336,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 return {
                     ...data,
                     id: doc.id,
-                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined
+                    discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
+                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
                 } as Product
             }))
         })
@@ -624,7 +625,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const addProduct = async (product: Omit<Product, "id">) => {
         try {
-            await addDoc(collection(db, "products"), product)
+            await addDoc(collection(db, "products"), {
+                ...product,
+                createdAt: Timestamp.now()
+            })
             toast.success("تم إضافة المنتج للسحابة")
         } catch (e) {
             console.error("Add Product Error:", e)
