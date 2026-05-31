@@ -41,6 +41,42 @@ export default function CustomerProfilePage() {
                     </div>
 
                     <div className="space-y-6">
+                        {/* Invite Friends Widget */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="p-6 rounded-[2rem] border relative overflow-hidden group hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-emerald-500/10 via-white to-white dark:from-emerald-500/10 dark:via-white/5 dark:to-white/5 border-emerald-500/20 shadow-md shadow-emerald-500/[0.03]"
+                        >
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl transition-colors -mr-8 -mt-8 group-hover:bg-emerald-500/20" />
+                            
+                            <h3 className="font-black text-lg text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                                🤝 شارك المتجر مع أصدقائك
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                                هل لديك أصدقاء يمتلكون محلات صيانة سيارات؟ أدعهم للتسجيل والإنضمام لمتجرنا لتسهيل الطلب ومتابعة الفواتير!
+                            </p>
+                            
+                            <button 
+                                onClick={() => {
+                                    const { storeSettings } = useStore()
+                                    const baseTemplate = storeSettings?.whatsappTemplates?.inviteFriend || 
+                                        "مرحباً بك يا صديقي! أدعوك للتسجيل والإنضمام إلى متجرنا المميز لجميع مستلزمات قطع غيار ومستلزمات السيارات! 🚗✨\n\nخطوات الإنضمام سهلة جداً وبسيطة:\n1. اضغط على رابط طلب الانضمام التالي:\n{url}\n2. اضغط على زر 'تقديم طلب انضمام كعميل جديد'.\n3. املأ بياناتك (الاسم، الجوال، اسم المستخدم المطلوب).\n4. بعد الإرسال، ستقوم الإدارة بمراجعة حسابك وتفعيله فوراً لتستمتع بأفضل الأسعار والعروض الحصرية! 🎁\n\nأرسلها لك صديقك: {name} 🤝";
+                                    
+                                    const domain = window.location.origin
+                                    const messageText = baseTemplate
+                                        .replace(/{name}/g, currentUser.name)
+                                        .replace(/{url}/g, domain);
+                                    
+                                    const waUrl = `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+                                    window.open(waUrl, "_blank");
+                                }}
+                                className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all duration-300 shadow-lg shadow-emerald-500/10 active:scale-[0.98]"
+                            >
+                                إرسال دعوة انضمام عبر الواتساب
+                            </button>
+                        </motion.div>
+
                         {/* Sidebar / Extra Widgets Area */}
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
@@ -48,12 +84,12 @@ export default function CustomerProfilePage() {
                             transition={{ delay: 0.6 }}
                             className="glass-card p-6 rounded-3xl border border-border/50 sticky top-24"
                         >
-                            <h3 className="font-bold text-foreground mb-4">Account Security</h3>
-                            <button className="w-full py-3 rounded-xl bg-secondary/50 hover:bg-secondary text-sm font-medium transition-colors mb-2">
-                                Change Password
+                            <h3 className="font-bold text-slate-800 dark:text-white mb-4">أمن الحساب</h3>
+                            <button className="w-full py-3 rounded-xl bg-secondary/50 hover:bg-secondary text-sm font-medium transition-colors mb-2 text-slate-800 dark:text-white">
+                                تغيير كلمة المرور
                             </button>
                             <button className="w-full py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium transition-colors border border-red-500/20">
-                                Delete Account
+                                حذف الحساب
                             </button>
                         </motion.div>
                     </div>

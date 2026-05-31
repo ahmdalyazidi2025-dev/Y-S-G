@@ -839,6 +839,22 @@ function AdminSettingsContent() {
                                                 />
                                             </div>
 
+                                            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                                                <div className="flex justify-between items-center pr-1">
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص رسالة دعوة صديق للمتجر (مشاركة المتجر)</Label>
+                                                    <span className="text-[10px] text-primary font-bold">يمكنك استخدام المتغيرات التلقائية</span>
+                                                </div>
+                                                <Textarea
+                                                    value={formData.whatsappTemplates?.inviteFriend || ""}
+                                                    onChange={(e) => handleChange("whatsappTemplates", {
+                                                        ...formData.whatsappTemplates,
+                                                        inviteFriend: e.target.value
+                                                    })}
+                                                    className="bg-background border-border min-h-[120px] text-foreground text-right rounded-xl focus:ring-1 focus:ring-emerald-500"
+                                                    placeholder="اكتب نص رسالة دعوة صديق هنا..."
+                                                />
+                                            </div>
+
                                             <div className="bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-3">
                                                 <h5 className="text-xs font-bold text-foreground text-right mb-1">المتغيرات المدعومة للتضمين التلقائي (اكتبها في أي مكان بالرسالة):</h5>
                                                 <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
