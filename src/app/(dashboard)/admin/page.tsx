@@ -337,39 +337,6 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
-        </div>
-    )
-}
-
-function SkeletonStats() {
-    return (
-        <div className="glass-card p-6 h-32 flex flex-col gap-4 relative overflow-hidden border-slate-200/80 dark:border-white/5">
-            <div className="flex items-center justify-between">
-                <div className="w-12 h-12 skeleton rounded-2xl" />
-                <div className="space-y-2 flex flex-col items-end">
-                    <div className="w-16 h-2 skeleton" />
-                    <div className="w-24 h-6 skeleton" />
-                </div>
-            </div>
-            <div className="w-full h-1.5 skeleton rounded-full" />
-        </div>
-    )
-}
-
-function SkeletonModule({ index }: { index: number }) {
-    const isLarge = index === 1 || index === 2 || index === 7 || index === 8;
-    return (
-        <div className={cn(
-            "glass-card p-8 h-48 relative border-slate-200/80 dark:border-white/5 overflow-hidden",
-            isLarge ? "col-span-1 lg:col-span-2" : "col-span-1"
-        )}>
-            <div className="flex flex-col items-center justify-center h-full gap-6">
-                <div className="w-20 h-20 skeleton rounded-[2rem]" />
-                <div className="space-y-2">
-                    <div className="w-24 h-3 skeleton mx-auto" />
-                    <div className="w-16 h-2 skeleton mx-auto opacity-50" />
-                </div>
-            </div>
 
             {/* Share Links Dialog */}
             <AnimatePresence>
@@ -458,6 +425,39 @@ function SkeletonModule({ index }: { index: number }) {
                     </div>
                 )}
             </AnimatePresence>
+        </div>
+    )
+}
+
+function SkeletonStats() {
+    return (
+        <div className="glass-card p-6 h-32 flex flex-col gap-4 relative overflow-hidden border-slate-200/80 dark:border-white/5">
+            <div className="flex items-center justify-between">
+                <div className="w-12 h-12 skeleton rounded-2xl" />
+                <div className="space-y-2 flex flex-col items-end">
+                    <div className="w-16 h-2 skeleton" />
+                    <div className="w-24 h-6 skeleton" />
+                </div>
+            </div>
+            <div className="w-full h-1.5 skeleton rounded-full" />
+        </div>
+    )
+}
+
+function SkeletonModule({ index }: { index: number }) {
+    const isLarge = index === 1 || index === 2 || index === 7 || index === 8;
+    return (
+        <div className={cn(
+            "glass-card p-8 h-48 relative border-slate-200/80 dark:border-white/5 overflow-hidden",
+            isLarge ? "col-span-1 lg:col-span-2" : "col-span-1"
+        )}>
+            <div className="flex flex-col items-center justify-center h-full gap-6">
+                <div className="w-20 h-20 skeleton rounded-[2rem]" />
+                <div className="space-y-2">
+                    <div className="w-24 h-3 skeleton mx-auto" />
+                    <div className="w-16 h-2 skeleton mx-auto opacity-50" />
+                </div>
+            </div>
         </div>
     )
 }
