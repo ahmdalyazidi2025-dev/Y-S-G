@@ -138,7 +138,7 @@ export default function CustomerHome() {
                                     {/* Horizontal Swipeable Container */}
                                     <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar scroll-smooth snap-x">
                                         {categoryProducts.map((product) => (
-                                            <div key={product.id} className="min-w-[170px] sm:min-w-[210px] max-w-[230px] snap-start flex-shrink-0">
+                                            <div key={product.id} className="w-[38%] min-w-[130px] sm:min-w-[185px] max-w-[200px] snap-start flex-shrink-0">
                                                 <ProductCard
                                                     item={product}
                                                     onViewDetails={() => setSelectedProduct(product)}
