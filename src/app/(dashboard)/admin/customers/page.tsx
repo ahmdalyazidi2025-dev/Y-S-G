@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, MapPin, Settings2 } from "lucide-react"
+import { ArrowRight, Plus, Edit2, Trash2, User, Phone, ShieldCheck, MapPin, Settings2, Share2 } from "lucide-react"
 import Link from "next/link"
 import { useStore, Customer } from "@/context/store-context"
 import { AdminCustomerForm } from "@/components/admin/customer-form"
@@ -87,6 +87,22 @@ export default function CustomersPage() {
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">إدارة العملاء</h1>
                 <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        className="border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 gap-2 rounded-full h-10 px-4"
+                        onClick={() => {
+                            try {
+                                const storefrontLink = window.location.origin
+                                navigator.clipboard.writeText(storefrontLink)
+                                toast.success("تم نسخ رابط المتجر بنجاح!", { description: "رابط متجر العملاء جاهز الآن للمشاركة مع عملائك 🔗" })
+                            } catch (e) {
+                                console.error(e)
+                            }
+                        }}
+                    >
+                        <Share2 className="w-4 h-4" />
+                        <span>نسخ رابط المتجر</span>
+                    </Button>
                     <Button
                         className="bg-primary hover:bg-primary/90 text-white gap-2 rounded-full h-10 px-4"
                         onClick={handleAddNew}
