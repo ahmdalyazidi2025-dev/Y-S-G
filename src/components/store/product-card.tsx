@@ -16,7 +16,7 @@ export function ProductCard({ item, onViewDetails }: { item: Product, onViewDeta
     const hasDiscountDozen = item.oldPriceDozen && item.oldPriceDozen && item.oldPriceDozen > item.priceDozen!
 
     return (
-        <Card className="border-none overflow-hidden group relative bg-white dark:bg-slate-900/40 transition-all duration-300 flex flex-col justify-between h-full text-right p-0 select-none shadow-none">
+        <Card className="border-none overflow-visible group relative bg-white dark:bg-slate-900/40 transition-all duration-300 flex flex-col justify-between h-full text-right p-0 select-none shadow-none">
             
             {/* Transparent & Borderless Image Container - Giving the image a completely "free" floaty style */}
             <div className="relative aspect-[3/4] bg-transparent flex items-center justify-center overflow-visible transition-all duration-300">
