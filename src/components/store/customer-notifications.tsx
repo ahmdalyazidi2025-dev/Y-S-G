@@ -68,14 +68,24 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                             <div
                                 key={notification.id}
                                 className={cn(
-                                    "relative p-4 rounded-xl border transition-all duration-300",
+                                    "relative p-4 rounded-xl border transition-all duration-300 cursor-pointer",
                                     notification.read ? "bg-white/5 border-white/5 opacity-70" : "bg-primary/10 border-primary/20 shadow-lg shadow-primary/5"
                                 )}
                                 onClick={() => {
                                     if (!notification.read && markNotificationRead) markNotificationRead(notification.id)
-                                    if (notification.link) {
+                                    
+                                    let targetLink = notification.link
+                                    // Extract product link from body if action link is not set
+                                    if (!targetLink && notification.body?.includes('?product=')) {
+                                        const match = notification.body.match(/(https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+)/i)
+                                        if (match) {
+                                            targetLink = match[0]
+                                        }
+                                    }
+                                    
+                                    if (targetLink) {
                                         setIsOpen(false)
-                                        window.location.href = notification.link
+                                        window.location.href = targetLink
                                     }
                                 }}
                             >
@@ -86,14 +96,28 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                 ? "💬 رسالة جديدة"
                                                 : notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1").replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
-                                            {notification.link && <ExternalLink className="w-3 h-3 opacity-50" />}
+                                            {(notification.link || notification.body?.includes('?product=')) && <ExternalLink className="w-3 h-3 opacity-50" />}
                                         </h4>
                                         <p className="text-xs text-slate-300 leading-relaxed">
-                                            {/* Format body for chat */}
+                                            {/* Format body for chat & clean raw URL links */}
                                             {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                 ? "قام أحد ممثلي الإدارة بالرد على استفسارك..."
-                                                : notification.body.replace(/\[بواسطة الآدمن\]/g, '').replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
+                                                : notification.body
+                                                    .replace(/https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+/gi, '🛍️ (رابط منتج مرفق)')
+                                                    .replace(/\[بواسطة الآدمن\]/g, '')
+                                                    .replace(/\(@[a-zA-Z0-9_-]+\)/g, '')
+                                                    .trim()}
                                         </p>
+                                        
+                                        {/* Attachment Action Badge */}
+                                        {(notification.link?.includes('?product=') || notification.body?.includes('?product=')) && (
+                                            <div className="mt-2 pt-2 border-t border-white/10 flex justify-end">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-lg border border-primary/20 hover:bg-primary/30 transition-all cursor-pointer">
+                                                    🛍️ عرض المنتج المرفق
+                                                </span>
+                                            </div>
+                                        )}
+
                                         <span className="text-[10px] text-slate-500 block pt-2">
                                             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ar })}
                                         </span>
