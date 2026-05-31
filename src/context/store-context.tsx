@@ -1035,13 +1035,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         email: cData.email || ""
                     }
                 } else {
-                    // Fallback if document doesn't exist yet
-                    user = {
-                        id: uid,
-                        name: "عميل",
-                        role: "customer",
-                        username: normalizedInput
-                    }
+                    throw new Error("عذراً، هذا الحساب غير موجود في النظام أو تم حذفه من قبل الإدارة.")
                 }
             } else {
                 // Admin or Staff
@@ -1056,14 +1050,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         permissions: sData.permissions || []
                     }
                 } else {
-                    // Fallback
-                    user = {
-                        id: uid,
-                        name: "موظف",
-                        role: role as "admin" | "staff",
-                        username: normalizedInput,
-                        permissions: role === "admin" ? ["all"] : []
-                    }
+                    throw new Error("عذراً، هذا الحساب غير مسجل في النظام أو تم إلغاء صلاحياته.")
                 }
             }
 
