@@ -33,6 +33,34 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                     router.replace(`/login?role=${role}`)
                 } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
                     router.replace("/customer")
+                } else if (role === "admin" && user.role === "staff") {
+                    // Strict URL-level permission enforcement for staff members
+                    const perms: Record<string, string> = {
+                        "/admin/products": "products",
+                        "/admin/categories": "products",
+                        "/admin/customers": "customers",
+                        "/admin/analytics": "sales",
+                        "/admin/orders": "orders",
+                        "/admin/requests": "orders",
+                        "/admin/password-requests": "customers",
+                        "/admin/banners": "settings",
+                        "/admin/chat": "chat",
+                        "/admin/join-requests": "customers",
+                        "/admin/notifications": "settings",
+                        "/admin/system": "settings",
+                        "/admin/settings": "settings",
+                    }
+                    
+                    const matchedPath = Object.keys(perms).find(path => pathname.startsWith(path))
+                    if (matchedPath) {
+                        const requiredPermission = perms[matchedPath]
+                        if (!user.permissions?.includes(requiredPermission)) {
+                            // Staff is unauthorized! Redirect back to main admin dashboard
+                            router.replace("/admin")
+                            return
+                        }
+                    }
+                    setIsChecking(false)
                 } else if (role === "customer" && user.role !== "customer") {
                     router.replace(user.role === "admin" || user.role === "staff" ? "/admin" : `/login?role=customer`)
                 } else {
