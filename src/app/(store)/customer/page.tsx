@@ -39,16 +39,30 @@ export default function CustomerHome() {
 
     useEffect(() => {
         if (typeof window !== "undefined" && products.length > 0) {
+            // 1. Check URL parameters
             const params = new URLSearchParams(window.location.search)
             const productId = params.get("product")
             if (productId) {
                 const prod = products.find(p => p.id === productId)
                 if (prod) {
                     setSelectedProduct(prod)
-                    // Clean URL quietly
                     const cleanUrl = window.location.pathname
                     window.history.replaceState({}, document.title, cleanUrl)
                 }
+            }
+            
+            // 2. Check localStorage for redirect trigger
+            try {
+                const pendingId = localStorage.getItem("open_product_id")
+                if (pendingId) {
+                    const prod = products.find(p => p.id === pendingId)
+                    if (prod) {
+                        setSelectedProduct(prod)
+                        localStorage.removeItem("open_product_id")
+                    }
+                }
+            } catch (e) {
+                console.error(e)
             }
         }
     }, [products])

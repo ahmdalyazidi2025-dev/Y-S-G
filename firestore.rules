@@ -54,10 +54,7 @@ service cloud.firestore {
     }
     
     match /notifications/{notifId} {
-       allow read: if isAdmin() || (request.auth != null) || resource.data.userId.startsWith('guest_');
-       allow create: if isAdmin() || request.auth != null;
-       allow update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid) || resource.data.userId.startsWith('guest_');
-       allow delete: if isAdmin();
+       allow read, create, update, delete: if true;
     }
 
     match /password_requests/{reqId} {

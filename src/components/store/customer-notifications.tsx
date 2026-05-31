@@ -160,13 +160,19 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             if (targetLink) {
                                                 setIsOpen(false)
                                                 const match = targetLink.match(/\?product=([a-zA-Z0-9_-]+)/i)
-                                                // If we are already on customer store page, open it instantly without a reload!
-                                                if (match && (window.location.pathname.endsWith("/customer") || window.location.pathname === "/customer" || window.location.pathname.endsWith("/customer/"))) {
+                                                if (match) {
                                                     const productId = match[1]
+                                                    try {
+                                                        localStorage.setItem("open_product_id", productId)
+                                                    } catch (e) {
+                                                        console.error(e)
+                                                    }
+                                                    // Dispatch custom event for instant in-page trigger
                                                     window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
-                                                } else {
-                                                    window.location.href = targetLink
                                                 }
+                                                
+                                                // Perform routing navigation
+                                                window.location.href = targetLink
                                             }
                                         }}
                                     >
