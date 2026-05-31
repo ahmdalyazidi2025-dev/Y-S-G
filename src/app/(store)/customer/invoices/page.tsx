@@ -80,8 +80,20 @@ export default function InvoicesPage() {
                             icon: Clock
                         }
                         return (
-                            <div key={order.id} className="bg-white dark:bg-white/5 border border-slate-150 dark:border-white/10 p-5 space-y-4 rounded-3xl relative overflow-hidden group active:scale-[0.98] transition-transform cursor-pointer shadow-sm hover:shadow-md dark:shadow-none" onClick={() => setSelectedOrder(order)}>
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+                            <div 
+                                key={order.id} 
+                                className={cn(
+                                    "p-5 space-y-4 rounded-3xl relative overflow-hidden group active:scale-[0.98] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md dark:shadow-none border",
+                                    order.status === "draft"
+                                        ? "bg-gradient-to-br from-blue-50/40 via-white to-white dark:from-blue-950/15 dark:via-white/5 dark:to-white/5 border-blue-200/60 dark:border-blue-500/20 shadow-lg shadow-blue-500/[0.03] dark:shadow-none hover:border-blue-300 dark:hover:border-blue-500/40"
+                                        : "bg-white dark:bg-white/5 border-slate-150 dark:border-white/10"
+                                )}
+                                onClick={() => setSelectedOrder(order)}
+                            >
+                                <div className={cn(
+                                    "absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl transition-colors -mr-12 -mt-12",
+                                    order.status === "draft" ? "bg-blue-500/5 group-hover:bg-blue-500/10" : "bg-primary/5 group-hover:bg-primary/10"
+                                )} />
 
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-1">
