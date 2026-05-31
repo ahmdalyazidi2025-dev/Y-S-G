@@ -296,7 +296,8 @@ const MOCK_SETTINGS: StoreSettings = {
     footerReturns: "سياسة الاسترجاع",
     requireCustomerInfoOnCheckout: false,
     whatsappTemplates: {
-        newCustomer: "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}"
+        newCustomer: "مرحباً بك {name} في متجرنا! تم تفعيل حسابك كعميل بنجاح. بيانات الدخول الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}",
+        passwordRecovery: "مرحباً بك {name}. تم إعادة تعيين كلمة مرور حسابك بنجاح. بيانات الدخول الجديدة الخاصة بك هي:\nاسم المستخدم: {username}\nكلمة المرور: {password}"
     },
 }
 

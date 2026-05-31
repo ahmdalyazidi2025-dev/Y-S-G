@@ -809,7 +809,7 @@ function AdminSettingsContent() {
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-center pr-1">
-                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص الرسالة الترحيبية</Label>
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص الرسالة الترحيبية للعملاء الجدد</Label>
                                                     <span className="text-[10px] text-primary font-bold">يمكنك استخدام المتغيرات التلقائية</span>
                                                 </div>
                                                 <Textarea
@@ -820,6 +820,22 @@ function AdminSettingsContent() {
                                                     })}
                                                     className="bg-background border-border min-h-[120px] text-foreground text-right rounded-xl focus:ring-1 focus:ring-emerald-500"
                                                     placeholder="اكتب نص الرسالة الترحيبية هنا..."
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/5">
+                                                <div className="flex justify-between items-center pr-1">
+                                                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">نص رسالة استعادة كلمة المرور</Label>
+                                                    <span className="text-[10px] text-primary font-bold">يمكنك استخدام المتغيرات التلقائية</span>
+                                                </div>
+                                                <Textarea
+                                                    value={formData.whatsappTemplates?.passwordRecovery || ""}
+                                                    onChange={(e) => handleChange("whatsappTemplates", {
+                                                        ...formData.whatsappTemplates,
+                                                        passwordRecovery: e.target.value
+                                                    })}
+                                                    className="bg-background border-border min-h-[120px] text-foreground text-right rounded-xl focus:ring-1 focus:ring-emerald-500"
+                                                    placeholder="اكتب نص رسالة استعادة كلمة المرور هنا..."
                                                 />
                                             </div>
 

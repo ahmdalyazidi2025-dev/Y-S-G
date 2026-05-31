@@ -88,6 +88,35 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
         try {
             if (initialCustomer && initialCustomer.id) {
                 await updateCustomer({ ...customerData, id: initialCustomer.id })
+                
+                // If password was changed, trigger the WhatsApp password recovery message!
+                const isPasswordChanged = formData.password.trim() !== "" && formData.password !== (initialCustomer.password || "");
+                if (isPasswordChanged) {
+                    const baseTemplate = storeSettings?.whatsappTemplates?.passwordRecovery || 
+                        "مرحباً بك {name}. تم إعادة تعيين كلمة مرور حسابك بنجاح.";
+                    
+                    let customMessage = baseTemplate.replace(/{name}/g, customerData.name);
+                    
+                    const credentialsPart = 
+                        `\n\n*🔐 بيانات دخولك الجديدة:*\n` +
+                        `• *اسم المستخدم:* ${customerData.username}\n` +
+                        `• *كلمة المرور:* ${customerData.password || ""}\n\n` +
+                        `🔗 رابط تسجيل الدخول:\n${window.location.origin}/login`;
+                    
+                    const messageText = customMessage + credentialsPart;
+                    
+                    let cleanPhone = customerData.phone.trim();
+                    if (cleanPhone.startsWith("05")) {
+                        cleanPhone = "966" + cleanPhone.substring(1);
+                    } else if (cleanPhone.startsWith("5")) {
+                        cleanPhone = "966" + cleanPhone;
+                    } else if (cleanPhone.startsWith("0")) {
+                        cleanPhone = "966" + cleanPhone.substring(1);
+                    }
+
+                    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+                    window.open(waUrl, "_blank");
+                }
             } else {
                 await addCustomer(customerData)
 
