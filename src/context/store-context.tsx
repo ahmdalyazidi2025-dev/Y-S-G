@@ -426,11 +426,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
             let docs = snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Order, "id">
+                const mappedStatus = data.status === "pending" ? "draft" : data.status
                 return {
                     ...data,
                     id: doc.id,
+                    status: mappedStatus,
                     createdAt: toDate(data.createdAt),
-                    statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({ ...h, timestamp: toDate(h.timestamp) }))
+                    statusHistory: (data.statusHistory || []).map((h: { status: string, timestamp: Timestamp | Date | { seconds: number, nanoseconds: number } }) => ({
+                        ...h,
+                        status: h.status === "pending" ? "draft" : h.status,
+                        timestamp: toDate(h.timestamp)
+                    }))
                 } as Order
             })
 
