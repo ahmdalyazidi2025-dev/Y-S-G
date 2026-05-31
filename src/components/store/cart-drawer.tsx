@@ -15,21 +15,12 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
 
-    // Pre-fill registered customer details when opening the drawer
-    useEffect(() => {
-        if (isOpen && currentUser) {
-            setCustomerName(currentUser.name || "")
-            setCustomerPhone(currentUser.phone || "")
-        }
-    }, [isOpen, currentUser])
-
     const total = cart.reduce((acc, item) => acc + (item.selectedPrice * item.quantity), 0)
 
-    // Saudi phone validator (05xxxxxxxx, 5xxxxxxxx, +9665xxxxxxxx, 9665xxxxxxxx)
+    // Saudi phone validator (must be exactly 10 digits starting with 05)
     const isSaudiPhone = (phone: string) => {
         const clean = phone.replace(/[\s-]/g, "")
-        const saudiRegex = /^(05|5|\+9665|9665)\d{8}$/
-        return saudiRegex.test(clean)
+        return /^05\d{8}$/.test(clean)
     }
 
     const handleCreateOrder = (isDraft: boolean) => {

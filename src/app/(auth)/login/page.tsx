@@ -66,10 +66,10 @@ function LoginForm() {
         e.preventDefault()
         if (!recoveryPhone) return;
 
-        // SA Phone Validation
-        const phoneRegex = /^(05)(5|0|3|6|4|9|1|8|7)([0-9]{7})$/;
+        // SA Phone Validation (strictly 10 digits starting with 05)
+        const phoneRegex = /^05\d{8}$/;
         if (!phoneRegex.test(recoveryPhone)) {
-            import("sonner").then(({ toast }) => toast.error("يرجى إدخال رقم جوال سعودي صحيح (يبدأ بـ 05 ويتكون من 10 أرقام)"));
+            import("sonner").then(({ toast }) => toast.error("يرجى إدخال رقم جوال سعودي صحيح يتكون من 10 أرقام ويبدأ بـ 05"));
             return;
         }
 

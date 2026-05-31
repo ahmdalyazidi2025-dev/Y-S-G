@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Customer, useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface CustomerFormProps {
     isOpen: boolean
@@ -75,6 +76,13 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
             password: formData.password || undefined,
             location: formData.location,
             allowedCategories: (viewAllCategories ? "all" : selectedCategories) as "all" | string[],
+        }
+
+        // SA Phone Validation (strictly 10 digits starting with 05)
+        const phoneRegex = /^05\d{8}$/;
+        if (!phoneRegex.test(formData.phone.trim())) {
+            toast.error("يرجى إدخال رقم جوال سعودي صحيح يتكون من 10 أرقام ويبدأ بـ 05")
+            return
         }
 
         try {
