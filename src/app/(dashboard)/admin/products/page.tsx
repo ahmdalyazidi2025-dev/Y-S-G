@@ -2,13 +2,15 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, ArrowUpDown, Calendar, Layers, Tag, Barcode } from "lucide-react"
+import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, ArrowUpDown, Calendar, Layers, Tag, Barcode, Link2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, Product } from "@/context/store-context"
 import { Input } from "@/components/ui/input"
 import { AdminProductForm } from "@/components/admin/product-form"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
+import { hapticFeedback } from "@/lib/haptics"
 
 export default function ProductsPage() {
     const { products, deleteProduct, categories } = useStore()
@@ -67,6 +69,13 @@ export default function ProductsPage() {
     const handleAddNew = () => {
         setEditingProduct(null)
         setIsFormOpen(true)
+    }
+
+    const handleCopyLink = (productId: string) => {
+        const url = `${window.location.origin}/customer?product=${productId}`
+        navigator.clipboard.writeText(url)
+        toast.success("تم نسخ رابط المنتج بنجاح 🔗 جاهز لإرساله في الإشعارات")
+        hapticFeedback('success')
     }
 
     return (
@@ -307,6 +316,15 @@ export default function ProductsPage() {
 
                                 {/* Premium Actions Panel */}
                                 <div className="flex items-center justify-center gap-2 shrink-0 w-full md:w-auto">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 md:flex-none h-11 px-4 border-slate-200 dark:border-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl font-black gap-2 transition-all"
+                                        onClick={() => handleCopyLink(product.id)}
+                                    >
+                                        <Link2 className="w-4 h-4" />
+                                        <span>نسخ الرابط</span>
+                                    </Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
