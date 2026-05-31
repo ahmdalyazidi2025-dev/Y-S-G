@@ -21,13 +21,17 @@ export default function CustomersPage() {
     const [activeFilter, setActiveFilter] = useState<string>("all")
     const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
 
-    const getCategory = (lastActive?: Date) => {
-        if (!lastActive) return { label: "منقطع", color: "text-red-400", bg: "bg-red-400/10", id: "Disconnected" }
+    const getCategory = (customer: Customer) => {
+        if (customer.isNewCustomer) return { label: "جدد", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", id: "New" }
+        if (customer.hasLoggedIn && !customer.lastActive) return { label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", id: "LoggedIn" }
+
+        const lastActive = customer.lastActive
+        if (!lastActive) return { label: "منقطع", color: "text-red-500 dark:text-red-400", bg: "bg-red-500/10", id: "Disconnected" }
         const days = Math.floor((new Date().getTime() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24))
-        if (days <= 7) return { label: "نشط", color: "text-green-400", bg: "bg-green-400/10", id: "Active" }
-        if (days <= 14) return { label: "متوسط", color: "text-blue-400", bg: "bg-blue-400/10", id: "Average" }
-        if (days <= 30) return { label: "ضعيف", color: "text-orange-400", bg: "bg-orange-400/10", id: "Weak" }
-        return { label: "منقطع", color: "text-red-400", bg: "bg-red-400/10", id: "Disconnected" }
+        if (days <= 7) return { label: "نشط", color: "text-green-500 dark:text-green-400", bg: "bg-green-500/10", id: "Active" }
+        if (days <= 14) return { label: "متوسط", color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", id: "Average" }
+        if (days <= 30) return { label: "ضعيف", color: "text-orange-500 dark:text-orange-400", bg: "bg-orange-500/10", id: "Weak" }
+        return { label: "منقطع", color: "text-red-500 dark:text-red-400", bg: "bg-red-500/10", id: "Disconnected" }
     }
 
     const handleBroadcast = () => {
@@ -50,6 +54,8 @@ export default function CustomersPage() {
 
     const categoriesList = [
         { id: "all", label: "الكل", color: "text-slate-500 dark:text-slate-300", bg: "bg-slate-500/10", activeBg: "bg-slate-500 text-white", apiId: "all" },
+        { id: "New", label: "جدد", color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", activeBg: "bg-violet-500 text-white", apiId: "New" },
+        { id: "LoggedIn", label: "تم الدخول", color: "text-teal-500 dark:text-teal-400", bg: "bg-teal-500/10", activeBg: "bg-teal-500 text-white", apiId: "LoggedIn" },
         { id: "Active", label: "نشط", color: "text-green-500 dark:text-green-400", bg: "bg-green-500/10", activeBg: "bg-green-500 text-white", apiId: "Active" },
         { id: "Average", label: "متوسط", color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", activeBg: "bg-blue-500 text-white", apiId: "Average" },
         { id: "Weak", label: "ضعيف", color: "text-orange-500 dark:text-orange-400", bg: "bg-orange-500/10", activeBg: "bg-orange-500 text-white", apiId: "Weak" },
@@ -58,7 +64,7 @@ export default function CustomersPage() {
 
     const filteredCustomers = customers.filter(c => {
         if (activeFilter === "all") return true
-        const cat = getCategory(c.lastActive)
+        const cat = getCategory(c)
         return cat.id === activeFilter
     })
 
@@ -102,7 +108,7 @@ export default function CustomersPage() {
                                 {cat.label} ({
                                     cat.id === "all"
                                         ? customers.length
-                                        : customers.filter(c => getCategory(c.lastActive).id === cat.id).length
+                                        : customers.filter(c => getCategory(c).id === cat.id).length
                                 })
                             </button>
                             <button
@@ -177,13 +183,13 @@ export default function CustomersPage() {
                                     <div className="flex items-center gap-3">
                                         <h3 className="font-bold text-slate-900 dark:text-white text-lg">{customer.name}</h3>
                                         {(() => {
-                                            const cat = getCategory(customer.lastActive)
-                                            return (
-                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cat.bg} ${cat.color} border border-white/5`}>
-                                                    {cat.label}
-                                                </span>
-                                            )
-                                        })()}
+                                             const cat = getCategory(customer)
+                                             return (
+                                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cat.bg} ${cat.color} border border-white/5`}>
+                                                     {cat.label}
+                                                 </span>
+                                             )
+                                         })()}
                                     </div>
                                     <div className="flex items-center gap-3 text-xs text-slate-500">
                                         <div className="flex items-center gap-1">

@@ -75,6 +75,8 @@ export type Customer = {
     createdAt?: Date | any
     allowedCategories?: string[] | "all"
     fcmTokens?: string[]
+    isNewCustomer?: boolean
+    hasLoggedIn?: boolean
 }
 
 export type Coupon = {
@@ -223,6 +225,7 @@ type StoreContextType = {
     addCustomer: (customer: Omit<Customer, "id">) => void
     updateCustomer: (customer: Customer) => void
     deleteCustomer: (customerId: string) => void
+    markCustomerLoggedIn: (customerId: string) => Promise<void>
     coupons: Coupon[]
     addCoupon: (coupon: Omit<Coupon, "id">) => void
     deleteCoupon: (couponId: string) => void
@@ -700,7 +703,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 id: uid,
                 email: generatedEmail,
                 username: normalizedUsername,
-                createdAt: Timestamp.now()
+                createdAt: Timestamp.now(),
+                isNewCustomer: true,
+                hasLoggedIn: false
             });
 
             toast.success("تم إضافة وتفعيل العميل بنجاح ✅");
@@ -768,6 +773,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch (error: any) {
             console.error("Failed to delete customer:", error);
             toast.error("فشل حذف العميل: " + error.message);
+        }
+    }
+
+    const markCustomerLoggedIn = async (customerId: string) => {
+        try {
+            await updateDoc(doc(db, "customers", customerId), {
+                isNewCustomer: false,
+                hasLoggedIn: true,
+                lastActive: Timestamp.now()
+            });
+        } catch (e) {
+            console.error("Failed to mark customer as logged in:", e);
         }
     }
 
@@ -1196,7 +1213,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             products, cart, orders, categories, customers, banners, productRequests,
             addToCart, removeFromCart, clearCart, createOrder, scanProduct,
             addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
-            addCustomer, updateCustomer, deleteCustomer, updateOrderStatus,
+            addCustomer, updateCustomer, deleteCustomer, updateOrderStatus, markCustomerLoggedIn,
             coupons, addCoupon, deleteCoupon,
             addBanner, deleteBanner, toggleBanner, addProductRequest, updateProductRequestStatus,
             messages, sendMessage, broadcastNotification, currentUser, login, logout,

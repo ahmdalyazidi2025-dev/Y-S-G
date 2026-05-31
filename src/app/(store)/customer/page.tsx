@@ -18,7 +18,7 @@ import { CartDrawer } from "@/components/store/cart-drawer"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function CustomerHome() {
-    const { products, banners, categories } = useStore()
+    const { products, banners, categories, currentUser, markCustomerLoggedIn } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -236,11 +236,14 @@ export default function CustomerHome() {
                                 <button
                                     onClick={() => {
                                         try {
-                                            localStorage.removeItem("ysg_accepted_welcome")
+                                             localStorage.removeItem("ysg_accepted_welcome")
+                                             if (currentUser?.id) {
+                                                 markCustomerLoggedIn(currentUser.id)
+                                             }
                                         } catch(e) {}
                                         setShowAcceptedWelcome(false)
                                     }}
-                                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-sm shadow-xl shadow-primary/25 hover:opacity-95 transition-opacity flex items-center justify-center gap-2"
+                                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-sm shadow-xl shadow-primary/25 hover:opacity-95 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
                                 >
                                     🛍️ ابدأ تصفح المتجر الآن
                                 </button>
