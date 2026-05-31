@@ -1167,7 +1167,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         username: customer.username,
                         phone: customer.phone || "",
                         location: customer.location || "",
-                        email: customer.email || ""
+                        email: customer.email || "",
+                        allowedCategories: customer.allowedCategories || "all"
                     }
                     setCurrentUser(user)
                     localStorage.setItem("ysg_user", JSON.stringify(user))
@@ -1265,20 +1266,26 @@ const normalizeArabic = (str: string | null | undefined): string => {
     }
 
     const visibleProducts = React.useMemo(() => {
-        if (currentUser?.role === "customer" && currentUser.allowedCategories && currentUser.allowedCategories !== "all") {
-            const allowed = currentUser.allowedCategories as string[]
+        const dbCustomer = customers.find(c => c.id === currentUser?.id)
+        const allowedCategories = dbCustomer ? dbCustomer.allowedCategories : (currentUser?.allowedCategories || "all")
+
+        if (currentUser?.role === "customer" && allowedCategories && allowedCategories !== "all") {
+            const allowed = allowedCategories as string[]
             return products.filter(p => allowed.includes(p.category))
         }
         return products
-    }, [products, currentUser])
+    }, [products, currentUser, customers])
 
     const visibleCategories = React.useMemo(() => {
-        if (currentUser?.role === "customer" && currentUser.allowedCategories && currentUser.allowedCategories !== "all") {
-            const allowed = currentUser.allowedCategories as string[]
+        const dbCustomer = customers.find(c => c.id === currentUser?.id)
+        const allowedCategories = dbCustomer ? dbCustomer.allowedCategories : (currentUser?.allowedCategories || "all")
+
+        if (currentUser?.role === "customer" && allowedCategories && allowedCategories !== "all") {
+            const allowed = allowedCategories as string[]
             return categories.filter(c => allowed.includes(c.id) || allowed.includes(c.nameAr) || allowed.includes(c.nameEn))
         }
         return categories
-    }, [categories, currentUser])
+    }, [categories, currentUser, customers])
 
     return (
         <StoreContext.Provider value={{
