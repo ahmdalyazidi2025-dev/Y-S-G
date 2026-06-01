@@ -101,19 +101,6 @@ export default function ChatPage() {
                                 
                                 {/* Render Smart Product Card Preview */}
                                 {matchedProduct && (
-                                    <div className="mt-1 bg-white/50 dark:bg-black/35 p-2 rounded-xl border border-slate-200 dark:border-white/5 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right">
-                                        <div className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
-                                            {matchedProduct.image ? (
-                                                <Image
-                                                    src={matchedProduct.image}
-                                                    alt=""
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-slate-400">📦</div>
-                                            )}
                                     <div className="mt-1 bg-white/50 dark:bg-black/35 p-2 rounded-xl border border-slate-200 dark:border-white/5 flex flex-col gap-2 w-full min-w-[210px] sm:min-w-[250px] text-right">
                                         <div className="flex gap-3 items-center">
                                             <div className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
