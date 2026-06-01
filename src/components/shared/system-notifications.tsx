@@ -208,8 +208,12 @@ export function SystemNotifications() {
                                             const target = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
                                             const match = target.match(/\?product=([a-zA-Z0-9_-]+)/i)
                                             if (match) {
+                                                try {
+                                                    localStorage.setItem("open_product_id", match[1])
+                                                } catch (e) {}
                                                 window.dispatchEvent(new CustomEvent("open-product-modal", { detail: match[1] }))
-                                                if (window.location.pathname === "/customer") return;
+                                                if (window.location.pathname === "/customer" || window.location.pathname === "/customer/chat") return;
+                                                // If not on customer home or chat, let it route, but localStorage is set now!
                                             }
                                             
                                             if (target.startsWith('/')) {

@@ -210,8 +210,8 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                         window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
                                                     }, 100)
                                                     
-                                                    // If we are already on the customer dashboard, just update the URL without triggering a route change
-                                                    if (window.location.pathname === "/customer") {
+                                                    // If we are already on the customer dashboard or chat, just update the URL without triggering a route change
+                                                    if (window.location.pathname === "/customer" || window.location.pathname === "/customer/chat") {
                                                         window.history.pushState({}, "", localPath)
                                                         return // Skip router.push to prevent full reloads
                                                     }

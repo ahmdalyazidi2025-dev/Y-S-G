@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle } from "lucide-react"
 import Link from "next/link"
@@ -18,6 +18,21 @@ export default function ChatPage() {
 
     // Use logged in user or fallback to guest (though this page should probably be protected)
     const currentCustomerId = currentUser?.id || "guest"
+
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        const handleOpenProductModal = (e: Event) => {
+            const productId = (e as CustomEvent).detail
+            if (productId && products.length > 0) {
+                const prod = products.find(p => p.id === productId)
+                if (prod) {
+                    setSelectedProduct(prod)
+                }
+            }
+        }
+        window.addEventListener("open-product-modal", handleOpenProductModal)
+        return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
+    }, [products])
 
     const chatMessages = useMemo(() => {
         return messages.filter(m => m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`)))
