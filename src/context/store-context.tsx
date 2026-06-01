@@ -331,7 +331,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [storeSettings, setStoreSettings] = useState<StoreSettings>({
         minimumOrderValue: 0,
         enableBarcodeScanner: true
-    })
+    } as StoreSettings)
 
     const [globalSelectedProduct, setGlobalSelectedProduct] = useState<Product | null>(null)
     const [joinRequests, setJoinRequests] = useState<any[]>([])
