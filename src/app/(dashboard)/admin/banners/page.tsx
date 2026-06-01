@@ -38,54 +38,7 @@ export default function AdminBannersPage() {
                 </Button>
             </div>
 
-            {/* Live Client Slideshow Mockup Preview Frame */}
-            {banners.filter(b => b.active).length > 0 && (
-                <div className="glass-card p-5 sm:p-6 rounded-[32px] border border-white/10 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="space-y-1 text-right">
-                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
-                                <span>المعاينة التفاعلية المباشرة للعميل</span>
-                            </h2>
-                            <p className="text-xs text-slate-400">شاهد كيف يظهر شريط العروض تلقائياً لعملائك</p>
-                        </div>
-                        
-                        <div className="flex gap-1 bg-black/35 p-1 rounded-xl border border-white/5 w-fit mr-auto sm:mr-0 ml-0">
-                            <Button
-                                size="sm"
-                                variant={previewDevice === "desktop" ? "default" : "ghost"}
-                                className="h-8 text-xs rounded-lg gap-1.5 cursor-pointer"
-                                onClick={() => setPreviewDevice("desktop")}
-                            >
-                                <Monitor className="w-3.5 h-3.5" />
-                                <span>شاشة كمبيوتر</span>
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant={previewDevice === "mobile" ? "default" : "ghost"}
-                                className="h-8 text-xs rounded-lg gap-1.5 cursor-pointer"
-                                onClick={() => setPreviewDevice("mobile")}
-                            >
-                                <Smartphone className="w-3.5 h-3.5" />
-                                <span>شاشة هاتف</span>
-                            </Button>
-                        </div>
-                    </div>
 
-                    <div className="flex justify-center items-center bg-black/40 p-3 sm:p-4 rounded-[24px] border border-white/5 overflow-hidden transition-all duration-300">
-                        <div 
-                            className={cn(
-                                "transition-all duration-500 rounded-[2rem] overflow-hidden shadow-2xl border border-white/10",
-                                previewDevice === "desktop" 
-                                    ? "w-full max-w-4xl aspect-[2.8/1] sm:aspect-[3/1]" 
-                                    : "w-[300px] h-[155px] sm:w-[340px] sm:h-[160px]"
-                            )}
-                        >
-                            <HeroBanner />
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <div className="grid grid-cols-1 gap-6">
                 {banners.length === 0 ? (
@@ -143,7 +96,7 @@ export default function AdminBannersPage() {
                                 <Button
                                     variant="glass"
                                     size="icon"
-                                    className="h-10 w-10 bg-yellow-500/90 text-white hover:bg-yellow-500 rounded-xl shadow-lg shadow-yellow-500/20 transition-all cursor-pointer border border-white/10"
+                                    className="h-10 w-10 bg-orange-500/90 text-white hover:bg-orange-650 rounded-xl shadow-lg shadow-orange-500/20 transition-all cursor-pointer border border-white/10"
                                     title="تعديل تفاصيل العرض"
                                     onClick={() => {
                                         setEditingBanner(banner)
