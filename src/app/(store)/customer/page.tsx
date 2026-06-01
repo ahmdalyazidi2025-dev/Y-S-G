@@ -141,7 +141,7 @@ export default function CustomerHome() {
                                             <div key={product.id} className="w-[38%] min-w-[130px] sm:min-w-[185px] max-w-[200px] snap-start flex-shrink-0">
                                                 <ProductCard
                                                     item={product}
-                                                    onViewDetails={() => setSelectedProduct(product)}
+                                                    onViewDetails={() => setGlobalSelectedProduct(product)}
                                                 />
                                             </div>
                                         ))}
