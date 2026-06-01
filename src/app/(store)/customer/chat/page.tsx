@@ -21,10 +21,37 @@ export default function ChatPage() {
 
     useEffect(() => {
         if (typeof window === "undefined") return
+
+        // 1. Check URL parameters
+        const params = new URLSearchParams(window.location.search)
+        const productId = params.get("product")
+        if (productId && products.length > 0) {
+            const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
+            if (prod) {
+                setSelectedProduct(prod)
+                const cleanUrl = window.location.pathname
+                window.history.replaceState({}, document.title, cleanUrl)
+            }
+        }
+        
+        // 2. Check localStorage for redirect trigger
+        try {
+            const pendingId = localStorage.getItem("open_product_id")
+            if (pendingId && products.length > 0) {
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(pendingId).trim().toLowerCase())
+                if (prod) {
+                    setSelectedProduct(prod)
+                    localStorage.removeItem("open_product_id")
+                }
+            }
+        } catch (e) {
+            console.error(e)
+        }
+
         const handleOpenProductModal = (e: Event) => {
-            const productId = (e as CustomEvent).detail
-            if (productId && products.length > 0) {
-                const prod = products.find(p => p.id === productId)
+            const evProductId = (e as CustomEvent).detail
+            if (evProductId && products.length > 0) {
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(evProductId).trim().toLowerCase())
                 if (prod) {
                     setSelectedProduct(prod)
                 }
@@ -58,10 +85,10 @@ export default function ChatPage() {
                         className="text-blue-400 dark:text-blue-300 underline break-all font-bold hover:opacity-85 transition-opacity"
                         onClick={(e) => {
                             // If it's an internal product link, intercept and open the modal directly instead of opening a new tab
-                            const match = part.match(/product=([a-zA-Z0-9_-]+)/)
+                            const match = part.match(/product=([a-zA-Z0-9_-]+)/i)
                             if (match) {
                                 e.preventDefault()
-                                const prod = products.find(p => p.id === match[1])
+                                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(match[1]).trim().toLowerCase())
                                 if (prod) setSelectedProduct(prod)
                             }
                         }}

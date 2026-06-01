@@ -216,10 +216,15 @@ export function SystemNotifications() {
                                                 // If not on customer home or chat, let it route, but localStorage is set now!
                                             }
                                             
-                                            if (target.startsWith('/')) {
-                                                router.push(target)
+                                            let localPath = target;
+                                            if (localPath.startsWith(window.location.origin)) {
+                                                localPath = localPath.replace(window.location.origin, "");
+                                            }
+                                            
+                                            if (localPath.startsWith('/')) {
+                                                router.push(localPath)
                                             } else {
-                                                window.location.href = target
+                                                window.location.href = localPath
                                             }
                                         }}
                                         className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"

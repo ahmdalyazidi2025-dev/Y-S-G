@@ -43,7 +43,7 @@ export default function CustomerHome() {
             const params = new URLSearchParams(window.location.search)
             const productId = params.get("product")
             if (productId) {
-                const prod = products.find(p => p.id === productId)
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
                 if (prod) {
                     setSelectedProduct(prod)
                     const cleanUrl = window.location.pathname
@@ -55,7 +55,7 @@ export default function CustomerHome() {
             try {
                 const pendingId = localStorage.getItem("open_product_id")
                 if (pendingId) {
-                    const prod = products.find(p => p.id === pendingId)
+                    const prod = products.find(p => String(p.id).trim().toLowerCase() === String(pendingId).trim().toLowerCase())
                     if (prod) {
                         setSelectedProduct(prod)
                         localStorage.removeItem("open_product_id")
@@ -72,7 +72,7 @@ export default function CustomerHome() {
         const handleOpenProductModal = (e: Event) => {
             const productId = (e as CustomEvent).detail
             if (productId && products.length > 0) {
-                const prod = products.find(p => p.id === productId)
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
                 if (prod) {
                     setSelectedProduct(prod)
                 }
