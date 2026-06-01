@@ -207,6 +207,7 @@ export type StoreSettings = {
     enableAIChat?: boolean
     enableProductRequests?: boolean
     enableBarcodeScanner?: boolean
+    minimumOrderValue?: number
     sounds?: {
         newOrder?: string;
         newMessage?: string;

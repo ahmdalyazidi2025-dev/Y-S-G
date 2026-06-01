@@ -190,6 +190,7 @@ export type StoreSettings = {
     footerReturns: string
     requireCustomerInfoOnCheckout: boolean
     enableBarcodeScanner?: boolean
+    minimumOrderValue?: number
     enableAiSystem?: boolean
     enableCoupons?: boolean
     logoUrl?: string
