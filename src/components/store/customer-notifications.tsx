@@ -162,10 +162,14 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             if (targetLink) {
                                                 setIsOpen(false)
                                                 
-                                                // Clean full domain prefix to make it a local path
                                                 let localPath = targetLink
-                                                if (typeof window !== "undefined" && localPath.startsWith(window.location.origin)) {
-                                                    localPath = localPath.replace(window.location.origin, "")
+                                                try {
+                                                    if (localPath.startsWith("http://") || localPath.startsWith("https://")) {
+                                                        const urlObj = new URL(localPath)
+                                                        localPath = urlObj.pathname + urlObj.search + urlObj.hash
+                                                    }
+                                                } catch (e) {
+                                                    console.error("Failed to parse URL:", e)
                                                 }
 
                                                 const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)

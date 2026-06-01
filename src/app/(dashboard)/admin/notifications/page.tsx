@@ -10,7 +10,7 @@ import { Bell, Send, Trash2, ShieldCheck, Users, User, ArrowRight, Clock, Eye } 
 import Link from "next/link"
 import { toast } from "sonner"
 import { db } from "@/lib/firebase"
-import { collection, addDoc, Timestamp, doc, deleteDoc } from "firebase/firestore"
+import { collection, addDoc, Timestamp, doc, deleteDoc, writeBatch, getDocs, query, where } from "firebase/firestore"
 import { cn } from "@/lib/utils"
 
 export default function AdminNotificationsPage() {
@@ -73,6 +73,8 @@ export default function AdminNotificationsPage() {
                 return
             }
 
+            const broadcastId = `bcast_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+
             // Save to Firestore notifications collection for each targeted customer
             const promises = targetUserIds.map(async (uid) => {
                 await addDoc(collection(db, "notifications"), {
@@ -82,6 +84,7 @@ export default function AdminNotificationsPage() {
                     link: actionLink.trim() || "/",
                     read: false,
                     targetLabel: targetNameLabel,
+                    broadcastId: broadcastId,
                     createdAt: Timestamp.now()
                 })
             })
@@ -105,12 +108,61 @@ export default function AdminNotificationsPage() {
     }
 
     const handleDeleteNotification = async (id: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذا السجل من تاريخ الإشعارات؟")) return
+        if (!confirm("هل أنت متأكد من حذف هذا الإشعار نهائياً من سجل الإدارة ومن جميع العملاء؟")) return
         try {
-            await deleteDoc(doc(db, "notifications", id))
-            toast.success("تم حذف سجل الإشعار بنجاح")
+            const targetNotif = notifications.find((n: any) => n.id === id)
+            if (targetNotif && targetNotif.broadcastId) {
+                // Fetch all notifications sharing this broadcastId
+                const q = query(collection(db, "notifications"), where("broadcastId", "==", targetNotif.broadcastId))
+                const querySnapshot = await getDocs(q)
+                const batch = writeBatch(db)
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref)
+                })
+                await batch.commit()
+            } else if (targetNotif) {
+                // Fallback: search by title and body, then filter by proximity of createdAt to clean up older grouped broadcasts
+                const q = query(
+                    collection(db, "notifications"), 
+                    where("title", "==", targetNotif.title),
+                    where("body", "==", targetNotif.body)
+                )
+                const querySnapshot = await getDocs(q)
+                const batch = writeBatch(db)
+                let count = 0
+                
+                const getTimestampMs = (val: any) => {
+                    if (!val) return 0
+                    if (val.seconds) return val.seconds * 1000
+                    if (val.toDate) return val.toDate().getTime()
+                    if (val instanceof Date) return val.getTime()
+                    return new Date(val).getTime()
+                }
+                
+                const targetTime = getTimestampMs(targetNotif.createdAt)
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data()
+                    const docTime = getTimestampMs(data.createdAt)
+                    // If it was created within 60 seconds of the target notification
+                    const diff = Math.abs(docTime - targetTime)
+                    if (diff < 60000) {
+                        batch.delete(doc.ref)
+                        count++
+                    }
+                })
+                if (count > 0) {
+                    await batch.commit()
+                } else {
+                    await deleteDoc(doc(db, "notifications", id))
+                }
+            } else {
+                await deleteDoc(doc(db, "notifications", id))
+            }
+            toast.success("تم حذف الإشعار نهائياً من سجل الإدارة وحسابات العملاء")
         } catch (error) {
-            toast.error("فشل حذف السجل")
+            console.error("Delete notification failed:", error)
+            toast.error("فشل حذف الإشعار")
         }
     }
 
