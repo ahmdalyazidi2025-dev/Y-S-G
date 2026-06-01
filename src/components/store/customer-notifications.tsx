@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Bell, ExternalLink, Trash2, CheckCheck, Trash } from "lucide-react"
+import { Bell, Trash2, CheckCheck, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStore } from "@/context/store-context"
 import { formatDistanceToNow } from "date-fns"
@@ -216,14 +216,13 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                         ? "💬 رسالة جديدة"
                                                         : notification.title.replace(/(Invoice|الفاتورة)\s*#\w+/gi, "$1").replace(/\(@[a-zA-Z0-9_-]+\)/g, '').trim()}
-                                                    {(notification.link || notification.body?.includes('?product=')) && <ExternalLink className="w-3 h-3 opacity-50" />}
                                                 </h4>
                                                 <p className="text-xs text-slate-300 leading-relaxed">
                                                     {/* Format body for chat & clean raw URL links */}
                                                     {(notification.title.includes('رسالة') || /^[a-zA-Z0-9]{20}$/.test(notification.body))
                                                         ? "قام أحد ممثلي الإدارة بالرد على استفسارك..."
                                                         : notification.body
-                                                            .replace(/https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+/gi, '🛍️ (رابط منتج مرفق)')
+                                                            .replace(/https?:\/\/[^\s]+/gi, '')
                                                             .replace(/\[بواسطة الآدمن\]/g, '')
                                                             .replace(/\(@[a-zA-Z0-9_-]+\)/g, '')
                                                             .trim()}
@@ -242,12 +241,10 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     
                                                     if (matchedProduct) {
                                                         return (
-                                                            <div className="mt-2 bg-white/5 dark:bg-black/35 p-2 rounded-xl border border-white/10 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right cursor-pointer" onClick={(e) => { 
-                                                                e.stopPropagation(); 
-                                                                setIsOpen(false);
-                                                                setTimeout(() => {
-                                                                    window.dispatchEvent(new CustomEvent("open-product-modal", { detail: matchedProduct.id }));
-                                                                }, 100);
+                                                            <div className="mt-2 bg-white/5 dark:bg-black/35 p-2 rounded-xl border border-white/10 flex gap-3 items-center w-full text-right cursor-pointer" onClick={(e) => { 
+                                                                e.stopPropagation()
+                                                                setIsOpen(false)
+                                                                setTimeout(() => setGlobalSelectedProduct(matchedProduct), 150)
                                                             }}>
                                                                 <div className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
                                                                     {matchedProduct.image ? (
@@ -260,20 +257,8 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                                     <p className="font-bold text-[10px] truncate text-slate-200 leading-tight">{matchedProduct.name}</p>
                                                                     <p className="text-[10px] text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
                                                                 </div>
-                                                                <button 
-                                                                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-bold rounded-lg transition-all active:scale-95 whitespace-nowrap"
-                                                                >
+                                                                <span className="px-2.5 py-1 bg-emerald-500 text-white text-[9px] font-bold rounded-lg whitespace-nowrap">
                                                                     عرض المنتج
-                                                                </button>
-                                                            </div>
-                                                        )
-                                                    }
-
-                                                    if (notification.link?.includes('?product=') || notification.body?.includes('?product=')) {
-                                                        return (
-                                                            <div className="mt-2 pt-2 border-t border-white/10 flex justify-end">
-                                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-lg border border-primary/20 hover:bg-primary/30 transition-all cursor-pointer">
-                                                                    🛍️ عرض المنتج المرفق
                                                                 </span>
                                                             </div>
                                                         )
