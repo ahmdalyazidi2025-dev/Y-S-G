@@ -79,10 +79,7 @@ export default function CustomerHome() {
                     </div>
                 </div>
 
-                {/* Modern Carousel */}
-                <div className="px-4">
-                    <HeroBanner />
-                </div>
+
 
                 {/* Category Stories - Native Circular Layout (Mobile & Desktop) */}
                 <div className="w-full">
