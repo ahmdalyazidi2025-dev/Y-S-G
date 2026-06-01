@@ -12,54 +12,13 @@ import Image from "next/image"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 
 export default function ChatPage() {
-    const { messages, sendMessage, currentUser, products } = useStore()
+    const { messages, sendMessage, currentUser, products, setGlobalSelectedProduct } = useStore()
     const [msg, setMsg] = useState("")
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
     // Use logged in user or fallback to guest (though this page should probably be protected)
     const currentCustomerId = currentUser?.id || "guest"
 
-    useEffect(() => {
-        if (typeof window === "undefined") return
 
-        // 1. Check URL parameters
-        const params = new URLSearchParams(window.location.search)
-        const productId = params.get("product")
-        if (productId && products.length > 0) {
-            const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
-            if (prod) {
-                setSelectedProduct(prod)
-                const cleanUrl = window.location.pathname
-                window.history.replaceState({}, document.title, cleanUrl)
-            }
-        }
-        
-        // 2. Check localStorage for redirect trigger
-        try {
-            const pendingId = localStorage.getItem("open_product_id")
-            if (pendingId && products.length > 0) {
-                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(pendingId).trim().toLowerCase())
-                if (prod) {
-                    setSelectedProduct(prod)
-                    localStorage.removeItem("open_product_id")
-                }
-            }
-        } catch (e) {
-            console.error(e)
-        }
-
-        const handleOpenProductModal = (e: Event) => {
-            const evProductId = (e as CustomEvent).detail
-            if (evProductId && products.length > 0) {
-                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(evProductId).trim().toLowerCase())
-                if (prod) {
-                    setSelectedProduct(prod)
-                }
-            }
-        }
-        window.addEventListener("open-product-modal", handleOpenProductModal)
-        return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
-    }, [products])
 
     const chatMessages = useMemo(() => {
         return messages.filter(m => m.senderId === currentCustomerId || (m.isAdmin && m.text.includes(`@${currentCustomerId}`)))
@@ -89,7 +48,7 @@ export default function ChatPage() {
                             if (match) {
                                 e.preventDefault()
                                 const prod = products.find(p => String(p.id).trim().toLowerCase() === String(match[1]).trim().toLowerCase())
-                                if (prod) setSelectedProduct(prod)
+                                if (prod) setGlobalSelectedProduct(prod)
                             }
                         }}
                     >
@@ -155,14 +114,29 @@ export default function ChatPage() {
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-slate-400">📦</div>
                                             )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-[10px] truncate text-slate-800 dark:text-slate-100 leading-tight">{matchedProduct.name}</p>
-                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
+                                    <div className="mt-1 bg-white/50 dark:bg-black/35 p-2 rounded-xl border border-slate-200 dark:border-white/5 flex flex-col gap-2 w-full min-w-[210px] sm:min-w-[250px] text-right">
+                                        <div className="flex gap-3 items-center">
+                                            <div className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
+                                                {matchedProduct.image ? (
+                                                    <Image
+                                                        src={matchedProduct.image}
+                                                        alt=""
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-400">📦</div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-[10px] truncate text-slate-800 dark:text-slate-100 leading-tight">{matchedProduct.name}</p>
+                                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
+                                            </div>
                                         </div>
                                         <button 
-                                            onClick={() => setSelectedProduct(matchedProduct!)} 
-                                            className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-bold rounded-lg cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                                            onClick={() => setGlobalSelectedProduct(matchedProduct!)} 
+                                            className="w-full text-center text-xs font-bold bg-primary/10 text-primary py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
                                         >
                                             عرض المنتج
                                         </button>
@@ -192,12 +166,6 @@ export default function ChatPage() {
                     <Send className="w-5 h-5 text-white" />
                 </Button>
             </div>
-
-            <ProductDetailsModal
-                isOpen={!!selectedProduct}
-                onClose={() => setSelectedProduct(null)}
-                product={selectedProduct}
-            />
         </div>
     )
 }

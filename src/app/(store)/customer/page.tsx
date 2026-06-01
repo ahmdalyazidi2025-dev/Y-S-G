@@ -18,12 +18,11 @@ import { CartDrawer } from "@/components/store/cart-drawer"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function CustomerHome() {
-    const { products, banners, categories, currentUser, markCustomerLoggedIn } = useStore()
+    const { products, banners, categories, currentUser, markCustomerLoggedIn, setGlobalSelectedProduct } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [showAcceptedWelcome, setShowAcceptedWelcome] = useState(false)
 
@@ -37,50 +36,6 @@ export default function CustomerHome() {
         }
     }, [])
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && products.length > 0) {
-            // 1. Check URL parameters
-            const params = new URLSearchParams(window.location.search)
-            const productId = params.get("product")
-            if (productId) {
-                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
-                if (prod) {
-                    setSelectedProduct(prod)
-                    const cleanUrl = window.location.pathname
-                    window.history.replaceState({}, document.title, cleanUrl)
-                }
-            }
-            
-            // 2. Check localStorage for redirect trigger
-            try {
-                const pendingId = localStorage.getItem("open_product_id")
-                if (pendingId) {
-                    const prod = products.find(p => String(p.id).trim().toLowerCase() === String(pendingId).trim().toLowerCase())
-                    if (prod) {
-                        setSelectedProduct(prod)
-                        localStorage.removeItem("open_product_id")
-                    }
-                }
-            } catch (e) {
-                console.error(e)
-            }
-        }
-    }, [products])
-
-    useEffect(() => {
-        if (typeof window === "undefined") return
-        const handleOpenProductModal = (e: Event) => {
-            const productId = (e as CustomEvent).detail
-            if (productId && products.length > 0) {
-                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
-                if (prod) {
-                    setSelectedProduct(prod)
-                }
-            }
-        }
-        window.addEventListener("open-product-modal", handleOpenProductModal)
-        return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
-    }, [products])
 
     const handleRefresh = async () => {
         // In a real app, refresh data here
@@ -213,7 +168,7 @@ export default function CustomerHome() {
                                         <ProductCard
                                             key={product.id}
                                             item={product}
-                                            onViewDetails={() => setSelectedProduct(product)}
+                                            onViewDetails={() => setGlobalSelectedProduct(product)}
                                         />
                                     ))
                                 ) : (
@@ -237,11 +192,6 @@ export default function CustomerHome() {
                     onClose={() => setIsRequestModalOpen(false)}
                 />
 
-                 <ProductDetailsModal
-                    isOpen={!!selectedProduct}
-                    onClose={() => setSelectedProduct(null)}
-                    product={selectedProduct}
-                />
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
                 {/* Celebratory Accepted Welcome Modal */}

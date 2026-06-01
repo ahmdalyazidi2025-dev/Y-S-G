@@ -12,6 +12,7 @@ import { useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { ProtectedRoute } from "@/components/auth/protected-route"
+import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { Footer } from "@/components/store/footer"
 import { toast } from "sonner"
 
@@ -27,7 +28,7 @@ export default function StoreLayout({
     const [isRequestOpen, setIsRequestOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout, storeSettings, messages } = useStore()
+    const { cart, logout, storeSettings, messages, globalSelectedProduct, setGlobalSelectedProduct, products } = useStore()
     const [unreadChatCount, setUnreadChatCount] = useState(0)
 
     useEffect(() => {
@@ -41,6 +42,49 @@ export default function StoreLayout({
             setUnreadChatCount(count)
         }
     }, [pathname, messages])
+
+    // Global listener for product modal
+    useEffect(() => {
+        if (typeof window === "undefined") return
+
+        // 1. Check URL parameters globally
+        const params = new URLSearchParams(window.location.search)
+        const productId = params.get("product")
+        if (productId && products.length > 0) {
+            const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
+            if (prod) {
+                setGlobalSelectedProduct(prod)
+                const cleanUrl = window.location.pathname
+                window.history.replaceState({}, document.title, cleanUrl)
+            }
+        }
+        
+        // 2. Check localStorage globally
+        try {
+            const pendingId = localStorage.getItem("open_product_id")
+            if (pendingId && products.length > 0) {
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(pendingId).trim().toLowerCase())
+                if (prod) {
+                    setGlobalSelectedProduct(prod)
+                    localStorage.removeItem("open_product_id")
+                }
+            }
+        } catch (e) {
+            console.error(e)
+        }
+
+        const handleOpenProductModal = (e: Event) => {
+            const evProductId = (e as CustomEvent).detail
+            if (evProductId && products.length > 0) {
+                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(evProductId).trim().toLowerCase())
+                if (prod) {
+                    setGlobalSelectedProduct(prod)
+                }
+            }
+        }
+        window.addEventListener("open-product-modal", handleOpenProductModal)
+        return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
+    }, [products, setGlobalSelectedProduct])
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
     const showBottomNav = pathname === "/customer"
@@ -196,6 +240,11 @@ export default function StoreLayout({
                 />
                 <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
                 <RequestModal isOpen={isRequestOpen} onClose={() => setIsRequestOpen(false)} />
+                <ProductDetailsModal
+                    isOpen={!!globalSelectedProduct}
+                    onClose={() => setGlobalSelectedProduct(null)}
+                    product={globalSelectedProduct}
+                />
             </div>
         </ProtectedRoute>
     )

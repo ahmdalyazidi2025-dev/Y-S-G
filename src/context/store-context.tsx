@@ -248,6 +248,8 @@ type StoreContextType = {
     messages: Message[]
     notifications?: any[]
     guestId?: string
+    globalSelectedProduct: Product | null
+    setGlobalSelectedProduct: (product: Product | null) => void
     markAllNotificationsRead?: (userId: string) => void
     markMessagesRead?: () => void
     sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string) => void
@@ -325,7 +327,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         return null
     })
-    const [storeSettings, setStoreSettings] = useState<StoreSettings>(MOCK_SETTINGS)
+    const [storeSettings, setStoreSettings] = useState<StoreSettings>({
+        minimumOrderValue: 0,
+        enableBarcodeScanner: true
+    })
+
+    const [globalSelectedProduct, setGlobalSelectedProduct] = useState<Product | null>(null)
     const [joinRequests, setJoinRequests] = useState<any[]>([])
     const [passwordRequests, setPasswordRequests] = useState<any[]>([])
     const [notifications, setNotifications] = useState<any[]>([])
@@ -1301,7 +1308,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
             fetchProducts, deleteAllChatsAndNotifications,
             joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
-            notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk
+            notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk,
+            globalSelectedProduct, setGlobalSelectedProduct, guestId
         }}>
             {children}
         </StoreContext.Provider>
