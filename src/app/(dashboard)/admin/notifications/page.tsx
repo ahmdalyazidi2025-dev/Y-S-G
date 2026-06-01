@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useStore } from "@/context/store-context"
-import { Bell, Send, Trash2, ShieldCheck, Users, User, ArrowRight, Clock, Eye } from "lucide-react"
+import { Bell, Send, Trash2, ShieldCheck, Users, User, ArrowRight, Clock, Eye, CheckSquare } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { db } from "@/lib/firebase"
@@ -22,6 +22,116 @@ export default function AdminNotificationsPage() {
     const [body, setBody] = useState("")
     const [actionLink, setActionLink] = useState("/")
     const [isLoading, setIsLoading] = useState(false)
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+    const groupedNotifications = useMemo(() => {
+        const grouped = [];
+        const seen = new Set();
+        for (const notif of notifications) {
+            const groupKey = notif.broadcastId || `${notif.title}_${notif.body}`;
+            if (!seen.has(groupKey)) {
+                seen.add(groupKey);
+                const count = notifications.filter((n: any) => 
+                    notif.broadcastId ? n.broadcastId === notif.broadcastId : (n.title === notif.title && n.body === notif.body)
+                ).length;
+                grouped.push({ ...notif, recipientCount: count });
+            }
+        }
+        return grouped.slice(0, 30); // Show up to 30 recent broadcasts
+    }, [notifications]);
+
+    const handleToggleSelect = (id: string) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        )
+    }
+
+    const handleSelectAll = () => {
+        if (selectedIds.length === groupedNotifications.length) {
+            setSelectedIds([])
+        } else {
+            setSelectedIds(groupedNotifications.map((n: any) => n.id))
+        }
+    }
+
+    const handleDeleteSelected = async () => {
+        if (selectedIds.length === 0) return;
+        if (!confirm(`هل أنت متأكد من حذف ${selectedIds.length} من الإشعارات المحددة نهائياً؟`)) return;
+
+        setIsLoading(true);
+        try {
+            for (const id of selectedIds) {
+                await deleteSingleBroadcast(id, false);
+            }
+            setSelectedIds([]);
+            toast.success("تم حذف الإشعارات المحددة بنجاح");
+        } catch (error) {
+            console.error("Bulk delete failed:", error);
+            toast.error("حدث خطأ أثناء حذف بعض الإشعارات");
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const deleteSingleBroadcast = async (id: string, showToast = true) => {
+        const targetNotif = notifications.find((n: any) => n.id === id)
+        if (targetNotif && targetNotif.broadcastId) {
+            const q = query(collection(db, "notifications"), where("broadcastId", "==", targetNotif.broadcastId))
+            const querySnapshot = await getDocs(q)
+            const batch = writeBatch(db)
+            querySnapshot.forEach((doc) => {
+                batch.delete(doc.ref)
+            })
+            await batch.commit()
+        } else if (targetNotif) {
+            const q = query(
+                collection(db, "notifications"), 
+                where("title", "==", targetNotif.title),
+                where("body", "==", targetNotif.body)
+            )
+            const querySnapshot = await getDocs(q)
+            const batch = writeBatch(db)
+            let count = 0
+            
+            const getTimestampMs = (val: any) => {
+                if (!val) return 0
+                if (val.seconds) return val.seconds * 1000
+                if (val.toDate) return val.toDate().getTime()
+                if (val instanceof Date) return val.getTime()
+                return new Date(val).getTime()
+            }
+            
+            const targetTime = getTimestampMs(targetNotif.createdAt)
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data()
+                const docTime = getTimestampMs(data.createdAt)
+                const diff = Math.abs(docTime - targetTime)
+                if (diff < 60000) {
+                    batch.delete(doc.ref)
+                    count++
+                }
+            })
+            if (count > 0) {
+                await batch.commit()
+            } else {
+                await deleteDoc(doc(db, "notifications", id))
+            }
+        } else {
+            await deleteDoc(doc(db, "notifications", id))
+        }
+        if (showToast) toast.success("تم حذف الإشعار نهائياً من سجل الإدارة وحسابات العملاء")
+    }
+
+    const handleDeleteNotification = async (id: string) => {
+        if (!confirm("هل أنت متأكد من حذف هذا الإشعار نهائياً من سجل الإدارة ومن جميع العملاء؟")) return
+        try {
+            await deleteSingleBroadcast(id, true)
+        } catch (error) {
+            console.error("Delete notification failed:", error)
+            toast.error("فشل حذف الإشعار")
+        }
+    }
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -107,67 +217,8 @@ export default function AdminNotificationsPage() {
         }
     }
 
-    const handleDeleteNotification = async (id: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذا الإشعار نهائياً من سجل الإدارة ومن جميع العملاء؟")) return
-        try {
-            const targetNotif = notifications.find((n: any) => n.id === id)
-            if (targetNotif && targetNotif.broadcastId) {
-                // Fetch all notifications sharing this broadcastId
-                const q = query(collection(db, "notifications"), where("broadcastId", "==", targetNotif.broadcastId))
-                const querySnapshot = await getDocs(q)
-                const batch = writeBatch(db)
-                querySnapshot.forEach((doc) => {
-                    batch.delete(doc.ref)
-                })
-                await batch.commit()
-            } else if (targetNotif) {
-                // Fallback: search by title and body, then filter by proximity of createdAt to clean up older grouped broadcasts
-                const q = query(
-                    collection(db, "notifications"), 
-                    where("title", "==", targetNotif.title),
-                    where("body", "==", targetNotif.body)
-                )
-                const querySnapshot = await getDocs(q)
-                const batch = writeBatch(db)
-                let count = 0
-                
-                const getTimestampMs = (val: any) => {
-                    if (!val) return 0
-                    if (val.seconds) return val.seconds * 1000
-                    if (val.toDate) return val.toDate().getTime()
-                    if (val instanceof Date) return val.getTime()
-                    return new Date(val).getTime()
-                }
-                
-                const targetTime = getTimestampMs(targetNotif.createdAt)
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data()
-                    const docTime = getTimestampMs(data.createdAt)
-                    // If it was created within 60 seconds of the target notification
-                    const diff = Math.abs(docTime - targetTime)
-                    if (diff < 60000) {
-                        batch.delete(doc.ref)
-                        count++
-                    }
-                })
-                if (count > 0) {
-                    await batch.commit()
-                } else {
-                    await deleteDoc(doc(db, "notifications", id))
-                }
-            } else {
-                await deleteDoc(doc(db, "notifications", id))
-            }
-            toast.success("تم حذف الإشعار نهائياً من سجل الإدارة وحسابات العملاء")
-        } catch (error) {
-            console.error("Delete notification failed:", error)
-            toast.error("فشل حذف الإشعار")
-        }
-    }
-
     return (
-        <div className="space-y-8 text-right max-w-5xl mx-auto">
+        <div className="space-y-8 text-right max-w-5xl mx-auto pb-20">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/admin">
@@ -348,9 +399,24 @@ export default function AdminNotificationsPage() {
 
             {/* History of sent notifications */}
             <div className="bg-white dark:bg-[#1a242f] border border-slate-200 dark:border-white/5 rounded-3xl p-6 shadow-md space-y-4">
-                <h3 className="font-bold text-slate-900 dark:text-white text-lg">سجل الإشعارات المرسلة مؤخراً</h3>
+                <div className="flex justify-between items-center">
+                    {selectedIds.length > 0 ? (
+                        <Button 
+                            onClick={handleDeleteSelected}
+                            disabled={isLoading}
+                            variant="destructive" 
+                            size="sm" 
+                            className="font-bold text-xs gap-2 rounded-xl animate-in fade-in"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            حذف المحدد ({selectedIds.length})
+                        </Button>
+                    ) : <div />}
+                    <h3 className="font-bold text-slate-900 dark:text-white text-lg">سجل الإشعارات المرسلة مؤخراً</h3>
+                </div>
+
                 <div className="overflow-x-auto no-scrollbar">
-                    {notifications.length === 0 ? (
+                    {groupedNotifications.length === 0 ? (
                         <div className="text-center py-12 text-slate-450 dark:text-slate-500 text-xs font-bold">
                             لا توجد إشعارات مرسلة في السجل حالياً
                         </div>
@@ -359,43 +425,81 @@ export default function AdminNotificationsPage() {
                             <thead>
                                 <tr className="border-b border-slate-100 dark:border-white/5 text-slate-400 font-bold">
                                     <th className="pb-3 text-right">العنوان والرسالة</th>
-                                    <th className="pb-3 text-right">المرسل إليه</th>
+                                    <th className="pb-3 text-right">المستهدفين</th>
                                     <th className="pb-3 text-right">رابط التوجيه</th>
                                     <th className="pb-3 text-right">التوقيت</th>
                                     <th className="pb-3 text-center w-20">حذف</th>
+                                    <th className="pb-3 text-center w-12">
+                                        <button 
+                                            onClick={handleSelectAll}
+                                            className={cn(
+                                                "w-5 h-5 rounded border mx-auto flex items-center justify-center transition-all",
+                                                selectedIds.length === groupedNotifications.length 
+                                                    ? "bg-primary border-primary text-white" 
+                                                    : "border-slate-300 dark:border-white/20 hover:border-primary"
+                                            )}
+                                        >
+                                            {selectedIds.length === groupedNotifications.length && <CheckSquare className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {notifications.slice(0, 15).map((notif: any) => (
-                                    <tr key={notif.id} className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                        <td className="py-4 space-y-1">
-                                            <div className="font-bold text-slate-900 dark:text-white text-sm">{notif.title}</div>
-                                            <div className="text-slate-400 leading-relaxed text-[11px] max-w-sm">{notif.body}</div>
-                                        </td>
-                                        <td className="py-4">
-                                            <span className="font-bold px-2.5 py-1 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/5">
-                                                {notif.targetLabel || "عميل محدد"}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 font-mono text-slate-400">{notif.link || "/"}</td>
-                                        <td className="py-4 text-slate-400">
-                                            {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString("ar-SA", {
-                                                hour: "2-digit",
-                                                minute: "2-digit"
-                                            }) : "مؤخراً"}
-                                        </td>
-                                        <td className="py-4 text-center">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full"
-                                                onClick={() => handleDeleteNotification(notif.id)}
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {groupedNotifications.map((notif: any) => {
+                                    const isSelected = selectedIds.includes(notif.id);
+                                    return (
+                                        <tr 
+                                            key={notif.id} 
+                                            onClick={() => handleToggleSelect(notif.id)}
+                                            className={cn(
+                                                "border-b border-slate-100 dark:border-white/5 transition-colors cursor-pointer",
+                                                isSelected ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-white/5"
+                                            )}
+                                        >
+                                            <td className="py-4 space-y-1">
+                                                <div className="font-bold text-slate-900 dark:text-white text-sm">{notif.title}</div>
+                                                <div className="text-slate-400 leading-relaxed text-[11px] max-w-sm">{notif.body}</div>
+                                            </td>
+                                            <td className="py-4">
+                                                <span className="font-bold px-2.5 py-1 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/5">
+                                                    {notif.targetLabel || "عميل محدد"} ({notif.recipientCount})
+                                                </span>
+                                            </td>
+                                            <td className="py-4 font-mono text-slate-400">{notif.link || "/"}</td>
+                                            <td className="py-4 text-slate-400">
+                                                {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString("ar-SA", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit"
+                                                }) : "مؤخراً"}
+                                            </td>
+                                            <td className="py-4 text-center">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteNotification(notif.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </td>
+                                            <td className="py-4 text-center">
+                                                <div 
+                                                    className={cn(
+                                                        "w-5 h-5 rounded border mx-auto flex items-center justify-center transition-all",
+                                                        isSelected 
+                                                            ? "bg-primary border-primary text-white" 
+                                                            : "border-slate-300 dark:border-white/20"
+                                                    )}
+                                                >
+                                                    {isSelected && <CheckSquare className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     )}

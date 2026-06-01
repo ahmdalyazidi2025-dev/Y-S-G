@@ -201,9 +201,15 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     }
                                                     // Dispatch custom event for instant in-page trigger
                                                     window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
+                                                    
+                                                    // If we are already on the customer dashboard, just update the URL without triggering a route change
+                                                    if (window.location.pathname === "/customer") {
+                                                        window.history.pushState({}, "", localPath)
+                                                        return // Skip router.push to prevent full reloads
+                                                    }
                                                 }
                                                 
-                                                // Perform smooth Next.js navigation rather than full page reload
+                                                // If not on the customer dashboard, perform smooth Next.js navigation
                                                 if (localPath.startsWith('/')) {
                                                     router.push(localPath)
                                                 } else {

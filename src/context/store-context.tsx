@@ -424,18 +424,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (isAdmin) {
             ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"))
         } else {
-            // Find all potential IDs for this customer to capture historical mismatched orders
-            const dbCustomer = customers.find(c => c.username === currentUser?.username || c.id === currentUser?.id)
-            const ids = [customerId]
-            if (dbCustomer && dbCustomer.id && !ids.includes(dbCustomer.id)) {
-                ids.push(dbCustomer.id)
-            }
-            
-            if (ids.length > 1) {
-                ordersQuery = query(collection(db, "orders"), where("customerId", "in", ids))
-            } else {
-                ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
-            }
+            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
         }
 
         const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {
