@@ -23,7 +23,6 @@ interface CustomerNotificationsProps {
 export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps) {
     const { notifications, markNotificationRead, markAllNotificationsRead, currentUser, products } = useStore()
     const [isOpen, setIsOpen] = useState(false)
-    const [selectedProduct, setSelectedProduct] = useState<any>(null)
     const router = useRouter()
 
     const handleDeleteSingle = async (id: string, e: React.MouseEvent) => {
@@ -206,8 +205,10 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     } catch (e) {
                                                         console.error(e)
                                                     }
-                                                    // Dispatch custom event for instant in-page trigger
-                                                    window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
+                                                    // Dispatch custom event for instant in-page trigger after a small delay to let Sheet close
+                                                    setTimeout(() => {
+                                                        window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
+                                                    }, 100)
                                                     
                                                     // If we are already on the customer dashboard, just update the URL without triggering a route change
                                                     if (window.location.pathname === "/customer") {
@@ -267,7 +268,13 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     
                                                     if (matchedProduct) {
                                                         return (
-                                                            <div className="mt-2 bg-white/5 dark:bg-black/35 p-2 rounded-xl border border-white/10 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedProduct(matchedProduct) }}>
+                                                            <div className="mt-2 bg-white/5 dark:bg-black/35 p-2 rounded-xl border border-white/10 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right cursor-pointer" onClick={(e) => { 
+                                                                e.stopPropagation(); 
+                                                                setIsOpen(false);
+                                                                setTimeout(() => {
+                                                                    window.dispatchEvent(new CustomEvent("open-product-modal", { detail: matchedProduct.id }));
+                                                                }, 100);
+                                                            }}>
                                                                 <div className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
                                                                     {matchedProduct.image ? (
                                                                         <Image src={matchedProduct.image} alt="" fill className="object-cover" unoptimized />
@@ -315,12 +322,6 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                     </AnimatePresence>
                 </div>
             </SheetContent>
-
-            <ProductDetailsModal
-                isOpen={!!selectedProduct}
-                onClose={() => setSelectedProduct(null)}
-                product={selectedProduct}
-            />
         </Sheet>
     )
 }

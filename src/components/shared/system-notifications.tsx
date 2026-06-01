@@ -206,6 +206,12 @@ export function SystemNotifications() {
                                         onClick={() => {
                                             toast.dismiss(t)
                                             const target = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
+                                            const match = target.match(/\?product=([a-zA-Z0-9_-]+)/i)
+                                            if (match) {
+                                                window.dispatchEvent(new CustomEvent("open-product-modal", { detail: match[1] }))
+                                                if (window.location.pathname === "/customer") return;
+                                            }
+                                            
                                             if (target.startsWith('/')) {
                                                 router.push(target)
                                             } else {
