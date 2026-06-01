@@ -21,7 +21,7 @@ interface CustomerNotificationsProps {
 }
 
 export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps) {
-    const { notifications, markNotificationRead, markAllNotificationsRead, currentUser, products } = useStore()
+    const { notifications, markNotificationRead, markAllNotificationsRead, currentUser, products, setGlobalSelectedProduct } = useStore()
     const [isOpen, setIsOpen] = useState(false)
     const router = useRouter()
 
@@ -190,15 +190,15 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                 const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)
                                                 if (match) {
                                                     const productId = match[1]
+                                                    const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
+                                                    if (prod) {
+                                                        setGlobalSelectedProduct(prod)
+                                                    }
                                                     try {
                                                         localStorage.setItem("open_product_id", productId)
                                                     } catch (e) {
                                                         console.error(e)
                                                     }
-                                                    // Dispatch custom event for instant in-page trigger after a small delay to let Sheet close
-                                                    setTimeout(() => {
-                                                        window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
-                                                    }, 100)
                                                     
                                                     // If we are already on the customer dashboard or chat, just update the URL without triggering a route change
                                                     if (window.location.pathname === "/customer" || window.location.pathname === "/customer/chat") {

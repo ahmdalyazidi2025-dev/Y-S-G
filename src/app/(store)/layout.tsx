@@ -84,7 +84,7 @@ export default function StoreLayout({
         }
         window.addEventListener("open-product-modal", handleOpenProductModal)
         return () => window.removeEventListener("open-product-modal", handleOpenProductModal)
-    }, [products, setGlobalSelectedProduct])
+    }, [products, setGlobalSelectedProduct, pathname])
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
     const showBottomNav = pathname === "/customer"
