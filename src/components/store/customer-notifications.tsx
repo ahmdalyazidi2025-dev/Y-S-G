@@ -153,39 +153,40 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                         onClick={() => {
                                             if (!notification.read && markNotificationRead) markNotificationRead(notification.id)
                                             
-                                            let targetLink = notification.link
+                                            // Try to find a product link in notification.link OR notification.body
+                                            let targetLink = notification.link || ""
                                             if (!targetLink && notification.body?.includes('?product=')) {
-                                                const match = notification.body.match(/(https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+)/i)
-                                                if (match) {
-                                                    targetLink = match[0]
-                                                }
+                                                const bodyMatch = notification.body.match(/(https?:\/\/[^\s]+customer\?product=[a-zA-Z0-9_-]+)/i)
+                                                if (bodyMatch) targetLink = bodyMatch[0]
                                             }
                                             
-                                            if (!targetLink) return
-
-                                            // Extract product ID from link
+                                            // Extract product ID from wherever the link is found
                                             let productId: string | null = null
-                                            try {
-                                                const urlObj = new URL(targetLink)
-                                                productId = urlObj.searchParams.get("product")
-                                            } catch {
-                                                const match = targetLink.match(/[?&]product=([a-zA-Z0-9_-]+)/i)
-                                                if (match) productId = match[1]
-                                            }
-
-                                            if (productId) {
-                                                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
-                                                if (prod) {
-                                                    // Close the sheet first then open modal after brief delay
-                                                    setIsOpen(false)
-                                                    setTimeout(() => {
-                                                        setGlobalSelectedProduct(prod)
-                                                    }, 200)
-                                                    return // NEVER do router.push for product links
+                                            if (targetLink.includes('product=')) {
+                                                try {
+                                                    const urlObj = new URL(targetLink.startsWith("http") ? targetLink : `https://x.com${targetLink}`)
+                                                    productId = urlObj.searchParams.get("product")
+                                                } catch {
+                                                    const m = targetLink.match(/[?&]product=([a-zA-Z0-9_-]+)/i)
+                                                    if (m) productId = m[1]
                                                 }
                                             }
 
-                                            // Not a product link — navigate normally
+                                            // *** ALWAYS open modal for product links — NEVER navigate ***
+                                            if (productId) {
+                                                setIsOpen(false)
+                                                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
+                                                if (prod) {
+                                                    setTimeout(() => setGlobalSelectedProduct(prod), 150)
+                                                } else {
+                                                    // Product not in memory yet — store ID and wait for products to load (handled by layout.tsx)
+                                                    try { localStorage.setItem("open_product_id", productId) } catch {}
+                                                }
+                                                return // CRITICAL: block ALL navigation for product links
+                                            }
+
+                                            // No product link — navigate normally
+                                            if (!targetLink) return
                                             setIsOpen(false)
                                             let localPath = targetLink
                                             try {
@@ -194,7 +195,7 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             } catch {
                                                 if (!localPath.startsWith("/")) localPath = "/" + localPath
                                             }
-                                            if (localPath.startsWith('/')) {
+                                            if (localPath.startsWith('/') && !localPath.includes('product=')) {
                                                 router.push(localPath)
                                             }
                                         }}
