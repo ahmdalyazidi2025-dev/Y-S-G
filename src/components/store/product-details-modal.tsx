@@ -18,17 +18,21 @@ interface ProductDetailsModalProps {
 
 export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetailsModalProps) {
     const { addToCart, products } = useStore()
-    const [activeProduct, setActiveProduct] = useState<Product | null>(null)
+    const [activeProductState, setActiveProductState] = useState<Product | null>(null)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [selectedUnit, setSelectedUnit] = useState<string>("حبة")
 
     useEffect(() => {
         if (product) {
-            setActiveProduct(product)
+            setActiveProductState(product)
             setCurrentImageIndex(0)
             setSelectedUnit("حبة")
+        } else {
+            setActiveProductState(null)
         }
     }, [product])
+
+    const activeProduct = activeProductState || product
 
     const handleShareProduct = () => {
         if (!activeProduct) return
@@ -288,7 +292,7 @@ export function ProductDetailsModal({ isOpen, onClose, product }: ProductDetails
                                                 <div 
                                                     key={relProduct.id} 
                                                     onClick={() => {
-                                                        setActiveProduct(relProduct)
+                                                        setActiveProductState(relProduct)
                                                         setCurrentImageIndex(0)
                                                         setSelectedUnit("حبة")
                                                     }}
