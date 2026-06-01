@@ -244,23 +244,6 @@ export default function AdminNotificationsPage() {
                             />
                         </div>
 
-                        {/* Action Link */}
-                        <div className="space-y-2">
-                            <Label className="block font-bold text-slate-700 dark:text-slate-300">
-                                رابط الإجراء <span className="text-[10px] text-slate-400 font-normal">(اختياري - لتوجيه العميل لصفحة معينة)</span>
-                            </Label>
-                            <select
-                                value={actionLink}
-                                onChange={(e) => setActionLink(e.target.value)}
-                                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white rounded-xl h-11 px-3 text-right text-sm"
-                            >
-                                <option value="/">الرئيسية للمتجر</option>
-                                <option value="/customer/chat">محادثة الدعم المباشر</option>
-                                <option value="/customer/profile">الملف الشخصي</option>
-                                <option value="/customer/invoices">فواتيري المشتراة</option>
-                            </select>
-                        </div>
-
                         {/* Submit button */}
                         <Button
                             type="submit"
