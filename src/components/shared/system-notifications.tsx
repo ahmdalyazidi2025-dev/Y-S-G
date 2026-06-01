@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react"
 import { useStore } from "@/context/store-context"
 import { toast } from "sonner"
 import { ShoppingBag, MessageSquare, AlertTriangle, CheckCircle2, UserPlus, Phone } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 export function SystemNotifications() {
     const { orders, messages, productRequests: requests, currentUser, playSound, joinRequests = [], passwordRequests = [] } = useStore()
     const pathname = usePathname()
+    const router = useRouter()
 
     // track previous counts to detect "new" items vs initial load
     const prevOrdersLength = useRef(orders.length)
@@ -118,7 +119,7 @@ export function SystemNotifications() {
                                 <button
                                     onClick={() => {
                                         toast.dismiss(t)
-                                        window.location.href = `/customer/orders/${order.id}`
+                                        router.push(`/customer/orders/${order.id}`)
                                     }}
                                     className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
                                 >
@@ -204,7 +205,12 @@ export function SystemNotifications() {
                                     <button
                                         onClick={() => {
                                             toast.dismiss(t)
-                                            window.location.href = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
+                                            const target = latestMsg.actionLink || (isAdminUser ? `/admin/chat` : `/customer/chat`)
+                                            if (target.startsWith('/')) {
+                                                router.push(target)
+                                            } else {
+                                                window.location.href = target
+                                            }
                                         }}
                                         className="text-xs font-bold px-4 py-1.5 rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
                                     >

@@ -424,7 +424,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (isAdmin) {
             ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"))
         } else {
-            ordersQuery = query(collection(db, "orders"), where("customerId", "==", customerId))
+            ordersQuery = query(collection(db, "orders"), where("customerId", "in", [customerId, "guest"]))
         }
 
         const unsubOrders = onSnapshot(ordersQuery, (snap: QuerySnapshot<DocumentData>) => {

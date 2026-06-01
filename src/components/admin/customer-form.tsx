@@ -160,6 +160,11 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                 const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
                 window.open(waUrl, "_blank");
             }
+            
+            // Delay closing to give visual feedback while WhatsApp tab opens
+            toast.success(initialCustomer ? "تم الحفظ بنجاح!" : "تم تفعيل الحساب، جاري فتح الواتساب...", { duration: 3000 })
+            await new Promise(resolve => setTimeout(resolve, 2000))
+
             if (onSuccess) {
                 onSuccess()
             }

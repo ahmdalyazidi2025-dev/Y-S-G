@@ -13,14 +13,17 @@ import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { ProductDetailsModal } from "@/components/store/product-details-modal"
 
 interface CustomerNotificationsProps {
     forceOpen?: boolean;
 }
 
 export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps) {
-    const { notifications, markNotificationRead, markAllNotificationsRead, currentUser } = useStore()
+    const { notifications, markNotificationRead, markAllNotificationsRead, currentUser, products } = useStore()
     const [isOpen, setIsOpen] = useState(false)
+    const [selectedProduct, setSelectedProduct] = useState<any>(null)
     const router = useRouter()
 
     const handleDeleteSingle = async (id: string, e: React.MouseEvent) => {
@@ -191,6 +194,10 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                      localPath = "/" + localPath
                                                  }
 
+                                                 if (localPath === "/") {
+                                                     localPath = "/customer"
+                                                 }
+
                                                 const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)
                                                 if (match) {
                                                     const productId = match[1]
@@ -247,14 +254,51 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                             .trim()}
                                                 </p>
                                                 
-                                                {/* Attachment Action Badge */}
-                                                {(notification.link?.includes('?product=') || notification.body?.includes('?product=')) && (
-                                                    <div className="mt-2 pt-2 border-t border-white/10 flex justify-end">
-                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-lg border border-primary/20 hover:bg-primary/30 transition-all cursor-pointer">
-                                                            🛍️ عرض المنتج المرفق
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                {/* Attachment Action Badge / Smart Product Preview */}
+                                                {(() => {
+                                                    let matchedProduct: any = null
+                                                    if (notification.link?.includes('?product=') || notification.body?.includes('?product=')) {
+                                                        const targetStr = notification.link || notification.body
+                                                        const match = targetStr?.match(/\?product=([a-zA-Z0-9_-]+)/i)
+                                                        if (match) {
+                                                            matchedProduct = products?.find((p: any) => p.id === match[1])
+                                                        }
+                                                    }
+                                                    
+                                                    if (matchedProduct) {
+                                                        return (
+                                                            <div className="mt-2 bg-white/5 dark:bg-black/35 p-2 rounded-xl border border-white/10 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedProduct(matchedProduct) }}>
+                                                                <div className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
+                                                                    {matchedProduct.image ? (
+                                                                        <Image src={matchedProduct.image} alt="" fill className="object-cover" unoptimized />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-slate-400">📦</div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-bold text-[10px] truncate text-slate-200 leading-tight">{matchedProduct.name}</p>
+                                                                    <p className="text-[10px] text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
+                                                                </div>
+                                                                <button 
+                                                                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[9px] font-bold rounded-lg transition-all active:scale-95 whitespace-nowrap"
+                                                                >
+                                                                    عرض المنتج
+                                                                </button>
+                                                            </div>
+                                                        )
+                                                    }
+
+                                                    if (notification.link?.includes('?product=') || notification.body?.includes('?product=')) {
+                                                        return (
+                                                            <div className="mt-2 pt-2 border-t border-white/10 flex justify-end">
+                                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-lg border border-primary/20 hover:bg-primary/30 transition-all cursor-pointer">
+                                                                    🛍️ عرض المنتج المرفق
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    }
+                                                    return null
+                                                })()}
 
                                                 <span className="text-[10px] text-slate-500 block pt-2">
                                                     {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: ar })}
@@ -271,6 +315,12 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                     </AnimatePresence>
                 </div>
             </SheetContent>
+
+            <ProductDetailsModal
+                isOpen={!!selectedProduct}
+                onClose={() => setSelectedProduct(null)}
+                product={selectedProduct}
+            />
         </Sheet>
     )
 }
