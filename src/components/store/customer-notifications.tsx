@@ -12,6 +12,7 @@ import { doc, deleteDoc, writeBatch } from "firebase/firestore"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
+import { useRouter } from "next/navigation"
 
 interface CustomerNotificationsProps {
     forceOpen?: boolean;
@@ -20,6 +21,7 @@ interface CustomerNotificationsProps {
 export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps) {
     const { notifications, markNotificationRead, markAllNotificationsRead, currentUser } = useStore()
     const [isOpen, setIsOpen] = useState(false)
+    const router = useRouter()
 
     const handleDeleteSingle = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation()
@@ -159,7 +161,14 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             
                                             if (targetLink) {
                                                 setIsOpen(false)
-                                                const match = targetLink.match(/\?product=([a-zA-Z0-9_-]+)/i)
+                                                
+                                                // Clean full domain prefix to make it a local path
+                                                let localPath = targetLink
+                                                if (typeof window !== "undefined" && localPath.startsWith(window.location.origin)) {
+                                                    localPath = localPath.replace(window.location.origin, "")
+                                                }
+
+                                                const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)
                                                 if (match) {
                                                     const productId = match[1]
                                                     try {
@@ -171,8 +180,12 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                     window.dispatchEvent(new CustomEvent("open-product-modal", { detail: productId }))
                                                 }
                                                 
-                                                // Perform routing navigation
-                                                window.location.href = targetLink
+                                                // Perform smooth Next.js navigation rather than full page reload
+                                                if (localPath.startsWith('/')) {
+                                                    router.push(localPath)
+                                                } else {
+                                                    window.location.href = localPath
+                                                }
                                             }
                                         }}
                                     >
