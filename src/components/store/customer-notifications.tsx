@@ -161,58 +161,41 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                 }
                                             }
                                             
-                                            if (targetLink) {
-                                                setIsOpen(false)
-                                                
-                                                 let localPath = targetLink
-                                                 try {
-                                                     const urlObj = new URL(targetLink);
-                                                     localPath = urlObj.pathname + urlObj.search + urlObj.hash;
-                                                 } catch(e) {
-                                                     if (localPath.startsWith(window.location.origin)) {
-                                                         localPath = localPath.replace(window.location.origin, "");
-                                                     } else if (localPath.includes("/customer")) {
-                                                         localPath = localPath.substring(localPath.indexOf("/customer"))
-                                                     } else if (localPath.includes("/admin")) {
-                                                         localPath = localPath.substring(localPath.indexOf("/admin"))
-                                                     }
-                                                 }
-                                                 
-                                                 // Guarantee a relative path starting with / to prevent window.location reloads
-                                                 if (!localPath.startsWith("/") && !localPath.startsWith("http://") && !localPath.startsWith("https://")) {
-                                                     localPath = "/" + localPath
-                                                 }
+                                            if (!targetLink) return
 
-                                                 if (localPath === "/") {
-                                                     localPath = "/customer"
-                                                 }
+                                            // Extract product ID from link
+                                            let productId: string | null = null
+                                            try {
+                                                const urlObj = new URL(targetLink)
+                                                productId = urlObj.searchParams.get("product")
+                                            } catch {
+                                                const match = targetLink.match(/[?&]product=([a-zA-Z0-9_-]+)/i)
+                                                if (match) productId = match[1]
+                                            }
 
-                                                const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)
-                                                if (match) {
-                                                    const productId = match[1]
-                                                    const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
-                                                    if (prod) {
+                                            if (productId) {
+                                                const prod = products.find(p => String(p.id).trim().toLowerCase() === String(productId).trim().toLowerCase())
+                                                if (prod) {
+                                                    // Close the sheet first then open modal after brief delay
+                                                    setIsOpen(false)
+                                                    setTimeout(() => {
                                                         setGlobalSelectedProduct(prod)
-                                                    }
-                                                    try {
-                                                        localStorage.setItem("open_product_id", productId)
-                                                    } catch (e) {
-                                                        console.error(e)
-                                                    }
-                                                    
-                                                    // If we are already on the customer dashboard or chat, just update the URL without triggering a route change
-                                                    if (window.location.pathname === "/customer" || window.location.pathname === "/customer/chat") {
-                                                        window.history.pushState({}, "", localPath)
-                                                        return // Skip router.push to prevent full reloads
-                                                    }
+                                                    }, 200)
+                                                    return // NEVER do router.push for product links
                                                 }
-                                                
-                                                // If not on the customer dashboard, perform smooth Next.js navigation
-                                                if (localPath.startsWith('/')) {
-                                                    router.push(localPath)
-                                                } else {
-                                                    window.location.href = localPath
-                                                }
+                                            }
+
+                                            // Not a product link — navigate normally
+                                            setIsOpen(false)
+                                            let localPath = targetLink
+                                            try {
+                                                const urlObj = new URL(targetLink)
+                                                localPath = urlObj.pathname + urlObj.search + urlObj.hash
+                                            } catch {
+                                                if (!localPath.startsWith("/")) localPath = "/" + localPath
+                                            }
+                                            if (localPath.startsWith('/')) {
+                                                router.push(localPath)
                                             }
                                         }}
                                     >
