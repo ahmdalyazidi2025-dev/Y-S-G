@@ -259,8 +259,19 @@ export function AdminBannerForm({ isOpen, onClose, initialBanner }: BannerFormPr
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-[#080b12] via-[#080b12]/30 to-transparent" />
                                                         
+                                                        {/* Shaded Crop Areas for Mobile representation */}
+                                                        <div className="absolute inset-y-0 left-0 w-[18%] bg-black/60 border-r border-dashed border-red-500/50 flex items-center justify-center text-[5.5px] text-red-400 font-bold z-10 select-none">
+                                                            مقصوف بالجوال ✂️
+                                                        </div>
+                                                        <div className="absolute inset-y-0 right-0 w-[18%] bg-black/60 border-l border-dashed border-red-500/50 flex items-center justify-center text-[5.5px] text-red-400 font-bold z-10 select-none">
+                                                            مقصوف بالجوال ✂️
+                                                        </div>
+                                                        <div className="absolute top-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-emerald-500/90 text-white text-[5px] font-black rounded-full z-10 select-none tracking-wider">
+                                                            📱 المنطقة الآمنة والظاهرة على الجوال (Safe Zone)
+                                                        </div>
+
                                                         {showText && (
-                                                            <div className="absolute inset-0 flex flex-col justify-end pb-2 px-4 text-right">
+                                                            <div className="absolute inset-0 flex flex-col justify-end pb-2 px-[20%] text-right z-20">
                                                                 <h3 
                                                                     className={cn("text-xs font-black leading-tight mb-0.5", getFontClass(fontFamily))}
                                                                     style={{ color: textColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
