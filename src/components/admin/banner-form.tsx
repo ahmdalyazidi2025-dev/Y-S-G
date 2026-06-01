@@ -7,7 +7,7 @@ import { X, Plus, Image as ImageIcon, Camera, Type, Sparkles } from "lucide-reac
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { useStore } from "@/context/store-context"
+import { useStore, Banner } from "@/context/store-context"
 import { compressImage } from "@/lib/image-utils"
 import { getFontClass } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
@@ -16,10 +16,11 @@ import { toast } from "sonner"
 interface BannerFormProps {
     isOpen: boolean
     onClose: () => void
+    initialBanner?: Banner | null
 }
 
-export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
-    const { addBanner } = useStore()
+export function AdminBannerForm({ isOpen, onClose, initialBanner }: BannerFormProps) {
+    const { addBanner, updateBanner } = useStore()
     const fileInputRef = useRef<HTMLInputElement>(null)
     
     // States
@@ -33,6 +34,26 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const [textColor, setTextColor] = useState("#ffffff")
     const [fontFamily, setFontFamily] = useState("Cairo")
     const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop")
+
+    // Prefill form in edit mode
+    React.useEffect(() => {
+        if (!isOpen) return
+        if (initialBanner) {
+            setImage(initialBanner.image || "")
+            setTitle(initialBanner.title || "")
+            setDescription(initialBanner.description || "")
+            setTextColor(initialBanner.textColor || "#ffffff")
+            setFontFamily(initialBanner.fontFamily || "Cairo")
+            setShowText(!!(initialBanner.title || initialBanner.description))
+        } else {
+            setImage("")
+            setTitle("")
+            setDescription("")
+            setTextColor("#ffffff")
+            setFontFamily("Cairo")
+            setShowText(false)
+        }
+    }, [initialBanner, isOpen])
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -63,14 +84,20 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
             return
         }
 
-        addBanner({
+        const bannerData = {
             image,
-            active: true,
+            active: initialBanner ? initialBanner.active : true,
             title: showText ? title : "",
             description: showText ? description : "",
             textColor: showText ? textColor : "#ffffff",
             fontFamily: showText ? fontFamily : "Cairo"
-        })
+        }
+
+        if (initialBanner && initialBanner.id) {
+            updateBanner(initialBanner.id, bannerData)
+        } else {
+            addBanner(bannerData)
+        }
 
         // Reset states
         setImage("")
@@ -101,11 +128,13 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         className="bg-white dark:bg-[#1c2a36] w-full max-w-xl p-6 rounded-[32px] border border-slate-200 dark:border-white/10 relative shadow-2xl overflow-y-auto max-h-[90vh] space-y-6"
                     >
-                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                                 <Plus className="w-6 h-6" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">إضافة صورة عرض جديدة</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                                {initialBanner ? "تعديل صورة العرض" : "إضافة صورة عرض جديدة"}
+                            </h2>
                             <button onClick={onClose} className="p-2 mr-auto hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors text-slate-500">
                                 <X className="w-5 h-5" />
                             </button>
@@ -324,7 +353,7 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
                                     className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl gap-3 shadow-xl shadow-primary/20 text-lg font-bold transition-all active:scale-[0.98] cursor-pointer"
                                 >
                                     <Sparkles className="w-6 h-6 animate-pulse" />
-                                    <span>نشر صورة العرض</span>
+                                    <span>{initialBanner ? "حفظ التعديلات" : "نشر صورة العرض"}</span>
                                 </Button>
                             </div>
                         </form>
