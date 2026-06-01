@@ -162,15 +162,34 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                             if (targetLink) {
                                                 setIsOpen(false)
                                                 
-                                                let localPath = targetLink
-                                                try {
-                                                    if (localPath.startsWith("http://") || localPath.startsWith("https://")) {
-                                                        const urlObj = new URL(localPath)
-                                                        localPath = urlObj.pathname + urlObj.search + urlObj.hash
-                                                    }
-                                                } catch (e) {
-                                                    console.error("Failed to parse URL:", e)
-                                                }
+                                                 let localPath = targetLink
+                                                 
+                                                 // Robust relative path extractor: strips any domains or Vercel subdomains
+                                                 if (localPath.includes("/customer")) {
+                                                     localPath = localPath.substring(localPath.indexOf("/customer"))
+                                                 } else if (localPath.includes("/admin")) {
+                                                     localPath = localPath.substring(localPath.indexOf("/admin"))
+                                                 } else {
+                                                     try {
+                                                         if (localPath.startsWith("http://") || localPath.startsWith("https://")) {
+                                                             const urlObj = new URL(localPath)
+                                                             localPath = urlObj.pathname + urlObj.search + urlObj.hash
+                                                         } else if (localPath.includes("/")) {
+                                                             const parts = localPath.split("/")
+                                                             if (parts[0].includes(".") || parts[0].includes("localhost") || parts[0].includes("vercel.app")) {
+                                                                 parts.shift()
+                                                                 localPath = "/" + parts.join("/")
+                                                             }
+                                                         }
+                                                     } catch (e) {
+                                                         console.error("Failed to parse URL:", e)
+                                                     }
+                                                 }
+                                                 
+                                                 // Guarantee a relative path starting with / to prevent window.location reloads
+                                                 if (!localPath.startsWith("/") && !localPath.startsWith("http://") && !localPath.startsWith("https://")) {
+                                                     localPath = "/" + localPath
+                                                 }
 
                                                 const match = localPath.match(/\?product=([a-zA-Z0-9_-]+)/i)
                                                 if (match) {
