@@ -63,8 +63,8 @@ export default function ChatPage() {
         <div className="flex flex-col h-[calc(100vh-160px)]">
             <div className="flex items-center gap-4 mb-6">
                 <Link href="/customer">
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
-                        <ArrowRight className="w-5 h-5 text-white" />
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-200 dark:hover:bg-white/10">
+                        <ArrowRight className="w-5 h-5 text-slate-800 dark:text-white" />
                     </Button>
                 </Link>
                 <h1 className="text-2xl font-bold flex-1">الدردشة</h1>
@@ -93,15 +93,15 @@ export default function ChatPage() {
                         return (
                             <div key={m.id} className={cn(
                                 "max-w-[80%] p-3 rounded-2xl text-xs space-y-2 flex flex-col",
-                                m.isAdmin ? "bg-white/10 text-slate-200 self-start rounded-bl-none" : "bg-primary text-white self-end rounded-br-none"
+                                m.isAdmin ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-start rounded-bl-none border border-slate-200 dark:border-white/5" : "bg-primary text-white self-end rounded-br-none shadow-md shadow-primary/20"
                             )}>
                                 <p className="font-bold text-[8px] opacity-70">{m.senderName}</p>
                                 <div>{renderMessageText(cleanText)}</div>
                                 
                                 {/* Render Smart Product Card Preview */}
                                 {matchedProduct && (
-                                    <div className="mt-1 bg-white/10 dark:bg-black/35 p-2 rounded-xl border border-white/5 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right">
-                                        <div className="w-10 h-10 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200/50 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
+                                    <div className="mt-1 bg-white/50 dark:bg-black/35 p-2 rounded-xl border border-slate-200 dark:border-white/5 flex gap-3 items-center w-full min-w-[210px] sm:min-w-[250px] text-right">
+                                        <div className="w-10 h-10 bg-slate-200 dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/5 overflow-hidden flex-shrink-0 relative">
                                             {matchedProduct.image ? (
                                                 <Image
                                                     src={matchedProduct.image}
@@ -115,8 +115,8 @@ export default function ChatPage() {
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-[10px] truncate text-slate-100 leading-tight">{matchedProduct.name}</p>
-                                            <p className="text-[10px] text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
+                                            <p className="font-bold text-[10px] truncate text-slate-800 dark:text-slate-100 leading-tight">{matchedProduct.name}</p>
+                                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">{matchedProduct.pricePiece} ر.س</p>
                                         </div>
                                         <button 
                                             onClick={() => setSelectedProduct(matchedProduct!)} 
@@ -137,7 +137,7 @@ export default function ChatPage() {
             <div className="mt-4 flex gap-2">
                 <Input
                     placeholder="اكتب رسالتك..."
-                    className="bg-black/20 border-white/10 rounded-full h-12"
+                    className="bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-full h-12 shadow-inner"
                     value={msg}
                     onChange={(e) => setMsg(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}

@@ -27,7 +27,20 @@ export default function StoreLayout({
     const [isRequestOpen, setIsRequestOpen] = useState(false)
     const pathname = usePathname()
     const router = useRouter()
-    const { cart, logout, storeSettings } = useStore()
+    const { cart, logout, storeSettings, messages } = useStore()
+    const [unreadChatCount, setUnreadChatCount] = useState(0)
+
+    useEffect(() => {
+        if (pathname === "/customer/chat") {
+            setUnreadChatCount(0)
+            localStorage.setItem("ysg_last_chat_read", Date.now().toString())
+        } else {
+            const lastReadStr = localStorage.getItem("ysg_last_chat_read")
+            const lastRead = lastReadStr ? Number(lastReadStr) : 0
+            const count = messages.filter(m => m.isAdmin && m.createdAt.getTime() > lastRead).length
+            setUnreadChatCount(count)
+        }
+    }, [pathname, messages])
 
     const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0)
     const showBottomNav = pathname === "/customer"
@@ -45,7 +58,7 @@ export default function StoreLayout({
             { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }
         ] : []),
         { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) },
-        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
+        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount },
     ]
 
     return (

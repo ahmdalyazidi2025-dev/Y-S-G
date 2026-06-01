@@ -1,19 +1,36 @@
 "use client"
 
+import React, { useState, useEffect } from "react"
 import { ClipboardList, MessageSquare, LogOut, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import Image from "next/image"
+import { useStore } from "@/context/store-context"
 
 export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
     const pathname = usePathname()
+    const { messages } = useStore()
+    const [unreadChatCount, setUnreadChatCount] = useState(0)
+
+    useEffect(() => {
+        if (pathname === "/customer/chat") {
+            setUnreadChatCount(0)
+            // It's also updated in layout.tsx, but just to be safe
+            localStorage.setItem("ysg_last_chat_read", Date.now().toString())
+        } else {
+            const lastReadStr = localStorage.getItem("ysg_last_chat_read")
+            const lastRead = lastReadStr ? Number(lastReadStr) : 0
+            const count = messages.filter(m => m.isAdmin && m.createdAt.getTime() > lastRead).length
+            setUnreadChatCount(count)
+        }
+    }, [pathname, messages])
 
     const navItems = [
         { name: "المتجر", icon: LayoutDashboard, href: "/customer" },
         { name: "فواتيري", icon: ClipboardList, href: "/customer/invoices" },
-        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat" },
+        { name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount },
     ]
 
     return (
@@ -32,14 +49,21 @@ export function DesktopSidebar({ onLogout }: { onLogout: () => void }) {
                             href={item.href}
                             onClick={() => hapticFeedback('light')}
                             className={cn(
-                                "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all",
+                                "flex items-center justify-between px-4 py-3 rounded-2xl transition-all",
                                 isActive
                                     ? "bg-primary text-white shadow-lg shadow-primary/20"
                                     : "text-slate-400 hover:bg-white/5 hover:text-white"
                             )}
                         >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-bold text-sm">{item.name}</span>
+                            <div className="flex items-center gap-4">
+                                <item.icon className="w-5 h-5" />
+                                <span className="font-bold text-sm">{item.name}</span>
+                            </div>
+                            {item.badge && item.badge > 0 ? (
+                                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                    {item.badge}
+                                </span>
+                            ) : null}
                         </Link>
                     )
                 })}
