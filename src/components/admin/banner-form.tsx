@@ -32,6 +32,7 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
     const [description, setDescription] = useState("")
     const [textColor, setTextColor] = useState("#ffffff")
     const [fontFamily, setFontFamily] = useState("Cairo")
+    const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop")
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -151,34 +152,83 @@ export function AdminBannerForm({ isOpen, onClose }: BannerFormProps) {
 
                             {/* Live Interactive Preview */}
                             {image && (
-                                <div className="space-y-2">
-                                    <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block w-full font-bold">👀 معاينة البانر الإعلاني الحية:</Label>
-                                    <div className="relative aspect-[3/1] w-full rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-white/10">
-                                        <Image
-                                            src={image}
-                                            alt="Live Preview"
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-[#080b12] via-[#080b12]/35 to-transparent" />
-                                        
-                                        {showText && (
-                                            <div className="absolute inset-0 flex flex-col justify-end pb-3 px-4 text-right">
-                                                <h3 
-                                                    className={cn("text-xs sm:text-base font-black leading-tight mb-0.5", getFontClass(fontFamily))}
-                                                    style={{ color: textColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
-                                                >
-                                                    {title || "عنوان البانر الرئيسي"}
-                                                </h3>
-                                                <p 
-                                                    className={cn("text-[8px] sm:text-[10px] font-medium opacity-90 line-clamp-1", getFontClass(fontFamily))}
-                                                    style={{ color: textColor, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
-                                                >
-                                                    {description || "تفاصيل العرض الترويجي تظهر هنا..."}
-                                                </p>
-                                            </div>
-                                        )}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-slate-500 dark:text-slate-400 text-xs pr-1 text-right block font-bold">👀 معاينة البانر الإعلانية الحية:</Label>
+                                        <div className="flex gap-1.5 bg-slate-100 dark:bg-black/25 p-1 rounded-xl border border-slate-200 dark:border-white/5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewMode("desktop")}
+                                                className={cn(
+                                                    "px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1",
+                                                    previewMode === "desktop"
+                                                        ? "bg-white dark:bg-[#1c2a36] text-primary shadow-sm"
+                                                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                                )}
+                                            >
+                                                💻 كمبيوتر
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewMode("mobile")}
+                                                className={cn(
+                                                    "px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1",
+                                                    previewMode === "mobile"
+                                                        ? "bg-white dark:bg-[#1c2a36] text-primary shadow-sm"
+                                                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                                                )}
+                                            >
+                                                📱 جوال
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-center p-3 bg-slate-50 dark:bg-black/10 rounded-[24px] border border-slate-200/50 dark:border-white/5">
+                                        <div 
+                                            className={cn(
+                                                "relative overflow-hidden shadow-2xl border border-slate-200/80 dark:border-white/10 transition-all duration-300 rounded-[1.5rem]",
+                                                previewMode === "desktop" 
+                                                    ? "w-full aspect-[3/1]" 
+                                                    : "w-[280px] h-[160px] aspect-[1.75/1]"
+                                            )}
+                                        >
+                                            <Image
+                                                src={image}
+                                                alt="Live Preview"
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#080b12] via-[#080b12]/35 to-transparent" />
+                                            
+                                            {showText && (
+                                                <div className={cn(
+                                                    "absolute inset-0 flex flex-col justify-end text-right",
+                                                    previewMode === "desktop" ? "pb-3 px-4" : "pb-2 px-3"
+                                                )}>
+                                                    <h3 
+                                                        className={cn(
+                                                            "font-black leading-tight mb-0.5",
+                                                            previewMode === "desktop" ? "text-xs sm:text-base" : "text-[10px]",
+                                                            getFontClass(fontFamily)
+                                                        )}
+                                                        style={{ color: textColor, textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
+                                                    >
+                                                        {title || "عنوان البانر الرئيسي"}
+                                                    </h3>
+                                                    <p 
+                                                        className={cn(
+                                                            "font-medium opacity-90 line-clamp-1",
+                                                            previewMode === "desktop" ? "text-[8px] sm:text-[10px]" : "text-[7px]",
+                                                            getFontClass(fontFamily)
+                                                        )}
+                                                        style={{ color: textColor, textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+                                                    >
+                                                        {description || "تفاصيل العرض الترويجي تظهر هنا..."}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             )}
