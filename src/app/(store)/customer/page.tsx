@@ -16,6 +16,7 @@ import { ProductDetailsModal } from "@/components/store/product-details-modal"
 import { CustomerNotifications } from "@/components/store/customer-notifications"
 import { CartDrawer } from "@/components/store/cart-drawer"
 import { motion, AnimatePresence } from "framer-motion"
+import { HeroBanner } from "@/components/store/hero-banner"
 
 export default function CustomerHome() {
     const { products, banners, categories, currentUser, markCustomerLoggedIn, setGlobalSelectedProduct } = useStore()
@@ -80,31 +81,7 @@ export default function CustomerHome() {
 
                 {/* Modern Carousel */}
                 <div className="px-4">
-                    <div className="relative h-44 sm:h-56 md:h-72 lg:h-80 xl:h-96 w-full rounded-[2rem] overflow-hidden group shadow-2xl shadow-primary/10">
-                        <div className="absolute inset-0 flex transition-transform duration-500 ease-in-out">
-                            {activeBanners.length > 0 ? activeBanners.map((banner, idx) => (
-                                <div key={idx} className="min-w-full h-full relative">
-                                    <Image
-                                        src={banner.image}
-                                        alt="banner"
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
-                                        <div className="space-y-1 text-right w-full">
-                                            <h2 className="text-xl lg:text-3xl font-black text-white drop-shadow-md">عروض حصرية 🎉</h2>
-                                            <p className="text-[10px] lg:text-sm text-slate-300">خصومات تصل إلى 50% على المنتجات المختارة</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="min-w-full h-full bg-primary/20 flex items-center justify-center">
-                                    <span className="text-slate-400">لا توجد عروض حالياً</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <HeroBanner />
                 </div>
 
                 {/* Category Stories - Native Circular Layout (Mobile & Desktop) */}

@@ -6,6 +6,7 @@ import Link from "next/link"
 import NextImage from "next/image"
 import { useStore } from "@/context/store-context"
 import { cn } from "@/lib/utils"
+import { getFontClass } from "@/lib/fonts"
 import { AdminBannerForm } from "@/components/admin/banner-form"
 
 export default function AdminBannersPage() {
@@ -39,7 +40,7 @@ export default function AdminBannersPage() {
                 ) : (
                     banners.map((banner) => (
                         <div key={banner.id} className="glass-card overflow-hidden group relative">
-                            <div className="aspect-[3/1] bg-black/40 overflow-hidden">
+                            <div className="aspect-[3/1] bg-black/40 overflow-hidden relative">
                                 <NextImage
                                     src={banner.image}
                                     alt="banner"
@@ -47,6 +48,29 @@ export default function AdminBannersPage() {
                                     height={400}
                                     className={cn("w-full h-full object-cover transition-opacity", !banner.active && "opacity-40")}
                                 />
+                                
+                                {/* Custom text overlay in Admin List */}
+                                {banner.title && (
+                                    <>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                                        <div className="absolute inset-0 flex flex-col justify-end pb-8 px-6 text-right">
+                                            <h3 
+                                                className={cn("text-sm sm:text-2xl font-black leading-tight mb-1", getFontClass(banner.fontFamily))}
+                                                style={{ color: banner.textColor || "#ffffff", textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}
+                                            >
+                                                {banner.title}
+                                            </h3>
+                                            {banner.description && (
+                                                <p 
+                                                    className={cn("text-[9px] sm:text-xs font-medium opacity-90 line-clamp-1", getFontClass(banner.fontFamily))}
+                                                    style={{ color: banner.textColor || "rgb(226, 232, 240)", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+                                                >
+                                                    {banner.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

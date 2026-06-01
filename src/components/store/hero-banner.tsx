@@ -56,10 +56,10 @@ export function HeroBanner() {
 
     if (activeBanners.length === 0) {
         return (
-            <div className="relative w-full h-[450px] bg-slate-900 flex items-center justify-center rounded-b-[3rem] overflow-hidden shadow-2xl">
+            <div className="relative w-full h-44 sm:h-56 md:h-72 lg:h-80 xl:h-[380px] bg-slate-900 flex items-center justify-center rounded-[2rem] overflow-hidden shadow-2xl">
                 <div className="text-center space-y-2">
-                    <span className="text-6xl">🛍️</span>
-                    <p className="text-slate-500 font-medium">لا توجد عروض حالياً</p>
+                    <span className="text-4xl sm:text-6xl">🛍️</span>
+                    <p className="text-slate-500 text-xs sm:text-sm font-medium">لا توجد عروض حالياً</p>
                 </div>
                 {/* Ambient BG */}
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
@@ -68,7 +68,7 @@ export function HeroBanner() {
     }
 
     return (
-        <div className="relative w-full h-[450px] overflow-hidden rounded-b-[3rem] shadow-2xl group">
+        <div className="relative w-full h-44 sm:h-56 md:h-72 lg:h-80 xl:h-[380px] overflow-hidden rounded-[2rem] shadow-2xl group">
             <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                     key={current}
@@ -96,30 +96,30 @@ export function HeroBanner() {
                         />
 
                         {/* Cinematic Gradients */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#080b12] via-[#080b12]/40 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#080b12] via-[#080b12]/30 to-transparent" />
                         <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent opacity-60" />
 
                         {/* Content */}
-                        <div className="absolute inset-0 flex flex-col justify-end pb-32 px-6 sm:px-10">
+                        <div className="absolute inset-0 flex flex-col justify-end pb-8 sm:pb-14 md:pb-16 px-4 sm:px-8 md:px-10">
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.3 }}
-                                className="max-w-2xl"
+                                className="max-w-2xl text-right"
                             >
-                                <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 w-fit rounded-full text-white text-xs font-bold mb-4 shadow-lg flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <div className="bg-white/10 backdrop-blur-md border border-white/20 px-2.5 py-0.5 sm:px-4 sm:py-1.5 w-fit rounded-full text-white text-[9px] sm:text-xs font-bold mb-1.5 sm:mb-4 shadow-lg flex items-center gap-1.5 mr-auto sm:mr-0 ml-0">
+                                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
                                     عروض حصرية 🔥
                                 </div>
                                 <h2 
-                                    className={cn("text-4xl sm:text-5xl md:text-6xl font-black drop-shadow-2xl mb-4 leading-tight tracking-tight", getFontClass(activeBanners[current].fontFamily))}
-                                    style={{ color: activeBanners[current].textColor || 'white', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 4px 8px rgba(0,0,0,0.3), 0 2px 4px rgba(255,255,255,0.4)' : '0 4px 12px rgba(0,0,0,0.6)' }}
+                                    className={cn("text-lg sm:text-3xl md:text-4xl lg:text-5xl font-black drop-shadow-2xl mb-1 sm:mb-3 leading-tight tracking-tight", getFontClass(activeBanners[current].fontFamily))}
+                                    style={{ color: activeBanners[current].textColor || 'white', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(255,255,255,0.4)' : '0 2px 8px rgba(0,0,0,0.6)' }}
                                 >
                                     {activeBanners[current].title || "تخفيضات الموسم"}
                                 </h2>
                                 <p 
-                                    className={cn("text-base sm:text-lg font-medium max-w-xl leading-relaxed drop-shadow-lg line-clamp-2", getFontClass(activeBanners[current].fontFamily))}
-                                    style={{ color: activeBanners[current].textColor || 'rgb(226, 232, 240)', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(255,255,255,0.5)' : '0 2px 8px rgba(0,0,0,0.8)' }}
+                                    className={cn("text-[9px] sm:text-xs md:text-sm lg:text-base font-medium max-w-xl leading-relaxed drop-shadow-lg line-clamp-2", getFontClass(activeBanners[current].fontFamily))}
+                                    style={{ color: activeBanners[current].textColor || 'rgb(226, 232, 240)', textShadow: activeBanners[current].textColor && activeBanners[current].textColor !== '#ffffff' ? '0 1px 2px rgba(0,0,0,0.4), 0 0.5px 1px rgba(255,255,255,0.5)' : '0 1px 4px rgba(0,0,0,0.8)' }}
                                 >
                                     {activeBanners[current].description || "استفد من خصومات حصرية لفترة محدودة على جميع المنتجات الجديدة"}
                                 </p>
@@ -130,7 +130,7 @@ export function HeroBanner() {
             </AnimatePresence>
 
             {/* Navigation Dots */}
-            <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-2 z-20">
+            <div className="absolute bottom-3 sm:bottom-6 left-0 right-0 flex justify-center gap-1.5 z-20">
                 {activeBanners.map((_, idx) => (
                     <button
                         key={idx}
@@ -139,9 +139,9 @@ export function HeroBanner() {
                             setCurrent(idx)
                         }}
                         className={cn(
-                            "w-2 h-2 rounded-full transition-all duration-300 backdrop-blur-sm",
+                            "w-1.5 h-1.5 rounded-full transition-all duration-300 backdrop-blur-sm",
                             current === idx
-                                ? "w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                                ? "w-6 bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]"
                                 : "bg-white/30 hover:bg-white/50"
                         )}
                     />
@@ -153,15 +153,15 @@ export function HeroBanner() {
                 <>
                     <button
                         onClick={handlePrev}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/40 hover:scale-110 z-20"
+                        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/40 hover:scale-110 z-20"
                     >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                     </button>
                     <button
                         onClick={handleNext}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/40 hover:scale-110 z-20"
+                        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/40 hover:scale-110 z-20"
                     >
-                        <ChevronRight className="w-6 h-6" />
+                        <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                     </button>
                 </>
             )}

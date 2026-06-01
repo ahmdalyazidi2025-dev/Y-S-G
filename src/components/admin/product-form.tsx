@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Product, useStore } from "@/context/store-context"
-import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock } from "lucide-react"
+import { X, Camera, Package, Hash, List, PlusCircle, Plus, ChevronDown, Trash2, Wand2, Clock, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { compressImage, applyBrandingTemplate } from "@/lib/image-utils"
+import { compressImage, applyBrandingTemplate, enhanceImageBase64 } from "@/lib/image-utils"
 import { toast } from "sonner"
 import ScannerModal from "@/components/store/scanner-modal"
 
@@ -23,6 +23,8 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [useBranding, setUseBranding] = useState(false)
+    const [processingIndex, setProcessingIndex] = useState<number | null>(null)
+    const [processingType, setProcessingType] = useState<"ai" | "enhance" | null>(null)
 
     const [formData, setFormData] = useState({
         name: "",
@@ -140,6 +142,79 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                 image: newImages.length > 0 ? newImages[0] : ""
             }
         })
+    }
+
+    const handleRemoveBackground = async (index: number) => {
+        const targetImage = formData.images[index]
+        if (!targetImage) return
+
+        try {
+            setProcessingIndex(index)
+            setProcessingType("ai")
+            toast.info("جاري تهيئة الذكاء الاصطناعي وإزالة الخلفية محلياً...")
+            
+            // Dynamically import to ensure code runs only client-side
+            const imglyModule = await import("@imgly/background-removal") as any
+            const imglyRemoveBackground = imglyModule.removeBackground || imglyModule.default
+            
+            const resultBlob = await imglyRemoveBackground(targetImage, {
+                progress: (key: string, current: number, total: number) => {
+                    console.log(`[AI-Remove-BG] ${key}: ${Math.round((current / total) * 100)}%`)
+                }
+            })
+            
+            const reader = new FileReader()
+            reader.readAsDataURL(resultBlob)
+            reader.onloadend = () => {
+                const base64data = reader.result as string
+                setFormData(prev => {
+                    const newImages = [...prev.images]
+                    newImages[index] = base64data
+                    return {
+                        ...prev,
+                        images: newImages,
+                        image: index === 0 ? base64data : prev.image
+                    }
+                })
+                toast.success("تم إزالة الخلفية بنجاح! 🪄")
+            }
+        } catch (err) {
+            console.error("AI background removal error:", err)
+            toast.error("فشلت عملية إزالة الخلفية. تأكد من جودة الصورة وحجمها")
+        } finally {
+            setProcessingIndex(null)
+            setProcessingType(null)
+        }
+    }
+
+    const handleEnhanceImage = async (index: number) => {
+        const targetImage = formData.images[index]
+        if (!targetImage) return
+
+        try {
+            setProcessingIndex(index)
+            setProcessingType("enhance")
+            toast.info("جاري تحسين ألوان ووضوح التفاصيل...")
+            
+            const enhancedBase64 = await enhanceImageBase64(targetImage)
+            
+            setFormData(prev => {
+                const newImages = [...prev.images]
+                newImages[index] = enhancedBase64
+                return {
+                    ...prev,
+                    images: newImages,
+                    image: index === 0 ? enhancedBase64 : prev.image
+                }
+            })
+            toast.success("تم تحسين وتوضيح الصورة بنجاح! ✨")
+        } catch (err) {
+            console.error("Enhance image error:", err)
+            toast.error("فشل تحسين الصورة")
+        } finally {
+            setProcessingIndex(null)
+            setProcessingType(null)
+        }
     }
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -281,15 +356,48 @@ export function AdminProductForm({ isOpen, onClose, initialProduct }: ProductFor
                                             className="object-cover"
                                             unoptimized
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(idx)}
-                                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        
+                                        {/* Hover Overlay Controls */}
+                                        <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2 z-10">
+                                            {processingIndex === idx ? (
+                                                <div className="flex flex-col items-center gap-2 text-white">
+                                                    <span className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                                    <span className="text-[8px] font-bold text-center animate-pulse">
+                                                        {processingType === "ai" ? "جاري القص..." : "جاري التصفية..."}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveBackground(idx)}
+                                                        className="w-full py-1 bg-primary text-white rounded-lg text-[9px] font-bold hover:bg-primary/95 flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                                                    >
+                                                        <Wand2 className="w-3 h-3" />
+                                                        <span>إزالة الخلفية AI</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleEnhanceImage(idx)}
+                                                        className="w-full py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-bold hover:bg-emerald-600 flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                                                    >
+                                                        <Sparkles className="w-3 h-3" />
+                                                        <span>توضيح وتحسين</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(idx)}
+                                                        className="w-full py-0.5 bg-red-500 text-white rounded-lg text-[9px] font-bold hover:bg-red-600 flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer mt-1"
+                                                    >
+                                                        <Trash2 className="w-2.5 h-2.5" />
+                                                        <span>حذف الصورة</span>
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+
                                         {idx === 0 && (
-                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 font-bold">
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] text-center py-1 font-bold z-0">
                                                 الرئيسية
                                             </div>
                                         )}
