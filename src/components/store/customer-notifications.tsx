@@ -165,26 +165,16 @@ export function CustomerNotifications({ forceOpen }: CustomerNotificationsProps)
                                                 setIsOpen(false)
                                                 
                                                  let localPath = targetLink
-                                                 
-                                                 // Robust relative path extractor: strips any domains or Vercel subdomains
-                                                 if (localPath.includes("/customer")) {
-                                                     localPath = localPath.substring(localPath.indexOf("/customer"))
-                                                 } else if (localPath.includes("/admin")) {
-                                                     localPath = localPath.substring(localPath.indexOf("/admin"))
-                                                 } else {
-                                                     try {
-                                                         if (localPath.startsWith("http://") || localPath.startsWith("https://")) {
-                                                             const urlObj = new URL(localPath)
-                                                             localPath = urlObj.pathname + urlObj.search + urlObj.hash
-                                                         } else if (localPath.includes("/")) {
-                                                             const parts = localPath.split("/")
-                                                             if (parts[0].includes(".") || parts[0].includes("localhost") || parts[0].includes("vercel.app")) {
-                                                                 parts.shift()
-                                                                 localPath = "/" + parts.join("/")
-                                                             }
-                                                         }
-                                                     } catch (e) {
-                                                         console.error("Failed to parse URL:", e)
+                                                 try {
+                                                     const urlObj = new URL(targetLink);
+                                                     localPath = urlObj.pathname + urlObj.search + urlObj.hash;
+                                                 } catch(e) {
+                                                     if (localPath.startsWith(window.location.origin)) {
+                                                         localPath = localPath.replace(window.location.origin, "");
+                                                     } else if (localPath.includes("/customer")) {
+                                                         localPath = localPath.substring(localPath.indexOf("/customer"))
+                                                     } else if (localPath.includes("/admin")) {
+                                                         localPath = localPath.substring(localPath.indexOf("/admin"))
                                                      }
                                                  }
                                                  

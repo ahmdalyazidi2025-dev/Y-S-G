@@ -217,8 +217,14 @@ export function SystemNotifications() {
                                             }
                                             
                                             let localPath = target;
-                                            if (localPath.startsWith(window.location.origin)) {
-                                                localPath = localPath.replace(window.location.origin, "");
+                                            try {
+                                                const urlObj = new URL(target);
+                                                localPath = urlObj.pathname + urlObj.search + urlObj.hash;
+                                            } catch(e) {
+                                                // Target is already a relative path or invalid URL
+                                                if (localPath.startsWith(window.location.origin)) {
+                                                    localPath = localPath.replace(window.location.origin, "");
+                                                }
                                             }
                                             
                                             if (localPath.startsWith('/')) {
