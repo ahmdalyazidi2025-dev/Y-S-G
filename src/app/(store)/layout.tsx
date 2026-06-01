@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { ClipboardList, ShoppingCart, PlusCircle, MessageSquare, Scan, LogOut, Share2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
