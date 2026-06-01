@@ -30,6 +30,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
     const [viewAllCategories, setViewAllCategories] = useState(true)
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [showFormPassword, setShowFormPassword] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         if (!isOpen) return;
@@ -69,6 +70,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (isSubmitting) return
+
         const customerData = {
             name: formData.name,
             phone: formData.phone,
@@ -85,6 +88,7 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
             return
         }
 
+        setIsSubmitting(true)
         try {
             if (initialCustomer && initialCustomer.id) {
                 await updateCustomer({ ...customerData, id: initialCustomer.id })
@@ -162,6 +166,8 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
             onClose()
         } catch (error) {
             console.error("Submit customer form failed:", error)
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -321,9 +327,22 @@ export function AdminCustomerForm({ isOpen, onClose, initialCustomer, onSuccess 
                             </div>
 
                             <div className="pt-4">
-                                <Button type="submit" className="w-full h-12 bg-primary text-white rounded-xl gap-2 shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all">
-                                    <Save className="w-4 h-4" />
-                                    <span>{initialCustomer ? "حفظ التغييرات" : "إضافة العميل"}</span>
+                                <Button 
+                                    type="submit" 
+                                    disabled={isSubmitting}
+                                    className="w-full h-12 bg-primary text-white rounded-xl gap-2 shadow-lg shadow-primary/20 hover:bg-primary/95 transition-all flex items-center justify-center disabled:opacity-80 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                                            <span>جاري الحفظ وتفعيل الحساب...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-4 h-4" />
+                                            <span>{initialCustomer ? "حفظ التغييرات" : "إضافة وتفعيل العميل"}</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </form>
