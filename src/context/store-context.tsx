@@ -334,6 +334,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     } as StoreSettings)
 
     const [globalSelectedProduct, setGlobalSelectedProduct] = useState<Product | null>(null)
+    const [guestId, setGuestId] = useState<string>("guest")
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            let storedId = localStorage.getItem("store_guest_id")
+            if (!storedId) {
+                storedId = "guest_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+                localStorage.setItem("store_guest_id", storedId)
+            }
+            setGuestId(storedId)
+        }
+    }, [])
+
     const [joinRequests, setJoinRequests] = useState<any[]>([])
     const [passwordRequests, setPasswordRequests] = useState<any[]>([])
     const [notifications, setNotifications] = useState<any[]>([])
