@@ -1452,10 +1452,14 @@ const normalizeArabic = (str: string | null | undefined): string => {
             let deletedCount = 0
             const total = msgSnap.docs.length
             
-            for (let i = 0; i < msgSnap.docs.length; i++) {
-                await deleteDoc(doc(db, "messages", msgSnap.docs[i].id))
-                deletedCount++
-                onProgress?.(10 + Math.floor((deletedCount / total) * 40), `تم حذف ${deletedCount} رسالة...`)
+            if (total > 0) {
+                for (let i = 0; i < msgSnap.docs.length; i++) {
+                    await deleteDoc(doc(db, "messages", msgSnap.docs[i].id))
+                    deletedCount++
+                    onProgress?.(10 + Math.floor((deletedCount / total) * 40), `تم حذف ${deletedCount} رسالة...`)
+                }
+            } else {
+                onProgress?.(50, "لا توجد رسائل لحذفها")
             }
 
             onProgress?.(50, "البدء في حذف الإشعارات...")
@@ -1463,10 +1467,14 @@ const normalizeArabic = (str: string | null | undefined): string => {
             deletedCount = 0
             const notifTotal = notifSnap.docs.length
 
-            for (let i = 0; i < notifSnap.docs.length; i++) {
-                await deleteDoc(doc(db, "notifications", notifSnap.docs[i].id))
-                deletedCount++
-                onProgress?.(50 + Math.floor((deletedCount / notifTotal) * 40), `تم حذف ${deletedCount} إشعار...`)
+            if (notifTotal > 0) {
+                for (let i = 0; i < notifSnap.docs.length; i++) {
+                    await deleteDoc(doc(db, "notifications", notifSnap.docs[i].id))
+                    deletedCount++
+                    onProgress?.(50 + Math.floor((deletedCount / notifTotal) * 40), `تم حذف ${deletedCount} إشعار...`)
+                }
+            } else {
+                onProgress?.(100, "لا توجد إشعارات لحذفها")
             }
 
             onProgress?.(100, "اكتمل حذف جميع البيانات بنجاح!")
