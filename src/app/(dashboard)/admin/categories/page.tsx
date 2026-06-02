@@ -11,7 +11,7 @@ import { CategorySortModal } from "@/components/admin/category-sort-modal"
 import { useRouter } from "next/navigation"
 
 export default function CategoriesPage() {
-    const { categories, deleteCategory, updateCategory, products } = useStore()
+    const { categories, deleteCategory, updateCategory, products, storeSettings } = useStore()
     const [isCatFormOpen, setIsCatFormOpen] = useState(false)
     const [isSortModalOpen, setIsSortModalOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -91,6 +91,54 @@ export default function CategoriesPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* All Categories Card */}
+                    <div
+                        className="glass-card overflow-hidden group rounded-2xl border border-slate-200 dark:border-white/5 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                        onClick={() => router.push('/admin/settings?tab=identity')}
+                    >
+                        {/* Image area - full cover */}
+                        <div className="relative h-52 bg-gradient-to-br from-primary/20 to-teal-500/10 overflow-hidden">
+                            <Image
+                                src={storeSettings?.logoUrl || "/logo.png"}
+                                alt="الكل"
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                unoptimized
+                            />
+                            {/* Gradient overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+                            {/* Product count badge */}
+                            <div className="absolute bottom-3 left-3 z-10">
+                                <span className="text-xs bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full text-white font-bold flex items-center gap-1.5">
+                                    <Package className="w-3 h-3" />
+                                    {products.filter(p => !p.isDraft).length} منتج
+                                </span>
+                            </div>
+
+                            {/* Order badge */}
+                            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                                <span className="text-[10px] bg-primary/95 backdrop-blur-sm px-2 py-1 rounded-lg text-white font-bold">
+                                    قسم رئيسي افتراضي
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Info area */}
+                        <div className="p-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-slate-900 dark:text-white text-lg leading-snug">الكل</h3>
+                                <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
+                                    <Globe className="w-3.5 h-3.5" />
+                                    <span>All</span>
+                                </div>
+                            </div>
+                            <div className="text-slate-400 group-hover:text-primary transition-colors">
+                                <ArrowRight className="w-5 h-5 rotate-180" />
+                            </div>
+                        </div>
+                    </div>
+
                     {categories.map((category) => {
                         const productCount = getProductCount(category)
                         return (
