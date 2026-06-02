@@ -185,7 +185,9 @@ export default function AdminChatPage() {
                                 return (
                                     <div key={m.id} className={cn(
                                         "max-w-[80%] p-3 rounded-2xl text-xs space-y-2 flex flex-col",
-                                        m.isAdmin ? "bg-primary text-white self-end rounded-br-none" : "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-start rounded-bl-none border border-slate-200/50 dark:border-white/5"
+                                        m.isAdmin 
+                                            ? "bg-primary text-white self-start rounded-br-none" 
+                                            : "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-end rounded-bl-none border border-slate-200/50 dark:border-white/5"
                                     )}>
                                         <div>{renderMessageText(cleanText)}</div>
                                         

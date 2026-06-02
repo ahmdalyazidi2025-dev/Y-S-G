@@ -94,7 +94,9 @@ export default function ChatPage() {
                         return (
                             <div key={m.id} className={cn(
                                 "max-w-[80%] p-3 rounded-2xl text-xs space-y-2 flex flex-col",
-                                m.isAdmin ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-start rounded-bl-none border border-slate-200 dark:border-white/5" : "bg-primary text-white self-end rounded-br-none shadow-md shadow-primary/20"
+                                m.isAdmin 
+                                    ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 self-end rounded-bl-none border border-slate-200 dark:border-white/5" 
+                                    : "bg-primary text-white self-start rounded-br-none shadow-md shadow-primary/20"
                             )}>
                                 <p className="font-bold text-[8px] opacity-70">{m.senderName}</p>
                                 <div>{renderMessageText(cleanText)}</div>
