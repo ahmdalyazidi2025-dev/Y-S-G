@@ -4,7 +4,7 @@
     "short_name": "YSG Admin",
     "description": "نظام الإدارة والمتابعة المتكامل لمجموعة YSG",
     "start_url": "/admin",
-    "scope": "/",
+    "scope": "/admin",
     "display": "standalone",
     "background_color": "#f8fafc",
     "theme_color": "#1e3a5f",

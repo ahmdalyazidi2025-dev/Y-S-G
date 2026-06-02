@@ -1,10 +1,10 @@
 {
-    "id": "/",
+    "id": "/customer",
     "name": "YSG Group — المتجر",
     "short_name": "Y S G",
     "description": "نظام توزيع المبيعات المتكامل لمجموعة YSG",
-    "start_url": "/",
-    "scope": "/",
+    "start_url": "/customer",
+    "scope": "/customer",
     "display": "standalone",
     "background_color": "#f8fafc",
     "theme_color": "#f8fafc",

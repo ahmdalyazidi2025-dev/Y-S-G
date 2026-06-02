@@ -319,11 +319,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [coupons, setCoupons] = useState<Coupon[]>([])
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
-            const savedUser = localStorage.getItem("ysg_user")
+            const isAdmin = window.location.pathname.startsWith('/admin') || 
+                            (window.location.pathname === '/login' && window.location.search.includes('role=admin')) ||
+                            (window.location.pathname === '/login' && window.location.search.includes('role=staff'));
+            const userKey = isAdmin ? "ysg_user_admin" : "ysg_user_customer";
+            
+            let savedUser = localStorage.getItem(userKey);
+            // Fallback to legacy key if partitioned key does not exist
+            if (!savedUser) {
+                savedUser = localStorage.getItem("ysg_user");
+                if (savedUser) {
+                    try {
+                        const parsed = JSON.parse(savedUser);
+                        if (isAdmin && (parsed.role === 'admin' || parsed.role === 'staff')) {
+                            localStorage.setItem("ysg_user_admin", savedUser);
+                        } else if (!isAdmin && parsed.role === 'customer') {
+                            localStorage.setItem("ysg_user_customer", savedUser);
+                        }
+                    } catch (e) {
+                        console.error("Fallback user parse failed", e);
+                    }
+                }
+            }
             try {
                 return savedUser ? JSON.parse(savedUser) : null
             } catch (e) {
-                localStorage.removeItem("ysg_user")
+                localStorage.removeItem(userKey)
                 return null
             }
         }
@@ -1084,11 +1105,11 @@ const normalizeArabic = (str: string | null | undefined): string => {
         if (role === "admin" && normalizedInput === "admin" && cleanPassword === "admin") {
             const user: User = { id: "admin", name: "المشرف العام", role: "admin", username: "admin", permissions: ["orders", "products", "customers", "settings", "chat", "sales"] }
             setCurrentUser(user)
-            localStorage.setItem("ysg_user", JSON.stringify(user))
+            localStorage.setItem("ysg_user_admin", JSON.stringify(user))
             
             // Set cookies for middleware
-            document.cookie = `firebase-auth-token=emergency-admin-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-            document.cookie = `user-role=admin; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+            document.cookie = `firebase-auth-token-admin=emergency-admin-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+            document.cookie = `user-role-admin=admin; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
             return true
         }
 
@@ -1150,7 +1171,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
 
             if (user) {
                 setCurrentUser(user)
-                localStorage.setItem("ysg_user", JSON.stringify(user))
+                const userKey = role === "customer" ? "ysg_user_customer" : "ysg_user_admin"
+                localStorage.setItem(userKey, JSON.stringify(user))
 
                 if (role === "customer") {
                     try {
@@ -1166,8 +1188,11 @@ const normalizeArabic = (str: string | null | undefined): string => {
 
                 // Get auth token and set cookies for middleware
                 const token = await userCredential.user.getIdToken()
-                document.cookie = `firebase-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                document.cookie = `user-role=${user.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                const tokenCookieName = role === "customer" ? "firebase-auth-token-customer" : "firebase-auth-token-admin"
+                const roleCookieName = role === "customer" ? "user-role-customer" : "user-role-admin"
+                
+                document.cookie = `${tokenCookieName}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                document.cookie = `${roleCookieName}=${user.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                 return true
             }
 
@@ -1180,9 +1205,9 @@ const normalizeArabic = (str: string | null | undefined): string => {
                 if (normalizedInput === "b1" && cleanPassword === "123") {
                     const user: User = { id: "b1", name: "عميل b1", role: "customer", username: "b1" }
                     setCurrentUser(user)
-                    localStorage.setItem("ysg_user", JSON.stringify(user))
-                    document.cookie = `firebase-auth-token=customer-b1-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                    document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    localStorage.setItem("ysg_user_customer", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token-customer=customer-b1-token; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role-customer=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                     return true
                 }
 
@@ -1199,9 +1224,9 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         allowedCategories: customer.allowedCategories || "all"
                     }
                     setCurrentUser(user)
-                    localStorage.setItem("ysg_user", JSON.stringify(user))
-                    document.cookie = `firebase-auth-token=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                    document.cookie = `user-role=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    localStorage.setItem("ysg_user_customer", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token-customer=customer-token-${customer.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role-customer=customer; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                     return true
                 }
             } else {
@@ -1215,9 +1240,9 @@ const normalizeArabic = (str: string | null | undefined): string => {
                         permissions: member.permissions 
                     }
                     setCurrentUser(user)
-                    localStorage.setItem("ysg_user", JSON.stringify(user))
-                    document.cookie = `firebase-auth-token=staff-token-${member.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
-                    document.cookie = `user-role=${member.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    localStorage.setItem("ysg_user_admin", JSON.stringify(user))
+                    document.cookie = `firebase-auth-token-admin=staff-token-${member.id}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+                    document.cookie = `user-role-admin=${member.role}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
                     return true
                 }
             }
@@ -1228,11 +1253,30 @@ const normalizeArabic = (str: string | null | undefined): string => {
     }
 
     const logout = () => {
+        const isAdmin = typeof window !== "undefined" && (
+            window.location.pathname.startsWith('/admin') || 
+            currentUser?.role === 'admin' || 
+            currentUser?.role === 'staff'
+        );
+        
         setCurrentUser(null)
-        localStorage.removeItem("ysg_user")
-        setCart([])
-        document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-        document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        
+        if (isAdmin) {
+            localStorage.removeItem("ysg_user_admin")
+            localStorage.removeItem("ysg_user") // Clear legacy
+            document.cookie = "firebase-auth-token-admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "user-role-admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        } else {
+            localStorage.removeItem("ysg_user_customer")
+            localStorage.removeItem("ysg_user") // Clear legacy
+            setCart([])
+            document.cookie = "firebase-auth-token-customer=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "user-role-customer=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        }
         toast.info("تم تسجيل الخروج")
     }
 

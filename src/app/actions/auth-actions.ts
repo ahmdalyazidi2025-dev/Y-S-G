@@ -15,7 +15,7 @@ async function verifyAdmin(): Promise<{ authorized: boolean; uid?: string; error
         let token = authHeader?.replace("Bearer ", "")
         
         if (!token) {
-            token = cookieStore.get("firebase-auth-token")?.value
+            token = cookieStore.get("firebase-auth-token-admin")?.value || cookieStore.get("firebase-auth-token")?.value
         }
         
         if (!token) {

@@ -17,19 +17,30 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 // Give a tiny bit of time for the Provider's useEffect to run
                 await new Promise(resolve => setTimeout(resolve, 50))
 
-                const savedUser = localStorage.getItem("ysg_user")
+                const userKey = role === "admin" ? "ysg_user_admin" : "ysg_user_customer"
+                let savedUser = localStorage.getItem(userKey)
+                if (!savedUser) {
+                    savedUser = localStorage.getItem("ysg_user")
+                }
                 let user = currentUser
                 if (savedUser) {
                     try {
                         user = JSON.parse(savedUser)
                     } catch (e) {
+                        localStorage.removeItem(userKey)
                         localStorage.removeItem("ysg_user")
                     }
                 }
 
                 if (!user) {
+                    const tokenCookieName = role === "admin" ? "firebase-auth-token-admin" : "firebase-auth-token-customer"
+                    const roleCookieName = role === "admin" ? "user-role-admin" : "user-role-customer"
+                    
+                    document.cookie = `${tokenCookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+                    document.cookie = `${roleCookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
                     document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                     document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+                    
                     router.replace(`/login?role=${role}`)
                 } else if (role === "admin" && user.role !== "admin" && user.role !== "staff") {
                     router.replace("/customer")
@@ -68,6 +79,11 @@ export function ProtectedRoute({ children, role }: { children: React.ReactNode, 
                 }
             } catch (error) {
                 console.error("Auth check failed:", error)
+                const tokenCookieName = role === "admin" ? "firebase-auth-token-admin" : "firebase-auth-token-customer"
+                const roleCookieName = role === "admin" ? "user-role-admin" : "user-role-customer"
+                
+                document.cookie = `${tokenCookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+                document.cookie = `${roleCookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
                 document.cookie = "firebase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                 document.cookie = "user-role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
                 router.replace(`/login?role=${role}`)
