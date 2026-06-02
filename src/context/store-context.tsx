@@ -494,6 +494,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 const data = doc.data() as Omit<Message, "id">
                 return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
             })
+
+            // Auto-migrate legacy messages to contain userId for proper routing & customer views
+            if (isAdmin) {
+                snap.docs.forEach(async (d) => {
+                    const data = d.data()
+                    if (data.isAdmin && !data.userId) {
+                        const match = data.text?.match(/\(@([a-zA-Z0-9_-]+)\)/)
+                        if (match && match[1]) {
+                            try {
+                                await updateDoc(doc(db, "messages", d.id), {
+                                    userId: match[1]
+                                })
+                            } catch (err) {
+                                console.error("Message migration error:", err)
+                            }
+                        }
+                    }
+                })
+            }
+
             // Sort ascending in memory to display messages chronologically in chat interface
             docs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
             setMessages(docs)

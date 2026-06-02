@@ -81,7 +81,7 @@ export default function AdminChatPage() {
             broadcastNotification(msg)
             setMsg("")
         } else if (selectedCustomer) {
-            sendMessage(`${msg} (@${selectedCustomer})`, true)
+            sendMessage(`${msg} (@${selectedCustomer})`, true, selectedCustomer)
             setMsg("")
         }
     }
