@@ -350,6 +350,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         return null
     })
+
+    const [firebaseAuthReady, setFirebaseAuthReady] = useState(false)
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            setFirebaseAuthReady(true)
+        })
+        return () => unsubscribe()
+    }, [])
     const [storeSettings, setStoreSettings] = useState<StoreSettings>({
         minimumOrderValue: 0,
         enableBarcodeScanner: true
@@ -412,17 +421,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             }))
         })
 
-        const unsubStaff = onSnapshot(collection(db, "staff"), (snap: QuerySnapshot<DocumentData>) => {
-            setStaff(snap.docs.map((doc) => {
-                const data = doc.data()
-                return {
-                    ...data,
-                    id: doc.id,
-                    createdAt: data.createdAt ? toDate(data.createdAt) : undefined
-                } as StaffMember
-            }))
-        })
-
         const unsubBanners = onSnapshot(collection(db, "banners"), (snap: QuerySnapshot<DocumentData>) => {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
@@ -453,7 +451,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         return () => {
-            unsubProducts(); unsubCategories(); unsubCustomers(); unsubStaff();
+            unsubProducts(); unsubCategories(); unsubCustomers();
             unsubBanners(); unsubRequests();
             unsubMessages(); unsubSettings(); unsubNotifications();
         }
@@ -506,11 +504,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [currentUser, toDate, customers])
 
     useEffect(() => {
-        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
+        if (!firebaseAuthReady || !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
+            setStaff([])
             setJoinRequests([])
             setPasswordRequests([])
             return
         }
+
+        const unsubStaff = onSnapshot(
+            collection(db, "staff"),
+            (snap: QuerySnapshot<DocumentData>) => {
+                setStaff(snap.docs.map((doc) => {
+                    const data = doc.data()
+                    return {
+                        ...data,
+                        id: doc.id,
+                        createdAt: data.createdAt ? toDate(data.createdAt) : undefined
+                    } as StaffMember
+                }))
+            },
+            (err) => console.error("Error syncing staff:", err)
+        )
 
         const unsubJoin = onSnapshot(
             query(collection(db, "joinRequests"), orderBy("createdAt", "desc")),
@@ -537,10 +551,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         )
 
         return () => {
+            unsubStaff()
             unsubJoin()
             unsubPassword()
         }
-    }, [currentUser, toDate])
+    }, [currentUser, firebaseAuthReady, toDate])
 
     const deleteJoinRequest = async (id: string) => {
         try {
