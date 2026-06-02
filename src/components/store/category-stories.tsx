@@ -5,9 +5,11 @@ import { cn } from "@/lib/utils"
 import { hapticFeedback } from "@/lib/haptics"
 import { motion } from "framer-motion"
 import Image from "next/image"
+import { useRef, useEffect } from "react"
 
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
     const { categories, storeSettings } = useStore()
+    const containerRef = useRef<HTMLDivElement>(null)
 
     // Filter out hidden categories from customer view
     const visibleCategories = categories.filter(c => !c.isHidden)
@@ -15,8 +17,31 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
     // "الكل" + DB categories
     const allCategories = ["الكل", ...visibleCategories.map(c => c.nameAr)]
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const container = containerRef.current
+            if (!container) return
+
+            // Smoothly scroll to the left (reveal items)
+            // In RTL, moving left means scrollLeft decreases (becomes negative).
+            container.scrollBy({ left: -150, behavior: 'smooth' })
+
+            // Wait 1.2 seconds, then scroll back to start (0)
+            const returnTimer = setTimeout(() => {
+                container.scrollTo({ left: 0, behavior: 'smooth' })
+            }, 1200)
+
+            return () => clearTimeout(returnTimer)
+        }, 1000)
+
+        return () => clearTimeout(timer)
+    }, [])
+
     return (
-        <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar px-4 pt-2 w-full">
+        <div 
+            ref={containerRef}
+            className="flex gap-6 overflow-x-auto pb-4 no-scrollbar px-4 pt-2 w-full scroll-smooth"
+        >
             {allCategories.map((cat) => {
                 const isActive = selectedCategory === cat
                 const dbCat = categories.find(c => c.nameAr === cat)

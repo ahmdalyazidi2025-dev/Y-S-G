@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Package, Clock, Truck, CheckCircle2, XCircle, ChevronLeft, ChevronDown, User, Calendar, CreditCard, Search, Printer, Share2, FileDown, MapPin, LayoutList, Users, Trash2, Undo } from "lucide-react"
 import Link from "next/link"
@@ -51,6 +51,45 @@ export default function AdminOrdersPage() {
     const [deletionQueue, setDeletionQueue] = useState<string[] | null>(null)
     const [countdown, setCountdown] = useState<number>(0)
     const [countdownTimer, setCountdownTimer] = useState<any>(null)
+
+    // Long press selection system
+    const longPressTimeout = useRef<any>(null)
+    const isLongPressActive = useRef(false)
+
+    const handlePointerDown = (orderId: string, e: React.PointerEvent) => {
+        // Only left click or primary touch contact
+        if (e.button !== 0) return
+        isLongPressActive.current = false
+        
+        longPressTimeout.current = setTimeout(() => {
+            isLongPressActive.current = true
+            toggleSelectOrder(orderId)
+            hapticFeedback('medium')
+            toast.success("تم تحديد الطلب ودخول وضع التحديد")
+        }, 600)
+    }
+
+    const handlePointerUp = (orderId: string, e: React.PointerEvent, onClickAction: () => void) => {
+        if (longPressTimeout.current) {
+            clearTimeout(longPressTimeout.current)
+            longPressTimeout.current = null
+        }
+        
+        if (isLongPressActive.current) {
+            e.preventDefault()
+            e.stopPropagation()
+            isLongPressActive.current = false
+        } else {
+            onClickAction()
+        }
+    }
+
+    const handlePointerCancel = () => {
+        if (longPressTimeout.current) {
+            clearTimeout(longPressTimeout.current)
+            longPressTimeout.current = null
+        }
+    }
 
     const toggleSelectOrder = (orderId: string, e?: React.MouseEvent) => {
         if (e) e.stopPropagation()
@@ -431,16 +470,19 @@ export default function AdminOrdersPage() {
                                                         return (
                                                             <div
                                                                 key={order.id}
-                                                                className={cn("flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors",
+                                                                className={cn("flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/50 dark:hover:bg-white/5 transition-colors select-none",
                                                                     isSelected && "bg-primary/5 dark:bg-primary/10"
                                                                 )}
-                                                                onClick={() => {
+                                                                onPointerDown={(e) => handlePointerDown(order.id, e)}
+                                                                onPointerUp={(e) => handlePointerUp(order.id, e, () => {
                                                                     if (isSelectionMode) {
                                                                         toggleSelectOrder(order.id)
                                                                     } else {
                                                                         setSelectedOrder(order)
                                                                     }
-                                                                }}
+                                                                })}
+                                                                onPointerLeave={handlePointerCancel}
+                                                                onPointerCancel={handlePointerCancel}
                                                             >
                                                                 {/* Checkbox */}
                                                                 {isSelectionMode && (
@@ -497,16 +539,19 @@ export default function AdminOrdersPage() {
                             const isSelected = selectedOrderIds.includes(order.id)
                             return (
                                 <div key={order.id}
-                                    className={cn("glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5",
+                                    className={cn("glass-card p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-slate-100 dark:border-white/5 select-none",
                                         isSelected && "border-primary/30 bg-primary/5 dark:bg-primary/10"
                                     )}
-                                    onClick={() => {
+                                    onPointerDown={(e) => handlePointerDown(order.id, e)}
+                                    onPointerUp={(e) => handlePointerUp(order.id, e, () => {
                                         if (isSelectionMode) {
                                             toggleSelectOrder(order.id)
                                         } else {
                                             setSelectedOrder(order)
                                         }
-                                    }}>
+                                    })}
+                                    onPointerLeave={handlePointerCancel}
+                                    onPointerCancel={handlePointerCancel}>
                                     <div className="flex items-center gap-4">
                                         {/* Checkbox */}
                                         {isSelectionMode && (
