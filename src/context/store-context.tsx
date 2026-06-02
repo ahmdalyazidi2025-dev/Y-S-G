@@ -569,36 +569,54 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         )
 
         const unsubRequests = onSnapshot(
-            query(collection(db, "requests"), orderBy("createdAt", "desc")),
+            collection(db, "requests"),
             (snap: QuerySnapshot<DocumentData>) => {
-                setProductRequests(snap.docs.map((doc) => {
+                const docs = snap.docs.map((doc) => {
                     const data = doc.data() as Omit<ProductRequest, "id">
                     return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
-                }))
+                })
+                docs.sort((a, b) => {
+                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+                    return timeB - timeA
+                })
+                setProductRequests(docs)
             },
             (err) => console.error("Error syncing requests:", err)
         )
 
         const unsubJoin = onSnapshot(
-            query(collection(db, "joinRequests"), orderBy("createdAt", "desc")),
+            collection(db, "joinRequests"),
             (snap) => {
-                setJoinRequests(snap.docs.map(doc => ({
+                const docs = snap.docs.map(doc => ({
                     ...doc.data(),
                     id: doc.id,
                     createdAt: toDate(doc.data().createdAt)
-                })))
+                }))
+                docs.sort((a, b) => {
+                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+                    return timeB - timeA
+                })
+                setJoinRequests(docs)
             },
             (err) => console.error("Error syncing join requests:", err)
         )
 
         const unsubPassword = onSnapshot(
-            query(collection(db, "password_requests"), orderBy("createdAt", "desc")),
+            collection(db, "password_requests"),
             (snap) => {
-                setPasswordRequests(snap.docs.map(doc => ({
+                const docs = snap.docs.map(doc => ({
                     ...doc.data(),
                     id: doc.id,
                     createdAt: toDate(doc.data().createdAt)
-                })))
+                }))
+                docs.sort((a, b) => {
+                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+                    return timeB - timeA
+                })
+                setPasswordRequests(docs)
             },
             (err) => console.error("Error syncing password requests:", err)
         )
