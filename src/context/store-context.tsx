@@ -8,7 +8,8 @@ import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
-    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch
+    QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch,
+    runTransaction, or, limit
 } from "firebase/firestore"
 import { adminCreateOrUpdateUserAction, adminDeleteUserAction } from "@/app/actions/auth-actions"
 import { sanitizeData } from "@/lib/utils/store-helpers"
@@ -413,13 +414,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
 
-        const unsubMessages = onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snap: QuerySnapshot<DocumentData>) => {
-            setMessages(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<Message, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
-            }))
-        })
-
         const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
             setNotifications(snap.docs.map((doc) => {
                 const data = doc.data()
@@ -434,7 +428,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return () => {
             unsubProducts(); unsubCategories();
             unsubBanners();
-            unsubMessages(); unsubSettings(); unsubNotifications();
+            unsubSettings(); unsubNotifications();
         }
     }, [toDate])
 
@@ -444,7 +438,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         let ordersQuery;
         if (isAdmin) {
-            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"))
+            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(250))
         } else {
             ordersQuery = query(collection(db, "orders"), where("customerId", "in", [customerId, "guest"]))
         }
@@ -481,7 +475,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             console.error("Firestore unsubOrders Listen Error:", error)
         })
 
-        return () => unsubOrders()
+        // Optimized Messages Query (Admin gets last 300, Customer gets own chats only)
+        let messagesQuery;
+        if (isAdmin) {
+            messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "desc"), limit(300))
+        } else {
+            messagesQuery = query(
+                collection(db, "messages"),
+                or(
+                    where("userId", "==", customerId),
+                    where("senderId", "==", customerId)
+                )
+            )
+        }
+
+        const unsubMessages = onSnapshot(messagesQuery, (snap: QuerySnapshot<DocumentData>) => {
+            let docs = snap.docs.map((doc) => {
+                const data = doc.data() as Omit<Message, "id">
+                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as Message
+            })
+            // Sort ascending in memory to display messages chronologically in chat interface
+            docs.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+            setMessages(docs)
+        }, (error) => {
+            console.error("Firestore unsubMessages Listen Error:", error)
+        })
+
+        return () => {
+            unsubOrders()
+            unsubMessages()
+        }
     }, [currentUser, toDate, customers])
 
     useEffect(() => {
@@ -663,12 +686,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             let orderId: string
             try {
                 const counterRef = doc(db, "counters", "orders")
-                const counterSnap = await getDoc(counterRef)
-                const newCounterValue = (counterSnap.exists() ? (counterSnap.data().current || 0) : 0) + 1
-                orderId = newCounterValue.toString()
-                await setDoc(counterRef, { current: newCounterValue }, { merge: true })
+                orderId = await runTransaction(db, async (transaction) => {
+                    const counterSnap = await transaction.get(counterRef)
+                    const newCounterValue = (counterSnap.exists() ? (counterSnap.data().current || 0) : 0) + 1
+                    transaction.set(counterRef, { current: newCounterValue }, { merge: true })
+                    return newCounterValue.toString()
+                })
             } catch (counterError) {
-                console.warn("Counter logic failed, falling back to timestamp ID:", counterError)
+                console.warn("Counter transaction failed, falling back to timestamp ID:", counterError)
                 orderId = Date.now().toString().slice(-8) // Fallback to last 8 digits of timestamp
             }
 
@@ -1013,11 +1038,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
 
     const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل") => {
+        const finalCustomerId = isAdmin ? customerId : (currentUser?.id || customerId)
         await addDoc(collection(db, "messages"), {
-            senderId: isAdmin ? "admin" : (currentUser?.id || customerId),
+            senderId: isAdmin ? "admin" : finalCustomerId,
             senderName: isAdmin ? "الإدارة" : (currentUser?.name || customerName),
             text,
             isAdmin,
+            userId: finalCustomerId,
             createdAt: Timestamp.now()
         })
     }
