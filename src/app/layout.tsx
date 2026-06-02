@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Tajawal } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
+const tajawal = Tajawal({
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
   title: "موقع العملاء - مجموعة يحيى سلمان غزواني التجارية (YSG)",
@@ -60,7 +64,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 overflow-x-hidden relative`}>
+      <body className={`${tajawal.className} min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 overflow-x-hidden relative`}>
         {/* --- DUAL-LAYER BACKGROUND SYSTEM --- */}
 
         {/* LAYER 1: Dark Mode Universe (Only visible in Dark Mode) */}
