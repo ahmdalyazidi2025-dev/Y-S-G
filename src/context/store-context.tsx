@@ -1205,7 +1205,9 @@ const normalizeArabic = (str: string | null | undefined): string => {
         try {
             // 2. Resolve final email
             let finalEmail = cleanUsername
-            if (role === "customer") {
+            if (normalizedInput.includes("@")) {
+                finalEmail = normalizedInput
+            } else if (role === "customer") {
                 finalEmail = `${normalizedInput}@ysg.local`
             } else {
                 // Admin or Staff
