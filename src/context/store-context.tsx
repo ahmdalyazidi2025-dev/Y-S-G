@@ -1026,23 +1026,72 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.info(text, { duration: 5000, icon: "🔔" })
     }
 
-    const addStaff = async (member: Omit<StaffMember, "id" | "createdAt">) => {
-        await addDoc(collection(db, "staff"), {
-            ...member,
-            createdAt: Timestamp.now()
-        })
-        toast.success("تم إضافة الموظف")
+    const addStaff = async (member: Omit<StaffMember, "id" | "createdAt"> & { password?: string }) => {
+        try {
+            if (!member.phone) throw new Error("رقم الهاتف مطلوب")
+            const normalizedUsername = member.username?.toLowerCase().trim() || member.name.replace(/\s/g, '').toLowerCase()
+            const generatedEmail = `${normalizedUsername}@staff.ysg.local`
+
+            const result = await adminCreateOrUpdateUserAction(generatedEmail, member.password || "Ysg@2025", member.name, currentUser?.id);
+            if (!result.success || !result.uid) {
+                throw new Error(result.error || "فشل إنشاء حساب المشرف في خادم المصادقة");
+            }
+            const uid = result.uid;
+
+            await setDoc(doc(db, "users", uid), {
+                id: uid, name: member.name, role: member.role, email: generatedEmail, username: normalizedUsername, phone: member.phone,
+                permissions: member.role === "admin" ? ["all"] : member.permissions
+            })
+            await setDoc(doc(db, "usernames", normalizedUsername), { email: generatedEmail, uid })
+            await setDoc(doc(db, "staff", uid), sanitizeData({ ...member, id: uid, email: generatedEmail, createdAt: Timestamp.now() }))
+
+            toast.success("تم إضافة الموظف بنجاح ✅")
+        } catch (error: any) {
+            toast.error("فشل إضافة الموظف: " + error.message)
+        }
     }
 
-    const updateStaff = async (member: StaffMember) => {
-        const { id, ...data } = member
-        await updateDoc(doc(db, "staff", id), data)
-        toast.success("تم تحديث بيانات الموظف")
+    const updateStaff = async (member: StaffMember & { password?: string }) => {
+        try {
+            const { id, password, ...data } = member
+
+            // Update Auth if password changed
+            if (password) {
+                const result = await adminCreateOrUpdateUserAction(member.email || `${member.username}@staff.ysg.local`, password, member.name, currentUser?.id);
+                if (!result.success) {
+                    console.error("Admin Auth update warning:", result.error);
+                    throw new Error(result.error || "فشل تحديث كلمة المرور في الخادم");
+                }
+            }
+
+            await updateDoc(doc(db, "staff", id), sanitizeData(data))
+            await setDoc(doc(db, "users", id), {
+                id, name: member.name, role: member.role, email: member.email, phone: member.phone,
+                permissions: member.role === "admin" ? ["all"] : member.permissions
+            }, { merge: true })
+            toast.success("تم تحديث بيانات الموظف")
+        } catch (e: any) {
+            toast.error("فشل تحديث البيانات: " + e.message)
+        }
     }
 
     const deleteStaff = async (memberId: string) => {
-        await deleteDoc(doc(db, "staff", memberId))
-        toast.error("تم حذف الموظف")
+        try {
+            const member = staff.find(s => s.id === memberId)
+
+            // Delete from Auth securely via Admin SDK Server Action
+            const result = await adminDeleteUserAction(memberId, currentUser?.id);
+            if (!result.success) {
+                console.error("Admin Auth delete warning:", result.error);
+            }
+
+            await deleteDoc(doc(db, "staff", memberId))
+            await deleteDoc(doc(db, "users", memberId))
+            if (member?.username) await deleteDoc(doc(db, "usernames", member.username.toLowerCase()))
+            toast.error("تم حذف الموظف بالكامل")
+        } catch (e: any) {
+            toast.error("فشل حذف الموظف: " + e.message)
+        }
     }
 
     const resetPassword = async (email: string) => {
