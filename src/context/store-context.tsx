@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 import { db, auth } from "@/lib/firebase"
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth"
 import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
@@ -354,7 +354,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [firebaseAuthReady, setFirebaseAuthReady] = useState(false)
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             setFirebaseAuthReady(true)
         })
         return () => unsubscribe()
