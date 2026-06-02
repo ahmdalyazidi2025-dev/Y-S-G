@@ -6,17 +6,38 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "YSG Sales Management",
-  description: "Sales Management System for YSG Group",
+  title: "موقع العملاء - مجموعة يحيى سلمان غزواني التجارية (YSG)",
+  description: "البوابة الرسمية لمجموعة يحيى سلمان غزواني التجارية لخدمات قطع الغيار ومستلزمات السيارات",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo.jpg",
-    apple: "/pwa-icon.jpg",
+    icon: "/logo.png",
+    apple: "/pwa-icon.png",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Y S G",
+  },
+  openGraph: {
+    title: "مجموعة يحيى سلمان غزواني التجارية (YSG)",
+    description: "البوابة الرسمية لمجموعة يحيى سلمان غزواني التجارية لخدمات قطع الغيار ومستلزمات السيارات",
+    siteName: "YSG Group",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "YSG Group Logo",
+      },
+    ],
+    locale: "ar_SA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "مجموعة يحيى سلمان غزواني التجارية (YSG)",
+    description: "البوابة الرسمية لمجموعة يحيى سلمان غزواني التجارية لخدمات قطع الغيار ومستلزمات السيارات",
+    images: ["/logo.png"],
   },
 };
 
