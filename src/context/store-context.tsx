@@ -409,27 +409,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setCategories(list)
         })
 
-        const unsubCustomers = onSnapshot(collection(db, "customers"), (snap: QuerySnapshot<DocumentData>) => {
-            setCustomers(snap.docs.map((doc) => {
-                const data = doc.data()
-                return {
-                    ...data,
-                    id: doc.id,
-                    lastActive: data.lastActive ? toDate(data.lastActive) : undefined,
-                    firstLoginDate: data.firstLoginDate ? toDate(data.firstLoginDate) : undefined
-                } as Customer
-            }))
-        })
-
         const unsubBanners = onSnapshot(collection(db, "banners"), (snap: QuerySnapshot<DocumentData>) => {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
-        })
-
-        const unsubRequests = onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
-            setProductRequests(snap.docs.map((doc) => {
-                const data = doc.data() as Omit<ProductRequest, "id">
-                return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
-            }))
         })
 
         const unsubMessages = onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "asc")), (snap: QuerySnapshot<DocumentData>) => {
@@ -451,8 +432,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         return () => {
-            unsubProducts(); unsubCategories(); unsubCustomers();
-            unsubBanners(); unsubRequests();
+            unsubProducts(); unsubCategories();
+            unsubBanners();
             unsubMessages(); unsubSettings(); unsubNotifications();
         }
     }, [toDate])
@@ -506,6 +487,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!firebaseAuthReady || !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
             setStaff([])
+            setCustomers([])
+            setProductRequests([])
             setJoinRequests([])
             setPasswordRequests([])
             return
@@ -524,6 +507,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 }))
             },
             (err) => console.error("Error syncing staff:", err)
+        )
+
+        const unsubCustomers = onSnapshot(
+            collection(db, "customers"),
+            (snap: QuerySnapshot<DocumentData>) => {
+                setCustomers(snap.docs.map((doc) => {
+                    const data = doc.data()
+                    return {
+                        ...data,
+                        id: doc.id,
+                        lastActive: data.lastActive ? toDate(data.lastActive) : undefined,
+                        firstLoginDate: data.firstLoginDate ? toDate(data.firstLoginDate) : undefined
+                    } as Customer
+                }))
+            },
+            (err) => console.error("Error syncing customers:", err)
+        )
+
+        const unsubRequests = onSnapshot(
+            query(collection(db, "requests"), orderBy("createdAt", "desc")),
+            (snap: QuerySnapshot<DocumentData>) => {
+                setProductRequests(snap.docs.map((doc) => {
+                    const data = doc.data() as Omit<ProductRequest, "id">
+                    return { ...data, id: doc.id, createdAt: toDate(data.createdAt) } as ProductRequest
+                }))
+            },
+            (err) => console.error("Error syncing requests:", err)
         )
 
         const unsubJoin = onSnapshot(
@@ -552,6 +562,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         return () => {
             unsubStaff()
+            unsubCustomers()
+            unsubRequests()
             unsubJoin()
             unsubPassword()
         }
