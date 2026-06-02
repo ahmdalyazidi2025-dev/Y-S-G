@@ -91,7 +91,7 @@ export function StaffManager() {
 
 
 
-    const addCurrentUser = () => {
+    const addCurrentUser = async () => {
         if (!currentUser) return
 
         // Check if already exists
@@ -105,14 +105,17 @@ export function StaffManager() {
             return;
         }
 
-
-
         // Use specialized function to avoid creating new auth user
         if (addExistingUserAsStaff) {
-            addExistingUserAsStaff(currentUser.id)
+            try {
+                await addExistingUserAsStaff(currentUser.id)
+                hapticFeedback('success')
+            } catch (error: any) {
+                console.error("Add current user failed:", error)
+            }
+        } else {
+            toast.error("هذه الميزة غير متوفرة حالياً")
         }
-        toast.success("تم إضافة حسابك الحالي كمسؤول")
-        hapticFeedback('success')
     }
 
     const togglePermission = (perm: string) => {

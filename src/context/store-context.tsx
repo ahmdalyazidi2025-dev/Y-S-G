@@ -1018,6 +1018,68 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast.error("تم حذف الموظف")
     }
 
+    const resetPassword = async (email: string) => {
+        try {
+            const { sendPasswordResetEmail } = await import("firebase/auth")
+            await sendPasswordResetEmail(auth, email)
+            toast.success("تم إرسال رابط إعادة تعيين كلمة المرور للبريد الإلكتروني")
+        } catch (error: any) {
+            console.error("Password reset error:", error)
+            toast.error("فشل إرسال الرابط: " + error.message)
+        }
+    }
+
+    const addExistingUserAsStaff = async (userId: string) => {
+        if (!currentUser) {
+            toast.error("غير مصرح: يجب تسجيل الدخول أولاً")
+            return
+        }
+
+        // Security check: only allow if staff list is empty, or the current user is already an admin
+        const isStaffEmpty = staff.length === 0
+        const isAuthorized = isStaffEmpty || currentUser.role === "admin"
+
+        if (!isAuthorized) {
+            toast.error("غير مصرح: ليس لديك صلاحيات لتنفيذ هذا الإجراء")
+            return
+        }
+
+        try {
+            const staffRef = doc(db, "staff", userId)
+            const staffDoc = await getDoc(staffRef)
+            if (staffDoc.exists()) {
+                toast.info("هذا الحساب موجود بالفعل في قائمة المشرفين")
+                return
+            }
+
+            const staffData = {
+                id: userId,
+                name: currentUser.name,
+                username: currentUser.username || "admin",
+                phone: currentUser.phone || "",
+                email: currentUser.email || `${currentUser.username || "admin"}@ysg.local`,
+                role: "admin" as const,
+                permissions: ["all"],
+                createdAt: Timestamp.now()
+            }
+
+            await setDoc(staffRef, staffData, { merge: true })
+            
+            // Also update the users collection to set their role to admin
+            const userRef = doc(db, "users", userId)
+            const userDoc = await getDoc(userRef)
+            if (userDoc.exists()) {
+                await setDoc(userRef, { role: "admin", permissions: ["all"], updatedAt: Timestamp.now() }, { merge: true })
+            }
+
+            toast.success("تم إضافة حسابك الحالي كمسؤول بنجاح! 🚀")
+        } catch (error: any) {
+            console.error("Failed to add existing user as staff:", error)
+            toast.error("فشل إضافة الحساب كمسؤول: " + error.message)
+            throw error
+        }
+    }
+
     const broadcastToCategory = async (category: string, text: string) => {
         try {
             const getCategory = (lastActive?: any) => {
@@ -1370,6 +1432,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,
+            resetPassword, addExistingUserAsStaff,
             fetchProducts, deleteAllChatsAndNotifications,
             joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
             notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk,
