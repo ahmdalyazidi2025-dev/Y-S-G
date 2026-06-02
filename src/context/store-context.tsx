@@ -253,7 +253,7 @@ type StoreContextType = {
     globalSelectedProduct: Product | null
     setGlobalSelectedProduct: (product: Product | null) => void
     markAllNotificationsRead?: (userId: string) => void
-    markMessagesRead?: () => void
+    markMessagesRead?: (userId?: string, isAdminView?: boolean) => Promise<void>
     sendMessage: (text: string, isAdmin: boolean, customerId?: string, customerName?: string) => void
     broadcastNotification: (text: string) => void
     currentUser: User | null
@@ -1445,6 +1445,28 @@ const normalizeArabic = (str: string | null | undefined): string => {
         }
     }
 
+    const markMessagesRead = async (userId?: string, isAdminView = false) => {
+        if (!userId) return
+        try {
+            const unread = messages.filter(m => {
+                if (m.read) return false
+                if (isAdminView) {
+                    return (m.senderId === userId || m.userId === userId) && !m.isAdmin
+                } else {
+                    return m.userId === userId && m.isAdmin
+                }
+            })
+            if (unread.length === 0) return
+            const batch = writeBatch(db)
+            unread.forEach(m => {
+                batch.update(doc(db, "messages", m.id), { read: true })
+            })
+            await batch.commit()
+        } catch (e) {
+            console.error("Error marking messages as read:", e)
+        }
+    }
+
     const deleteAllChatsAndNotifications = async (onProgress?: (progress: number, status: string) => void) => {
         try {
             onProgress?.(10, "البدء في حذف الرسائل...")
@@ -1522,7 +1544,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             fetchProducts, deleteAllChatsAndNotifications,
             joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
             notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk,
-            globalSelectedProduct, setGlobalSelectedProduct, guestId
+            globalSelectedProduct, setGlobalSelectedProduct, guestId, markMessagesRead
         }}>
             {children}
         </StoreContext.Provider>

@@ -7,7 +7,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 
 export function CategoryStories({ selectedCategory, onSelect }: { selectedCategory: string, onSelect: (cat: string) => void }) {
-    const { categories } = useStore()
+    const { categories, storeSettings } = useStore()
 
     // Filter out hidden categories from customer view
     const visibleCategories = categories.filter(c => !c.isHidden)
@@ -42,8 +42,15 @@ export function CategoryStories({ selectedCategory, onSelect }: { selectedCatego
                             {/* Inner Circle Frame */}
                             <div className="w-full h-full rounded-full bg-white dark:bg-slate-950 overflow-hidden flex items-center justify-center border border-slate-100 dark:border-slate-800 transition-colors shadow-inner">
                                 {cat === "الكل" ? (
-                                    <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-primary/10 text-primary text-2xl">
-                                        🏠
+                                    <div className="w-full h-full relative overflow-hidden flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+                                        <Image 
+                                            src={storeSettings?.logoUrl || "/logo.png"} 
+                                            alt={cat} 
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                            width={80} 
+                                            height={80} 
+                                            unoptimized
+                                        />
                                     </div>
                                 ) : dbCat?.image ? (
                                     <Image 

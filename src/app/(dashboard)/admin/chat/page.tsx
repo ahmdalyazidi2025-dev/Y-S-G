@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Send, MessageCircle, Bell, Megaphone, User, ChevronLeft } from "lucide-react"
 import Link from "next/link"
@@ -13,11 +13,18 @@ import Image from "next/image"
 import { ProductDetailsModal } from "@/components/store/product-details-modal"
 
 export default function AdminChatPage() {
-    const { messages, sendMessage, broadcastNotification, customers, products } = useStore()
+    const { messages, sendMessage, broadcastNotification, customers, products, markMessagesRead } = useStore()
     const [msg, setMsg] = useState("")
     const [mode, setMode] = useState<"direct" | "broadcast">("direct")
     const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
+    // Mark messages read when admin opens a chat
+    useEffect(() => {
+        if (selectedCustomer && markMessagesRead) {
+            markMessagesRead(selectedCustomer, true)
+        }
+    }, [selectedCustomer, messages, markMessagesRead])
 
     // Group messages into conversations
     const conversations = useMemo(() => {
@@ -25,15 +32,19 @@ export default function AdminChatPage() {
 
         messages.forEach(m => {
             if (m.senderId === "admin") return
+            const isUnread = !m.read && !m.isAdmin;
             if (!convs[m.senderId]) {
                 convs[m.senderId] = {
                     customerId: m.senderId,
                     customerName: m.senderName,
                     lastMessage: m.text,
                     lastMessageDate: m.createdAt,
-                    unreadCount: 0
+                    unreadCount: isUnread ? 1 : 0
                 }
             } else {
+                if (isUnread) {
+                    convs[m.senderId].unreadCount += 1
+                }
                 if (m.createdAt > convs[m.senderId]!.lastMessageDate!) {
                     convs[m.senderId].lastMessage = m.text
                     convs[m.senderId].lastMessageDate = m.createdAt
