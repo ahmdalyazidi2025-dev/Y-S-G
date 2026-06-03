@@ -422,7 +422,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     useEffect(() => {
-        const unsubProducts = onSnapshot(query(collection(db, "products"), orderBy("createdAt", "desc"), limit(productsLimit)), (snap: QuerySnapshot<DocumentData>) => {
+        const unsubProducts = onSnapshot(query(collection(db, "products"), limit(productsLimit)), (snap: QuerySnapshot<DocumentData>) => {
             setProducts(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Product, "id">
                 return {
