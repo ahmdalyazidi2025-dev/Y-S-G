@@ -189,176 +189,184 @@ export function StaffManager() {
                                 {member.username || (member.email?.includes('@') ? member.email.split('@')[0] : member.name)} • {member.phone || "لا يوجد هاتف"} • {member.permissions?.length || 0} صلاحيات
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {currentUser?.id === member.id && (
+                        {currentUser?.role === "admin" && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {currentUser?.id === member.id && (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 rounded-lg text-amber-500 hover:bg-amber-500/10 text-xs gap-1"
+                                        onClick={() => {
+                                            if (confirm("هل تريد إصلاح صلاحياتك وتعيين نفسك كمسؤول شامل (Super Admin)؟")) {
+                                                updateStaff({
+                                                    ...member,
+                                                    role: "admin",
+                                                    permissions: ALL_PERMS.map(p => p.id)
+                                                })
+                                                setTimeout(() => window.location.reload(), 1000)
+                                            }
+                                        }}
+                                    >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        <span className="hidden sm:inline">إصلاح صلاحياتي</span>
+                                    </Button>
+                                )}
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="h-8 rounded-lg text-amber-500 hover:bg-amber-500/10 text-xs gap-1"
+                                    className="h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 text-xs"
+                                    onClick={() => startEdit(member)}
+                                >
+                                    تعديل
+                                </Button>
+
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 rounded-lg text-emerald-400 hover:bg-emerald-400/10 text-xs"
                                     onClick={() => {
-                                        if (confirm("هل تريد إصلاح صلاحياتك وتعيين نفسك كمسؤول شامل (Super Admin)؟")) {
-                                            updateStaff({
-                                                ...member,
-                                                role: "admin",
-                                                permissions: ALL_PERMS.map(p => p.id)
-                                            })
-                                            setTimeout(() => window.location.reload(), 1000)
+                                        if (confirm("هل أنت متأكد من إرسال رابط استعادة كلمة المرور لهذا المستخدم؟")) {
+                                            if (resetPassword && member.email) resetPassword(member.email)
                                         }
                                     }}
                                 >
-                                    <ShieldCheck className="w-4 h-4" />
-                                    <span className="hidden sm:inline">إصلاح صلاحياتي</span>
+                                    <Lock className="w-4 h-4" />
                                 </Button>
-                            )}
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 text-xs"
-                                onClick={() => startEdit(member)}
-                            >
-                                تعديل
-                            </Button>
 
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 rounded-lg text-emerald-400 hover:bg-emerald-400/10 text-xs"
-                                onClick={() => {
-                                    if (confirm("هل أنت متأكد من إرسال رابط استعادة كلمة المرور لهذا المستخدم؟")) {
-                                        if (resetPassword && member.email) resetPassword(member.email)
-                                    }
-                                }}
-                            >
-                                <Lock className="w-4 h-4" />
-                            </Button>
-
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-400/10"
-                                onClick={() => {
-                                    if (confirm("تحذير هام: سيتم حذف حساب الموظف نهائياً وسحب كافة الصلاحيات. لن يتمكن من الدخول مجدداً.\nهل أنت متأكد؟")) {
-                                        deleteStaff(member.id)
-                                    }
-                                }}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </Button>
-                        </div>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 rounded-lg text-red-400 hover:bg-red-400/10"
+                                    onClick={() => {
+                                        if (confirm("تحذير هام: سيتم حذف حساب الموظف نهائياً وسحب كافة الصلاحيات. لن يتمكن من الدخول مجدداً.\nهل أنت متأكد؟")) {
+                                            deleteStaff(member.id)
+                                        }
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
 
-            {isAdding ? (
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-sm font-bold text-primary">{editingId ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}</h3>
-                    </div>
+            {currentUser?.role === "admin" ? (
+                isAdding ? (
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-sm font-bold text-primary">{editingId ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}</h3>
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label className="text-[10px]">الاسم</Label>
+                                <Input
+                                    placeholder="اسم الموظف"
+                                    value={newStaff.name}
+                                    onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
+                                    className="bg-background h-10 text-xs text-right border-border"
+                                    autoComplete="off"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px]">اسم المستخدم</Label>
+                                <Input
+                                    placeholder="username"
+                                    value={newStaff.username}
+                                    onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
+                                    className="bg-background h-10 text-xs text-right dir-rtl border-border"
+                                    disabled={!!editingId} // Disable username edit to prevent email mismatches
+                                    autoComplete="off"
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-1">
-                            <Label className="text-[10px]">الاسم</Label>
+                            <Label className="text-[10px]">رقم الهاتف</Label>
                             <Input
-                                placeholder="اسم الموظف"
-                                value={newStaff.name}
-                                onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
+                                placeholder="05xxxxxxxx"
+                                value={newStaff.phone}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    if (val.length <= 10) setNewStaff({ ...newStaff, phone: val })
+                                }}
                                 className="bg-background h-10 text-xs text-right border-border"
                                 autoComplete="off"
+                                type="tel"
                             />
+                            <p className="text-[9px] text-muted-foreground">يستخدم لاستعادة كلمة المرور</p>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[10px]">اسم المستخدم</Label>
-                            <Input
-                                placeholder="username"
-                                value={newStaff.username}
-                                onChange={e => setNewStaff({ ...newStaff, username: e.target.value.replace(/\s/g, '').toLowerCase() })}
-                                className="bg-background h-10 text-xs text-right dir-rtl border-border"
-                                disabled={!!editingId} // Disable username edit to prevent email mismatches
-                                autoComplete="off"
+                            <Label className="text-[10px]">كلمة المرور</Label>
+                            <PasswordInput
+                                placeholder={editingId ? "اتركه فارغاً للاحتفاظ بكلمة المرور الحالية" : "••••••••"}
+                                value={newStaff.password}
+                                onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
+                                className="bg-background h-10 text-xs text-right border-border"
+                                autoComplete="new-password"
                             />
+                            {editingId && <p className="text-[9px] text-muted-foreground">عند كتابة كلمة مرور جديدة، سيتم تغييرها فوراً للموظف.</p>}
                         </div>
-                    </div>
 
-                    <div className="space-y-1">
-                        <Label className="text-[10px]">رقم الهاتف</Label>
-                        <Input
-                            placeholder="05xxxxxxxx"
-                            value={newStaff.phone}
-                            onChange={(e) => {
-                                const val = e.target.value.replace(/[^0-9]/g, '');
-                                if (val.length <= 10) setNewStaff({ ...newStaff, phone: val })
-                            }}
-                            className="bg-background h-10 text-xs text-right border-border"
-                            autoComplete="off"
-                            type="tel"
-                        />
-                        <p className="text-[9px] text-muted-foreground">يستخدم لاستعادة كلمة المرور</p>
-                    </div>
-                    <div className="space-y-1">
-                        <Label className="text-[10px]">كلمة المرور</Label>
-                        <PasswordInput
-                            placeholder={editingId ? "اتركه فارغاً للاحتفاظ بكلمة المرور الحالية" : "••••••••"}
-                            value={newStaff.password}
-                            onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                            className="bg-background h-10 text-xs text-right border-border"
-                            autoComplete="new-password"
-                        />
-                        {editingId && <p className="text-[9px] text-muted-foreground">عند كتابة كلمة مرور جديدة، سيتم تغييرها فوراً للموظف.</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-[10px]">نوع الحساب</Label>
-                        <div className="flex gap-2 bg-muted p-1 rounded-lg">
-                            <button
-                                onClick={() => setNewStaff({ ...newStaff, role: "staff" })}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "staff" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-                            >موظف</button>
-                            <button
-                                onClick={() => setNewStaff({ ...newStaff, role: "admin", permissions: ALL_PERMS.map(p => p.id) })}
-                                className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "admin" ? "bg-primary text-primary-foreground font-bold shadow-sm" : "text-muted-foreground"}`}
-                            >مسؤول (Admin)</button>
-                        </div>
-                    </div>
-
-                    <div className={`space-y-2 ${newStaff.role === "admin" ? "opacity-50 pointer-events-none" : ""}`}>
-                        <Label className="text-[10px]">الصلاحيات {newStaff.role === "admin" && "(المدير يملك كافة الصلاحيات)"}</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {ALL_PERMS.map(perm => (
+                        <div className="space-y-2">
+                            <Label className="text-[10px]">نوع الحساب</Label>
+                            <div className="flex gap-2 bg-muted p-1 rounded-lg">
                                 <button
-                                    key={perm.id}
-                                    type="button"
-                                    onClick={() => togglePermission(perm.id)}
-                                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${(newStaff.permissions || []).includes(perm.id)
-                                        ? "bg-primary/20 border-primary text-primary"
-                                        : "bg-muted border-border text-muted-foreground hover:border-foreground/20"
-                                        }`}
-                                >
-                                    {(newStaff.permissions || []).includes(perm.id) ? (
-                                        <CheckCircle className="w-3 h-3" />
-                                    ) : (
-                                        <Circle className="w-3 h-3" />
-                                    )}
-                                    {perm.label}
-                                </button>
-                            ))}
+                                    onClick={() => setNewStaff({ ...newStaff, role: "staff" })}
+                                    className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "staff" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+                                >موظف</button>
+                                <button
+                                    onClick={() => setNewStaff({ ...newStaff, role: "admin", permissions: ALL_PERMS.map(p => p.id) })}
+                                    className={`flex-1 text-xs py-1.5 rounded-md transition-all ${newStaff.role === "admin" ? "bg-primary text-primary-foreground font-bold shadow-sm" : "text-muted-foreground"}`}
+                                >مسؤول (Admin)</button>
+                            </div>
+                        </div>
+
+                        <div className={`space-y-2 ${newStaff.role === "admin" ? "opacity-50 pointer-events-none" : ""}`}>
+                            <Label className="text-[10px]">الصلاحيات {newStaff.role === "admin" && "(المدير يملك كافة الصلاحيات)"}</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {ALL_PERMS.map(perm => (
+                                    <button
+                                        key={perm.id}
+                                        type="button"
+                                        onClick={() => togglePermission(perm.id)}
+                                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${(newStaff.permissions || []).includes(perm.id)
+                                            ? "bg-primary/20 border-primary text-primary"
+                                            : "bg-muted border-border text-muted-foreground hover:border-foreground/20"
+                                            }`}
+                                    >
+                                        {(newStaff.permissions || []).includes(perm.id) ? (
+                                            <CheckCircle className="w-3 h-3" />
+                                        ) : (
+                                            <Circle className="w-3 h-3" />
+                                        )}
+                                        {perm.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                            <Button className="flex-1 h-10 text-xs" onClick={handleSave}>{editingId ? "حفظ التعديلات" : "إضافة"}</Button>
+                            <Button variant="ghost" className="h-10 text-xs" onClick={resetForm}>إلغاء</Button>
                         </div>
                     </div>
-
-                    <div className="flex gap-2 pt-2">
-                        <Button className="flex-1 h-10 text-xs" onClick={handleSave}>{editingId ? "حفظ التعديلات" : "إضافة"}</Button>
-                        <Button variant="ghost" className="h-10 text-xs" onClick={resetForm}>إلغاء</Button>
-                    </div>
-                </div>
+                ) : (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full border-dashed border-border bg-card hover:bg-muted text-muted-foreground h-12 rounded-xl text-xs gap-2"
+                        onClick={() => setIsAdding(true)}
+                    >
+                        <PlusSquare className="w-4 h-4" />
+                        <span>إضافة عضو جديد</span>
+                    </Button>
+                )
             ) : (
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full border-dashed border-border bg-card hover:bg-muted text-muted-foreground h-12 rounded-xl text-xs gap-2"
-                    onClick={() => setIsAdding(true)}
-                >
-                    <PlusSquare className="w-4 h-4" />
-                    <span>إضافة عضو جديد</span>
-                </Button>
+                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl p-4 text-xs font-bold text-center">
+                    ⚠️ يرجى العلم أن إدارة فريق العمل والصلاحيات تتطلب حساب مدير نظام كامل (Admin). حساب الموظف الحالي (Staff) للقراءة فقط ولا يمكنه التعديل.
+                </div>
             )}
         </div>
     )

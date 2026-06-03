@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useStore } from "@/context/store-context"
-import { Bell, Send, Trash2, ShieldCheck, Users, User, ArrowRight, Clock, Eye, CheckSquare } from "lucide-react"
+import { Bell, Send, Trash2, ShieldCheck, Users, User, ArrowRight, Clock, Eye, CheckSquare, Link2, ExternalLink, Package, Globe } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { db } from "@/lib/firebase"
@@ -14,15 +14,27 @@ import { collection, addDoc, Timestamp, doc, deleteDoc, writeBatch, getDocs, que
 import { cn } from "@/lib/utils"
 
 export default function AdminNotificationsPage() {
-    const { customers, notifications = [], deleteCustomer } = useStore()
+    const { customers, notifications = [], products = [], deleteCustomer } = useStore()
     const [targetType, setTargetType] = useState<"all" | "category" | "single">("all")
     const [targetCategory, setTargetCategory] = useState<string>("Active")
     const [targetCustomerId, setTargetCustomerId] = useState<string>("")
     const [title, setTitle] = useState("")
     const [body, setBody] = useState("")
-    const [actionLink, setActionLink] = useState("/")
+    const [linkType, setLinkType] = useState<"default" | "product" | "custom">("default")
+    const [selectedProductId, setSelectedProductId] = useState<string>("")
+    const [customLink, setCustomLink] = useState("/")
     const [isLoading, setIsLoading] = useState(false)
     const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+    const computedActionLink = useMemo(() => {
+        if (linkType === "product") {
+            return selectedProductId ? `/customer?product=${selectedProductId}` : "/"
+        }
+        if (linkType === "custom") {
+            return customLink.trim() || "/"
+        }
+        return "/"
+    }, [linkType, selectedProductId, customLink])
 
     const groupedNotifications = useMemo(() => {
         const grouped = [];
@@ -191,7 +203,7 @@ export default function AdminNotificationsPage() {
                     userId: uid,
                     title: title.trim(),
                     body: body.trim(),
-                    link: actionLink.trim() || "/",
+                    link: computedActionLink,
                     read: false,
                     targetLabel: targetNameLabel,
                     broadcastId: broadcastId,
@@ -203,12 +215,14 @@ export default function AdminNotificationsPage() {
 
             // Trigger push notifications
             const { sendPushToUsers } = await import("@/app/actions/notifications")
-            await sendPushToUsers(targetUserIds, title.trim(), body.trim(), actionLink.trim() || "/customer?notifications=open")
+            await sendPushToUsers(targetUserIds, title.trim(), body.trim(), computedActionLink)
 
             toast.success(`تم إرسال الإشعار بنجاح إلى ${targetUserIds.length} عميل (${targetNameLabel})`)
             setTitle("")
             setBody("")
-            setActionLink("/")
+            setLinkType("default")
+            setSelectedProductId("")
+            setCustomLink("/")
         } catch (error) {
             console.error("Error sending notification:", error)
             toast.error("حدث خطأ أثناء إرسال الإشعارات")
@@ -345,6 +359,85 @@ export default function AdminNotificationsPage() {
                                 onChange={(e) => setBody(e.target.value)}
                                 required
                             />
+                        </div>
+
+                        {/* Action Link / Redirect Routing */}
+                        <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-white/5">
+                            <Label className="block font-bold text-slate-700 dark:text-slate-300">توجيه الإشعار عند النقر</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setLinkType("default")}
+                                    className={cn(
+                                        "py-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5",
+                                        linkType === "default"
+                                            ? "bg-amber-500 text-white border-transparent shadow-sm"
+                                            : "bg-slate-50 dark:bg-black/10 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-100"
+                                    )}
+                                >
+                                    <Globe className="w-4 h-4" />
+                                    <span>الرئيسية (الافتراضي)</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLinkType("product")}
+                                    className={cn(
+                                        "py-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5",
+                                        linkType === "product"
+                                            ? "bg-amber-500 text-white border-transparent shadow-sm"
+                                            : "bg-slate-50 dark:bg-black/10 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-100"
+                                    )}
+                                >
+                                    <Package className="w-4 h-4" />
+                                    <span>ربط بمنتج محدد</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setLinkType("custom")}
+                                    className={cn(
+                                        "py-2.5 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5",
+                                        linkType === "custom"
+                                            ? "bg-amber-500 text-white border-transparent shadow-sm"
+                                            : "bg-slate-50 dark:bg-black/10 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-100"
+                                    )}
+                                >
+                                    <Link2 className="w-4 h-4" />
+                                    <span>رابط مخصص</span>
+                                </button>
+                            </div>
+
+                            {/* Product Selector Dropdown */}
+                            {linkType === "product" && (
+                                <div className="space-y-2 animate-fadeIn">
+                                    <Label className="block font-bold text-xs text-slate-400">اختر المنتج المرتبط</Label>
+                                    <select
+                                        value={selectedProductId}
+                                        onChange={(e) => setSelectedProductId(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white rounded-xl h-11 px-3 text-right text-sm font-bold"
+                                    >
+                                        <option value="">-- اختر منتجاً من المتجر --</option>
+                                        {products.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name} ({p.pricePiece} ر.س)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Custom Link Input */}
+                            {linkType === "custom" && (
+                                <div className="space-y-2 animate-fadeIn">
+                                    <Label className="block font-bold text-xs text-slate-400">مسار الرابط المخصص</Label>
+                                    <Input
+                                        placeholder="مثال: /customer/orders أو /customer?notifications=open"
+                                        className="bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5 rounded-xl text-left font-mono h-11 text-slate-900 dark:text-white placeholder-slate-400"
+                                        value={customLink}
+                                        onChange={(e) => setCustomLink(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Submit button */}
