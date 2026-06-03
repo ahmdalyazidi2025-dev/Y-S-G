@@ -101,7 +101,9 @@ export default function StoreLayout({
         ...(storeSettings?.enableBarcodeScanner !== false ? [
             { name: "الماسح", icon: Scan, isCenter: true, onClick: () => setIsScannerOpen(true) }
         ] : []),
-        { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) },
+        ...(storeSettings?.enableProductRequests !== false ? [
+            { name: "طلب", icon: PlusCircle, onClick: () => setIsRequestOpen(true) }
+        ] : []),
         { name: "الدردشة", icon: MessageSquare, href: "/customer/chat", badge: unreadChatCount },
     ]
 

@@ -372,8 +372,13 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                                                         variant="outline"
                                                         className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 rounded-xl h-12 font-bold"
                                                         onClick={() => {
+                                                            const nameDisplay = currentUser 
+                                                                ? `${currentUser.username} (${currentUser.name})`
+                                                                : "عميل المتجر الذكي"
                                                             addProductRequest({
-                                                                customerName: "عميل المتجر الذكي",
+                                                                customerName: nameDisplay,
+                                                                customerId: currentUser?.id || "unknown",
+                                                                customerPhone: currentUser?.phone || "",
                                                                 description: `طلب تلقائي من AI: ${msg.content.slice(0, 50)}...`,
                                                                 image: msg.image || undefined
                                                             })

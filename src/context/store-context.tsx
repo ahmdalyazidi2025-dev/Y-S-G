@@ -582,7 +582,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 })
                 setProductRequests(docs)
             },
-            (err) => console.error("Error syncing requests:", err)
+            (err) => {
+                console.error("Error syncing requests:", err);
+                toast.error("خطأ في مزامنة طلبات التوفير: " + err.message);
+            }
         )
 
         const unsubJoin = onSnapshot(
