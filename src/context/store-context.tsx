@@ -241,6 +241,7 @@ type StoreContextType = {
     updateBanner: (bannerId: string, data: Partial<Banner>) => void
     addProductRequest: (request: Omit<ProductRequest, "id" | "status" | "createdAt">) => void
     updateProductRequestStatus: (requestId: string, status: ProductRequest["status"]) => void
+    deleteProductRequest: (requestId: string) => Promise<void>
     staff: StaffMember[]
     addStaff: (member: Omit<StaffMember, "id" | "createdAt">) => void
     updateStaff: (member: StaffMember) => void
@@ -1078,6 +1079,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         await updateDoc(doc(db, "requests", requestId), { status })
     }
 
+    const deleteProductRequest = async (requestId: string) => {
+        await deleteDoc(doc(db, "requests", requestId))
+        toast.success("تم حذف طلب التوفير بنجاح")
+    }
+
     const sendMessage = async (text: string, isAdmin: boolean, customerId = "guest", customerName = "عميل") => {
         const finalCustomerId = isAdmin ? customerId : (currentUser?.id || customerId)
         await addDoc(collection(db, "messages"), {
@@ -1604,7 +1610,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory,
             addCustomer, updateCustomer, deleteCustomer, updateOrderStatus, markCustomerLoggedIn,
             coupons, addCoupon, deleteCoupon,
-            addBanner, deleteBanner, toggleBanner, updateBanner, addProductRequest, updateProductRequestStatus,
+            addBanner, deleteBanner, toggleBanner, updateBanner, addProductRequest, updateProductRequestStatus, deleteProductRequest,
             messages, sendMessage, broadcastNotification, currentUser, login, logout,
             updateCartQuantity, restoreDraftToCart, storeSettings, updateStoreSettings,
             staff, addStaff, updateStaff, deleteStaff, broadcastToCategory,

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, ChevronDown, ChevronLeft } from "lucide-react"
+import { ArrowRight, Camera, Clock, CheckCircle2, XCircle, User, Calendar, MessageSquare, ChevronDown, ChevronLeft, Trash2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useStore, ProductRequest } from "@/context/store-context"
@@ -29,7 +29,7 @@ const formatRequestDate = (d: any, format: "date" | "datetime" = "datetime"): st
 }
 
 export default function AdminRequestsPage() {
-    const { productRequests, updateProductRequestStatus } = useStore()
+    const { productRequests, updateProductRequestStatus, deleteProductRequest } = useStore()
     const [selectedRequest, setSelectedRequest] = useState<ProductRequest | null>(null)
     const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -245,21 +245,36 @@ export default function AdminRequestsPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="pt-2 flex gap-2">
-                                    <Button
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-12 gap-2"
-                                        onClick={() => { updateProductRequestStatus(selectedRequest.id, "fulfilled"); setSelectedRequest(null) }}
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        <span>تم التوفير</span>
-                                    </Button>
+                                <div className="pt-2 flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <Button
+                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl h-12 gap-2"
+                                            onClick={() => { updateProductRequestStatus(selectedRequest.id, "fulfilled"); setSelectedRequest(null) }}
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            <span>تم التوفير</span>
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl h-12 gap-2"
+                                            onClick={() => { updateProductRequestStatus(selectedRequest.id, "rejected"); setSelectedRequest(null) }}
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            <span>رفض</span>
+                                        </Button>
+                                    </div>
                                     <Button
                                         variant="ghost"
-                                        className="flex-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl h-12 gap-2"
-                                        onClick={() => { updateProductRequestStatus(selectedRequest.id, "rejected"); setSelectedRequest(null) }}
+                                        className="w-full text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 dark:border-rose-500/20 rounded-xl h-12 gap-2 mt-1"
+                                        onClick={() => {
+                                            if (confirm("هل أنت متأكد من رغبتك في حذف هذا الطلب نهائياً؟")) {
+                                                deleteProductRequest(selectedRequest.id);
+                                                setSelectedRequest(null);
+                                            }
+                                        }}
                                     >
-                                        <XCircle className="w-4 h-4" />
-                                        <span>رفض</span>
+                                        <Trash2 className="w-4 h-4" />
+                                        <span>حذف الطلب نهائياً</span>
                                     </Button>
                                 </div>
                             </div>
