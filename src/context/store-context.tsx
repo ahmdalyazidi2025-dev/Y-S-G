@@ -282,6 +282,8 @@ type StoreContextType = {
     hasMoreProducts?: boolean
     hasMoreOrders?: boolean
     hasMoreNotifications?: boolean
+    loadMoreCategoryProducts?: (catId: string) => void
+    hasMoreCategoryProducts?: (catId: string) => boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -347,6 +349,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!hasMoreNotifications) return
         setNotificationsLimit(prev => prev + 25)
     }
+
+    const [categoryLimits, setCategoryLimits] = useState<{ [catId: string]: number }>({})
+    const [categoryProductsMap, setCategoryProductsMap] = useState<{ [catId: string]: Product[] }>({})
+
+    const loadMoreCategoryProducts = useCallback((catId: string) => {
+        setCategoryLimits(prev => ({
+            ...prev,
+            [catId]: (prev[catId] || 10) + 10
+        }))
+    }, [])
+
+    const hasMoreCategoryProducts = useCallback((catId: string) => {
+        const currentCount = categoryProductsMap[catId]?.length || 0
+        const currentLimit = categoryLimits[catId] || 10
+        return currentCount >= currentLimit
+    }, [categoryProductsMap, categoryLimits])
 
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
@@ -422,6 +440,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     useEffect(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        if (!isAdmin && categories.length > 0) {
+            setProducts([])
+            return
+        }
+
         const unsubProducts = onSnapshot(query(collection(db, "products"), limit(productsLimit)), (snap: QuerySnapshot<DocumentData>) => {
             setProducts(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Product, "id">
@@ -435,6 +459,54 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setHasMoreProducts(snap.docs.length >= productsLimit)
         })
 
+        return () => unsubProducts()
+    }, [toDate, productsLimit, currentUser, categories.length])
+
+    useEffect(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        if (isAdmin || categories.length === 0) return
+
+        const unsubscribes = categories.map(cat => {
+            const catId = cat.id
+            const currentLimit = categoryLimits[catId] || 10
+            const q = query(
+                collection(db, "products"),
+                where("category", "==", catId),
+                limit(currentLimit)
+            )
+
+            return onSnapshot(q, (snap) => {
+                const docs = snap.docs.map(doc => {
+                    const data = doc.data() as Omit<Product, "id">
+                    return {
+                        ...data,
+                        id: doc.id,
+                        discountEndDate: data.discountEndDate ? toDate(data.discountEndDate) : undefined,
+                        createdAt: data.createdAt ? toDate(data.createdAt) : undefined
+                    } as Product
+                })
+
+                setCategoryProductsMap(prev => ({
+                    ...prev,
+                    [catId]: docs
+                }))
+            })
+        })
+
+        return () => {
+            unsubscribes.forEach(unsub => unsub())
+        }
+    }, [categories, categoryLimits, currentUser, toDate])
+
+    const computedProducts = React.useMemo(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        if (isAdmin || categories.length === 0) {
+            return products
+        }
+        return Object.values(categoryProductsMap).flat()
+    }, [products, categoryProductsMap, currentUser, categories.length])
+
+    useEffect(() => {
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
             const list = snap.docs.map((doc) => ({ ...doc.data() as Omit<Category, "id">, id: doc.id } as Category))
             list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
@@ -458,11 +530,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
 
         return () => {
-            unsubProducts(); unsubCategories();
+            unsubCategories();
             unsubBanners();
             unsubSettings(); unsubNotifications();
         }
-    }, [toDate, productsLimit, notificationsLimit])
+    }, [toDate, notificationsLimit])
 
     useEffect(() => {
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
@@ -1619,10 +1691,10 @@ const normalizeArabic = (str: string | null | undefined): string => {
 
         if (currentUser?.role === "customer" && allowedCategories && allowedCategories !== "all") {
             const allowed = allowedCategories as string[]
-            return products.filter(p => allowed.includes(p.category))
+            return computedProducts.filter(p => allowed.includes(p.category))
         }
-        return products
-    }, [products, currentUser, customers])
+        return computedProducts
+    }, [computedProducts, currentUser, customers])
 
     const visibleCategories = React.useMemo(() => {
         const dbCustomer = customers.find(c => c.id === currentUser?.id)
@@ -1652,7 +1724,8 @@ const normalizeArabic = (str: string | null | undefined): string => {
             notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk,
             globalSelectedProduct, setGlobalSelectedProduct, guestId, markMessagesRead,
             loadMoreProducts, loadMoreOrders, loadMoreNotifications,
-            hasMoreProducts, hasMoreOrders, hasMoreNotifications
+            hasMoreProducts, hasMoreOrders, hasMoreNotifications,
+            loadMoreCategoryProducts, hasMoreCategoryProducts
         }}>
             {children}
         </StoreContext.Provider>

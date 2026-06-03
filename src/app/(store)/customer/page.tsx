@@ -19,7 +19,18 @@ import { motion, AnimatePresence } from "framer-motion"
 import { HeroBanner } from "@/components/store/hero-banner"
 
 export default function CustomerHome() {
-    const { products, banners, categories, currentUser, markCustomerLoggedIn, setGlobalSelectedProduct, loadMoreProducts, hasMoreProducts } = useStore()
+    const { 
+        products, 
+        banners, 
+        categories, 
+        currentUser, 
+        markCustomerLoggedIn, 
+        setGlobalSelectedProduct, 
+        loadMoreProducts, 
+        hasMoreProducts,
+        loadMoreCategoryProducts,
+        hasMoreCategoryProducts
+    } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -28,12 +39,23 @@ export default function CustomerHome() {
     const [showAcceptedWelcome, setShowAcceptedWelcome] = useState(false)
     const sentinelRef = useRef<HTMLDivElement | null>(null)
 
+    const activeCategoryObj = categories.find(c => c.nameAr === selectedCategory || c.id === selectedCategory || c.nameEn === selectedCategory)
+    const activeCategoryId = activeCategoryObj?.id
+
+    const hasMore = searchQuery !== ""
+        ? hasMoreProducts 
+        : (selectedCategory !== "الكل" && activeCategoryId ? hasMoreCategoryProducts?.(activeCategoryId) : false)
+
     useEffect(() => {
-        if (!hasMoreProducts || !loadMoreProducts) return
+        if (!hasMore) return
 
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
-                loadMoreProducts()
+                if (searchQuery !== "") {
+                    loadMoreProducts?.()
+                } else if (selectedCategory !== "الكل" && activeCategoryId) {
+                    loadMoreCategoryProducts?.(activeCategoryId)
+                }
             }
         }, {
             rootMargin: '150px'
@@ -49,7 +71,16 @@ export default function CustomerHome() {
                 observer.unobserve(currentSentinel)
             }
         }
-    }, [hasMoreProducts, loadMoreProducts])
+    }, [hasMore, searchQuery, selectedCategory, activeCategoryId, loadMoreProducts, loadMoreCategoryProducts])
+
+    const handleHorizontalScroll = (e: React.UIEvent<HTMLDivElement>, catId: string) => {
+        const target = e.currentTarget
+        const scrollLeftAbs = Math.abs(target.scrollLeft)
+        const isNearEnd = target.scrollWidth - target.clientWidth - scrollLeftAbs <= 80
+        if (isNearEnd && hasMoreCategoryProducts?.(catId)) {
+            loadMoreCategoryProducts?.(catId)
+        }
+    }
 
     useEffect(() => {
         try {
@@ -134,7 +165,10 @@ export default function CustomerHome() {
                                     </div>
                                     
                                     {/* Horizontal Swipeable Container */}
-                                    <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar scroll-smooth snap-x">
+                                    <div 
+                                        className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar scroll-smooth snap-x"
+                                        onScroll={(e) => handleHorizontalScroll(e, cat.id)}
+                                    >
                                         {categoryProducts.map((product) => (
                                             <div key={product.id} className="w-[38%] min-w-[130px] sm:min-w-[185px] max-w-[200px] snap-start flex-shrink-0">
                                                 <ProductCard
@@ -143,6 +177,12 @@ export default function CustomerHome() {
                                                 />
                                             </div>
                                         ))}
+                                        {hasMoreCategoryProducts?.(cat.id) && (
+                                            <div className="w-[120px] sm:w-[150px] snap-start flex-shrink-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-white/5 rounded-3xl p-4 min-h-[180px]">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">جاري التحميل...</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )
@@ -178,13 +218,12 @@ export default function CustomerHome() {
                         </div>
                     )}
 
-                    {hasMoreProducts && (
+                    {hasMore && (
                         <div ref={sentinelRef} className="flex justify-center pt-8 pb-4">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                         </div>
                     )}
                 </div>
-
 
                 <ScannerModal
                     isOpen={isScannerOpen}

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useStore } from "@/context/store-context"
 import { ProductCard } from "@/components/store/product-card"
@@ -18,7 +18,7 @@ import { toast } from "sonner"
 export default function CategoryPage() {
     const params = useParams()
     const router = useRouter()
-    const { products, categories, loading, storeSettings, scanProduct } = useStore()
+    const { products, categories, loading, storeSettings, scanProduct, loadMoreCategoryProducts, hasMoreCategoryProducts } = useStore()
     const categoryId = decodeURIComponent(params?.id as string)
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -28,6 +28,32 @@ export default function CategoryPage() {
 
     // Find current category
     const category = categories.find(c => c.id === categoryId || c.nameAr === categoryId)
+
+    const sentinelRef = useRef<HTMLDivElement | null>(null)
+    const hasMore = hasMoreCategoryProducts?.(categoryId)
+
+    useEffect(() => {
+        if (!hasMore || !loadMoreCategoryProducts) return
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadMoreCategoryProducts(categoryId)
+            }
+        }, {
+            rootMargin: '150px'
+        })
+
+        const currentSentinel = sentinelRef.current
+        if (currentSentinel) {
+            observer.observe(currentSentinel)
+        }
+
+        return () => {
+            if (currentSentinel) {
+                observer.unobserve(currentSentinel)
+            }
+        }
+    }, [hasMore, categoryId, loadMoreCategoryProducts])
 
     // Filter products for this category AND search query
     const categoryProducts = useMemo(() => {
@@ -108,15 +134,22 @@ export default function CategoryPage() {
                 {/* Content */}
                 <div className="px-4 py-6">
                     {categoryProducts.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                            {categoryProducts.map((product, index) => (
-                                <ProductCard
-                                    key={product.id}
-                                    item={product}
-                                    onViewDetails={() => setSelectedProduct(product)}
-                                />
-                            ))}
-                        </div>
+                        <>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {categoryProducts.map((product, index) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        item={product}
+                                        onViewDetails={() => setSelectedProduct(product)}
+                                    />
+                                ))}
+                            </div>
+                            {hasMore && (
+                                <div ref={sentinelRef} className="flex justify-center pt-8 pb-4">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 text-center text-slate-500">
                             <Search className="w-12 h-12 mb-4 opacity-20" />
