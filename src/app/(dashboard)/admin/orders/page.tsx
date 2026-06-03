@@ -36,7 +36,7 @@ const formatOrderDate = (d: any): string => {
 }
 
 export default function AdminOrdersPage() {
-    const { orders, updateOrderStatus, deleteOrdersBulk, customers } = useStore()
+    const { orders, updateOrderStatus, deleteOrdersBulk, customers, loadMoreOrders, hasMoreOrders } = useStore()
     const [viewMode, setViewMode] = useState<"all" | "byCustomer">("byCustomer")
     const [filter, setFilter] = useState<string>("all")
     const [regionFilter, setRegionFilter] = useState<string>("all")
@@ -598,6 +598,18 @@ export default function AdminOrdersPage() {
                             )
                         })
                     )}
+                </div>
+            )}
+
+            {hasMoreOrders && loadMoreOrders && (
+                <div className="flex justify-center pt-8 pb-4">
+                    <Button 
+                        onClick={loadMoreOrders} 
+                        variant="outline" 
+                        className="rounded-2xl border-dashed px-8 font-bold gap-2 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10"
+                    >
+                        عرض المزيد من الطلبات 📦
+                    </Button>
                 </div>
             )}
 

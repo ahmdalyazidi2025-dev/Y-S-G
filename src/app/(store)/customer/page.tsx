@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { HeroBanner } from "@/components/store/hero-banner"
 
 export default function CustomerHome() {
-    const { products, banners, categories, currentUser, markCustomerLoggedIn, setGlobalSelectedProduct } = useStore()
+    const { products, banners, categories, currentUser, markCustomerLoggedIn, setGlobalSelectedProduct, loadMoreProducts, hasMoreProducts } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -151,6 +151,18 @@ export default function CustomerHome() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {hasMoreProducts && loadMoreProducts && (
+                        <div className="flex justify-center pt-8">
+                            <Button 
+                                onClick={loadMoreProducts} 
+                                variant="outline" 
+                                className="rounded-2xl border-dashed px-8 font-bold gap-2 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10"
+                            >
+                                عرض المزيد من المنتجات 💎
+                            </Button>
                         </div>
                     )}
                 </div>

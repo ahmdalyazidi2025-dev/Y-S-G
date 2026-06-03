@@ -14,7 +14,7 @@ import { collection, addDoc, Timestamp, doc, deleteDoc, writeBatch, getDocs, que
 import { cn } from "@/lib/utils"
 
 export default function AdminNotificationsPage() {
-    const { customers, notifications = [], products = [], deleteCustomer } = useStore()
+    const { customers, notifications = [], products = [], deleteCustomer, loadMoreNotifications, hasMoreNotifications } = useStore()
     const [targetType, setTargetType] = useState<"all" | "category" | "single">("all")
     const [targetCategory, setTargetCategory] = useState<string>("Active")
     const [targetCustomerId, setTargetCustomerId] = useState<string>("")
@@ -595,6 +595,18 @@ export default function AdminNotificationsPage() {
                                 })}
                             </tbody>
                         </table>
+                    )}
+
+                    {hasMoreNotifications && loadMoreNotifications && (
+                        <div className="flex justify-center pt-6 border-t border-slate-100 dark:border-white/5">
+                            <Button 
+                                onClick={loadMoreNotifications} 
+                                variant="outline" 
+                                className="rounded-xl border-dashed px-8 font-bold gap-2 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 text-xs h-9"
+                            >
+                                عرض المزيد من السجل 🔔
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>

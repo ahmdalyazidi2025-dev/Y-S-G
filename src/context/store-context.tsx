@@ -276,6 +276,12 @@ type StoreContextType = {
     markNotificationRead?: (id: string) => void
     fetchProducts?: (categoryId?: string, isInitial?: boolean) => Promise<void>
     deleteAllChatsAndNotifications?: (onProgress?: (progress: number, status: string) => void) => Promise<void>
+    loadMoreProducts?: () => void
+    loadMoreOrders?: () => void
+    loadMoreNotifications?: () => void
+    hasMoreProducts?: boolean
+    hasMoreOrders?: boolean
+    hasMoreNotifications?: boolean
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -319,6 +325,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [messages, setMessages] = useState<Message[]>([])
     const [staff, setStaff] = useState<StaffMember[]>([])
     const [coupons, setCoupons] = useState<Coupon[]>([])
+    
+    const [productsLimit, setProductsLimit] = useState(50)
+    const [ordersLimit, setOrdersLimit] = useState(25)
+    const [notificationsLimit, setNotificationsLimit] = useState(25)
+    const [hasMoreProducts, setHasMoreProducts] = useState(true)
+    const [hasMoreOrders, setHasMoreOrders] = useState(true)
+    const [hasMoreNotifications, setHasMoreNotifications] = useState(true)
+
+    const loadMoreProducts = () => {
+        if (!hasMoreProducts) return
+        setProductsLimit(prev => prev + 25)
+    }
+
+    const loadMoreOrders = () => {
+        if (!hasMoreOrders) return
+        setOrdersLimit(prev => prev + 25)
+    }
+
+    const loadMoreNotifications = () => {
+        if (!hasMoreNotifications) return
+        setNotificationsLimit(prev => prev + 25)
+    }
+
     const [currentUser, setCurrentUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
             const isAdmin = window.location.pathname.startsWith('/admin') || 
@@ -393,7 +422,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     useEffect(() => {
-        const unsubProducts = onSnapshot(collection(db, "products"), (snap: QuerySnapshot<DocumentData>) => {
+        const unsubProducts = onSnapshot(query(collection(db, "products"), orderBy("createdAt", "desc"), limit(productsLimit)), (snap: QuerySnapshot<DocumentData>) => {
             setProducts(snap.docs.map((doc) => {
                 const data = doc.data() as Omit<Product, "id">
                 return {
@@ -403,6 +432,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                     createdAt: data.createdAt ? toDate(data.createdAt) : undefined
                 } as Product
             }))
+            setHasMoreProducts(snap.docs.length >= productsLimit)
         })
 
         const unsubCategories = onSnapshot(collection(db, "categories"), (snap: QuerySnapshot<DocumentData>) => {
@@ -415,11 +445,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             setBanners(snap.docs.map((doc) => ({ ...doc.data() as Omit<Banner, "id">, id: doc.id } as Banner)))
         })
 
-        const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc")), (snap: QuerySnapshot<DocumentData>) => {
+        const unsubNotifications = onSnapshot(query(collection(db, "notifications"), orderBy("createdAt", "desc"), limit(notificationsLimit)), (snap: QuerySnapshot<DocumentData>) => {
             setNotifications(snap.docs.map((doc) => {
                 const data = doc.data()
                 return { ...data, id: doc.id, createdAt: data.createdAt ? toDate(data.createdAt) : undefined }
             }))
+            setHasMoreNotifications(snap.docs.length >= notificationsLimit)
         })
 
         const unsubSettings = onSnapshot(doc(db, "settings", "global"), (snap: DocumentSnapshot<DocumentData>) => {
@@ -431,7 +462,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubBanners();
             unsubSettings(); unsubNotifications();
         }
-    }, [toDate])
+    }, [toDate, productsLimit, notificationsLimit])
 
     useEffect(() => {
         const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
@@ -439,7 +470,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
         let ordersQuery;
         if (isAdmin) {
-            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(250))
+            ordersQuery = query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(ordersLimit))
         } else {
             ordersQuery = query(collection(db, "orders"), where("customerId", "in", [customerId, "guest"]))
         }
@@ -461,6 +492,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             if (isAdmin) {
                 // Admin must NOT see drafts! Only real orders!
                 docs = docs.filter(o => o.status !== "draft")
+                setHasMoreOrders(snap.docs.length >= ordersLimit)
             } else {
                 // Customer must NOT see soft-deleted orders!
                 docs = docs.filter(o => !o.deletedByCustomer)
@@ -526,7 +558,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             unsubOrders()
             unsubMessages()
         }
-    }, [currentUser, toDate, customers])
+    }, [currentUser, toDate, customers, ordersLimit])
 
     useEffect(() => {
         if (!firebaseAuthReady || !currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'staff')) {
@@ -1618,7 +1650,9 @@ const normalizeArabic = (str: string | null | undefined): string => {
             fetchProducts, deleteAllChatsAndNotifications,
             joinRequests, passwordRequests, deleteJoinRequest, resolvePasswordRequest, playSound,
             notifications, markNotificationRead, markAllNotificationsRead, deleteOrdersBulk,
-            globalSelectedProduct, setGlobalSelectedProduct, guestId, markMessagesRead
+            globalSelectedProduct, setGlobalSelectedProduct, guestId, markMessagesRead,
+            loadMoreProducts, loadMoreOrders, loadMoreNotifications,
+            hasMoreProducts, hasMoreOrders, hasMoreNotifications
         }}>
             {children}
         </StoreContext.Provider>
