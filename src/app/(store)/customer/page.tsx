@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { ProductCard } from "@/components/store/product-card"
 import { Input } from "@/components/ui/input"
 import { Search, Bell, Sparkles, CheckCircle } from "lucide-react"
@@ -26,6 +26,30 @@ export default function CustomerHome() {
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
     const [isCartOpen, setIsCartOpen] = useState(false)
     const [showAcceptedWelcome, setShowAcceptedWelcome] = useState(false)
+    const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        if (!hasMoreProducts || !loadMoreProducts) return
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadMoreProducts()
+            }
+        }, {
+            rootMargin: '150px'
+        })
+
+        const currentSentinel = sentinelRef.current
+        if (currentSentinel) {
+            observer.observe(currentSentinel)
+        }
+
+        return () => {
+            if (currentSentinel) {
+                observer.unobserve(currentSentinel)
+            }
+        }
+    }, [hasMoreProducts, loadMoreProducts])
 
     useEffect(() => {
         try {
@@ -154,15 +178,9 @@ export default function CustomerHome() {
                         </div>
                     )}
 
-                    {hasMoreProducts && loadMoreProducts && (
-                        <div className="flex justify-center pt-8">
-                            <Button 
-                                onClick={loadMoreProducts} 
-                                variant="outline" 
-                                className="rounded-2xl border-dashed px-8 font-bold gap-2 text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10"
-                            >
-                                عرض المزيد من المنتجات 💎
-                            </Button>
+                    {hasMoreProducts && (
+                        <div ref={sentinelRef} className="flex justify-center pt-8 pb-4">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                         </div>
                     )}
                 </div>
