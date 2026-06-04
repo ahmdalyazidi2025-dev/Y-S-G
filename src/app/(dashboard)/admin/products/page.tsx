@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Search, Edit2, Trash2, Package, History, ArrowUpDown, Calendar, Layers, Tag, Barcode, Link2 } from "lucide-react"
 import Link from "next/link"
@@ -13,12 +13,37 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 
 export default function ProductsPage() {
-    const { products, deleteProduct, categories, totalProductsDbCount } = useStore()
+    const { products, deleteProduct, categories, totalProductsDbCount, loadMoreProducts, hasMoreProducts } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest")
     const [isFormOpen, setIsFormOpen] = useState(false)
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+    const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        if (!hasMoreProducts || !loadMoreProducts) return
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                loadMoreProducts()
+            }
+        }, {
+            rootMargin: '150px'
+        })
+
+        const currentSentinel = sentinelRef.current
+        if (currentSentinel) {
+            observer.observe(currentSentinel)
+        }
+
+        return () => {
+            if (currentSentinel) {
+                observer.unobserve(currentSentinel)
+            }
+        }
+    }, [hasMoreProducts, loadMoreProducts])
 
     const filteredProducts = products.filter((p: Product) => {
         const isExpired = p.discountEndDate && new Date(p.discountEndDate) < new Date()
@@ -353,6 +378,12 @@ export default function ProductsPage() {
                     })
                 )}
             </div>
+
+            {hasMoreProducts && (
+                <div ref={sentinelRef} className="flex justify-center pt-8 pb-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+            )}
 
             <AdminProductForm
                 isOpen={isFormOpen}
