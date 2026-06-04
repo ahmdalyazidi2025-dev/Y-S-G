@@ -21,16 +21,21 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
     const sentinelRef = useRef<HTMLDivElement | null>(null)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
 
     useEffect(() => {
-        if (!hasMoreProducts || !loadMoreProducts) return
+        if (!hasMoreProducts || !loadMoreProducts || isLoadingMore) return
 
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
+                setIsLoadingMore(true)
                 loadMoreProducts()
+                setTimeout(() => {
+                    setIsLoadingMore(false)
+                }, 1000)
             }
         }, {
-            rootMargin: '150px'
+            rootMargin: '100px'
         })
 
         const currentSentinel = sentinelRef.current
@@ -43,7 +48,7 @@ export default function ProductsPage() {
                 observer.unobserve(currentSentinel)
             }
         }
-    }, [hasMoreProducts, loadMoreProducts])
+    }, [hasMoreProducts, loadMoreProducts, isLoadingMore])
 
     const filteredProducts = products.filter((p: Product) => {
         const isExpired = p.discountEndDate && new Date(p.discountEndDate) < new Date()

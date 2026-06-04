@@ -31,16 +31,21 @@ export default function CategoryPage() {
 
     const sentinelRef = useRef<HTMLDivElement | null>(null)
     const hasMore = hasMoreCategoryProducts?.(categoryId)
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
 
     useEffect(() => {
-        if (!hasMore || !loadMoreCategoryProducts) return
+        if (!hasMore || !loadMoreCategoryProducts || isLoadingMore) return
 
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
+                setIsLoadingMore(true)
                 loadMoreCategoryProducts(categoryId)
+                setTimeout(() => {
+                    setIsLoadingMore(false)
+                }, 1000)
             }
         }, {
-            rootMargin: '150px'
+            rootMargin: '100px'
         })
 
         const currentSentinel = sentinelRef.current
@@ -53,7 +58,7 @@ export default function CategoryPage() {
                 observer.unobserve(currentSentinel)
             }
         }
-    }, [hasMore, categoryId, loadMoreCategoryProducts])
+    }, [hasMore, categoryId, loadMoreCategoryProducts, isLoadingMore])
 
     // Filter products for this category AND search query
     const categoryProducts = useMemo(() => {

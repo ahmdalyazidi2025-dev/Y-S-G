@@ -46,19 +46,25 @@ export default function CustomerHome() {
         ? hasMoreProducts 
         : (selectedCategory !== "الكل" && activeCategoryId ? hasMoreCategoryProducts?.(activeCategoryId) : false)
 
+    const [isLoadingMore, setIsLoadingMore] = useState(false)
+
     useEffect(() => {
-        if (!hasMore) return
+        if (!hasMore || isLoadingMore) return
 
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
+                setIsLoadingMore(true)
                 if (searchQuery !== "") {
                     loadMoreProducts?.()
                 } else if (selectedCategory !== "الكل" && activeCategoryId) {
                     loadMoreCategoryProducts?.(activeCategoryId)
                 }
+                setTimeout(() => {
+                    setIsLoadingMore(false)
+                }, 1000)
             }
         }, {
-            rootMargin: '150px'
+            rootMargin: '100px'
         })
 
         const currentSentinel = sentinelRef.current
@@ -71,7 +77,7 @@ export default function CustomerHome() {
                 observer.unobserve(currentSentinel)
             }
         }
-    }, [hasMore, searchQuery, selectedCategory, activeCategoryId, loadMoreProducts, loadMoreCategoryProducts])
+    }, [hasMore, searchQuery, selectedCategory, activeCategoryId, loadMoreProducts, loadMoreCategoryProducts, isLoadingMore])
 
     const handleHorizontalScroll = (e: React.UIEvent<HTMLDivElement>, catId: string) => {
         const target = e.currentTarget
