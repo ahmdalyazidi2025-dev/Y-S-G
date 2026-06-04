@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 
 export default function ProductsPage() {
-    const { products, deleteProduct, categories, totalProductsDbCount, loadMoreProducts, hasMoreProducts } = useStore()
+    const { products, deleteProduct, categories, totalProductsDbCount, categoryProductCounts, loadMoreProducts, hasMoreProducts } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest")
@@ -89,7 +89,16 @@ export default function ProductsPage() {
     })
 
     const expiredCount = products.filter((p: Product) => p.discountEndDate && new Date(p.discountEndDate) < new Date()).length
-    const totalCount = totalProductsDbCount || products.length
+    const selectedCatObj = categories.find(c => c.nameAr === selectedCategory || c.id === selectedCategory || c.nameEn === selectedCategory)
+    const activeCategoryId = selectedCatObj?.id
+
+    const globalTotalCount = totalProductsDbCount || products.length
+
+    const totalCount = searchQuery !== "" 
+        ? filteredProducts.length
+        : selectedCategory === "الكل" 
+            ? (totalProductsDbCount || products.length)
+            : (activeCategoryId && categoryProductCounts?.[activeCategoryId]) || filteredProducts.length
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product)
@@ -110,6 +119,10 @@ export default function ProductsPage() {
 
     return (
         <div className="space-y-8 pb-12 text-right">
+            {/* DEBUG INFO */}
+            <div className="bg-amber-500/10 text-amber-600 p-2 text-xs text-center rounded-xl font-mono" dir="ltr">
+                DEBUG: totalProductsDbCount={totalProductsDbCount ?? "undefined"} | products={products.length} | categoryProductCounts={JSON.stringify(categoryProductCounts)}
+            </div>
             {/* Top Premium Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50 dark:bg-slate-900/40 p-6 rounded-[2rem] border border-slate-200/60 dark:border-white/5 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -151,7 +164,7 @@ export default function ProductsPage() {
                     </div>
                     <div className="text-left select-none">
                         <span className="text-[10px] text-slate-400 font-bold block mb-0.5">المنتجات النشطة</span>
-                        <span className="text-xl font-black text-slate-800 dark:text-white">{totalCount}</span>
+                        <span className="text-xl font-black text-slate-800 dark:text-white">{globalTotalCount}</span>
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm">

@@ -285,6 +285,7 @@ type StoreContextType = {
     loadMoreCategoryProducts?: (catId: string) => void
     hasMoreCategoryProducts?: (catId: string) => boolean
     totalProductsDbCount?: number
+    categoryProductCounts?: { [catId: string]: number }
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -413,13 +414,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const [totalProductsDbCount, setTotalProductsDbCount] = useState(0)
 
     useEffect(() => {
-        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
-        if (!isAdmin) return
-
         getCountFromServer(collection(db, "products")).then(snap => {
             setTotalProductsDbCount(snap.data().count)
         }).catch(err => console.error("Error getting product count:", err))
-    }, [currentUser, products.length])
+    }, [products.length])
+
+    const [categoryProductCounts, setCategoryProductCounts] = useState<{ [catId: string]: number }>({})
+
+    useEffect(() => {
+        if (categories.length === 0) return
+
+        categories.forEach(cat => {
+            const catId = cat.id
+            const matches = Array.from(new Set([catId, cat.nameAr, cat.nameEn].filter(Boolean)))
+            const q = query(collection(db, "products"), where("category", "in", matches))
+            
+            getCountFromServer(q).then(snap => {
+                setCategoryProductCounts(prev => ({
+                    ...prev,
+                    [catId]: snap.data().count
+                }))
+            }).catch(err => console.error("Error getting category product count:", err))
+        })
+    }, [categories])
 
     const [storeSettings, setStoreSettings] = useState<StoreSettings>({
         minimumOrderValue: 0,
@@ -1741,7 +1758,7 @@ const normalizeArabic = (str: string | null | undefined): string => {
             globalSelectedProduct, setGlobalSelectedProduct, guestId, markMessagesRead,
             loadMoreProducts, loadMoreOrders, loadMoreNotifications,
             hasMoreProducts, hasMoreOrders, hasMoreNotifications,
-            loadMoreCategoryProducts, hasMoreCategoryProducts
+            loadMoreCategoryProducts, hasMoreCategoryProducts, categoryProductCounts, totalProductsDbCount
         }}>
             {children}
         </StoreContext.Provider>

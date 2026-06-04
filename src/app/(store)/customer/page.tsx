@@ -29,7 +29,8 @@ export default function CustomerHome() {
         loadMoreProducts, 
         hasMoreProducts,
         loadMoreCategoryProducts,
-        hasMoreCategoryProducts
+        hasMoreCategoryProducts,
+        categoryProductCounts
     } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
@@ -171,7 +172,7 @@ export default function CustomerHome() {
                                             {cat.nameAr}
                                         </h3>
                                         <span className="text-xs bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full font-bold">
-                                            {categoryProducts.length} منتج
+                                            {categoryProductCounts?.[cat.id] ?? categoryProducts.length} منتج
                                         </span>
                                     </div>
                                     
@@ -206,7 +207,7 @@ export default function CustomerHome() {
                                         {selectedCategory}
                                     </h3>
                                     <span className="text-xs bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full font-bold">
-                                        {filteredProducts.length} منتج
+                                        {searchQuery === "" && activeCategoryId ? (categoryProductCounts?.[activeCategoryId] ?? filteredProducts.length) : filteredProducts.length} منتج
                                     </span>
                                 </div>
                             )}
