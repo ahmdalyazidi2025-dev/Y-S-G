@@ -119,10 +119,6 @@ export default function ProductsPage() {
 
     return (
         <div className="space-y-8 pb-12 text-right">
-            {/* DEBUG INFO */}
-            <div className="bg-amber-500/10 text-amber-600 p-2 text-xs text-center rounded-xl font-mono" dir="ltr">
-                DEBUG: totalProductsDbCount={totalProductsDbCount ?? "undefined"} | products={products.length} | categoryProductCounts={JSON.stringify(categoryProductCounts)}
-            </div>
             {/* Top Premium Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50 dark:bg-slate-900/40 p-6 rounded-[2rem] border border-slate-200/60 dark:border-white/5 shadow-sm">
                 <div className="flex items-center gap-4">
