@@ -136,6 +136,11 @@ export default function CustomerHome() {
 
 
 
+                {/* Modern Carousel */}
+                <div className="px-4">
+                    <HeroBanner />
+                </div>
+
                 {/* Category Stories - Native Circular Layout (Mobile & Desktop) */}
                 <div className="w-full">
                     <CategoryStories selectedCategory={selectedCategory} onSelect={setSelectedCategory} />
