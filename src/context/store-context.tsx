@@ -9,7 +9,7 @@ import {
     collection, addDoc, updateDoc, doc, deleteDoc,
     onSnapshot, query, orderBy, Timestamp, setDoc,
     QuerySnapshot, DocumentSnapshot, DocumentData, getDoc, getDocs, where, writeBatch,
-    runTransaction, or, limit
+    runTransaction, or, limit, getCountFromServer
 } from "firebase/firestore"
 import { adminCreateOrUpdateUserAction, adminDeleteUserAction } from "@/app/actions/auth-actions"
 import { sanitizeData } from "@/lib/utils/store-helpers"
@@ -284,6 +284,7 @@ type StoreContextType = {
     hasMoreNotifications?: boolean
     loadMoreCategoryProducts?: (catId: string) => void
     hasMoreCategoryProducts?: (catId: string) => boolean
+    totalProductsDbCount?: number
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -408,6 +409,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
         return () => unsubscribe()
     }, [])
+
+    const [totalProductsDbCount, setTotalProductsDbCount] = useState(0)
+
+    useEffect(() => {
+        const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'staff'
+        if (!isAdmin) return
+
+        getCountFromServer(collection(db, "products")).then(snap => {
+            setTotalProductsDbCount(snap.data().count)
+        }).catch(err => console.error("Error getting product count:", err))
+    }, [currentUser, products.length])
+
     const [storeSettings, setStoreSettings] = useState<StoreSettings>({
         minimumOrderValue: 0,
         enableBarcodeScanner: true

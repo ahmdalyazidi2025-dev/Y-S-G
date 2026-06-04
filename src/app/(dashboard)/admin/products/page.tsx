@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import { hapticFeedback } from "@/lib/haptics"
 
 export default function ProductsPage() {
-    const { products, deleteProduct, categories } = useStore()
+    const { products, deleteProduct, categories, totalProductsDbCount } = useStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("الكل")
     const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest")
@@ -59,7 +59,7 @@ export default function ProductsPage() {
     })
 
     const expiredCount = products.filter((p: Product) => p.discountEndDate && new Date(p.discountEndDate) < new Date()).length
-    const totalCount = products.length
+    const totalCount = totalProductsDbCount || products.length
 
     const handleEdit = (product: Product) => {
         setEditingProduct(product)
@@ -121,7 +121,7 @@ export default function ProductsPage() {
                     </div>
                     <div className="text-left select-none">
                         <span className="text-[10px] text-slate-400 font-bold block mb-0.5">المنتجات النشطة</span>
-                        <span className="text-xl font-black text-slate-800 dark:text-white">{filteredProducts.length}</span>
+                        <span className="text-xl font-black text-slate-800 dark:text-white">{totalCount}</span>
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm">
