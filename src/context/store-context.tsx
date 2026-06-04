@@ -483,9 +483,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             const catId = cat.id
             const currentLimit = categoryLimits[catId] || 10
 
-            const matches = [catId]
-            if (cat.nameAr) matches.push(cat.nameAr)
-            if (cat.nameEn) matches.push(cat.nameEn)
+            const matches = Array.from(new Set([catId, cat.nameAr, cat.nameEn].filter(Boolean)))
 
             const q = query(
                 collection(db, "products"),
